@@ -1,0 +1,9 @@
+/.github/
+/.vscode/
+/node_modules/
+/build/
+
+*.log
+.gitlab-ci.yml
+
+package-lock.json

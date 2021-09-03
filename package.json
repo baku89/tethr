@@ -1,0 +1,19 @@
+{
+	"name": "camera-control",
+	"version": "0.0.0",
+	"scripts": {
+		"demo": "npx parcel demo/index.html"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@typescript-eslint/eslint-plugin": "^4.28.2",
+		"@typescript-eslint/parser": "^4.28.2",
+		"eslint": "^7.30.0",
+		"eslint-loader": "^4.0.2",
+		"eslint-plugin-prettier": "^3.4.0",
+		"eslint-plugin-simple-import-sort": "^7.0.0",
+		"eslint-plugin-unused-imports": "^1.1.2",
+		"parcel-bundler": "^1.12.5",
+		"typescript": "^4.4.2"
+	}
+}
