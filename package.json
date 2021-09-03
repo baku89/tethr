@@ -2,10 +2,12 @@
 	"name": "camera-control",
 	"version": "0.0.0",
 	"scripts": {
-		"dev": "parcel demo/index.html"
+		"dev": "parcel demo/index.html",
+		"lint": "eslint --fix --ext .ts --ignore-path .gitignore ."
 	},
 	"license": "MIT",
 	"devDependencies": {
+		"@types/w3c-web-usb": "^1.0.5",
 		"@typescript-eslint/eslint-plugin": "^4.28.2",
 		"@typescript-eslint/parser": "^4.28.2",
 		"eslint": "^7.30.0",
@@ -15,5 +17,8 @@
 		"eslint-plugin-unused-imports": "^1.1.2",
 		"parcel-bundler": "^1.12.5",
 		"typescript": "^4.4.2"
-	}
+	},
+	"browserslist": [
+    "since 2020-12"
+  ]
 }

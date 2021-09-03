@@ -11,7 +11,7 @@
 		"allowSyntheticDefaultImports": true,
 		"sourceMap": true,
 		"baseUrl": ".",
-		"types": ["webpack-env", "jquery", "node", "@types/jest"],
+		"types": ["@types/w3c-web-usb"],
 		"typeRoots": ["node_modules/@types", "src"],
 		"paths": {
 			"*": ["src/@types/*"],
