@@ -1,3 +1,3 @@
 export const test = () => {
-	console.log('Hello World')
+	// alert('Hello World')
 }
