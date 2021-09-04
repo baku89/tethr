@@ -1,4 +1,3 @@
-
 export class PTPDecoder {
 
 	private buffer: ArrayBuffer
@@ -23,8 +22,8 @@ export class PTPDecoder {
 		return ret
 	}
 
-	getUint32(lit = true): number {
-		const ret = this.dataView.getUint32(this.byteOffset, lit)
+	getUint32(): number {
+		const ret = this.dataView.getUint32(this.byteOffset, true)
 		this.byteOffset += 4
 		return ret
 	}
@@ -50,8 +49,8 @@ export class PTPDecoder {
 		return ret
 	}
 
-	getUint16Array<T = number>(fmap: (x: number) => T): T[] {
-		const length = this.getUint32(true)
+	getUint16Array<T = number>(fmap: ((x: number) => T) = x => x as never): T[] {
+		const length = this.getUint32()
 
 		const arr = new Array(length).fill(0)
 			.map(() => this.getUint16())
