@@ -1,5 +1,5 @@
 import {PTPDecoder} from './PTPDecoder'
-import {ResponseCodeTable} from './Table'
+import {RescodeTable} from './Table'
 
 enum PTPContainerType {
 	Command = 0x1,
@@ -8,20 +8,24 @@ enum PTPContainerType {
 }
 
 interface PTPTransactionOption {
-	operationCode: number
+	label?: string
+	opcode: number
 	parameters?: number[]
 	data?: ArrayBuffer
 }
 
 interface PTPTransactionResult {
-	responseCode: number
+	rescode: number
 	parameters: number[]
 	data?: ArrayBuffer
 }
 
 export class PTPDevice {
 	private device: USBDevice | undefined
-	private transactionId = 0
+	private transactionId = 0x00000000
+
+	private bulkOut = 0x0
+	private bulkIn = 0x0
 
 	async connect(): Promise<void> {
 		let [device] = await navigator.usb.getDevices()
@@ -31,14 +35,34 @@ export class PTPDevice {
 
 		await device.open()
 
-		if (!device.configuration) {
+		// Configurate
+		let {configuration} = device
+		if (!configuration) {
 			await device.selectConfiguration(1)
+			configuration = device.configuration
 		}
+		if (!configuration) throw new Error('Cannot configurate PTPDevice')
 
+		// Claim interface
 		await device.claimInterface(0)
 
-		this.device = device
+		// Determine endpoints number
+		const endpoints = configuration.interfaces[0].alternates[0].endpoints
+
+		const endpointOut = endpoints.find(
+			e => e.type === 'bulk' && e.direction === 'out'
+		)
+		const endpointIn = endpoints.find(
+			e => e.type === 'bulk' && e.direction === 'in'
+		)
+
+		if (!endpointOut || !endpointIn) throw new Error('Invalid endpoints')
+		this.bulkOut = endpointOut.endpointNumber
+		this.bulkIn = endpointIn.endpointNumber
+
 		console.log(`device=${device.productName}`, device)
+
+		this.device = device
 	}
 
 	async close(): Promise<void> {
@@ -49,17 +73,22 @@ export class PTPDevice {
 	async performTransaction(
 		option: PTPTransactionOption
 	): Promise<PTPTransactionResult> {
-		const {operationCode, data} = option
-		const parameters = option.parameters || []
+		const {opcode, data} = option
+		const label = option.label ?? ''
+		const parameters = option.parameters ?? []
 		const transactionId = this.generateTransactionId()
 
-		await this.sendRequest(operationCode, transactionId, parameters)
+		console.log(`Transaction ${label} ========`)
+		await this.sendRequest(opcode, transactionId, parameters)
 
 		if (data) {
-			await this.sendData(operationCode, transactionId, data)
+			await this.sendData(opcode, transactionId, data)
 		}
 
-		return await this.getResponse(transactionId)
+		const result = await this.getResponse(transactionId)
+		console.log(`Transaction ${label} ========`)
+
+		return result
 	}
 
 	private async sendRequest(
@@ -83,7 +112,7 @@ export class PTPDevice {
 			dataView.setUint32(12 + index * 4, param, true)
 		})
 
-		const sent = await this.device.transferOut(1, buffer)
+		const sent = await this.device.transferOut(this.bulkOut, buffer)
 		console.log(
 			'Request=',
 			'0x' + code.toString(16),
@@ -114,7 +143,7 @@ export class PTPDevice {
 		const dataBytes = new Uint8Array(data)
 		dataBytes.forEach((byte, offset) => dataView.setUint8(12 + offset, byte))
 
-		const sent = await this.device.transferOut(1, buffer)
+		const sent = await this.device.transferOut(this.bulkOut, buffer)
 		console.log(
 			'SendData=',
 			'0x' + code.toString(16),
@@ -128,7 +157,7 @@ export class PTPDevice {
 	private async waitTransferIn(expectedTransactionId: number) {
 		if (!this.device) throw new Error()
 
-		const res = await this.device.transferIn(0x2, 512)
+		const res = await this.device.transferIn(this.bulkIn, 512)
 		if (!res.data) throw new Error()
 
 		const decoder = new PTPDecoder(res.data)
@@ -152,7 +181,7 @@ export class PTPDevice {
 				})
 				break
 			case PTPContainerType.Response: {
-				const rescode = ResponseCodeTable[code]
+				const rescode = RescodeTable[code]
 				console.log('Response=', {
 					dataSize,
 					type,
@@ -175,7 +204,7 @@ export class PTPDevice {
 
 	private async getResponse(expectedTransactionId: number) {
 		const result: PTPTransactionResult = {
-			responseCode: 0x0,
+			rescode: 0x0,
 			parameters: [],
 		}
 
@@ -192,7 +221,7 @@ export class PTPDevice {
 		}
 
 		// Process response phase
-		result.responseCode = responsePhase.code
+		result.rescode = responsePhase.code
 		result.parameters = [...new Uint32Array(responsePhase.payload)]
 
 		return result

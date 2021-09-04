@@ -4,7 +4,7 @@ import {
 	DevicePropCodeTable,
 	EventTypeTable,
 	ObjectFormatCodeTable,
-	OperationCodeTable,
+	OpcodeTable,
 } from '../src/Table'
 
 const initDevice = async () => {
@@ -20,7 +20,7 @@ const initDevice = async () => {
 
 	{
 		const result = await device.performTransaction({
-			operationCode: GetDeviceInfo,
+			opcode: GetDeviceInfo,
 		})
 		if (!result.data) throw new Error()
 		const decoder = new PTPDecoder(result.data)
@@ -32,7 +32,7 @@ const initDevice = async () => {
 			VendorExtensionDesc: decoder.getString(),
 			FunctionalMode: decoder.getUint16(),
 			OperationsSupported: decoder.getUint16Array(
-				getCodeTransformer(OperationCodeTable)
+				getCodeTransformer(OpcodeTable)
 			),
 			EventsSupported: decoder.getUint16Array(
 				getCodeTransformer(EventTypeTable)
@@ -53,7 +53,8 @@ const initDevice = async () => {
 		})
 
 		await device.performTransaction({
-			operationCode: OpenSession,
+			label: 'Open Session',
+			opcode: OpenSession,
 			parameters: [0x1],
 		})
 	}
@@ -61,9 +62,9 @@ const initDevice = async () => {
 	// await sendCommand(0x9102, [0x00010001])
 	// await receiveResponse()
 
-	// Shutter
 	await device.performTransaction({
-		operationCode: 0x9404,
+		label: 'Shutter',
+		opcode: 0x9404,
 		parameters: [0x3000011],
 	})
 
@@ -77,7 +78,8 @@ const initDevice = async () => {
 	// await receiveResponse()
 
 	await device.performTransaction({
-		operationCode: GetStorageIDs,
+		label: 'Get Storage IDs',
+		opcode: GetStorageIDs,
 	})
 	// const storageIDs = (await receiveResponse()).getUint16Array()
 	// await receiveResponse()
@@ -98,7 +100,8 @@ const initDevice = async () => {
 	// )
 
 	await device.performTransaction({
-		operationCode: CloseSession,
+		label: 'Close Session',
+		opcode: CloseSession,
 	})
 
 	device.close()

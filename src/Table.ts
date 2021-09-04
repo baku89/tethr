@@ -8,7 +8,7 @@ export const StorageTypeTable: Table = {
 	0x0004: 'Removable RAM',
 }
 
-export const OperationCodeTable: Table = {
+export const OpcodeTable: Table = {
 	0x1000: 'Undefined',
 	0x1001: 'GetDeviceInfo',
 	0x1002: 'OpenSession',
@@ -40,7 +40,7 @@ export const OperationCodeTable: Table = {
 	0x101c: 'InitiateOpenCapture',
 }
 
-export const ResponseCodeTable: Table = {
+export const RescodeTable: Table = {
 	0x2000: 'Undefined',
 	0x2001: 'OK',
 	0x2002: 'General Error',
