@@ -67,6 +67,17 @@ export class PTPDecoder {
 		return arr
 	}
 
+	getUint32Array<T = number>(fmap: (x: number) => T = x => x as never): T[] {
+		const length = this.getUint32()
+
+		const arr = new Array(length)
+			.fill(0)
+			.map(() => this.getUint32())
+			.map(fmap)
+
+		return arr
+	}
+
 	getRest(): ArrayBuffer {
 		return this.dataView.buffer.slice(this.byteOffset)
 	}

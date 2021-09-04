@@ -20,6 +20,7 @@ const initDevice = async () => {
 
 	{
 		const result = await device.performTransaction({
+			label: 'Get Device Info',
 			opcode: GetDeviceInfo,
 		})
 		if (!result.data) throw new Error()
@@ -59,45 +60,40 @@ const initDevice = async () => {
 		})
 	}
 
-	// await sendCommand(0x9102, [0x00010001])
-	// await receiveResponse()
-
 	await device.performTransaction({
 		label: 'Shutter',
 		opcode: 0x9404,
 		parameters: [0x3000011],
 	})
 
-	// await sendCommand(0x9103, [])
-	// await receiveResponse()
+	{
+		const result = await device.performTransaction({
+			label: 'Get Storage IDs',
+			opcode: GetStorageIDs,
+		})
+		if (!result.data) throw new Error()
+		const decoder = new PTPDecoder(result.data)
 
-	// await sendCommand(0x9035, [0x0])
-	// await receiveResponse()
+		const storageIDs = decoder.getUint32Array()
+		console.log('storage ids =', storageIDs)
 
-	// await sendCommand(0x9012, [0x0])
-	// await receiveResponse()
+		const r = await device.performTransaction({
+			label: 'GetStorageInfo',
+			parameters: [storageIDs[0]],
+			opcode: GetStorageInfo,
+		})
+		if (!r.data) throw new Error()
+		const storageInfo = new PTPDecoder(r.data)
 
-	await device.performTransaction({
-		label: 'Get Storage IDs',
-		opcode: GetStorageIDs,
-	})
-	// const storageIDs = (await receiveResponse()).getUint16Array()
-	// await receiveResponse()
-	// console.log('storage ids =', storageIDs)
-
-	// await sendCommand(GetStorageInfo, [x])
-	// const storageInfo = await receiveResponse()
-	// await receiveResponse()
-
-	// console.log('storage info=', {
-	// 		storageType: storageInfo.getUint16(),
-	// 		filesystemType: storageInfo.getUint16(),
-	// 		accessCapability: storageInfo.getUint16(),
-	// 		maxCapability: storageInfo.getUint64(),
-	// 		freeSpaceInBytes: storageInfo.getUint64(),
-	// 		freeSpaceInImages: storageInfo.getUint32(),
-	// 	},
-	// )
+		console.log('storage info=', {
+			storageType: storageInfo.getUint16(),
+			filesystemType: storageInfo.getUint16(),
+			accessCapability: storageInfo.getUint16(),
+			maxCapability: storageInfo.getUint64(),
+			freeSpaceInBytes: storageInfo.getUint64(),
+			freeSpaceInImages: storageInfo.getUint32(),
+		})
+	}
 
 	await device.performTransaction({
 		label: 'Close Session',

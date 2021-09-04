@@ -78,7 +78,7 @@ export class PTPDevice {
 		const parameters = option.parameters ?? []
 		const transactionId = this.generateTransactionId()
 
-		console.log(`Transaction ${label} ========`)
+		console.log(`Transaction [${label}] >>>>>>>>`)
 		await this.sendRequest(opcode, transactionId, parameters)
 
 		if (data) {
@@ -86,7 +86,7 @@ export class PTPDevice {
 		}
 
 		const result = await this.getResponse(transactionId)
-		console.log(`Transaction ${label} ========`)
+		console.log(`Transaction [${label}] <<<<<<<<`)
 
 		return result
 	}
