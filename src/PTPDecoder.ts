@@ -56,29 +56,23 @@ export class PTPDecoder {
 		return ret
 	}
 
-	getUint16Array<T = number>(fmap: (x: number) => T = x => x as never): T[] {
-		const length = this.getUint32()
-
-		const arr = new Array(length)
-			.fill(0)
-			.map(() => this.getUint16())
-			.map(fmap)
-
-		return arr
+	getUint16Array<T = number>(fmap: (x: number) => T): T[] {
+		return this.getArray(this.getUint16, fmap)
 	}
 
-	getUint32Array<T = number>(fmap: (x: number) => T = x => x as never): T[] {
-		const length = this.getUint32()
-
-		const arr = new Array(length)
-			.fill(0)
-			.map(() => this.getUint32())
-			.map(fmap)
-
-		return arr
+	getUint32Array<T = number>(fmap: (x: number) => T): T[] {
+		return this.getArray(this.getUint32, fmap)
 	}
 
 	getRest(): ArrayBuffer {
 		return this.dataView.buffer.slice(this.byteOffset)
+	}
+
+	private getArray<T = number>(
+		getFunc: () => number,
+		fmap: (x: number) => T = x => x as never
+	): T[] {
+		const length = this.getUint32()
+		return new Array(length).fill(0).map(getFunc.bind(this)).map(fmap)
 	}
 }
