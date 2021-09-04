@@ -1,12 +1,16 @@
 export class PTPDecoder {
-
 	private buffer: ArrayBuffer
 	private dataView: DataView
 	private byteOffset: number
 
-	constructor(dataView: DataView) {
-		this.dataView = dataView
-		this.buffer = dataView.buffer
+	constructor(buffer: DataView | ArrayBuffer) {
+		if (buffer instanceof DataView) {
+			this.buffer = buffer.buffer
+			this.dataView = buffer
+		} else {
+			this.buffer = buffer
+			this.dataView = new DataView(buffer)
+		}
 		this.byteOffset = 0
 	}
 
@@ -40,8 +44,11 @@ export class PTPDecoder {
 		if (numChars == 0) {
 			return ''
 		}
-		
-		const strBuffer = this.buffer.slice(this.byteOffset, this.byteOffset + (numChars - 1) * 2)
+
+		const strBuffer = this.buffer.slice(
+			this.byteOffset,
+			this.byteOffset + (numChars - 1) * 2
+		)
 		const ret = String.fromCharCode(...new Uint16Array(strBuffer))
 
 		this.byteOffset += numChars * 2
@@ -49,10 +56,11 @@ export class PTPDecoder {
 		return ret
 	}
 
-	getUint16Array<T = number>(fmap: ((x: number) => T) = x => x as never): T[] {
+	getUint16Array<T = number>(fmap: (x: number) => T = x => x as never): T[] {
 		const length = this.getUint32()
 
-		const arr = new Array(length).fill(0)
+		const arr = new Array(length)
+			.fill(0)
 			.map(() => this.getUint16())
 			.map(fmap)
 
