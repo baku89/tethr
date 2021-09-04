@@ -5,8 +5,10 @@ module.exports = {
 		node: true,
 		commonjs: true,
 	},
+	parser: '@typescript-eslint/parser',
 	extends: [
 		'eslint:recommended',
+		'plugin:@typescript-eslint/recommended',
 	],
 	parserOptions: {
 		sourceType: 'module',
