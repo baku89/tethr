@@ -19,7 +19,11 @@ const connect = async () => {
 
 	window.addEventListener('beforeunload', cam.close)
 
-	$takePicture.addEventListener('click', cam.takePicture)
+	$takePicture.addEventListener('click', async () => {
+		const info = await cam.takePicture()
+		console.log(info)
+		if (info) await cam.getThumb(info.objectID)
+	})
 }
 
 function listify(object: Record<string, any>) {

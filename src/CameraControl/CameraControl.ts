@@ -28,6 +28,29 @@ export interface DevicePropDesc<T> {
 	}
 }
 
+export interface ObjectInfo {
+	objectID: number
+	storageID: number
+	objectFormat: number
+	protectionStatus: number
+	objectCompressedSize: number
+	thumbFormat: number
+	thumbCompressedSize: number
+	thumbPixWidth: number
+	thumbPixHeight: number
+	imagePixWidth: number
+	imagePixHeight: number
+	imageBitDepth: number
+	parentObject: number
+	associationType: number
+	associationDesc: number
+	sequenceNumber: number
+	filename: string
+	captureDate: Date
+	modificationDate: Date
+	keywords: string
+}
+
 export class CameraControl {
 	protected _opened = false
 
@@ -114,9 +137,20 @@ export class CameraControl {
 		return (value - min) / (max - min)
 	}
 
-	public takePicture = async (): Promise<void> => {
-		// Do nothing
-		null
+	public takePicture = async (): Promise<null | ObjectInfo> => {
+		return null
+	}
+
+	public getThumb = async (objectID: number): Promise<null> => {
+		const res = await this.device.performTransaction({
+			label: 'GetThumb',
+			opcode: OpCode.for('GetThumb'),
+			parameters: [objectID],
+		})
+
+		console.log(res)
+
+		return null
 	}
 
 	public getDevicePropDesc = async (
@@ -170,5 +204,39 @@ export class CameraControl {
 		}
 
 		return desc
+	}
+
+	protected getObjectInfo = async (objectID: number): Promise<ObjectInfo> => {
+		const res = await this.device.performTransaction({
+			opcode: OpCode.for('GetObjectInfo'),
+			parameters: [objectID],
+		})
+
+		if (!res.data) throw new Error('Invalid ObjectInfo')
+
+		const decoder = new PTPDecoder(res.data)
+
+		return {
+			objectID,
+			storageID: decoder.getUint32(),
+			objectFormat: decoder.getUint16(),
+			protectionStatus: decoder.getUint16(),
+			objectCompressedSize: decoder.getUint32(),
+			thumbFormat: decoder.getUint16(),
+			thumbCompressedSize: decoder.getUint32(),
+			thumbPixWidth: decoder.getUint32(),
+			thumbPixHeight: decoder.getUint32(),
+			imagePixWidth: decoder.getUint32(),
+			imagePixHeight: decoder.getUint32(),
+			imageBitDepth: decoder.getUint32(),
+			parentObject: decoder.getUint32(),
+			associationType: decoder.getUint16(),
+			associationDesc: decoder.getUint32(),
+			sequenceNumber: decoder.getUint32(),
+			filename: decoder.getString(),
+			captureDate: decoder.getDate(),
+			modificationDate: decoder.getDate(),
+			keywords: decoder.getString(),
+		}
 	}
 }

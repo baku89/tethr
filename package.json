@@ -10,6 +10,7 @@
 		"@types/w3c-web-usb": "^1.0.5",
 		"@typescript-eslint/eslint-plugin": "^4.28.2",
 		"@typescript-eslint/parser": "^4.28.2",
+		"date-format-parse": "^0.2.7",
 		"eslint": "^7.30.0",
 		"eslint-loader": "^4.0.2",
 		"eslint-plugin-prettier": "^3.4.0",

@@ -1,3 +1,5 @@
+import {parse as parseTimestamp} from 'date-format-parse'
+
 export class PTPDecoder {
 	private buffer: ArrayBuffer
 	private dataView: DataView
@@ -64,6 +66,11 @@ export class PTPDecoder {
 		this.byteOffset += numChars * 2
 
 		return ret
+	}
+
+	public getDate = (): Date => {
+		const timestamp = this.getString()
+		return parseTimestamp(timestamp, 'YYYYMMDDThhmmss')
 	}
 
 	public getUint16Array<T = number>(fmap?: (x: number) => T): T[] {
