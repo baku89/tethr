@@ -176,7 +176,7 @@ export class CameraControlSigma extends CameraControl {
 		return integer + fractional / 10
 	}
 
-	private decodeDriveMode(bits: number): DriveMode {
+	private decodeDriveMode(bits: number): null | DriveMode {
 		switch (bits & 0b111) {
 			case 0x1:
 				return DriveMode.P
@@ -186,15 +186,12 @@ export class CameraControlSigma extends CameraControl {
 				return DriveMode.S
 			case 0x4:
 				return DriveMode.M
-			default:
-				return DriveMode.Unknown
 		}
+		return null
 	}
 
 	private encodeDriveMode(mode: DriveMode): number {
 		switch (mode) {
-			case DriveMode.Unknown:
-				return 0x0
 			case DriveMode.P:
 				return 0x1
 			case DriveMode.A:

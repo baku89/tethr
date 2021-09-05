@@ -12,7 +12,6 @@ import {
 export type ISO = 'auto' | number
 
 export enum DriveMode {
-	Unknown = 'Unknown',
 	P = 'P',
 	A = 'A',
 	S = 'S',
@@ -100,8 +99,8 @@ export class CameraControl {
 		return null
 	}
 
-	public getDriveMode = async (): Promise<DriveMode> => {
-		return DriveMode.Unknown
+	public getDriveMode = async (): Promise<null | DriveMode> => {
+		return null
 	}
 
 	public getBatteryLevel = async (): Promise<number> => {
