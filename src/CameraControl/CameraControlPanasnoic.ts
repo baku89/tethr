@@ -1,4 +1,6 @@
-import {CameraControl, ObjectInfo} from './CameraControl'
+import {ObjectInfo} from '@/ObjectInfo'
+
+import {CameraControl} from './CameraControl'
 
 export class CameraControlPanasnoic extends CameraControl {
 	public takePicture = async (): Promise<ObjectInfo> => {
