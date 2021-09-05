@@ -26,3 +26,5 @@ export async function connectCamera(): Promise<CameraControl> {
 
 	return camera
 }
+
+export {CameraControl}
