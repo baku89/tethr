@@ -14,6 +14,10 @@ export class PTPDecoder {
 		this.byteOffset = 0
 	}
 
+	public get hasNext(): boolean {
+		return this.byteOffset < this.buffer.byteLength
+	}
+
 	public getUint8 = (): number => {
 		const ret = this.dataView.getUint8(this.byteOffset)
 		this.byteOffset += 1
