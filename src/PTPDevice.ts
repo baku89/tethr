@@ -12,6 +12,7 @@ enum PTPContainerType {
 	Command = 0x1,
 	Data = 0x2,
 	Response = 0x3,
+	Event = 0x4,
 }
 
 interface PTPTransactionOption {
@@ -27,12 +28,13 @@ interface PTPTransactionResult {
 	data?: ArrayBuffer
 }
 
-export class PTPDevice {
+export class PTPDevice extends EventTarget {
 	private device: USBDevice | undefined
 	private transactionId = 0x00000000
 
 	private bulkOut = 0x0
 	private bulkIn = 0x0
+	private interruptIn = 0x0
 
 	public connect = async (): Promise<void> => {
 		let [device] = await navigator.usb.getDevices()
@@ -62,14 +64,22 @@ export class PTPDevice {
 		const endpointIn = endpoints.find(
 			e => e.type === 'bulk' && e.direction === 'in'
 		)
+		const endpointEvent = endpoints.find(
+			e => e.type === 'interrupt' && e.direction === 'in'
+		)
 
-		if (!endpointOut || !endpointIn) throw new Error('Invalid endpoints')
+		if (!endpointOut || !endpointIn || !endpointEvent)
+			throw new Error('Invalid endpoints')
 		this.bulkOut = endpointOut.endpointNumber
 		this.bulkIn = endpointIn.endpointNumber
+		this.interruptIn = endpointEvent.endpointNumber
 
 		console.log(`device=${device.productName}`, device)
 
 		this.device = device
+
+		// Listen event
+		this.checkForEvent()
 	}
 
 	public close = async (): Promise<void> => {
@@ -260,6 +270,45 @@ export class PTPDevice {
 		result.parameters = [...new Uint32Array(responsePhase.payload)]
 
 		return result
+	}
+
+	private checkForEvent = async () => {
+		try {
+			if (!this.device) throw new Error('Device is not initialized')
+
+			const res = await this.device.transferIn(this.interruptIn, 512)
+
+			if (!res.data) throw new Error('Invalid event')
+
+			const decoder = new PTPDecoder(res.data)
+
+			const dataSize = decoder.getUint32()
+			const type = decoder.getUint16()
+			const code = decoder.getUint16()
+			const transactionId = decoder.getUint32()
+
+			const parameters = []
+			while (decoder.hasNext) {
+				console.log('inifi')
+				parameters.push(decoder.getUint32())
+			}
+
+			if (type !== PTPContainerType.Event) throw new Error('Invalid event')
+
+			const eventName = EventCode.nameFor(code)
+
+			const detail = {
+				eventName,
+				code: code,
+				transactionId,
+				parameters,
+			}
+
+			console.log('Event received', detail)
+			this.dispatchEvent(new CustomEvent(eventName, {detail}))
+		} finally {
+			this.checkForEvent()
+		}
 	}
 
 	private generateTransactionId = (): number => {
