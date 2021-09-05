@@ -111,6 +111,16 @@ export class CameraControlSigma extends CameraControl {
 
 			// Failure
 			if ((result.status & 0xf000) === 0x6000) {
+				switch (result.status) {
+					case 0x6001:
+						throw new Error('AF failure')
+					case 0x6002:
+						throw new Error('Buffer full')
+					case 0x6003:
+						throw new Error('Custom WB failure')
+					case 0x6004:
+						throw new Error('Image generation failed')
+				}
 				throw new Error('Capture failed')
 			}
 			// Success
