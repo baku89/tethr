@@ -1,4 +1,11 @@
-import {ResCode} from './PTPDatacode'
+import {DeviceInfo} from './DeviceInfo'
+import {
+	DevicePropCode,
+	EventCode,
+	ObjectFormatCode,
+	OpCode,
+	ResCode,
+} from './PTPDatacode'
 import {PTPDecoder} from './PTPDecoder'
 
 enum PTPContainerType {
@@ -68,6 +75,35 @@ export class PTPDevice {
 	async close(): Promise<void> {
 		if (!this.device) return
 		await this.device.close()
+	}
+
+	async getInfo(): Promise<DeviceInfo> {
+		const result = await this.performTransaction({
+			label: 'GetDeviceInfo',
+			opcode: OpCode.for('GetDeviceInfo'),
+		})
+
+		if (!result.data) throw new Error()
+		const decoder = new PTPDecoder(result.data)
+
+		const info: DeviceInfo = {
+			StandardVersion: decoder.getUint16(),
+			VendorExtensionID: decoder.getUint32(),
+			VendorExtensionVersion: decoder.getUint16(),
+			VendorExtensionDesc: decoder.getString(),
+			FunctionalMode: decoder.getUint16(),
+			OperationsSupported: decoder.getUint16Array(OpCode.nameFor),
+			EventsSupported: decoder.getUint16Array(EventCode.nameFor),
+			DevicePropertiesSupported: decoder.getUint16Array(DevicePropCode.nameFor),
+			CaptureFormats: decoder.getUint16Array(ObjectFormatCode.nameFor),
+			ImageFormats: decoder.getUint16Array(ObjectFormatCode.nameFor),
+			Manufacturer: decoder.getString(),
+			Model: decoder.getString(),
+			DeviceVersion: decoder.getString(),
+			SerialNumber: decoder.getString(),
+		}
+
+		return info
 	}
 
 	async performTransaction(

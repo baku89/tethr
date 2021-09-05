@@ -14,31 +14,37 @@ export class PTPDecoder {
 		this.byteOffset = 0
 	}
 
-	getUint8(): number {
+	getUint8 = (): number => {
 		const ret = this.dataView.getUint8(this.byteOffset)
 		this.byteOffset += 1
 		return ret
 	}
 
-	getUint16(): number {
+	getInt8 = (): number => {
+		const ret = this.dataView.getInt8(this.byteOffset)
+		this.byteOffset += 1
+		return ret
+	}
+
+	getUint16 = (): number => {
 		const ret = this.dataView.getUint16(this.byteOffset, true)
 		this.byteOffset += 2
 		return ret
 	}
 
-	getUint32(): number {
+	getUint32 = (): number => {
 		const ret = this.dataView.getUint32(this.byteOffset, true)
 		this.byteOffset += 4
 		return ret
 	}
 
-	getUint64(): bigint {
+	getUint64 = (): bigint => {
 		const ret = this.dataView.getBigUint64(this.byteOffset, true)
 		this.byteOffset += 8
 		return ret
 	}
 
-	getString(): string {
+	getString = (): string => {
 		const numChars = this.getUint8()
 
 		if (numChars == 0) {

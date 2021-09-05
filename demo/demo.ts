@@ -1,12 +1,14 @@
-import {CameraControl} from '../src/CameraControl'
+import {connectCamera} from '../src/CameraControl'
 
 const test = async () => {
-	const cam = new CameraControl()
+	const cam = await connectCamera()
 
-	await cam.open()
+	// await cam.getStorageInfo()
 
-	await cam.getDeviceInfo()
-	await cam.getStorageInfo()
+	console.log({
+		focalLength: await cam.getFocalLength(),
+		batteryLevel: await cam.getBatteryLevel(),
+	})
 
 	await cam.close()
 }
