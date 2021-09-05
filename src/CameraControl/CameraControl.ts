@@ -121,14 +121,6 @@ export class CameraControl {
 	}
 
 	public getThumb = async (objectID: number): Promise<null> => {
-		const res = await this.device.performTransaction({
-			label: 'GetThumb',
-			opcode: OpCode.for('GetThumb'),
-			parameters: [objectID],
-		})
-
-		console.log(res)
-
 		return null
 	}
 
@@ -187,6 +179,7 @@ export class CameraControl {
 
 	protected getObjectInfo = async (objectID: number): Promise<ObjectInfo> => {
 		const res = await this.device.performTransaction({
+			label: 'GetObjectInfo',
 			opcode: OpCode.for('GetObjectInfo'),
 			parameters: [objectID],
 		})
