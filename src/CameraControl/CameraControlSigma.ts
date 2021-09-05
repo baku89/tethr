@@ -1,5 +1,5 @@
 import {PTPDecoder} from '../PTPDecoder'
-import {CameraControl, DriveMode} from './CameraControl'
+import {BatteryLevel, CameraControl, DriveMode} from './CameraControl'
 
 export class CameraControlSigma extends CameraControl {
 	public open = async (): Promise<void> => {
@@ -20,11 +20,15 @@ export class CameraControlSigma extends CameraControl {
 	}
 
 	public getFocalLength = async (): Promise<number> => {
-		return (await this.getCamDataGroup1()).CurrentLensFocalLength
+		return (await this.getCamDataGroup1()).currentLensFocalLength
 	}
 
-	public getDriveMode = async (): Promise<DriveMode> => {
-		return (await this.getCamDataGroup2()).DriveMode
+	public getDriveMode = async (): Promise<null | DriveMode> => {
+		return (await this.getCamDataGroup2()).driveMode
+	}
+
+	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
+		return (await this.getCamDataGroup1()).batteryState
 	}
 
 	private async getCamDataGroup1() {
@@ -36,25 +40,25 @@ export class CameraControlSigma extends CameraControl {
 		if (!res.data) throw new Error('Failed to initialize Sigma fp')
 
 		const decoder = new PTPDecoder(res.data)
-		decoder.getUint8()
+		decoder.getUint8() // Size
+		decoder.getUint16() // FieldPreset
 
 		const group1 = {
-			FieldPreset: decoder.getUint16().toString(2),
-			ShutterSpeed: decoder.getUint8(),
-			Aperture: decoder.getUint8(),
-			ProgramShift: decoder.getInt8(),
-			ISOAuto: decoder.getUint8(),
-			ISOSpeed: decoder.getUint8().toString(2),
-			ExpCompensation: decoder.getUint8(),
-			ABValue: decoder.getUint8(),
-			ABSettings: decoder.getUint8(),
-			FrameBufferState: decoder.getUint8(),
-			MediaFreeSpace: decoder.getUint16(),
-			MediaStatus: decoder.getUint8(),
-			CurrentLensFocalLength: this.decodeFocalLength(decoder.getUint16()),
-			BatteryState: decoder.getUint8(),
-			ABShotRemainNumber: decoder.getUint8(),
-			ExpCompExcludeAB: decoder.getUint8(),
+			shutterSpeed: decoder.getUint8(),
+			aperture: decoder.getUint8(),
+			programShift: decoder.getInt8(),
+			iSOAuto: decoder.getUint8(),
+			iSOSpeed: decoder.getUint8().toString(2),
+			expCompensation: decoder.getUint8(),
+			abValue: decoder.getUint8(),
+			abSettings: decoder.getUint8(),
+			frameBufferState: decoder.getUint8(),
+			mediaFreeSpace: decoder.getUint16(),
+			mediaStatus: decoder.getUint8(),
+			currentLensFocalLength: this.decodeFocalLength(decoder.getUint16()),
+			batteryState: this.decodeBatteryState(decoder.getUint8()),
+			abShotRemainNumber: decoder.getUint8(),
+			expCompExcludeAB: decoder.getUint8(),
 		}
 
 		console.log('group1=', group1)
@@ -72,24 +76,24 @@ export class CameraControlSigma extends CameraControl {
 
 		const decoder = new PTPDecoder(res.data)
 		// decoder.getUint8()
+		decoder.getUint16() // FieldPreset
 
 		const group2 = {
-			FieldPreset: decoder.getUint16().toString(2),
-			DriveMode: this.decodeDriveMode(decoder.getUint8()),
-			SpecialMode: decoder.getUint8(),
-			ExposureMode: decoder.getUint8(),
-			AEMeteringMode: decoder.getUint8(),
+			driveMode: this.decodeDriveMode(decoder.getUint8()),
+			specialMode: decoder.getUint8(),
+			exposureMode: decoder.getUint8(),
+			aeMeteringMode: decoder.getUint8(),
 			__reserved0: decoder.getUint8(),
 			__reserved1: decoder.getUint8(),
 			__reserved2: decoder.getUint8(),
 			__reserved3: decoder.getUint8(),
-			FlashType: decoder.getUint8(),
+			flashType: decoder.getUint8(),
 			__reserved4: decoder.getUint8(),
-			FlashMode: decoder.getUint8().toString(2),
-			FlashSettings: decoder.getUint8(),
-			WhiteBalance: decoder.getUint8(),
-			Resolution: decoder.getUint8(),
-			ImageQuality: decoder.getUint8(),
+			flashMode: decoder.getUint8().toString(2),
+			flashSettings: decoder.getUint8(),
+			whiteBalance: decoder.getUint8(),
+			resolution: decoder.getUint8(),
+			imageQuality: decoder.getUint8(),
 		}
 
 		console.log('group2=', group2)
@@ -169,11 +173,44 @@ export class CameraControlSigma extends CameraControl {
 		console.log('ConfigAPI IFD=', str)
 	}
 
-	private decodeFocalLength(bits: number) {
-		const integer = bits >> 4,
-			fractional = bits & 0b1111
+	private decodeFocalLength(byte: number) {
+		const integer = byte >> 4,
+			fractional = byte & 0b1111
 
 		return integer + fractional / 10
+	}
+
+	private decodeBatteryState(byte: number): null | BatteryLevel {
+		switch (byte) {
+			case 0x00:
+				return null
+			case 0x01:
+				return 1 // Full
+			case 0x02:
+				return 2 / 3
+			case 0x03:
+				return 1 / 3
+			case 0x04:
+				return 0.1 // Low
+			case 0x05:
+				return 0
+			case 0x06:
+				return null
+			case 0x07:
+				return 0
+			case 0x08:
+				return 'ac'
+			case 0x09:
+				return null
+			case 0x0a:
+				return 4 / 5
+			case 0x0b:
+				return 3 / 5
+			case 0x0c:
+				return null
+		}
+
+		return null
 	}
 
 	private decodeDriveMode(bits: number): null | DriveMode {

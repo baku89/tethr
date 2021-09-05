@@ -18,6 +18,8 @@ export enum DriveMode {
 	M = 'M',
 }
 
+export type BatteryLevel = 'ac' | number
+
 export interface DevicePropDesc<T> {
 	currentValue: T
 	factoryDefaultValue: T
@@ -103,10 +105,10 @@ export class CameraControl {
 		return null
 	}
 
-	public getBatteryLevel = async (): Promise<number> => {
+	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
 		const desc = await this.getDevicePropDesc('BatteryLevel')
 
-		if (!desc) return NaN
+		if (!desc) return null
 
 		const min = desc.range?.min ?? 0
 		const max = desc.range?.max ?? 100
