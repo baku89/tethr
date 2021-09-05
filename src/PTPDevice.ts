@@ -224,6 +224,7 @@ export class PTPDevice extends EventTarget {
 
 		const res = await this.device.transferIn(this.bulkIn, 512)
 		if (!res.data) throw new Error()
+		if (res.status !== 'ok') new Error()
 
 		const decoder = new PTPDecoder(res.data)
 
