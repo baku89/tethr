@@ -17,6 +17,17 @@ export enum DriveMode {
 	M = 'M',
 }
 
+export interface DevicePropDesc<T> {
+	currentValue: T
+	factoryDefaultValue: T
+	getSet: number
+	range?: {
+		min: T
+		max: T
+		step: T
+	}
+}
+
 export class CameraControl {
 	protected _opened = false
 
@@ -83,8 +94,8 @@ export class CameraControl {
 		}
 	}
 
-	public getFocalLength = async (): Promise<number> => {
-		return NaN
+	public getFocalLength = async (): Promise<null | number> => {
+		return null
 	}
 
 	public getDriveMode = async (): Promise<DriveMode> => {
@@ -94,9 +105,13 @@ export class CameraControl {
 	public getBatteryLevel = async (): Promise<number> => {
 		const desc = await this.getDevicePropDesc('BatteryLevel')
 
-		console.log('batteryLevel=', desc)
+		if (!desc) return NaN
 
-		return 100
+		const min = desc.range?.min ?? 0
+		const max = desc.range?.max ?? 100
+		const value = desc.currentValue
+
+		return (value - min) / (max - min)
 	}
 
 	public takePicture = async (): Promise<void> => {
@@ -107,7 +122,9 @@ export class CameraControl {
 		})
 	}
 
-	public getDevicePropDesc = async (deviceProp: string): Promise<any> => {
+	public getDevicePropDesc = async (
+		deviceProp: string
+	): Promise<null | DevicePropDesc<number>> => {
 		const info = await this.device.getInfo()
 
 		if (!info.DevicePropertiesSupported.includes(deviceProp)) {
@@ -122,9 +139,9 @@ export class CameraControl {
 
 		if (!res.data) return null
 
-		const decoder = new PTPDecoder(res.data)
+		const decoder = new PTPDecoder(res.data.slice(2))
 
-		const devicePropCode = decoder.getUint16().toString(16)
+		const devicePropCode = decoder.getUint16()
 		const dataType = decoder.getUint16()
 		const getSet = decoder.getUint8()
 
@@ -137,13 +154,10 @@ export class CameraControl {
 		const factoryDefaultValue = getValue()
 		const currentValue = getValue()
 
-		const desc = {
-			devicePropCode,
-			dataType,
+		const desc: DevicePropDesc<number> = {
 			getSet,
 			factoryDefaultValue,
 			currentValue,
-			range: {min: NaN, max: NaN, step: NaN},
 		}
 
 		// Read form
