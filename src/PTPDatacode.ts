@@ -17,8 +17,7 @@ class PTPDatacode {
 		if (code in this.table) {
 			return this.table[code]
 		} else {
-			const hex = '0x' + ('0000' + code.toString(16)).slice(-4)
-			return `Unknwon Code (${hex})`
+			return '0x' + ('0000' + code.toString(16)).slice(-4)
 		}
 	}
 }
