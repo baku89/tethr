@@ -20,13 +20,13 @@ export enum DriveMode {
 export class CameraControl {
 	protected _opened = false
 
-	constructor(protected device: PTPDevice) {}
+	public constructor(protected device: PTPDevice) {}
 
-	get opened(): boolean {
+	public get opened(): boolean {
 		return this._opened
 	}
 
-	async open(): Promise<void> {
+	public async open(): Promise<void> {
 		await this.device.connect()
 
 		await this.device.performTransaction({
@@ -38,7 +38,7 @@ export class CameraControl {
 		this._opened = true
 	}
 
-	close = async (): Promise<void> => {
+	public close = async (): Promise<void> => {
 		this._opened = false
 
 		await this.device.performTransaction({
@@ -48,9 +48,9 @@ export class CameraControl {
 		await this.device.close()
 	}
 
-	getDeviceInfo = this.device.getInfo
+	public getDeviceInfo = this.device.getInfo
 
-	getStorageInfo = async (): Promise<void> => {
+	public getStorageInfo = async (): Promise<void> => {
 		const result = await this.device.performTransaction({
 			label: 'Get Storage IDs',
 			opcode: OpCode.for('GetStorageIDs'),
@@ -83,15 +83,15 @@ export class CameraControl {
 		}
 	}
 
-	async getFocalLength(): Promise<number> {
+	public getFocalLength = async (): Promise<number> => {
 		return NaN
 	}
 
-	async getDriveMode(): Promise<DriveMode> {
+	public getDriveMode = async (): Promise<DriveMode> => {
 		return DriveMode.Unknown
 	}
 
-	async getBatteryLevel(): Promise<number> {
+	public getBatteryLevel = async (): Promise<number> => {
 		const desc = await this.getDevicePropDesc('BatteryLevel')
 
 		console.log('batteryLevel=', desc)
@@ -99,7 +99,7 @@ export class CameraControl {
 		return 100
 	}
 
-	async takePicture(): Promise<void> {
+	public takePicture = async (): Promise<void> => {
 		await this.device.performTransaction({
 			label: 'Shutter',
 			opcode: 0x9404,
@@ -107,7 +107,7 @@ export class CameraControl {
 		})
 	}
 
-	async getDevicePropDesc(deviceProp: string): Promise<any> {
+	public getDevicePropDesc = async (deviceProp: string): Promise<any> => {
 		const info = await this.device.getInfo()
 
 		if (!info.DevicePropertiesSupported.includes(deviceProp)) {

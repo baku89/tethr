@@ -2,7 +2,7 @@ import {PTPDecoder} from '../PTPDecoder'
 import {CameraControl, DriveMode} from './CameraControl'
 
 export class CameraControlSigma extends CameraControl {
-	async open(): Promise<void> {
+	public open = async (): Promise<void> => {
 		await super.open()
 
 		const res = await this.device.performTransaction({
@@ -19,11 +19,11 @@ export class CameraControlSigma extends CameraControl {
 		await this.setToManual()
 	}
 
-	async getFocalLength(): Promise<number> {
+	public getFocalLength = async (): Promise<number> => {
 		return (await this.getCamDataGroup1()).CurrentLensFocalLength
 	}
 
-	async getDriveMode(): Promise<DriveMode> {
+	public getDriveMode = async (): Promise<DriveMode> => {
 		return (await this.getCamDataGroup2()).DriveMode
 	}
 

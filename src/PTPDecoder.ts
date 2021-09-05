@@ -3,7 +3,7 @@ export class PTPDecoder {
 	private dataView: DataView
 	private byteOffset: number
 
-	constructor(buffer: DataView | ArrayBuffer) {
+	public constructor(buffer: DataView | ArrayBuffer) {
 		if (buffer instanceof DataView) {
 			this.buffer = buffer.buffer
 			this.dataView = buffer
@@ -14,37 +14,37 @@ export class PTPDecoder {
 		this.byteOffset = 0
 	}
 
-	getUint8 = (): number => {
+	public getUint8 = (): number => {
 		const ret = this.dataView.getUint8(this.byteOffset)
 		this.byteOffset += 1
 		return ret
 	}
 
-	getInt8 = (): number => {
+	public getInt8 = (): number => {
 		const ret = this.dataView.getInt8(this.byteOffset)
 		this.byteOffset += 1
 		return ret
 	}
 
-	getUint16 = (): number => {
+	public getUint16 = (): number => {
 		const ret = this.dataView.getUint16(this.byteOffset, true)
 		this.byteOffset += 2
 		return ret
 	}
 
-	getUint32 = (): number => {
+	public getUint32 = (): number => {
 		const ret = this.dataView.getUint32(this.byteOffset, true)
 		this.byteOffset += 4
 		return ret
 	}
 
-	getUint64 = (): bigint => {
+	public getUint64 = (): bigint => {
 		const ret = this.dataView.getBigUint64(this.byteOffset, true)
 		this.byteOffset += 8
 		return ret
 	}
 
-	getString = (): string => {
+	public getString = (): string => {
 		const numChars = this.getUint8()
 
 		if (numChars == 0) {
@@ -62,15 +62,15 @@ export class PTPDecoder {
 		return ret
 	}
 
-	getUint16Array<T = number>(fmap?: (x: number) => T): T[] {
+	public getUint16Array<T = number>(fmap?: (x: number) => T): T[] {
 		return this.getArray(this.getUint16, fmap)
 	}
 
-	getUint32Array<T = number>(fmap?: (x: number) => T): T[] {
+	public getUint32Array<T = number>(fmap?: (x: number) => T): T[] {
 		return this.getArray(this.getUint32, fmap)
 	}
 
-	getRest(): ArrayBuffer {
+	public getRest(): ArrayBuffer {
 		return this.dataView.buffer.slice(this.byteOffset)
 	}
 

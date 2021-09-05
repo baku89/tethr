@@ -3,17 +3,17 @@ type Table = Record<number, string>
 class PTPDatacode {
 	private nameToCode: Record<string, number>
 
-	constructor(private table: Record<number, string>) {
+	public constructor(private table: Record<number, string>) {
 		this.nameToCode = Object.fromEntries(
 			Object.entries(table).map(([code, name]) => [name, parseInt(code)])
 		)
 	}
 
-	for = (name: string): number => {
+	public for = (name: string): number => {
 		return this.nameToCode[name]
 	}
 
-	nameFor = (code: number): string => {
+	public nameFor = (code: number): string => {
 		if (code in this.table) {
 			return this.table[code]
 		} else {

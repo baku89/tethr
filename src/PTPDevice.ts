@@ -34,7 +34,7 @@ export class PTPDevice {
 	private bulkOut = 0x0
 	private bulkIn = 0x0
 
-	async connect(): Promise<void> {
+	public connect = async (): Promise<void> => {
 		let [device] = await navigator.usb.getDevices()
 		if (!device) {
 			device = await navigator.usb.requestDevice({filters: []})
@@ -72,12 +72,12 @@ export class PTPDevice {
 		this.device = device
 	}
 
-	async close(): Promise<void> {
+	public close = async (): Promise<void> => {
 		if (!this.device) return
 		await this.device.close()
 	}
 
-	async getInfo(): Promise<DeviceInfo> {
+	public getInfo = async (): Promise<DeviceInfo> => {
 		const result = await this.performTransaction({
 			label: 'GetDeviceInfo',
 			opcode: OpCode.for('GetDeviceInfo'),
@@ -106,9 +106,9 @@ export class PTPDevice {
 		return info
 	}
 
-	async performTransaction(
+	public performTransaction = async (
 		option: PTPTransactionOption
-	): Promise<PTPTransactionResult> {
+	): Promise<PTPTransactionResult> => {
 		const {opcode, data} = option
 		const label = option.label ?? ''
 		const parameters = option.parameters ?? []
@@ -127,11 +127,11 @@ export class PTPDevice {
 		return result
 	}
 
-	private async sendRequest(
+	private sendRequest = async (
 		code: number,
 		transactionId: number,
 		parameters: number[]
-	) {
+	) => {
 		if (!this.device) throw new Error()
 
 		const length = 12 + parameters.length * 4
@@ -159,11 +159,11 @@ export class PTPDevice {
 		if (sent.status !== 'ok') throw new Error()
 	}
 
-	private async sendData(
+	private sendData = async (
 		code: number,
 		transactionId: number,
 		data: ArrayBuffer
-	) {
+	) => {
 		if (!this.device) return false
 
 		const length = 12 + data.byteLength
@@ -190,7 +190,7 @@ export class PTPDevice {
 		return sent.status === 'ok'
 	}
 
-	private async waitTransferIn(expectedTransactionId: number) {
+	private waitTransferIn = async (expectedTransactionId: number) => {
 		if (!this.device) throw new Error()
 
 		const res = await this.device.transferIn(this.bulkIn, 512)
@@ -237,7 +237,7 @@ export class PTPDevice {
 		}
 	}
 
-	private async getResponse(expectedTransactionId: number) {
+	private getResponse = async (expectedTransactionId: number) => {
 		const result: PTPTransactionResult = {
 			rescode: 0x0,
 			parameters: [],
@@ -262,7 +262,7 @@ export class PTPDevice {
 		return result
 	}
 
-	private generateTransactionId(): number {
+	private generateTransactionId = (): number => {
 		this.transactionId += 1
 		if (this.transactionId >= 0xfffffffe) {
 			this.transactionId = 1
