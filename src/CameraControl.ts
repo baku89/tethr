@@ -6,6 +6,7 @@ import {
 } from './PTPDatacode'
 import {PTPDecoder} from './PTPDecoder'
 import {PTPDevice} from './PTPDevice'
+import {PTPAccessCapability, PTPFilesystemType, PTPStorageType} from './PTPEnum'
 
 export class CameraControl {
 	private device: PTPDevice
@@ -78,14 +79,16 @@ export class CameraControl {
 			if (!r.data) throw new Error()
 			const storageInfo = new PTPDecoder(r.data)
 
-			console.log(`Storage info for ${id}=`, {
-				storageType: storageInfo.getUint16(),
-				filesystemType: storageInfo.getUint16(),
-				accessCapability: storageInfo.getUint16(),
+			const info = {
+				storageType: PTPStorageType[storageInfo.getUint16()],
+				filesystemType: PTPFilesystemType[storageInfo.getUint16()],
+				accessCapability: PTPAccessCapability[storageInfo.getUint16()],
 				maxCapability: storageInfo.getUint64(),
 				freeSpaceInBytes: storageInfo.getUint64(),
 				freeSpaceInImages: storageInfo.getUint32(),
-			})
+			}
+
+			console.log(`Storage info for ${id}=`, info)
 		}
 	}
 

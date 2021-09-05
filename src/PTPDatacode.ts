@@ -23,14 +23,6 @@ class PTPDatacode {
 	}
 }
 
-export const StorageType: Table = {
-	0x0000: 'Undefined',
-	0x0001: 'Fixed ROM',
-	0x0002: 'Removable ROM',
-	0x0003: 'Fixed RAM',
-	0x0004: 'Removable RAM',
-}
-
 export const OpCode = new PTPDatacode({
 	0x1000: 'Undefined',
 	0x1001: 'GetDeviceInfo',
