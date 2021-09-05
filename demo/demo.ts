@@ -5,7 +5,7 @@ import {
 	EventTypeTable,
 	ObjectFormatCodeTable,
 	OpcodeTable,
-} from '../src/Table'
+} from '../src/PTPTable'
 
 const initDevice = async () => {
 	const device = new PTPDevice()

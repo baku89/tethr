@@ -1,5 +1,5 @@
 import {PTPDecoder} from './PTPDecoder'
-import {RescodeTable} from './Table'
+import {RescodeTable} from './PTPTable'
 
 enum PTPContainerType {
 	Command = 0x1,
