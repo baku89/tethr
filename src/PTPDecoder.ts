@@ -56,11 +56,11 @@ export class PTPDecoder {
 		return ret
 	}
 
-	getUint16Array<T = number>(fmap: (x: number) => T): T[] {
+	getUint16Array<T = number>(fmap?: (x: number) => T): T[] {
 		return this.getArray(this.getUint16, fmap)
 	}
 
-	getUint32Array<T = number>(fmap: (x: number) => T): T[] {
+	getUint32Array<T = number>(fmap?: (x: number) => T): T[] {
 		return this.getArray(this.getUint32, fmap)
 	}
 

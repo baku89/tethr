@@ -1,5 +1,5 @@
+import {ResCode} from './PTPDatacode'
 import {PTPDecoder} from './PTPDecoder'
-import {RescodeTable} from './PTPTable'
 
 enum PTPContainerType {
 	Command = 0x1,
@@ -181,11 +181,10 @@ export class PTPDevice {
 				})
 				break
 			case PTPContainerType.Response: {
-				const rescode = RescodeTable[code]
 				console.log('Response=', {
 					dataSize,
 					type,
-					rescode,
+					rescode: ResCode.nameFor(code),
 					transactionId,
 					payload,
 				})

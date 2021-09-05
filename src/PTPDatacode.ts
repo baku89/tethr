@@ -1,6 +1,29 @@
 type Table = Record<number, string>
 
-export const StorageTypeTable: Table = {
+class PTPDatacode {
+	private nameToCode: Record<string, number>
+
+	constructor(private table: Record<number, string>) {
+		this.nameToCode = Object.fromEntries(
+			Object.entries(table).map(([code, name]) => [name, parseInt(code)])
+		)
+	}
+
+	for = (name: string): number => {
+		return this.nameToCode[name]
+	}
+
+	nameFor = (code: number): string => {
+		if (code in this.table) {
+			return this.table[code]
+		} else {
+			const hex = '0x' + ('0000' + code.toString(16)).slice(-4)
+			return `Unknwon Code (${hex})`
+		}
+	}
+}
+
+export const StorageType: Table = {
 	0x0000: 'Undefined',
 	0x0001: 'Fixed ROM',
 	0x0002: 'Removable ROM',
@@ -8,7 +31,7 @@ export const StorageTypeTable: Table = {
 	0x0004: 'Removable RAM',
 }
 
-export const OpcodeTable: Table = {
+export const OpCode = new PTPDatacode({
 	0x1000: 'Undefined',
 	0x1001: 'GetDeviceInfo',
 	0x1002: 'OpenSession',
@@ -38,9 +61,9 @@ export const OpcodeTable: Table = {
 	0x101a: 'CopyObject',
 	0x101b: 'GetPartialObject',
 	0x101c: 'InitiateOpenCapture',
-}
+})
 
-export const RescodeTable: Table = {
+export const ResCode = new PTPDatacode({
 	0x2000: 'Undefined',
 	0x2001: 'OK',
 	0x2002: 'General Error',
@@ -74,9 +97,9 @@ export const RescodeTable: Table = {
 	0x201e: 'Session Already Open',
 	0x201f: 'Transaction Cancelled',
 	0x2020: 'Specification of Destination Unsupported',
-}
+})
 
-export const EventTypeTable: Table = {
+export const EventCode = new PTPDatacode({
 	0x4000: 'Undefined',
 	0x4001: 'CancelTransaction',
 	0x4002: 'ObjectAdded',
@@ -92,9 +115,9 @@ export const EventTypeTable: Table = {
 	0x400c: 'StorageInfoChanged',
 	0x400d: 'CaptureComplete',
 	0x400e: 'UnreportedStatus',
-}
+})
 
-export const ObjectFormatCodeTable: Table = {
+export const ObjectFormatCode = new PTPDatacode({
 	0x3000: 'Undefined',
 	0x3001: 'Association',
 	0x3002: 'Script',
@@ -127,9 +150,9 @@ export const ObjectFormatCodeTable: Table = {
 	0x3810: 'JPX',
 
 	0x300d: 'Apple Quicktime',
-}
+})
 
-export const DevicePropCodeTable: Table = {
+export const DevicePropCode = new PTPDatacode({
 	0x5000: 'Undefined',
 	0x5001: 'BatteryLevel',
 	0x5002: 'FunctionalMode',
@@ -162,4 +185,4 @@ export const DevicePropCodeTable: Table = {
 	0x501d: 'UploadURL',
 	0x501e: 'Artist',
 	0x501f: 'CopyrightInfo',
-}
+})
