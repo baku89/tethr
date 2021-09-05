@@ -182,7 +182,7 @@ export class PTPDevice extends EventTarget {
 			'Request=',
 			'0x' + code.toString(16),
 			'id=' + transactionId,
-			sent
+			'parameters=' + parameters
 		)
 
 		if (sent.status !== 'ok') throw new Error()
@@ -224,7 +224,11 @@ export class PTPDevice extends EventTarget {
 
 		const res = await this.device.transferIn(this.bulkIn, 512)
 		if (!res.data) throw new Error()
-		if (res.status !== 'ok') new Error()
+		if (res.status !== 'ok') throw new Error(`Status = ${res.status}`)
+
+		console.log('wait', res.data)
+
+		// if (res.data.byteLength < 12) throw new E
 
 		const decoder = new PTPDecoder(res.data)
 
