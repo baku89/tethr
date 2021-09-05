@@ -1,6 +1,6 @@
 import {PTPDevice} from '../PTPDevice'
 import {CameraControl} from './CameraControl'
-import {CameraControlLumix} from './CameraControlPanasnoic'
+import {CameraControlPanasnoic} from './CameraControlPanasnoic'
 import {CameraControlSigma} from './CameraControlSigma'
 
 export async function connectCamera(): Promise<CameraControl> {
@@ -19,7 +19,7 @@ export async function connectCamera(): Promise<CameraControl> {
 			}
 			break
 		case 0x0000001c: // Panasnoic
-			camera = new CameraControlLumix(device)
+			camera = new CameraControlPanasnoic(device)
 			break
 	}
 

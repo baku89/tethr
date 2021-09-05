@@ -28,6 +28,15 @@ interface PTPTransactionResult {
 	data?: ArrayBuffer
 }
 
+interface PTPEventDetail {
+	eventName: string
+	code: number
+	transactionId: number
+	parameters: number[]
+}
+
+export type PTPEvent = CustomEvent<PTPEventDetail>
+
 export class PTPDevice extends EventTarget {
 	private device: USBDevice | undefined
 	private transactionId = 0x00000000
@@ -35,6 +44,7 @@ export class PTPDevice extends EventTarget {
 	private bulkOut = 0x0
 	private bulkIn = 0x0
 	private interruptIn = 0x0
+	private listeningEvent = false
 
 	public connect = async (): Promise<void> => {
 		let [device] = await navigator.usb.getDevices()
@@ -135,6 +145,15 @@ export class PTPDevice extends EventTarget {
 		console.groupEnd()
 
 		return result
+	}
+
+	public waitEvent = async (code: number): Promise<PTPEventDetail> => {
+		return new Promise((resolve, reject) => {
+			this.addEventListener(EventCode.nameFor(code), e => {
+				const detail = (e as PTPEvent).detail
+				resolve(detail)
+			})
+		})
 	}
 
 	private sendRequest = async (
@@ -273,10 +292,14 @@ export class PTPDevice extends EventTarget {
 	}
 
 	private checkForEvent = async () => {
+		if (this.listeningEvent) return
+
 		try {
 			if (!this.device) throw new Error('Device is not initialized')
 
+			this.listeningEvent = true
 			const res = await this.device.transferIn(this.interruptIn, 512)
+			this.listeningEvent = false
 
 			if (!res.data) throw new Error('Invalid event')
 
@@ -289,7 +312,6 @@ export class PTPDevice extends EventTarget {
 
 			const parameters = []
 			while (decoder.hasNext) {
-				console.log('inifi')
 				parameters.push(decoder.getUint32())
 			}
 
@@ -297,9 +319,9 @@ export class PTPDevice extends EventTarget {
 
 			const eventName = EventCode.nameFor(code)
 
-			const detail = {
+			const detail: PTPEventDetail = {
 				eventName,
-				code: code,
+				code,
 				transactionId,
 				parameters,
 			}

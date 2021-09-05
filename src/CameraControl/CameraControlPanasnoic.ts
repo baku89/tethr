@@ -1,11 +1,16 @@
 import {CameraControl} from './CameraControl'
 
-export class CameraControlLumix extends CameraControl {
+export class CameraControlPanasnoic extends CameraControl {
 	public takePicture = async (): Promise<void> => {
 		await this.device.performTransaction({
-			label: 'Shutter',
+			label: 'Panasonic Shutter',
 			opcode: 0x9404,
 			parameters: [0x3000011],
 		})
+
+		const objectAdded = await this.device.waitEvent(0xc108)
+		const objectID = objectAdded.parameters[0]
+
+		console.log('Object ID=', objectID)
 	}
 }
