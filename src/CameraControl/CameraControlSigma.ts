@@ -1,3 +1,4 @@
+import {ObjectInfo} from '../ObjectInfo'
 import {PTPDecoder} from '../PTPDecoder'
 import {BatteryLevel, CameraControl, ExposureMode} from './CameraControl'
 
@@ -42,6 +43,94 @@ export class CameraControlSigma extends CameraControl {
 
 	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
 		return (await this.getCamDataGroup1()).batteryLevel
+	}
+
+	public takePicture = async (): Promise<null | ObjectInfo> => {
+		// https://github.com/gphoto/libgphoto2/blob/96925915768917ef6c245349b787baa275df608c/camlibs/ptp2/library.c#L5426
+		let id = 0
+
+		{
+			const res = await this.device.performTransaction({
+				label: 'SigmaFP GetCamCaptStatus',
+				opcode: 0x9015,
+				parameters: [0x0],
+			})
+
+			if (!res.data) throw new Error()
+
+			const decoder = new PTPDecoder(res.data)
+			decoder.skip(1)
+			const result = {
+				imageId: decoder.getUint8(),
+				imageDBHead: decoder.getUint8(),
+				imageDBTail: decoder.getUint8(),
+				status: decoder.getUint16(),
+				destination: decoder.getUint8(),
+			}
+
+			console.log('status before snap=', result)
+
+			id = result.imageDBTail
+		}
+		// Snap
+		const buffer = new ArrayBuffer(2)
+		const dataView = new DataView(buffer)
+
+		dataView.setUint8(0, 0x02)
+		dataView.setUint8(1, 0x02)
+
+		const data = this.encodeParameter(buffer)
+
+		await this.device.performTransaction({
+			label: 'SigmaFP SnapCommand',
+			opcode: 0x901b,
+			data,
+		})
+
+		await new Promise(r => setTimeout(r, 100))
+
+		let tries = 50
+		while (tries--) {
+			const res = await this.device.performTransaction({
+				label: 'SigmaFP GetCamCaptStatus',
+				opcode: 0x9015,
+				parameters: [id],
+			})
+
+			if (!res.data) throw new Error()
+
+			const decoder = new PTPDecoder(res.data)
+			decoder.skip(1)
+			const result = {
+				imageId: decoder.getUint8(),
+				imageDBHead: decoder.getUint8(),
+				imageDBTail: decoder.getUint8(),
+				status: decoder.getUint16(),
+				destination: decoder.getUint8(),
+			}
+
+			// Failure
+			if ((result.status & 0xf000) === 0x6000) {
+				throw new Error('Capture failed')
+			}
+			// Success
+			if ((result.status & 0xf000) === 0x8000) break
+			if (result.status == 0x0002) break
+			if (result.status == 0x0005) break
+
+			console.log(result.status.toString(16))
+
+			await new Promise(r => setTimeout(r, 500))
+		}
+
+		await this.device.performTransaction({
+			label: 'SigmaFP ClearImageDBSingle',
+			opcode: 0x901c,
+			parameters: [id],
+			data: new ArrayBuffer(8),
+		})
+
+		return null
 	}
 
 	private async getCamDataGroup1() {
