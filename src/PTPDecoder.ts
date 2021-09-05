@@ -20,6 +20,13 @@ export class PTPDecoder {
 		return this.byteOffset < this.buffer.byteLength
 	}
 
+	public skip(bytes: number): void {
+		if (this.byteOffset + bytes > this.buffer.byteLength) {
+			throw new Error('Not enough byteLength to skip')
+		}
+		this.byteOffset += bytes
+	}
+
 	public getUint8 = (): number => {
 		const ret = this.dataView.getUint8(this.byteOffset)
 		this.byteOffset += 1

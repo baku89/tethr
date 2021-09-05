@@ -15,6 +15,7 @@ const connect = async () => {
 	$deviceProps.innerHTML = listify({
 		focalLength: await cam.getFocalLength(),
 		batteryLevel: await cam.getBatteryLevel(),
+		exposureMode: await cam.getExposureMode(),
 	})
 
 	window.addEventListener('beforeunload', cam.close)

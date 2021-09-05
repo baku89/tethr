@@ -1,5 +1,5 @@
 import {PTPDecoder} from '../PTPDecoder'
-import {BatteryLevel, CameraControl, DriveMode} from './CameraControl'
+import {BatteryLevel, CameraControl, ExposureMode} from './CameraControl'
 
 export class CameraControlSigma extends CameraControl {
 	public open = async (): Promise<void> => {
@@ -15,20 +15,33 @@ export class CameraControlSigma extends CameraControl {
 
 		await this.getCamDataGroup1()
 		await this.getCamDataGroup2()
-
-		await this.setToManual()
 	}
 
 	public getFocalLength = async (): Promise<number> => {
 		return (await this.getCamDataGroup1()).currentLensFocalLength
 	}
 
-	public getDriveMode = async (): Promise<null | DriveMode> => {
-		return (await this.getCamDataGroup2()).driveMode
+	public getExposureMode = async (): Promise<null | ExposureMode> => {
+		return (await this.getCamDataGroup2()).exposureMode
+	}
+	public setExposureMode = async (mode: ExposureMode): Promise<void> => {
+		const buffer = new ArrayBuffer(3)
+		const dataView = new DataView(buffer)
+
+		dataView.setUint16(0, 1 << 2, true) // Exposure
+		dataView.setUint8(2, this.encodeExposureMode(mode))
+
+		const data = this.encodeParameter(buffer)
+
+		const res = await this.device.performTransaction({
+			label: 'SigmaFP SetCamDataGroup2',
+			opcode: 0x9017,
+			data,
+		})
 	}
 
 	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
-		return (await this.getCamDataGroup1()).batteryState
+		return (await this.getCamDataGroup1()).batteryLevel
 	}
 
 	private async getCamDataGroup1() {
@@ -56,7 +69,7 @@ export class CameraControlSigma extends CameraControl {
 			mediaFreeSpace: decoder.getUint16(),
 			mediaStatus: decoder.getUint8(),
 			currentLensFocalLength: this.decodeFocalLength(decoder.getUint16()),
-			batteryState: this.decodeBatteryState(decoder.getUint8()),
+			batteryLevel: this.decodeBatteryLevel(decoder.getUint8()),
 			abShotRemainNumber: decoder.getUint8(),
 			expCompExcludeAB: decoder.getUint8(),
 		}
@@ -75,26 +88,28 @@ export class CameraControlSigma extends CameraControl {
 		if (!res.data) throw new Error('Failed to initialize Sigma fp')
 
 		const decoder = new PTPDecoder(res.data)
-		// decoder.getUint8()
+		decoder.getUint8()
 		decoder.getUint16() // FieldPreset
 
-		const group2 = {
-			driveMode: this.decodeDriveMode(decoder.getUint8()),
+		const group2FirstOct = {
+			driveMode: decoder.getUint8(),
 			specialMode: decoder.getUint8(),
-			exposureMode: decoder.getUint8(),
+			exposureMode: this.decodeExposureMode(decoder.getUint8()),
 			aeMeteringMode: decoder.getUint8(),
-			__reserved0: decoder.getUint8(),
-			__reserved1: decoder.getUint8(),
-			__reserved2: decoder.getUint8(),
-			__reserved3: decoder.getUint8(),
+		}
+
+		decoder.skip(4)
+
+		const group2SecondOct = {
 			flashType: decoder.getUint8(),
-			__reserved4: decoder.getUint8(),
 			flashMode: decoder.getUint8().toString(2),
 			flashSettings: decoder.getUint8(),
 			whiteBalance: decoder.getUint8(),
 			resolution: decoder.getUint8(),
 			imageQuality: decoder.getUint8(),
 		}
+
+		const group2 = {...group2FirstOct, ...group2SecondOct}
 
 		console.log('group2=', group2)
 
@@ -104,35 +119,6 @@ export class CameraControlSigma extends CameraControl {
 		console.log(str)
 
 		return group2
-	}
-
-	private async setToManual() {
-		const buffer = new ArrayBuffer(5)
-		const dataView = new DataView(buffer)
-
-		dataView.setUint8(0, 3)
-		dataView.setUint16(1, 1 << 2, true) // Exposure
-		dataView.setUint8(3, 0x04) // M
-
-		let checksum = 0
-		for (let i = 0; i < 4; i++) {
-			checksum += dataView.getUint8(i)
-		}
-		checksum &= 0xff
-		dataView.setUint8(4, checksum)
-
-		const str = [...new Uint8Array(buffer)]
-			.map(n => ('00' + n.toString(16)).slice(-2))
-			.join(' ')
-		console.log(str)
-
-		const res = await this.device.performTransaction({
-			label: 'SigmaFP SetCamDataGroup2',
-			opcode: 0x9017,
-			data: buffer,
-		})
-
-		console.log(res)
 	}
 
 	private parseIFD(data: ArrayBuffer) {
@@ -180,7 +166,7 @@ export class CameraControlSigma extends CameraControl {
 		return integer + fractional / 10
 	}
 
-	private decodeBatteryState(byte: number): null | BatteryLevel {
+	private decodeBatteryLevel(byte: number): null | BatteryLevel {
 		switch (byte) {
 			case 0x00:
 				return null
@@ -213,30 +199,56 @@ export class CameraControlSigma extends CameraControl {
 		return null
 	}
 
-	private decodeDriveMode(bits: number): null | DriveMode {
-		switch (bits & 0b111) {
+	private decodeExposureMode(byte: number): null | ExposureMode {
+		console.log('decode', byte && 0b111)
+		switch (byte & 0b111) {
 			case 0x1:
-				return DriveMode.P
+				return ExposureMode.P
 			case 0x2:
-				return DriveMode.A
+				return ExposureMode.A
 			case 0x3:
-				return DriveMode.S
+				return ExposureMode.S
 			case 0x4:
-				return DriveMode.M
+				return ExposureMode.M
 		}
 		return null
 	}
 
-	private encodeDriveMode(mode: DriveMode): number {
+	private encodeExposureMode(mode: ExposureMode): number {
 		switch (mode) {
-			case DriveMode.P:
+			case ExposureMode.P:
 				return 0x1
-			case DriveMode.A:
+			case ExposureMode.A:
 				return 0x2
-			case DriveMode.S:
+			case ExposureMode.S:
 				return 0x3
-			case DriveMode.M:
+			case ExposureMode.M:
 				return 0x4
 		}
+	}
+
+	private encodeParameter(buffer: ArrayBuffer) {
+		const bytes = new Uint8Array(buffer)
+
+		const size = buffer.byteLength
+		const encodedBuffer = new ArrayBuffer(size + 2)
+		const encodedBytes = new Uint8Array(encodedBuffer)
+
+		// Set size at the first byte
+		encodedBytes[0] = size
+
+		// Insert the content
+		for (let i = 0; i < size; i++) {
+			encodedBytes[1 + i] = bytes[i]
+		}
+
+		// Add checksum on the last
+		let checksum = 0
+		for (let i = 0; i <= size; i++) {
+			checksum += encodedBytes[i]
+		}
+		encodedBytes[size + 1] = checksum
+
+		return encodedBuffer
 	}
 }

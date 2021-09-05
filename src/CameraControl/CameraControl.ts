@@ -11,7 +11,7 @@ import {
 
 export type ISO = 'auto' | number
 
-export enum DriveMode {
+export enum ExposureMode {
 	P = 'P',
 	A = 'A',
 	S = 'S',
@@ -101,7 +101,7 @@ export class CameraControl {
 		return null
 	}
 
-	public getDriveMode = async (): Promise<null | DriveMode> => {
+	public getExposureMode = async (): Promise<null | ExposureMode> => {
 		return null
 	}
 
