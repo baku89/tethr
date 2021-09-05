@@ -1,15 +1,33 @@
 import {connectCamera} from '../src/CameraControl'
 
-const test = async () => {
+const $connect = document.getElementById('connect') as HTMLButtonElement
+const $takePicture = document.getElementById('takePicture') as HTMLButtonElement
+const $deviceInfo = document.getElementById('deviceInfo') as HTMLDivElement
+const $deviceProps = document.getElementById('deviceProps') as HTMLDivElement
+
+const connect = async () => {
 	const cam = await connectCamera()
 
-	// await cam.getStorageInfo()
+	$deviceInfo.innerHTML = listify(await cam.getDeviceInfo())
 
-	console.log({
+	$connect.disabled = true
+
+	$deviceProps.innerHTML = listify({
 		focalLength: await cam.getFocalLength(),
 		batteryLevel: await cam.getBatteryLevel(),
 	})
 
-	await cam.close()
+	window.addEventListener('beforeunload', cam.close)
+
+	$takePicture.addEventListener('click', cam.takePicture)
 }
-document.getElementById('execute')?.addEventListener('click', test)
+
+function listify(object: Record<string, any>) {
+	return Object.entries(object)
+		.map(([field, value]) => `<li>${field}: ${JSON.stringify(value)}`)
+		.join('')
+}
+
+$connect.addEventListener('click', connect)
+
+connect()
