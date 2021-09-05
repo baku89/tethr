@@ -148,7 +148,7 @@ export class PTPDevice extends EventTarget {
 	}
 
 	public waitEvent = async (code: number): Promise<PTPEventDetail> => {
-		return new Promise((resolve, reject) => {
+		return new Promise(resolve => {
 			this.addEventListener(EventCode.nameFor(code), e => {
 				const detail = (e as PTPEvent).detail
 				resolve(detail)
@@ -306,7 +306,7 @@ export class PTPDevice extends EventTarget {
 
 			const decoder = new PTPDecoder(res.data)
 
-			const dataSize = decoder.getUint32()
+			/*const dataSize = */ decoder.getUint32()
 			const type = decoder.getUint16()
 			const code = decoder.getUint16()
 			const transactionId = decoder.getUint32()

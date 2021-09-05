@@ -151,7 +151,7 @@ export class CameraControl {
 
 		const decoder = new PTPDecoder(res.data.slice(2))
 
-		const devicePropCode = decoder.getUint16()
+		/*const devicePropCode =*/ decoder.getUint16()
 		const dataType = decoder.getUint16()
 		const getSet = decoder.getUint8()
 

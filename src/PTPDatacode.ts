@@ -1,5 +1,3 @@
-type Table = Record<number, string>
-
 class PTPDatacode {
 	private nameToCode: Record<string, number>
 
