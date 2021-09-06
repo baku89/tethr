@@ -11,7 +11,7 @@ export class CameraControlSigma extends CameraControl {
 			code: 0x9035,
 			parameters: [0x0],
 		})
-		this.parseIFD(data)
+		this.decodeIFD(data)
 
 		await this.getCamDataGroup1()
 		await this.getCamDataGroup2()
@@ -216,7 +216,7 @@ export class CameraControlSigma extends CameraControl {
 		return group2
 	}
 
-	private parseIFD(data: ArrayBuffer) {
+	private decodeIFD(data: ArrayBuffer) {
 		const dataView = new DataView(data)
 		const size = data.byteLength
 		const asciiDecoder = new TextDecoder('ascii')
