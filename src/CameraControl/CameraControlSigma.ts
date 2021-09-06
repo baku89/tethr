@@ -6,13 +6,12 @@ export class CameraControlSigma extends CameraControl {
 	public open = async (): Promise<void> => {
 		await super.open()
 
-		const res = await this.device.performTransaction({
+		const {data} = await this.device.receiveData({
 			label: 'SigmaFP ConfigAPI',
-			opcode: 0x9035,
+			code: 0x9035,
 			parameters: [0x0],
 		})
-		if (!res.data) throw new Error('Failed to initialize Sigma fp')
-		this.parseIFD(res.data)
+		this.parseIFD(data)
 
 		await this.getCamDataGroup1()
 		await this.getCamDataGroup2()
@@ -34,9 +33,9 @@ export class CameraControlSigma extends CameraControl {
 
 		const data = this.encodeParameter(buffer)
 
-		const res = await this.device.performTransaction({
+		await this.device.sendData({
 			label: 'SigmaFP SetCamDataGroup2',
-			opcode: 0x9017,
+			code: 0x9017,
 			data,
 		})
 	}
@@ -50,16 +49,13 @@ export class CameraControlSigma extends CameraControl {
 		let id = 0
 
 		{
-			const res = await this.device.performTransaction({
+			const {data} = await this.device.receiveData({
 				label: 'SigmaFP GetCamCaptStatus',
-				opcode: 0x9015,
+				code: 0x9015,
 				parameters: [0x0],
 			})
 
-			if (!res.data) throw new Error()
-
-			const decoder = new PTPDecoder(res.data)
-			decoder.skip(1)
+			const decoder = new PTPDecoder(data.slice(1))
 			const result = {
 				imageId: decoder.getUint8(),
 				imageDBHead: decoder.getUint8(),
@@ -81,24 +77,21 @@ export class CameraControlSigma extends CameraControl {
 
 		const data = this.encodeParameter(buffer)
 
-		await this.device.performTransaction({
+		await this.device.sendData({
 			label: 'SigmaFP SnapCommand',
-			opcode: 0x901b,
+			code: 0x901b,
 			data,
 		})
 
 		let tries = 50
 		while (tries--) {
-			const res = await this.device.performTransaction({
+			const {data} = await this.device.receiveData({
 				label: 'SigmaFP GetCamCaptStatus',
-				opcode: 0x9015,
+				code: 0x9015,
 				parameters: [id],
 			})
 
-			if (!res.data) throw new Error()
-
-			const decoder = new PTPDecoder(res.data)
-			decoder.skip(1)
+			const decoder = new PTPDecoder(data.slice(1))
 			const result = {
 				imageId: decoder.getUint8(),
 				imageDBHead: decoder.getUint8(),
@@ -132,16 +125,15 @@ export class CameraControlSigma extends CameraControl {
 		}
 
 		{
-			const res = await this.device.performTransaction({
+			const res = await this.device.receiveData({
 				label: 'SigmaFP GetPictFileInfo2',
-				opcode: 0x902d,
+				code: 0x902d,
 			})
-			if (!res.data) throw new Error()
 		}
 
-		await this.device.performTransaction({
+		await this.device.sendData({
 			label: 'SigmaFP ClearImageDBSingle',
-			opcode: 0x901c,
+			code: 0x901c,
 			parameters: [id],
 			data: new ArrayBuffer(8),
 		})
@@ -150,14 +142,13 @@ export class CameraControlSigma extends CameraControl {
 	}
 
 	private async getCamDataGroup1() {
-		const res = await this.device.performTransaction({
+		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup1',
-			opcode: 0x9012,
+			code: 0x9012,
 			parameters: [0x0],
 		})
-		if (!res.data) throw new Error('Failed to initialize Sigma fp')
 
-		const decoder = new PTPDecoder(res.data)
+		const decoder = new PTPDecoder(data)
 		decoder.getUint8() // Size
 		decoder.getUint16() // FieldPreset
 
@@ -185,14 +176,13 @@ export class CameraControlSigma extends CameraControl {
 	}
 
 	private async getCamDataGroup2() {
-		const res = await this.device.performTransaction({
+		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup2',
-			opcode: 0x9013,
+			code: 0x9013,
 			parameters: [0x0],
 		})
-		if (!res.data) throw new Error('Failed to initialize Sigma fp')
 
-		const decoder = new PTPDecoder(res.data)
+		const decoder = new PTPDecoder(data)
 		decoder.getUint8()
 		decoder.getUint16() // FieldPreset
 
@@ -218,7 +208,7 @@ export class CameraControlSigma extends CameraControl {
 
 		console.log('group2=', group2)
 
-		const str = [...new Uint8Array(res.data)]
+		const str = [...new Uint8Array(data)]
 			.map(n => ('00' + n.toString(16)).slice(-2))
 			.join(' ')
 		console.log(str)

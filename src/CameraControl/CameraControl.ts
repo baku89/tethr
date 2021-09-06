@@ -1,6 +1,6 @@
 import {ObjectInfo} from '@/ObjectInfo'
 
-import {DevicePropCode, OpCode} from '../PTPDatacode'
+import {DevicePropCode, OpCode, ResCode} from '../PTPDatacode'
 import {PTPDecoder} from '../PTPDecoder'
 import {PTPDevice} from '../PTPDevice'
 import {
@@ -43,10 +43,14 @@ export class CameraControl {
 	public async open(): Promise<void> {
 		await this.device.open()
 
-		await this.device.performTransaction({
+		await this.device.sendCommand({
 			label: 'Open Session',
-			opcode: OpCode.for('OpenSession'),
+			code: OpCode.for('OpenSession'),
 			parameters: [0x1],
+			expectedResCodes: [
+				ResCode.for('OK'),
+				ResCode.for('Session Already Open'),
+			],
 		})
 
 		this._opened = true
@@ -55,9 +59,9 @@ export class CameraControl {
 	public close = async (): Promise<void> => {
 		this._opened = false
 
-		await this.device.performTransaction({
+		await this.device.sendCommand({
 			label: 'Close Session',
-			opcode: OpCode.for('CloseSession'),
+			code: OpCode.for('CloseSession'),
 		})
 		await this.device.close()
 	}
@@ -65,24 +69,23 @@ export class CameraControl {
 	public getDeviceInfo = this.device.getInfo
 
 	public getStorageInfo = async (): Promise<void> => {
-		const result = await this.device.performTransaction({
+		const {data} = await this.device.receiveData({
 			label: 'Get Storage IDs',
-			opcode: OpCode.for('GetStorageIDs'),
+			code: OpCode.for('GetStorageIDs'),
 		})
-		if (!result.data) throw new Error()
-		const decoder = new PTPDecoder(result.data)
+		const decoder = new PTPDecoder(data)
 
 		const storageIDs = decoder.getUint32Array()
 		console.log('Storage IDs =', storageIDs)
 
 		for (const id of storageIDs) {
-			const r = await this.device.performTransaction({
+			const {data} = await this.device.receiveData({
 				label: 'GetStorageInfo',
 				parameters: [id],
-				opcode: OpCode.for('GetStorageInfo'),
+				code: OpCode.for('GetStorageInfo'),
 			})
-			if (!r.data) throw new Error()
-			const storageInfo = new PTPDecoder(r.data)
+
+			const storageInfo = new PTPDecoder(data)
 
 			const info = {
 				storageType: PTPStorageType[storageInfo.getUint16()],
@@ -134,15 +137,13 @@ export class CameraControl {
 			return null
 		}
 
-		const res = await this.device.performTransaction({
+		const {data} = await this.device.receiveData({
 			label: 'GetDevicePropDesc',
-			opcode: OpCode.for('GetDevicePropDesc'),
+			code: OpCode.for('GetDevicePropDesc'),
 			parameters: [DevicePropCode.for(deviceProp)],
 		})
 
-		if (!res.data) return null
-
-		const decoder = new PTPDecoder(res.data.slice(2))
+		const decoder = new PTPDecoder(data.slice(2))
 
 		/*const devicePropCode =*/ decoder.getUint16()
 		const dataType = decoder.getUint16()
@@ -179,15 +180,13 @@ export class CameraControl {
 	}
 
 	protected getObjectInfo = async (objectID: number): Promise<ObjectInfo> => {
-		const res = await this.device.performTransaction({
+		const {data} = await this.device.receiveData({
 			label: 'GetObjectInfo',
-			opcode: OpCode.for('GetObjectInfo'),
+			code: OpCode.for('GetObjectInfo'),
 			parameters: [objectID],
 		})
 
-		if (!res.data) throw new Error('Invalid ObjectInfo')
-
-		const decoder = new PTPDecoder(res.data)
+		const decoder = new PTPDecoder(data)
 
 		return {
 			objectID,

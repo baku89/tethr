@@ -19,6 +19,7 @@ interface PTPSendOption {
 	label?: string
 	code: number
 	parameters?: number[]
+	expectedResCodes?: number[]
 }
 
 type PTPSendDataOption = PTPSendOption & {
@@ -134,6 +135,7 @@ export class PTPDevice extends EventTarget {
 		const {code} = option
 		const label = option.label ?? ''
 		const parameters = option.parameters ?? []
+		const expectedResCodes = option.expectedResCodes ?? [ResCode.for('OK')]
 		const id = this.generateTransactionId()
 
 		console.groupCollapsed(`Send Command [${label}]`)
@@ -142,8 +144,8 @@ export class PTPDevice extends EventTarget {
 
 		const {payload} = await this.waitTransferIn(
 			this.bulkIn,
-			PTPType.Command,
-			ResCode.for('OK'),
+			PTPType.Response,
+			expectedResCodes,
 			id
 		)
 
@@ -158,6 +160,7 @@ export class PTPDevice extends EventTarget {
 		const {code, data} = option
 		const label = option.label ?? ''
 		const parameters = option.parameters ?? []
+		const expectedResCodes = option.expectedResCodes ?? [ResCode.for('OK')]
 		const id = this.generateTransactionId()
 
 		console.groupCollapsed(`Send Data [${label}]`)
@@ -167,8 +170,8 @@ export class PTPDevice extends EventTarget {
 
 		const {payload} = await this.waitTransferIn(
 			this.bulkIn,
-			PTPType.Command,
-			ResCode.for('OK'),
+			PTPType.Response,
+			expectedResCodes,
 			id
 		)
 
@@ -198,7 +201,7 @@ export class PTPDevice extends EventTarget {
 		)
 		const {payload} = await this.waitTransferIn(
 			this.bulkIn,
-			PTPType.Command,
+			PTPType.Response,
 			ResCode.for('OK'),
 			id
 		)
@@ -289,9 +292,9 @@ export class PTPDevice extends EventTarget {
 
 	private waitTransferIn = async (
 		endpointNumber: number,
-		type: PTPType,
-		code: null | number = null,
-		transactionId: null | number = null
+		expectedType: PTPType,
+		expectedCode: null | number | number[] = null,
+		expectedTransactionId: null | number = null
 	) => {
 		if (!this.device) throw new Error()
 
@@ -302,23 +305,34 @@ export class PTPDevice extends EventTarget {
 		const decoder = new PTPDecoder(res.data)
 
 		/*const dataSize =*/ decoder.getUint32()
-		const resType = decoder.getUint16()
-		const resCode = decoder.getUint16()
-		const resTransactionId = decoder.getUint32()
+		const type = decoder.getUint16()
+		const code = decoder.getUint16()
+		const transactionId = decoder.getUint32()
 		const payload = decoder.getRest()
 
 		// Error checking
-		if (transactionId !== null && transactionId !== resTransactionId) {
+		if (
+			expectedTransactionId !== null &&
+			expectedTransactionId !== transactionId
+		) {
 			throw new Error('Different transaction ID')
 		}
-		if (type !== resType) {
-			throw new Error('Unexpected response type')
-		}
-		if (code !== null && code !== resCode) {
-			throw new Error(`Invalid response code ${ResCode.nameFor(code)}`)
+		if (expectedType !== type) {
+			throw new Error(`Expected response type: ${expectedType}, got: ${type}`)
 		}
 
-		return {code: resCode, transactionId: resTransactionId, payload}
+		if (expectedCode !== null) {
+			const codes = Array.isArray(expectedCode) ? expectedCode : [expectedCode]
+
+			if (!codes.includes(code)) {
+				const codesStr = codes.map(c => c.toString(16)).join(', ')
+				throw new Error(
+					`Expected response codes: [${codesStr}], ${code.toString(16)}`
+				)
+			}
+		}
+
+		return {code, transactionId, payload}
 	}
 
 	private checkForEvent = async () => {
