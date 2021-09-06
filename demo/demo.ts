@@ -2,6 +2,7 @@ import {connectCamera} from '../src/CameraControl'
 
 const $connect = document.getElementById('connect') as HTMLButtonElement
 const $takePicture = document.getElementById('takePicture') as HTMLButtonElement
+const $imageViewer = document.getElementById('imageViewer') as HTMLImageElement
 const $deviceInfo = document.getElementById('deviceInfo') as HTMLDivElement
 const $deviceProps = document.getElementById('deviceProps') as HTMLDivElement
 
@@ -21,9 +22,8 @@ const connect = async () => {
 	window.addEventListener('beforeunload', cam.close)
 
 	$takePicture.addEventListener('click', async () => {
-		const info = await cam.takePicture()
-		console.log(info)
-		if (info) await cam.getThumb(info.objectID)
+		const image = await cam.takePicture()
+		if (image) $imageViewer.src = image
 	})
 }
 
