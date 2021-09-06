@@ -226,8 +226,6 @@ export class PTPDevice extends EventTarget {
 		if (!res.data) throw new Error()
 		if (res.status !== 'ok') throw new Error(`Status = ${res.status}`)
 
-		// if (res.data.byteLength < 12) throw new E
-
 		const decoder = new PTPDecoder(res.data)
 
 		const dataSize = decoder.getUint32()
