@@ -87,8 +87,6 @@ export class CameraControlSigma extends CameraControl {
 			data,
 		})
 
-		await new Promise(r => setTimeout(r, 100))
-
 		let tries = 50
 		while (tries--) {
 			const res = await this.device.performTransaction({
