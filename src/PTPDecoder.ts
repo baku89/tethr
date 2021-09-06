@@ -57,6 +57,23 @@ export class PTPDecoder {
 		return ret
 	}
 
+	public getByteString = (): string => {
+		const start = this.byteOffset
+		let end = start
+		while (end < this.buffer.byteLength) {
+			console.log('offset=', this.byteOffset)
+			if (this.dataView.getUint8(end) === 0x00) break
+			end += 1
+		}
+
+		const chunk = this.buffer.slice(start, end)
+		const ret = String.fromCharCode(...new Uint8Array(chunk))
+
+		this.byteOffset = end + 1
+
+		return ret
+	}
+
 	public getString = (): string => {
 		const numChars = this.getUint8()
 

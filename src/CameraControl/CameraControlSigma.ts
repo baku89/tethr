@@ -54,10 +54,7 @@ export class CameraControlSigma extends CameraControl {
 				code: 0x9015,
 				parameters: [0x0],
 			})
-
 			const result = this.decodeCamCaptStatus(data)
-			console.log('status before snap=', result)
-
 			id = result.imageDBTail
 		}
 		// Snap
@@ -115,7 +112,8 @@ export class CameraControlSigma extends CameraControl {
 				code: 0x902d,
 			})
 
-			const decoder = new PTPDecoder(data)
+			const info = this.decodePictureFileInfoData2(data)
+			console.log(info)
 		}
 
 		await this.device.sendData({
@@ -207,6 +205,31 @@ export class CameraControlSigma extends CameraControl {
 			status: decoder.getUint16(),
 			destination: decoder.getUint8(),
 		}
+	}
+
+	private decodePictureFileInfoData2(data: ArrayBuffer) {
+		const decoder = new PTPDecoder(data)
+
+		decoder.skip(12)
+
+		const chunk0 = {
+			fileAddress: decoder.getUint32(),
+			fileSize: decoder.getUint32(),
+		}
+
+		decoder.skip(8)
+
+		const chunk1 = {
+			fileExt: decoder.getByteString(),
+			resolution: {
+				width: decoder.getUint16(),
+				height: decoder.getUint16(),
+			},
+			folderName: decoder.getByteString(),
+			fileName: decoder.getByteString(),
+		}
+
+		return {...chunk0, ...chunk1}
 	}
 
 	private decodeIFD(data: ArrayBuffer) {
