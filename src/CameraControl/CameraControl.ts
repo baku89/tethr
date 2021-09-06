@@ -142,6 +142,18 @@ export class CameraControl {
 		return null
 	}
 
+	public startLiveView = async (): Promise<void> => {
+		return
+	}
+
+	public stopLiveView = async (): Promise<void> => {
+		return
+	}
+
+	public getLiveView = async (): Promise<null | string> => {
+		return null
+	}
+
 	public getDevicePropDesc = async (
 		deviceProp: number
 	): Promise<null | DevicePropDesc<number>> => {
