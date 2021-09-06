@@ -280,7 +280,6 @@ export class CameraControlSigma extends CameraControl {
 	}
 
 	private decodeExposureMode(byte: number): null | ExposureMode {
-		console.log('decode', byte && 0b111)
 		switch (byte & 0b111) {
 			case 0x1:
 				return ExposureMode.P
