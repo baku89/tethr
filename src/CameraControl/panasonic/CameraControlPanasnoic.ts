@@ -1,6 +1,6 @@
-import {OpCode} from '../PTPDatacode'
-import {PTPDecoder} from '../PTPDecoder'
-import {Aperture, CameraControl, ExposureMode, ISO} from './CameraControl'
+import {OpCode} from '../../PTPDatacode'
+import {PTPDecoder} from '../../PTPDecoder'
+import {Aperture, CameraControl, ExposureMode, ISO} from '../CameraControl'
 
 export class CameraControlPanasnoic extends CameraControl {
 	public open = async (): Promise<void> => {

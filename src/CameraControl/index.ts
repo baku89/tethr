@@ -1,7 +1,7 @@
 import {PTPDevice} from '../PTPDevice'
 import {CameraControl} from './CameraControl'
-import {CameraControlPanasnoic} from './CameraControlPanasnoic'
-import {CameraControlSigma} from './Sigma/CameraControlSigma'
+import {CameraControlPanasnoic} from './panasonic/CameraControlPanasnoic'
+import {CameraControlSigma} from './sigma/CameraControlSigma'
 
 export async function connectCamera(): Promise<CameraControl> {
 	const device = new PTPDevice()
