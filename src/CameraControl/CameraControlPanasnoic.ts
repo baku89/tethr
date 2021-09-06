@@ -1,28 +1,26 @@
-import {ObjectInfo} from '@/ObjectInfo'
-
 import {CameraControl} from './CameraControl'
 
 export class CameraControlPanasnoic extends CameraControl {
 	public open = async (): Promise<void> => {
 		await super.open()
 
-		await this.device.performTransaction({
+		await this.device.sendCommand({
 			label: 'Panasonic OpenSession',
-			opcode: 0x9102,
+			code: 0x9102,
 			parameters: [0x00010001],
 		})
 	}
 
-	public takePicture = async (): Promise<ObjectInfo> => {
-		await this.device.performTransaction({
+	public takePicture = async (): Promise<null | string> => {
+		await this.device.sendCommand({
 			label: 'Panasonic Shutter',
-			opcode: 0x9404,
+			code: 0x9404,
 			parameters: [0x3000011],
 		})
 
 		const objectAdded = await this.device.waitEvent(0xc108)
 		const objectID = objectAdded.parameters[0]
 
-		return await this.getObjectInfo(objectID)
+		return null //await this.getObjectInfo(objectID)
 	}
 }
