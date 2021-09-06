@@ -1,5 +1,7 @@
-import {PTPDecoder} from '../PTPDecoder'
-import {BatteryLevel, CameraControl, ExposureMode} from './CameraControl'
+import {PTPDecoder} from '../../PTPDecoder'
+import {BatteryLevel, CameraControl, ExposureMode} from '../CameraControl'
+
+const SigmaAperture = new Map<number, number>([[1.0, 0b00001000]])
 
 export class CameraControlSigma extends CameraControl {
 	public open = async (): Promise<void> => {
@@ -16,8 +18,14 @@ export class CameraControlSigma extends CameraControl {
 		await this.getCamDataGroup2()
 	}
 
-	public getFocalLength = async (): Promise<number> => {
-		return (await this.getCamDataGroup1()).currentLensFocalLength
+	public getFocalLength = async () => {
+		const data = (await this.getCamDataGroup1()).currentLensFocalLength
+		return this.decodeFocalLength(data)
+	}
+
+	public getAperture = async () => {
+		const data = (await this.getCamDataGroup1()).aperture
+		return null
 	}
 
 	public getExposureMode = async (): Promise<null | ExposureMode> => {
@@ -164,7 +172,7 @@ export class CameraControlSigma extends CameraControl {
 			frameBufferState: decoder.getUint8(),
 			mediaFreeSpace: decoder.getUint16(),
 			mediaStatus: decoder.getUint8(),
-			currentLensFocalLength: this.decodeFocalLength(decoder.getUint16()),
+			currentLensFocalLength: decoder.getUint16(),
 			batteryLevel: this.decodeBatteryLevel(decoder.getUint8()),
 			abShotRemainNumber: decoder.getUint8(),
 			expCompExcludeAB: decoder.getUint8(),
