@@ -1,3 +1,4 @@
+import {OpCode} from '../PTPDatacode'
 import {CameraControl} from './CameraControl'
 
 export class CameraControlPanasnoic extends CameraControl {
@@ -21,6 +22,17 @@ export class CameraControlPanasnoic extends CameraControl {
 		const objectAdded = await this.device.waitEvent(0xc108)
 		const objectID = objectAdded.parameters[0]
 
-		return null //await this.getObjectInfo(objectID)
+		const objectInfo = await this.getObjectInfo(objectID)
+
+		const {data} = await this.device.receiveData({
+			label: 'GetObject',
+			code: OpCode.for('GetObject'),
+			parameters: [objectInfo.objectID],
+		})
+
+		const blob = new Blob([data], {type: 'image/jpeg'})
+		const url = window.URL.createObjectURL(blob)
+
+		return url
 	}
 }
