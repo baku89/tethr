@@ -127,4 +127,68 @@ export class CameraControlPanasnoic extends CameraControl {
 
 		return url
 	}
+
+	public startLiveView = async (): Promise<void> => {
+		await this.device.sendCommand({
+			label: 'Panasonic StartLiveView',
+			code: 0x9412,
+			parameters: [0x0d000010],
+		})
+	}
+
+	public stopLiveView = async (): Promise<void> => {
+		await this.device.sendCommand({
+			label: 'Panasonic StopLiveView',
+			code: 0x9412,
+			parameters: [0x0d000011],
+		})
+	}
+
+	public getLiveView = async (): Promise<null | string> => {
+		const {data} = await this.device.receiveData({
+			label: 'Panasonic LiveView',
+			code: 0x9706,
+			parameters: [],
+		})
+
+		// This does work somehow
+		const jpegData = data.slice(180) //CameraControlPanasnoic.extractJpeg(data)
+
+		const blob = new Blob([jpegData], {type: 'image/jpg'})
+		const url = window.URL.createObjectURL(blob)
+		return url
+	}
+
+	private static extractJpeg(buffer: ArrayBuffer) {
+		const bytes = new Uint8Array(buffer)
+		const len = bytes.length
+
+		// look for the JPEG SOI marker (0xFFD8) in data
+		let start: null | number = null
+
+		for (let i = 0; i + 1 < len; i++) {
+			if (bytes[i] === 0xff && bytes[i + 1] === 0xd8) {
+				// SOI found
+				start = i
+				break
+			}
+		}
+		if (start === null) /* no SOI -> no JPEG */ throw new Error('SOI not found')
+
+		// look for the JPEG SOI marker (0xFFD8) in data
+		let end: null | number = null
+
+		for (let i = start + 2; i + 1 < len; i++) {
+			if (bytes[i] === 0xff && bytes[i + 1] === 0xd9) {
+				// EOI found
+				end = i + 2
+				break
+			}
+		}
+		if (end === null)
+			// no EOI -> no JPEG
+			throw new Error('EOI not found')
+
+		return buffer.slice(start, end)
+	}
 }
