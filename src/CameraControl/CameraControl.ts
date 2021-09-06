@@ -120,7 +120,7 @@ export class CameraControl {
 		return (value - min) / (max - min)
 	}
 
-	public takePicture = async (): Promise<null | ObjectInfo> => {
+	public takePicture = async (): Promise<null | string> => {
 		return null
 	}
 
