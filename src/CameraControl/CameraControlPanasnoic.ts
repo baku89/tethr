@@ -15,6 +15,7 @@ export class CameraControlPanasnoic extends CameraControl {
 
 	public getAperture = async (): Promise<null | Aperture> => {
 		const {data} = await this.device.receiveData({
+			label: 'Panasonic GetAperture',
 			code: 0x9402,
 			parameters: [0x02000041],
 		})
@@ -30,6 +31,7 @@ export class CameraControlPanasnoic extends CameraControl {
 
 	public getShutterSpeed = async (): Promise<null | string> => {
 		const {data} = await this.device.receiveData({
+			label: 'Panasonic GetShutterSpeed',
 			code: 0x9402,
 			parameters: [0x02000031],
 		})
@@ -58,6 +60,7 @@ export class CameraControlPanasnoic extends CameraControl {
 
 	public getISO = async (): Promise<null | ISO> => {
 		const {data} = await this.device.receiveData({
+			label: 'Panasonic GetISO',
 			code: 0x9402,
 			parameters: [0x02000021],
 		})
