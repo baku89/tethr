@@ -80,23 +80,20 @@ export class PTPDecoder {
 		return parseTimestamp(timestamp, 'YYYYMMDDThhmmss')
 	}
 
-	public getUint16Array<T = number>(fmap?: (x: number) => T): T[] {
-		return this.getArray(this.getUint16, fmap)
+	public getUint16Array(): number[] {
+		return this.getArray(this.getUint16)
 	}
 
-	public getUint32Array<T = number>(fmap?: (x: number) => T): T[] {
-		return this.getArray(this.getUint32, fmap)
+	public getUint32Array(): number[] {
+		return this.getArray(this.getUint32)
 	}
 
 	public getRest(): ArrayBuffer {
 		return this.dataView.buffer.slice(this.byteOffset)
 	}
 
-	private getArray<T = number>(
-		getFunc: () => number,
-		fmap: (x: number) => T = x => x as never
-	): T[] {
+	private getArray(getFunc: () => number) {
 		const length = this.getUint32()
-		return new Array(length).fill(0).map(getFunc.bind(this)).map(fmap)
+		return new Array(length).fill(0).map(getFunc.bind(this))
 	}
 }

@@ -117,11 +117,13 @@ export class PTPDevice extends EventTarget {
 			VendorExtensionVersion: decoder.getUint16(),
 			VendorExtensionDesc: decoder.getString(),
 			FunctionalMode: decoder.getUint16(),
-			OperationsSupported: decoder.getUint16Array(OpCode.nameFor),
-			EventsSupported: decoder.getUint16Array(EventCode.nameFor),
-			DevicePropertiesSupported: decoder.getUint16Array(DevicePropCode.nameFor),
-			CaptureFormats: decoder.getUint16Array(ObjectFormatCode.nameFor),
-			ImageFormats: decoder.getUint16Array(ObjectFormatCode.nameFor),
+			OperationsSupported: decoder.getUint16Array().map(OpCode.nameFor),
+			EventsSupported: decoder.getUint16Array().map(EventCode.nameFor),
+			DevicePropertiesSupported: decoder
+				.getUint16Array()
+				.map(DevicePropCode.nameFor),
+			CaptureFormats: decoder.getUint16Array().map(ObjectFormatCode.nameFor),
+			ImageFormats: decoder.getUint16Array().map(ObjectFormatCode.nameFor),
 			Manufacturer: decoder.getString(),
 			Model: decoder.getString(),
 			DeviceVersion: decoder.getString(),
