@@ -61,7 +61,6 @@ export class PTPDecoder {
 		const start = this.byteOffset
 		let end = start
 		while (end < this.buffer.byteLength) {
-			console.log('offset=', this.byteOffset)
 			if (this.dataView.getUint8(end) === 0x00) break
 			end += 1
 		}
