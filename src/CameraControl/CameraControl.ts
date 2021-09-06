@@ -1,13 +1,7 @@
 import {DeviceInfo} from '@/DeviceInfo'
 import {ObjectInfo} from '@/ObjectInfo'
 
-import {
-	DevicePropCode,
-	EventCode,
-	ObjectFormatCode,
-	OpCode,
-	ResCode,
-} from '../PTPDatacode'
+import {DevicePropCode, OpCode, ResCode} from '../PTPDatacode'
 import {PTPDecoder} from '../PTPDecoder'
 import {PTPDevice} from '../PTPDevice'
 import {
@@ -52,12 +46,9 @@ export class CameraControl {
 
 		await this.device.sendCommand({
 			label: 'Open Session',
-			code: OpCode.for('OpenSession'),
+			code: OpCode.OpenSession,
 			parameters: [0x1],
-			expectedResCodes: [
-				ResCode.for('OK'),
-				ResCode.for('Session Already Open'),
-			],
+			expectedResCodes: [ResCode.OK, ResCode.SessionAlreadyOpen],
 		})
 
 		this._opened = true
@@ -68,7 +59,7 @@ export class CameraControl {
 
 		await this.device.sendCommand({
 			label: 'Close Session',
-			code: OpCode.for('CloseSession'),
+			code: OpCode.CloseSession,
 		})
 		await this.device.close()
 	}
@@ -80,7 +71,7 @@ export class CameraControl {
 	public getStorageInfo = async (): Promise<void> => {
 		const {data} = await this.device.receiveData({
 			label: 'Get Storage IDs',
-			code: OpCode.for('GetStorageIDs'),
+			code: OpCode.GetStorageIDs,
 		})
 		const decoder = new PTPDecoder(data)
 
@@ -91,7 +82,7 @@ export class CameraControl {
 			const {data} = await this.device.receiveData({
 				label: 'GetStorageInfo',
 				parameters: [id],
-				code: OpCode.for('GetStorageInfo'),
+				code: OpCode.GetStorageInfo,
 			})
 
 			const storageInfo = new PTPDecoder(data)
@@ -118,7 +109,7 @@ export class CameraControl {
 	}
 
 	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
-		const desc = await this.getDevicePropDesc('BatteryLevel')
+		const desc = await this.getDevicePropDesc(DevicePropCode.BatteryLevel)
 
 		if (!desc) return null
 
@@ -138,7 +129,7 @@ export class CameraControl {
 	}
 
 	public getDevicePropDesc = async (
-		deviceProp: string
+		deviceProp: number
 	): Promise<null | DevicePropDesc<number>> => {
 		const info = await this.getDeviceInfo()
 
@@ -148,8 +139,8 @@ export class CameraControl {
 
 		const {data} = await this.device.receiveData({
 			label: 'GetDevicePropDesc',
-			code: OpCode.for('GetDevicePropDesc'),
-			parameters: [DevicePropCode.for(deviceProp)],
+			code: OpCode.GetDevicePropDesc,
+			parameters: [deviceProp],
 		})
 
 		const decoder = new PTPDecoder(data.slice(2))
@@ -191,7 +182,7 @@ export class CameraControl {
 	protected getObjectInfo = async (objectID: number): Promise<ObjectInfo> => {
 		const {data} = await this.device.receiveData({
 			label: 'GetObjectInfo',
-			code: OpCode.for('GetObjectInfo'),
+			code: OpCode.GetObjectInfo,
 			parameters: [objectID],
 		})
 
@@ -226,7 +217,7 @@ export class CameraControl {
 	): Promise<DeviceInfo> {
 		const {data} = await device.receiveData({
 			label: 'GetDeviceInfo',
-			code: OpCode.for('GetDeviceInfo'),
+			code: OpCode.GetDeviceInfo,
 		})
 
 		const decoder = new PTPDecoder(data)
@@ -237,13 +228,11 @@ export class CameraControl {
 			VendorExtensionVersion: decoder.getUint16(),
 			VendorExtensionDesc: decoder.getString(),
 			FunctionalMode: decoder.getUint16(),
-			OperationsSupported: decoder.getUint16Array().map(OpCode.nameFor),
-			EventsSupported: decoder.getUint16Array().map(EventCode.nameFor),
-			DevicePropertiesSupported: decoder
-				.getUint16Array()
-				.map(DevicePropCode.nameFor),
-			CaptureFormats: decoder.getUint16Array().map(ObjectFormatCode.nameFor),
-			ImageFormats: decoder.getUint16Array().map(ObjectFormatCode.nameFor),
+			OperationsSupported: decoder.getUint16Array(),
+			EventsSupported: decoder.getUint16Array(),
+			DevicePropertiesSupported: decoder.getUint16Array(),
+			CaptureFormats: decoder.getUint16Array(),
+			ImageFormats: decoder.getUint16Array(),
 			Manufacturer: decoder.getString(),
 			Model: decoder.getString(),
 			DeviceVersion: decoder.getString(),

@@ -4,11 +4,11 @@ export interface DeviceInfo {
 	VendorExtensionVersion: number
 	VendorExtensionDesc: string
 	FunctionalMode: number
-	OperationsSupported: string[]
-	EventsSupported: string[]
-	DevicePropertiesSupported: string[]
-	CaptureFormats: string[]
-	ImageFormats: string[]
+	OperationsSupported: number[]
+	EventsSupported: number[]
+	DevicePropertiesSupported: number[]
+	CaptureFormats: number[]
+	ImageFormats: number[]
 	Manufacturer: string
 	Model: string
 	DeviceVersion: string

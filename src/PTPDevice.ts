@@ -1,4 +1,4 @@
-import {EventCode, ResCode} from './PTPDatacode'
+import {ResCode} from './PTPDatacode'
 
 enum PTPType {
 	Command = 0x1,
@@ -99,7 +99,7 @@ export class PTPDevice extends EventTarget {
 		const {code} = option
 		const label = option.label ?? ''
 		const parameters = option.parameters ?? []
-		const expectedResCodes = option.expectedResCodes ?? [ResCode.for('OK')]
+		const expectedResCodes = option.expectedResCodes ?? [ResCode.OK]
 		const id = this.generateTransactionId()
 
 		console.groupCollapsed(`Send Command [${label}]`)
@@ -124,7 +124,7 @@ export class PTPDevice extends EventTarget {
 		const {code, data} = option
 		const label = option.label ?? ''
 		const parameters = option.parameters ?? []
-		const expectedResCodes = option.expectedResCodes ?? [ResCode.for('OK')]
+		const expectedResCodes = option.expectedResCodes ?? [ResCode.OK]
 		const id = this.generateTransactionId()
 
 		console.groupCollapsed(`Send Data [${label}]`)
@@ -166,7 +166,7 @@ export class PTPDevice extends EventTarget {
 		const {payload} = await this.waitTransferIn(
 			this.bulkIn,
 			PTPType.Response,
-			ResCode.for('OK'),
+			ResCode.OK,
 			id
 		)
 
@@ -181,7 +181,7 @@ export class PTPDevice extends EventTarget {
 	public waitEvent = async (code: number): Promise<PTPEventDetail> => {
 		return new Promise(resolve => {
 			this.addEventListener(
-				EventCode.nameFor(code),
+				code.toString(16),
 				e => {
 					const detail = (e as PTPEvent).detail
 					resolve(detail)
@@ -319,7 +319,7 @@ export class PTPDevice extends EventTarget {
 			this.listeningEvent = false
 
 			const parameters = [...new Uint32Array(payload)]
-			const eventName = EventCode.nameFor(code)
+			const eventName = code.toString(16)
 
 			const detail: PTPEventDetail = {
 				eventName,
