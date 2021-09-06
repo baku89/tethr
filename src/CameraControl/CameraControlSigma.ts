@@ -127,6 +127,20 @@ export class CameraControlSigma extends CameraControl {
 		return url
 	}
 
+	public getLiveView = async (): Promise<null | string> => {
+		const {data} = await this.device.receiveData({
+			label: 'SigmaFP GetCamViewFrame',
+			code: 0x902b,
+			parameters: [],
+		})
+
+		const jpegData = CameraControl.extractJpeg(data)
+
+		const blob = new Blob([jpegData], {type: 'image/jpg'})
+		const url = window.URL.createObjectURL(blob)
+		return url
+	}
+
 	private async getCamDataGroup1() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup1',
