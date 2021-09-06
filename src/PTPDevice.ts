@@ -255,7 +255,10 @@ export class PTPDevice extends EventTarget {
 			'Request=',
 			'0x' + code.toString(16),
 			'id=' + transactionId,
-			'parameters=' + parameters
+			'parameters=' +
+				parameters
+					.map(n => '0x' + ('00000000' + n.toString(16)).substr(-8))
+					.join(', ')
 		)
 
 		if (sent.status !== 'ok') throw new Error()
@@ -300,7 +303,7 @@ export class PTPDevice extends EventTarget {
 	) => {
 		if (!this.device) throw new Error()
 
-		const res = await this.device.transferIn(endpointNumber, 512)
+		const res = await this.device.transferIn(endpointNumber, 0x8000000)
 		if (!res.data) throw new Error()
 		if (res.status !== 'ok') throw new Error(`Status = ${res.status}`)
 
