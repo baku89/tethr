@@ -5,8 +5,7 @@ import {CameraControlSigma} from './CameraControlSigma'
 
 export async function connectCamera(): Promise<CameraControl> {
 	const device = new PTPDevice()
-
-	await device.connect()
+	await device.open()
 
 	const info = await device.getInfo()
 

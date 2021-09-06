@@ -46,7 +46,7 @@ export class PTPDevice extends EventTarget {
 	private interruptIn = 0x0
 	private listeningEvent = false
 
-	public connect = async (): Promise<void> => {
+	public open = async (): Promise<void> => {
 		let [device] = await navigator.usb.getDevices()
 		if (!device) {
 			device = await navigator.usb.requestDevice({filters: []})

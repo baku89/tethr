@@ -41,7 +41,7 @@ export class CameraControl {
 	}
 
 	public async open(): Promise<void> {
-		await this.device.connect()
+		await this.device.open()
 
 		await this.device.performTransaction({
 			label: 'Open Session',
