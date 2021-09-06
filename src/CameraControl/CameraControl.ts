@@ -1,6 +1,13 @@
+import {DeviceInfo} from '@/DeviceInfo'
 import {ObjectInfo} from '@/ObjectInfo'
 
-import {DevicePropCode, OpCode, ResCode} from '../PTPDatacode'
+import {
+	DevicePropCode,
+	EventCode,
+	ObjectFormatCode,
+	OpCode,
+	ResCode,
+} from '../PTPDatacode'
 import {PTPDecoder} from '../PTPDecoder'
 import {PTPDevice} from '../PTPDevice'
 import {
@@ -66,7 +73,9 @@ export class CameraControl {
 		await this.device.close()
 	}
 
-	public getDeviceInfo = this.device.getInfo
+	public getDeviceInfo = async (): Promise<DeviceInfo> => {
+		return await CameraControl.getDeviceInfo(this.device)
+	}
 
 	public getStorageInfo = async (): Promise<void> => {
 		const {data} = await this.device.receiveData({
@@ -131,7 +140,7 @@ export class CameraControl {
 	public getDevicePropDesc = async (
 		deviceProp: string
 	): Promise<null | DevicePropDesc<number>> => {
-		const info = await this.device.getInfo()
+		const info = await this.getDeviceInfo()
 
 		if (!info.DevicePropertiesSupported.includes(deviceProp)) {
 			return null
@@ -210,5 +219,37 @@ export class CameraControl {
 			modificationDate: decoder.getDate(),
 			keywords: decoder.getString(),
 		}
+	}
+
+	public static getDeviceInfo = async function (
+		device: PTPDevice
+	): Promise<DeviceInfo> {
+		const {data} = await device.receiveData({
+			label: 'GetDeviceInfo',
+			code: OpCode.for('GetDeviceInfo'),
+		})
+
+		const decoder = new PTPDecoder(data)
+
+		const info: DeviceInfo = {
+			StandardVersion: decoder.getUint16(),
+			VendorExtensionID: decoder.getUint32(),
+			VendorExtensionVersion: decoder.getUint16(),
+			VendorExtensionDesc: decoder.getString(),
+			FunctionalMode: decoder.getUint16(),
+			OperationsSupported: decoder.getUint16Array().map(OpCode.nameFor),
+			EventsSupported: decoder.getUint16Array().map(EventCode.nameFor),
+			DevicePropertiesSupported: decoder
+				.getUint16Array()
+				.map(DevicePropCode.nameFor),
+			CaptureFormats: decoder.getUint16Array().map(ObjectFormatCode.nameFor),
+			ImageFormats: decoder.getUint16Array().map(ObjectFormatCode.nameFor),
+			Manufacturer: decoder.getString(),
+			Model: decoder.getString(),
+			DeviceVersion: decoder.getString(),
+			SerialNumber: decoder.getString(),
+		}
+
+		return info
 	}
 }

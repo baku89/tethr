@@ -1,12 +1,4 @@
-import {DeviceInfo} from './DeviceInfo'
-import {
-	DevicePropCode,
-	EventCode,
-	ObjectFormatCode,
-	OpCode,
-	ResCode,
-} from './PTPDatacode'
-import {PTPDecoder} from './PTPDecoder'
+import {EventCode, ResCode} from './PTPDatacode'
 
 enum PTPType {
 	Command = 0x1,
@@ -101,36 +93,6 @@ export class PTPDevice extends EventTarget {
 	public close = async (): Promise<void> => {
 		if (!this.device) return
 		await this.device.close()
-	}
-
-	public getInfo = async (): Promise<DeviceInfo> => {
-		const {data} = await this.receiveData({
-			label: 'GetDeviceInfo',
-			code: OpCode.for('GetDeviceInfo'),
-		})
-
-		const decoder = new PTPDecoder(data)
-
-		const info: DeviceInfo = {
-			StandardVersion: decoder.getUint16(),
-			VendorExtensionID: decoder.getUint32(),
-			VendorExtensionVersion: decoder.getUint16(),
-			VendorExtensionDesc: decoder.getString(),
-			FunctionalMode: decoder.getUint16(),
-			OperationsSupported: decoder.getUint16Array().map(OpCode.nameFor),
-			EventsSupported: decoder.getUint16Array().map(EventCode.nameFor),
-			DevicePropertiesSupported: decoder
-				.getUint16Array()
-				.map(DevicePropCode.nameFor),
-			CaptureFormats: decoder.getUint16Array().map(ObjectFormatCode.nameFor),
-			ImageFormats: decoder.getUint16Array().map(ObjectFormatCode.nameFor),
-			Manufacturer: decoder.getString(),
-			Model: decoder.getString(),
-			DeviceVersion: decoder.getString(),
-			SerialNumber: decoder.getString(),
-		}
-
-		return info
 	}
 
 	public sendCommand = async (option: PTPSendOption): Promise<PTPResponse> => {
@@ -303,24 +265,27 @@ export class PTPDevice extends EventTarget {
 	) => {
 		if (!this.device) throw new Error()
 
-		const res = await this.device.transferIn(endpointNumber, 0x8000000)
-		if (!res.data) throw new Error()
-		if (res.status !== 'ok') throw new Error(`Status = ${res.status}`)
+		const {data, status} = await this.device.transferIn(
+			endpointNumber,
+			0x8000000
+		)
+		if (!data) throw new Error()
+		if (status !== 'ok') throw new Error(`Status = ${status}`)
 
-		const decoder = new PTPDecoder(res.data)
-
-		/*const dataSize =*/ decoder.getUint32()
-		const type = decoder.getUint16()
-		const code = decoder.getUint16()
-		const transactionId = decoder.getUint32()
-		const payload = decoder.getRest()
+		const type = data.getUint16(4, true)
+		const code = data.getUint16(6, true)
+		const transactionId = data.getUint32(8, true)
+		const payload = data.buffer.slice(12)
 
 		// Error checking
 		if (
 			expectedTransactionId !== null &&
 			expectedTransactionId !== transactionId
 		) {
-			throw new Error('Different transaction ID')
+			console.log(type, code)
+			throw new Error(
+				`Expected transaction ID: ${expectedTransactionId}, got: ${transactionId}`
+			)
 		}
 		if (expectedType !== type) {
 			throw new Error(`Expected response type: ${expectedType}, got: ${type}`)

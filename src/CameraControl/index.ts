@@ -7,7 +7,7 @@ export async function connectCamera(): Promise<CameraControl> {
 	const device = new PTPDevice()
 	await device.open()
 
-	const info = await device.getInfo()
+	const info = await CameraControl.getDeviceInfo(device)
 
 	let camera: CameraControl | null = null
 
