@@ -72,7 +72,7 @@ export class CameraControlPanasnoic extends CameraControl {
 
 		const {data} = await this.device.receiveData({
 			label: 'GetObject',
-			code: OpCode.for('GetObject'),
+			code: OpCode.GetObject,
 			parameters: [objectInfo.objectID],
 		})
 
