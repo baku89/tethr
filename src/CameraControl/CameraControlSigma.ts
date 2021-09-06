@@ -131,6 +131,14 @@ export class CameraControlSigma extends CameraControl {
 			await new Promise(r => setTimeout(r, 500))
 		}
 
+		{
+			const res = await this.device.performTransaction({
+				label: 'SigmaFP GetPictFileInfo2',
+				opcode: 0x902d,
+			})
+			if (!res.data) throw new Error()
+		}
+
 		await this.device.performTransaction({
 			label: 'SigmaFP ClearImageDBSingle',
 			opcode: 0x901c,
