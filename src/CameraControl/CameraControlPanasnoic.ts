@@ -12,6 +12,33 @@ export class CameraControlPanasnoic extends CameraControl {
 		})
 	}
 
+	public getExposureMode = async (): Promise<null | ExposureMode> => {
+		const {data} = await this.device.receiveData({
+			label: 'Panasonic GetProperty',
+			code: 0x9402,
+			parameters: [0x02000082],
+		})
+
+		const decoder = new PTPDecoder(data)
+
+		/*const dpc =*/ decoder.getUint32()
+		decoder.skip(4)
+		const mode = decoder.getUint16()
+
+		switch (mode) {
+			case 0x0:
+				return ExposureMode.P
+			case 0x1:
+				return ExposureMode.A
+			case 0x2:
+				return ExposureMode.S
+			case 0x3:
+				return ExposureMode.M
+		}
+
+		return null
+	}
+
 	public takePicture = async (): Promise<null | string> => {
 		await this.device.sendCommand({
 			label: 'Panasonic Shutter',
