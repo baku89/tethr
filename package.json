@@ -3,11 +3,13 @@
 	"version": "0.0.0",
 	"scripts": {
 		"dev": "parcel demo/index.html",
-		"lint": "eslint --fix --ext .ts --ignore-path .gitignore ."
+		"lint": "eslint --fix --ext .ts --ignore-path .gitignore .",
+		"check": "tsc --noEmit"
 	},
 	"license": "MIT",
 	"devDependencies": {
-		"@parcel/validator-eslint": "^2.0.0-alpha.3",
+		"@parcel/transformer-typescript-tsc": "2.0.0-rc.0",
+		"@parcel/validator-typescript": "^2.0.0-rc.0",
 		"@types/w3c-web-usb": "^1.0.5",
 		"@typescript-eslint/eslint-plugin": "^4.28.2",
 		"@typescript-eslint/parser": "^4.28.2",
