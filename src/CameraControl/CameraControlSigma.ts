@@ -55,15 +55,7 @@ export class CameraControlSigma extends CameraControl {
 				parameters: [0x0],
 			})
 
-			const decoder = new PTPDecoder(data.slice(1))
-			const result = {
-				imageId: decoder.getUint8(),
-				imageDBHead: decoder.getUint8(),
-				imageDBTail: decoder.getUint8(),
-				status: decoder.getUint16(),
-				destination: decoder.getUint8(),
-			}
-
+			const result = this.decodeCamCaptStatus(data)
 			console.log('status before snap=', result)
 
 			id = result.imageDBTail
@@ -91,14 +83,7 @@ export class CameraControlSigma extends CameraControl {
 				parameters: [id],
 			})
 
-			const decoder = new PTPDecoder(data.slice(1))
-			const result = {
-				imageId: decoder.getUint8(),
-				imageDBHead: decoder.getUint8(),
-				imageDBTail: decoder.getUint8(),
-				status: decoder.getUint16(),
-				destination: decoder.getUint8(),
-			}
+			const result = this.decodeCamCaptStatus(data)
 
 			// Failure
 			if ((result.status & 0xf000) === 0x6000) {
@@ -125,10 +110,12 @@ export class CameraControlSigma extends CameraControl {
 		}
 
 		{
-			const res = await this.device.receiveData({
+			const {data} = await this.device.receiveData({
 				label: 'SigmaFP GetPictFileInfo2',
 				code: 0x902d,
 			})
+
+			const decoder = new PTPDecoder(data)
 		}
 
 		await this.device.sendData({
@@ -208,12 +195,18 @@ export class CameraControlSigma extends CameraControl {
 
 		console.log('group2=', group2)
 
-		const str = [...new Uint8Array(data)]
-			.map(n => ('00' + n.toString(16)).slice(-2))
-			.join(' ')
-		console.log(str)
-
 		return group2
+	}
+
+	private decodeCamCaptStatus(data: ArrayBuffer) {
+		const decoder = new PTPDecoder(data.slice(1))
+		return {
+			imageId: decoder.getUint8(),
+			imageDBHead: decoder.getUint8(),
+			imageDBTail: decoder.getUint8(),
+			status: decoder.getUint16(),
+			destination: decoder.getUint8(),
+		}
 	}
 
 	private decodeIFD(data: ArrayBuffer) {
@@ -244,14 +237,6 @@ export class CameraControlSigma extends CameraControl {
 
 			console.log(`IFD entry ${i}:`, {tag, type, count, valueOffset, value})
 		}
-
-		console.log('IFD=', asciiDecoder.decode(data))
-
-		const str = [...new Uint8Array(data)]
-			.map(n => ('00' + n.toString(16)).slice(-2))
-			.join(' ')
-
-		console.log('ConfigAPI IFD=', str)
 	}
 
 	private decodeFocalLength(byte: number) {
