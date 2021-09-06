@@ -33,10 +33,12 @@ const connect = async () => {
 
 	await cam.startLiveView()
 	async function updateLiveview() {
-		const url = await cam.getLiveView()
-		if (url) $liveview.src = url
-
-		requestAnimationFrame(updateLiveview)
+		try {
+			const url = await cam.getLiveView()
+			if (url) $liveview.src = url
+		} finally {
+			requestAnimationFrame(updateLiveview)
+		}
 	}
 	updateLiveview()
 }
