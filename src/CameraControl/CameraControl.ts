@@ -12,6 +12,8 @@ import {
 
 export type ISO = 'auto' | number
 
+export type Aperture = 'auto' | number
+
 export enum ExposureMode {
 	P = 'P',
 	A = 'A',
@@ -101,6 +103,18 @@ export class CameraControl {
 	}
 
 	public getFocalLength = async (): Promise<null | number> => {
+		return null
+	}
+
+	public getAperture = async (): Promise<null | Aperture> => {
+		return null
+	}
+
+	public getShutterSpeed = async (): Promise<null | string> => {
+		return null
+	}
+
+	public getISO = async (): Promise<null | ISO> => {
 		return null
 	}
 

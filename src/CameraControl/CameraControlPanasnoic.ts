@@ -1,6 +1,6 @@
 import {OpCode} from '../PTPDatacode'
 import {PTPDecoder} from '../PTPDecoder'
-import {CameraControl, ExposureMode, ISO} from './CameraControl'
+import {Aperture, CameraControl, ExposureMode, ISO} from './CameraControl'
 
 export class CameraControlPanasnoic extends CameraControl {
 	public open = async (): Promise<void> => {
@@ -11,6 +11,49 @@ export class CameraControlPanasnoic extends CameraControl {
 			code: 0x9102,
 			parameters: [0x00010001],
 		})
+	}
+
+	public getAperture = async (): Promise<null | Aperture> => {
+		const {data} = await this.device.receiveData({
+			code: 0x9402,
+			parameters: [0x02000041],
+		})
+
+		const decoder = new PTPDecoder(data)
+
+		/*const dpc =*/ decoder.getUint32()
+		/*const bytes = */ decoder.getUint32()
+		const aperture: Aperture = decoder.getUint16() / 10
+
+		return aperture
+	}
+
+	public getShutterSpeed = async (): Promise<null | string> => {
+		const {data} = await this.device.receiveData({
+			code: 0x9402,
+			parameters: [0x02000031],
+		})
+
+		const decoder = new PTPDecoder(data)
+
+		/*const dpc =*/ decoder.getUint32()
+		/*const bytes = */ decoder.getUint32()
+		const value = decoder.getUint32()
+
+		switch (value) {
+			case 0xffffffff:
+				return 'bulb'
+			case 0x0fffffff:
+				return 'auto'
+			case 0x0ffffffe:
+				return 'Unknown'
+			default:
+				if ((value & 0x80000000) === 0x00000000) {
+					return '1/' + value / 1000
+				} else {
+					return ((value & 0x7fffffff) / 1000).toString()
+				}
+		}
 	}
 
 	public getISO = async (): Promise<null | ISO> => {

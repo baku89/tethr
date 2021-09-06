@@ -17,6 +17,9 @@ const connect = async () => {
 		focalLength: await cam.getFocalLength(),
 		batteryLevel: await cam.getBatteryLevel(),
 		exposureMode: await cam.getExposureMode(),
+		iso: await cam.getISO(),
+		aperture: await cam.getAperture(),
+		shutterSpeed: await cam.getShutterSpeed(),
 	})
 
 	window.addEventListener('beforeunload', cam.close)
