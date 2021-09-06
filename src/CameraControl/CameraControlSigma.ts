@@ -1,4 +1,3 @@
-import {ObjectInfo} from '../ObjectInfo'
 import {PTPDecoder} from '../PTPDecoder'
 import {BatteryLevel, CameraControl, ExposureMode} from './CameraControl'
 
@@ -44,19 +43,17 @@ export class CameraControlSigma extends CameraControl {
 		return (await this.getCamDataGroup1()).batteryLevel
 	}
 
-	public takePicture = async (): Promise<null | ObjectInfo> => {
+	public takePicture = async (): Promise<null | string> => {
 		// https://github.com/gphoto/libgphoto2/blob/96925915768917ef6c245349b787baa275df608c/camlibs/ptp2/library.c#L5426
-		let id = 0
 
-		{
-			const {data} = await this.device.receiveData({
-				label: 'SigmaFP GetCamCaptStatus',
-				code: 0x9015,
-				parameters: [0x0],
-			})
-			const result = this.decodeCamCaptStatus(data)
-			id = result.imageDBTail
-		}
+		const {data: camCaptStatusData} = await this.device.receiveData({
+			label: 'SigmaFP GetCamCaptStatus',
+			code: 0x9015,
+			parameters: [0x0],
+		})
+		const camCaptStatus = this.decodeCamCaptStatus(camCaptStatusData)
+		const id = camCaptStatus.imageDBTail
+
 		// Snap
 		const buffer = new ArrayBuffer(2)
 		const dataView = new DataView(buffer)
@@ -64,12 +61,10 @@ export class CameraControlSigma extends CameraControl {
 		dataView.setUint8(0, 0x02)
 		dataView.setUint8(1, 0x02)
 
-		const data = this.encodeParameter(buffer)
-
 		await this.device.sendData({
 			label: 'SigmaFP SnapCommand',
 			code: 0x901b,
-			data,
+			data: this.encodeParameter(buffer),
 		})
 
 		let tries = 50
@@ -106,15 +101,21 @@ export class CameraControlSigma extends CameraControl {
 			await new Promise(r => setTimeout(r, 500))
 		}
 
-		{
-			const {data} = await this.device.receiveData({
-				label: 'SigmaFP GetPictFileInfo2',
-				code: 0x902d,
-			})
+		const {data: pictInfoData} = await this.device.receiveData({
+			label: 'SigmaFP GetPictFileInfo2',
+			code: 0x902d,
+		})
+		const pictInfo = this.decodePictureFileInfoData2(pictInfoData)
 
-			const info = this.decodePictureFileInfoData2(data)
-			console.log(info)
-		}
+		// Get file
+		const {data: pictFileData} = await this.device.receiveData({
+			label: 'SigmaFP GetBigPartialPictFile',
+			code: 0x9022,
+			parameters: [pictInfo.fileAddress, 0x0, pictInfo.fileSize],
+		})
+
+		const blob = new Blob([pictFileData.slice(4)], {type: 'image/jpeg'})
+		const url = window.URL.createObjectURL(blob)
 
 		await this.device.sendData({
 			label: 'SigmaFP ClearImageDBSingle',
@@ -123,7 +124,7 @@ export class CameraControlSigma extends CameraControl {
 			data: new ArrayBuffer(8),
 		})
 
-		return null
+		return url
 	}
 
 	private async getCamDataGroup1() {
