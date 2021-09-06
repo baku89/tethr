@@ -1,5 +1,6 @@
 import {OpCode} from '../PTPDatacode'
-import {CameraControl} from './CameraControl'
+import {PTPDecoder} from '../PTPDecoder'
+import {CameraControl, ExposureMode, ISO} from './CameraControl'
 
 export class CameraControlPanasnoic extends CameraControl {
 	public open = async (): Promise<void> => {
@@ -10,6 +11,24 @@ export class CameraControlPanasnoic extends CameraControl {
 			code: 0x9102,
 			parameters: [0x00010001],
 		})
+	}
+
+	public getISO = async (): Promise<null | ISO> => {
+		const {data} = await this.device.receiveData({
+			code: 0x9402,
+			parameters: [0x02000021],
+		})
+
+		const decoder = new PTPDecoder(data)
+
+		/*const dpc =*/ decoder.getUint32()
+		/*const bytes = */ decoder.getUint32()
+		let iso: ISO = decoder.getUint32()
+
+		if (iso === 0xffffffff) iso = 'auto'
+		if (iso === 0xfffffffe) iso = 'auto' // i-ISO
+
+		return iso
 	}
 
 	public getExposureMode = async (): Promise<null | ExposureMode> => {
