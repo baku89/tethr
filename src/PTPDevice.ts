@@ -149,10 +149,14 @@ export class PTPDevice extends EventTarget {
 
 	public waitEvent = async (code: number): Promise<PTPEventDetail> => {
 		return new Promise(resolve => {
-			this.addEventListener(EventCode.nameFor(code), e => {
-				const detail = (e as PTPEvent).detail
-				resolve(detail)
-			})
+			this.addEventListener(
+				EventCode.nameFor(code),
+				e => {
+					const detail = (e as PTPEvent).detail
+					resolve(detail)
+				},
+				{once: true}
+			)
 		})
 	}
 
