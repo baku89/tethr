@@ -13,6 +13,16 @@ export class TethrPanasnoic extends Tethr {
 		})
 	}
 
+	public close = async (): Promise<void> => {
+		await this.device.sendCommand({
+			label: 'Panasonic CloseSession',
+			code: 0x9103,
+			parameters: [0x00010001],
+		})
+
+		await super.open()
+	}
+
 	public getAperture = async (): Promise<null | Aperture> => {
 		const {data} = await this.device.receiveData({
 			label: 'Panasonic GetAperture',
