@@ -4,7 +4,7 @@ import App from './App.vue'
 
 createApp(App).mount('#app')
 
-// import {connectCamera} from '../src/CameraControl'
+// import {connectCamera} from '../src/Tethr'
 
 // const $connect = document.getElementById('connect') as HTMLButtonElement
 // const $takePicture = document.getElementById('takePicture') as HTMLButtonElement

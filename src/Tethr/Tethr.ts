@@ -40,7 +40,7 @@ export interface PropDescEnum<T> {
 	range: T[]
 }
 
-export class CameraControl {
+export class Tethr {
 	protected _opened = false
 
 	public constructor(protected device: PTPDevice) {}
@@ -75,7 +75,7 @@ export class CameraControl {
 	}
 
 	public getDeviceInfo = async (): Promise<DeviceInfo> => {
-		return await CameraControl.getDeviceInfo(this.device)
+		return await Tethr.getDeviceInfo(this.device)
 	}
 
 	public getStorageInfo = async (): Promise<void> => {

@@ -1,8 +1,8 @@
 import {OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
-import {Aperture, CameraControl, ExposureMode, ISO} from '../CameraControl'
+import {Aperture, ExposureMode, ISO, Tethr} from '../Tethr'
 
-export class CameraControlPanasnoic extends CameraControl {
+export class TethrPanasnoic extends Tethr {
 	public open = async (): Promise<void> => {
 		await super.open()
 
@@ -154,7 +154,7 @@ export class CameraControlPanasnoic extends CameraControl {
 		if (code !== ResCode.OK) return null
 
 		// This does work somehow
-		const jpegData = data.slice(180) //CameraControlPanasnoic.extractJpeg(data)
+		const jpegData = data.slice(180) //TethrPanasnoic.extractJpeg(data)
 
 		const blob = new Blob([jpegData], {type: 'image/jpg'})
 		const url = window.URL.createObjectURL(blob)

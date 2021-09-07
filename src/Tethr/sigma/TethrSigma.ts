@@ -5,11 +5,11 @@ import {PTPDecoder} from '../../PTPDecoder'
 import {
 	Aperture,
 	BatteryLevel,
-	CameraControl,
 	ExposureMode,
 	ISO,
 	PropDescEnum,
-} from '../CameraControl'
+	Tethr,
+} from '../Tethr'
 import {
 	SigmaApexApertureHalf,
 	SigmaApexApertureOneThird,
@@ -20,7 +20,7 @@ import {
 	SigmaApexShutterSpeedOneThird,
 } from './SigmaApexTable'
 
-export class CameraControlSigma extends CameraControl {
+export class TethrSigma extends Tethr {
 	public open = async (): Promise<void> => {
 		await super.open()
 
@@ -352,7 +352,7 @@ export class CameraControlSigma extends CameraControl {
 
 		if (code !== ResCode.OK) return null
 
-		const jpegData = CameraControl.extractJpeg(data)
+		const jpegData = Tethr.extractJpeg(data)
 
 		const blob = new Blob([jpegData], {type: 'image/jpg'})
 		const url = window.URL.createObjectURL(blob)

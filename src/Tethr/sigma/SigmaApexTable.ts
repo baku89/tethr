@@ -1,6 +1,6 @@
 import {BiMap} from 'bim'
 
-import {BatteryLevel, ExposureMode, ISO} from '../CameraControl'
+import {BatteryLevel, ExposureMode, ISO} from '../Tethr'
 
 export const SigmaApexISO = new BiMap<number, ISO>([
 	[0b00000000, 6],

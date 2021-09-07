@@ -1,13 +1,13 @@
 import {ref, watch} from 'vue'
 
-import {Aperture, CameraControl, connectCamera} from '../src/CameraControl'
-import {ExposureMode, PropDescEnum} from '../src/CameraControl/CameraControl'
+import {Aperture, connectCamera, Tethr} from '../src/Tethr'
+import {ExposureMode, PropDescEnum} from '../src/Tethr/Tethr'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 
-export function useCameraControl() {
-	let camera: CameraControl | null = null
+export function useTethr() {
+	let camera: Tethr | null = null
 
 	const connected = ref(false)
 

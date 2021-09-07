@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<h1>Camera Control</h1>
+		<h1>Tethr</h1>
 
 		<button @click="toggleCameraConnection">
 			{{ connected ? 'Dionnect' : 'Connect' }}
@@ -47,7 +47,7 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-import {useCameraControl} from './useCameraControl'
+import {useTethr} from './useTethr'
 
 export default defineComponent({
 	setup() {
@@ -61,7 +61,7 @@ export default defineComponent({
 			lastPictureURL,
 			toggleCameraConnection,
 			takePicture,
-		} = useCameraControl()
+		} = useTethr()
 
 		return {
 			connected,
