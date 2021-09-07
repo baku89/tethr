@@ -29,7 +29,7 @@ type PTPDataResponse = PTPResponse & {
 	data: ArrayBuffer
 }
 
-interface PTPTransferIn {
+interface PTPInTransferResult {
 	type: PTPType
 	code: number
 	transactionId: number
@@ -227,10 +227,10 @@ export class PTPDevice extends EventEmitter {
 		}
 	}
 
-	public waitEvent = (code: number): Promise<PTPTransferIn> => {
+	public waitEvent = (code: number): Promise<PTPInTransferResult> => {
 		return this.onceAsync(
 			'event:0x' + code.toString(16)
-		) as Promise<PTPTransferIn>
+		) as Promise<PTPInTransferResult>
 	}
 
 	private transferOutCommand = async (
@@ -367,7 +367,7 @@ export class PTPDevice extends EventEmitter {
 
 		const eventName = transactionId.toString()
 
-		return (await this.onceAsync(eventName)) as PTPTransferIn
+		return (await this.onceAsync(eventName)) as PTPInTransferResult
 	}
 
 	private generateTransactionId = (): number => {
