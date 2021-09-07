@@ -34,6 +34,12 @@ export interface DevicePropDesc<T> {
 	}
 }
 
+export interface PropDescEnum<T> {
+	canRead: boolean
+	canWrite: boolean
+	range: T[]
+}
+
 export class CameraControl {
 	protected _opened = false
 
@@ -114,6 +120,14 @@ export class CameraControl {
 		return false
 	}
 
+	public getApertureDesc = async (): Promise<PropDescEnum<Aperture>> => {
+		return {
+			canRead: false,
+			canWrite: false,
+			range: [],
+		}
+	}
+
 	public getShutterSpeed = async (): Promise<null | string> => {
 		return null
 	}
@@ -122,12 +136,28 @@ export class CameraControl {
 		return false
 	}
 
+	public getShutterSpeedDesc = async (): Promise<PropDescEnum<string>> => {
+		return {
+			canRead: false,
+			canWrite: false,
+			range: [],
+		}
+	}
+
 	public getISO = async (): Promise<null | ISO> => {
 		return null
 	}
 
 	public setISO = async (iso: ISO): Promise<boolean> => {
 		return false
+	}
+
+	public getISODesc = async (): Promise<PropDescEnum<ISO>> => {
+		return {
+			canRead: false,
+			canWrite: false,
+			range: [],
+		}
 	}
 
 	public getExposureMode = async (): Promise<null | ExposureMode> => {
