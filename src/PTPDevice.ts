@@ -167,7 +167,9 @@ export class PTPDevice extends EventEmitter {
 
 			if (!expectedResCodes.includes(res.code)) {
 				throw new Error(
-					`Expected rescode=[${expectedResCodes}], got= ${res.code}`
+					`Expected rescode=[${expectedResCodes.map(s =>
+						s.toString(16)
+					)}], got= ${res.code.toString(16)}`
 				)
 			}
 
