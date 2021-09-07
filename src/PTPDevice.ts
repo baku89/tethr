@@ -1,3 +1,5 @@
+import EventEmitter from 'eventemitter3'
+
 import {ResCode} from './PTPDatacode'
 
 enum PTPType {
@@ -19,6 +21,7 @@ type PTPSendDataOption = PTPSendOption & {
 }
 
 interface PTPResponse {
+	code: number
 	parameters: number[]
 }
 
@@ -26,23 +29,21 @@ type PTPDataResponse = PTPResponse & {
 	data: ArrayBuffer
 }
 
-interface PTPEventDetail {
-	eventName: string
+interface PTPTransferIn {
+	type: PTPType
 	code: number
 	transactionId: number
-	parameters: number[]
+	payload: ArrayBuffer
 }
 
-export type PTPEvent = CustomEvent<PTPEventDetail>
-
-export class PTPDevice extends EventTarget {
+export class PTPDevice extends EventEmitter {
 	private device: USBDevice | undefined
 	private transactionId = 0x00000000
 
 	private bulkOut = 0x0
 	private bulkIn = 0x0
 	private interruptIn = 0x0
-	private listeningEvent = false
+	private _opened = false
 
 	public open = async (): Promise<void> => {
 		let [device] = await navigator.usb.getDevices()
@@ -82,17 +83,26 @@ export class PTPDevice extends EventTarget {
 		this.bulkIn = endpointIn.endpointNumber
 		this.interruptIn = endpointEvent.endpointNumber
 
-		console.log(`device=${device.productName}`, device)
+		console.log(`PTPDevice = ${device.productName}`, device)
 
 		this.device = device
 
 		// Listen event
-		this.checkForEvent()
+		this.listenBulkIn()
+		this.listenInterruptIn()
+
+		this._opened = true
 	}
 
 	public close = async (): Promise<void> => {
-		if (!this.device) return
-		await this.device.close()
+		if (this.device && this.device.opened) {
+			await this.device.close()
+		}
+		this._opened = false
+	}
+
+	public get opened(): boolean {
+		return this._opened
 	}
 
 	public sendCommand = async (option: PTPSendOption): Promise<PTPResponse> => {
@@ -102,21 +112,34 @@ export class PTPDevice extends EventTarget {
 		const expectedResCodes = option.expectedResCodes ?? [ResCode.OK]
 		const id = this.generateTransactionId()
 
-		console.groupCollapsed(`Send Command [${label}]`)
+		try {
+			console.groupCollapsed(`Send Command [${label}]`)
 
-		await this.transferOutCommand(code, id, parameters)
+			await this.transferOutCommand(code, id, parameters)
 
-		const {payload} = await this.waitTransferIn(
-			this.bulkIn,
-			PTPType.Response,
-			expectedResCodes,
-			id
-		)
+			const res = await this.waitBulkIn(id)
 
-		console.groupEnd()
+			// Error checking
+			if (res.type !== PTPType.Response) {
+				throw new Error(
+					`Expected response type: ${PTPType.Response}, got: ${res.type}`
+				)
+			}
 
-		return {
-			parameters: [...new Uint32Array(payload)],
+			if (!expectedResCodes.includes(res.code)) {
+				throw new Error(
+					`Expected rescode=0x[${expectedResCodes.map(c =>
+						c.toString(16)
+					)}], got= ${res.code.toString(16)}`
+				)
+			}
+
+			return {
+				code: res.code,
+				parameters: [...new Uint32Array(res.payload)],
+			}
+		} finally {
+			console.groupEnd()
 		}
 	}
 
@@ -127,22 +150,33 @@ export class PTPDevice extends EventTarget {
 		const expectedResCodes = option.expectedResCodes ?? [ResCode.OK]
 		const id = this.generateTransactionId()
 
-		console.groupCollapsed(`Send Data [${label}]`)
+		try {
+			console.groupCollapsed(`Send Data [${label}]`)
 
-		await this.transferOutCommand(code, id, parameters)
-		await this.transferOutData(code, id, data)
+			await this.transferOutCommand(code, id, parameters)
+			await this.transferOutData(code, id, data)
 
-		const {payload} = await this.waitTransferIn(
-			this.bulkIn,
-			PTPType.Response,
-			expectedResCodes,
-			id
-		)
+			const res = await this.waitBulkIn(id)
 
-		console.groupEnd()
+			// Error checking
+			if (res.type !== PTPType.Response) {
+				throw new Error(
+					`Expected response type: ${PTPType.Response}, got: ${res.type}`
+				)
+			}
 
-		return {
-			parameters: [...new Uint32Array(payload)],
+			if (!expectedResCodes.includes(res.code)) {
+				throw new Error(
+					`Expected rescode=[${expectedResCodes}], got= ${res.code}`
+				)
+			}
+
+			return {
+				code: res.code,
+				parameters: [...new Uint32Array(res.payload)],
+			}
+		} finally {
+			console.groupEnd()
 		}
 	}
 
@@ -152,43 +186,51 @@ export class PTPDevice extends EventTarget {
 		const {code} = option
 		const label = option.label ?? ''
 		const parameters = option.parameters ?? []
+		const expectedResCodes = option.expectedResCodes ?? [ResCode.OK]
 		const id = this.generateTransactionId()
 
 		console.groupCollapsed(`Send Command [${label}]`)
 
-		await this.transferOutCommand(code, id, parameters)
-		const {payload: data} = await this.waitTransferIn(
-			this.bulkIn,
-			PTPType.Data,
-			code,
-			id
-		)
-		const {payload} = await this.waitTransferIn(
-			this.bulkIn,
-			PTPType.Response,
-			ResCode.OK,
-			id
-		)
+		try {
+			await this.transferOutCommand(code, id, parameters)
+			const res1 = await this.waitBulkIn(id)
 
-		console.groupEnd()
+			if (res1.type === PTPType.Response) {
+				if (expectedResCodes.includes(res1.code)) {
+					return {
+						code: res1.code,
+						parameters: [],
+						data: new ArrayBuffer(0),
+					}
+				}
+			}
 
-		return {
-			parameters: [...new Uint32Array(payload)],
-			data,
+			if (res1.type !== PTPType.Data) {
+				throw new Error(`Cannot receive data code=0x${res1.code.toString(16)}`)
+			}
+
+			const res2 = await this.waitBulkIn(id)
+
+			if (res2.type !== PTPType.Response) {
+				throw new Error(
+					`Expected response type: ${PTPType.Response}, but got: ${res2.type}`
+				)
+			}
+
+			return {
+				code: res2.code,
+				parameters: [...new Uint32Array(res2.payload)],
+				data: res1.payload,
+			}
+		} finally {
+			console.groupEnd()
 		}
 	}
 
-	public waitEvent = async (code: number): Promise<PTPEventDetail> => {
-		return new Promise(resolve => {
-			this.addEventListener(
-				code.toString(16),
-				e => {
-					const detail = (e as PTPEvent).detail
-					resolve(detail)
-				},
-				{once: true}
-			)
-		})
+	public waitEvent = (code: number): Promise<PTPTransferIn> => {
+		return this.onceAsync(
+			'event:0x' + code.toString(16)
+		) as Promise<PTPTransferIn>
 	}
 
 	private transferOutCommand = async (
@@ -196,7 +238,7 @@ export class PTPDevice extends EventTarget {
 		transactionId: number,
 		parameters: number[]
 	) => {
-		if (!this.device) throw new Error()
+		if (!this.device) throw new Error('Device is not opened')
 
 		const length = 12 + parameters.length * 4
 
@@ -214,13 +256,10 @@ export class PTPDevice extends EventTarget {
 
 		const sent = await this.device.transferOut(this.bulkOut, buffer)
 		console.log(
-			'Request=',
-			'0x' + code.toString(16),
-			'id=' + transactionId,
-			'parameters=' +
-				parameters
-					.map(n => '0x' + ('00000000' + n.toString(16)).substr(-8))
-					.join(', ')
+			'transferOutBulk',
+			'type= Command',
+			'code= 0x' + code.toString(16),
+			'id= ' + transactionId
 		)
 
 		if (sent.status !== 'ok') throw new Error()
@@ -248,91 +287,87 @@ export class PTPDevice extends EventTarget {
 
 		const sent = await this.device.transferOut(this.bulkOut, buffer)
 		console.log(
-			'SendData=',
-			'0x' + code.toString(16),
-			'id=' + transactionId,
-			sent
+			'transferOutBulk',
+			'type= Data',
+			'code= 0x' + code.toString(16),
+			'id= ' + transactionId
 		)
 
 		return sent.status === 'ok'
 	}
 
-	private waitTransferIn = async (
-		endpointNumber: number,
-		expectedType: PTPType,
-		expectedCode: null | number | number[] = null,
-		expectedTransactionId: null | number = null
-	) => {
-		if (!this.device) throw new Error()
-
-		const {data, status} = await this.device.transferIn(
-			endpointNumber,
-			0x8000000
-		)
-		if (!data) throw new Error()
-		if (status !== 'ok') throw new Error(`Status = ${status}`)
-
-		const type = data.getUint16(4, true)
-		const code = data.getUint16(6, true)
-		const transactionId = data.getUint32(8, true)
-		const payload = data.buffer.slice(12)
-
-		// Error checking
-		if (
-			expectedTransactionId !== null &&
-			expectedTransactionId !== transactionId
-		) {
-			console.log(type, code)
-			throw new Error(
-				`Expected transaction ID: ${expectedTransactionId}, got: ${transactionId}`
-			)
-		}
-		if (expectedType !== type) {
-			throw new Error(`Expected response type: ${expectedType}, got: ${type}`)
-		}
-
-		if (expectedCode !== null) {
-			const codes = Array.isArray(expectedCode) ? expectedCode : [expectedCode]
-
-			if (!codes.includes(code)) {
-				const codesStr = codes.map(c => c.toString(16)).join(', ')
-				throw new Error(
-					`Expected response codes: [${codesStr}], ${code.toString(16)}`
-				)
-			}
-		}
-
-		return {code, transactionId, payload}
-	}
-
-	private checkForEvent = async () => {
-		if (this.listeningEvent) return
+	private listenBulkIn = async () => {
+		if (!this.device || !this.device.opened) return
 
 		try {
-			if (!this.device) throw new Error('Device is not initialized')
+			const {data, status} = await this.device.transferIn(this.bulkIn, 0x800000)
 
-			this.listeningEvent = true
-			const {code, payload, transactionId} = await this.waitTransferIn(
-				this.interruptIn,
-				PTPType.Event
+			// Error checking
+			if (status !== 'ok') throw new Error(`BulkIn returned status: ${status}`)
+			if (!data || data.byteLength < 12) throw new Error('Invalid bulkIn data')
+
+			// Unpack packet
+			const type = data.getUint16(4, true)
+			const code = data.getUint16(6, true)
+			const transactionId = data.getUint32(8, true)
+			const payload = data.buffer.slice(12)
+
+			console.log(
+				'transferInBulk',
+				'type= ' + type,
+				'code= 0x' + code.toString(16),
+				'id= ' + transactionId,
+				'payload= ',
+				payload
 			)
-			this.listeningEvent = false
 
-			const parameters = [...new Uint32Array(payload)]
-			const eventName = code.toString(16)
-
-			const detail: PTPEventDetail = {
-				eventName,
-				code,
-				transactionId,
-				parameters,
-			}
-
-			console.log('Event received', detail)
-			this.dispatchEvent(new CustomEvent(eventName, {detail}))
+			const eventName = transactionId.toString()
+			this.emit(eventName, {type, code, transactionId, payload})
 		} finally {
-			this.checkForEvent()
+			setTimeout(this.listenBulkIn, 0)
 		}
+	}
+
+	private listenInterruptIn = async () => {
+		if (!this.device || !this.device.opened) return
+
+		try {
+			const {data, status} = await this.device.transferIn(this.interruptIn, 64)
+
+			// Error checking
+			if (status !== 'ok')
+				throw new Error(`InterruptIn returned status: ${status}`)
+			if (!data || data.byteLength < 12)
+				throw new Error('Invalid interruptIn data')
+
+			// Unpack packet
+			const type = data.getUint16(4, true)
+			const code = data.getUint16(6, true)
+			const transactionId = data.getUint32(8, true)
+			const payload = data.buffer.slice(12)
+
+			console.log(
+				'transferInInterrupt',
+				'type= ' + type,
+				'code= 0x' + code.toString(16),
+				'id= ' + transactionId,
+				'payload= ',
+				payload
+			)
+
+			const eventName = 'event:0x' + code.toString(16)
+			this.emit(eventName, {type, code, transactionId, payload})
+		} finally {
+			setTimeout(this.listenBulkIn, 0)
+		}
+	}
+
+	private waitBulkIn = async (transactionId: number) => {
+		if (!this.device) throw new Error('Device is not opened')
+
+		const eventName = transactionId.toString()
+
+		return (await this.onceAsync(eventName)) as PTPTransferIn
 	}
 
 	private generateTransactionId = (): number => {
@@ -342,5 +377,11 @@ export class PTPDevice extends EventTarget {
 		}
 
 		return this.transactionId
+	}
+
+	private onceAsync = (event: string | symbol) => {
+		return new Promise(resolve => {
+			this.once(event, resolve)
+		})
 	}
 }

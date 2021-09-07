@@ -21,6 +21,7 @@
 		"eslint-plugin-prettier": "^3.4.0",
 		"eslint-plugin-simple-import-sort": "^7.0.0",
 		"eslint-plugin-unused-imports": "^1.1.2",
+		"eventemitter3": "^4.0.7",
 		"lodash": "^4.17.21",
 		"parcel": "^2.0.0-rc.0",
 		"prettier": "^2.3.2",
