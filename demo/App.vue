@@ -1,0 +1,79 @@
+<template>
+	<div>
+		<h1>Camera Control</h1>
+
+		<button @click="toggleCameraConnection">
+			{{ connected ? 'Dionnect' : 'Connect' }}
+		</button>
+		<button @click="takePicture">Take Picture</button>
+
+		<br />
+
+		<img
+			id="liveview"
+			style="width: 25%; background: whiteSmoke"
+			:src="liveviewURL"
+		/>
+
+		<img
+			id="imageViewer"
+			style="width: 25%; background: gray"
+			:src="lastPictureURL"
+		/>
+
+		<h2>Device Props</h2>
+		<dl>
+			<dt>Exposure Mode</dt>
+			<dd>
+				<div v-for="mode in exposureModeDesc.range" :key="mode">
+					<input type="radio" :id="mode" :value="mode" v-model="exposureMode" />
+					<label :for="mode">{{ mode }}</label>
+				</div>
+			</dd>
+			<dt>Aperture</dt>
+			<dd>
+				<select v-model="aperture">
+					<option v-for="f in apertureDesc.range" :key="f" :value="f">
+						{{ f.toString() }}
+					</option>
+				</select>
+			</dd>
+		</dl>
+
+		<h2>Device Info</h2>
+		<div></div>
+	</div>
+</template>
+
+<script lang="ts">
+import {defineComponent} from 'vue'
+import {useCameraControl} from './useCameraControl'
+
+export default defineComponent({
+	setup() {
+		const {
+			connected,
+			aperture,
+			apertureDesc,
+			exposureMode,
+			exposureModeDesc,
+			liveviewURL,
+			lastPictureURL,
+			toggleCameraConnection,
+			takePicture,
+		} = useCameraControl()
+
+		return {
+			connected,
+			aperture,
+			apertureDesc,
+			exposureMode,
+			exposureModeDesc,
+			liveviewURL,
+			lastPictureURL,
+			toggleCameraConnection,
+			takePicture,
+		}
+	},
+})
+</script>

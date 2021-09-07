@@ -1,54 +1,60 @@
-import {connectCamera} from '../src/CameraControl'
+import {createApp} from 'vue'
 
-const $connect = document.getElementById('connect') as HTMLButtonElement
-const $takePicture = document.getElementById('takePicture') as HTMLButtonElement
-const $imageViewer = document.getElementById('imageViewer') as HTMLImageElement
-const $liveview = document.getElementById('liveview') as HTMLImageElement
-const $deviceInfo = document.getElementById('deviceInfo') as HTMLDivElement
-const $deviceProps = document.getElementById('deviceProps') as HTMLDivElement
+import App from './App.vue'
 
-const connect = async () => {
-	const cam = await connectCamera()
+createApp(App).mount('#app')
 
-	$deviceInfo.innerHTML = listify(await cam.getDeviceInfo())
+// import {connectCamera} from '../src/CameraControl'
 
-	$connect.disabled = true
+// const $connect = document.getElementById('connect') as HTMLButtonElement
+// const $takePicture = document.getElementById('takePicture') as HTMLButtonElement
+// const $imageViewer = document.getElementById('imageViewer') as HTMLImageElement
+// const $liveview = document.getElementById('liveview') as HTMLImageElement
+// const $deviceInfo = document.getElementById('deviceInfo') as HTMLDivElement
+// const $deviceProps = document.getElementById('deviceProps') as HTMLDivElement
 
-	$deviceProps.innerHTML = listify({
-		focalLength: await cam.getFocalLength(),
-		batteryLevel: await cam.getBatteryLevel(),
-		exposureMode: await cam.getExposureMode(),
-		iso: await cam.getISO(),
-		aperture: await cam.getAperture(),
-		shutterSpeed: await cam.getShutterSpeed(),
-	})
-	;(window as any).cam = cam
+// const connect = async () => {
+// 	const cam = await connectCamera()
 
-	window.addEventListener('beforeunload', cam.close)
+// 	$deviceInfo.innerHTML = listify(await cam.getDeviceInfo())
 
-	$takePicture.addEventListener('click', async () => {
-		const image = await cam.takePicture()
-		if (image) $imageViewer.src = image
-	})
+// 	$connect.disabled = true
 
-	// await cam.startLiveView()
-	// async function updateLiveview() {
-	// 	try {
-	// 		const url = await cam.getLiveView()
-	// 		if (url) $liveview.src = url
-	// 	} finally {
-	// 		requestAnimationFrame(updateLiveview)
-	// 	}
-	// }
-	// updateLiveview()
-}
+// 	$deviceProps.innerHTML = listify({
+// 		focalLength: await cam.getFocalLength(),
+// 		batteryLevel: await cam.getBatteryLevel(),
+// 		exposureMode: await cam.getExposureMode(),
+// 		iso: await cam.getISO(),
+// 		aperture: await cam.getAperture(),
+// 		shutterSpeed: await cam.getShutterSpeed(),
+// 	})
+// 	;(window as any).cam = cam
 
-function listify(object: Record<string, any>) {
-	return Object.entries(object)
-		.map(([field, value]) => `<li>${field}: ${JSON.stringify(value)}`)
-		.join('')
-}
+// 	window.addEventListener('beforeunload', cam.close)
 
-$connect.addEventListener('click', connect)
+// 	$takePicture.addEventListener('click', async () => {
+// 		const image = await cam.takePicture()
+// 		if (image) $imageViewer.src = image
+// 	})
 
-connect()
+// 	// await cam.startLiveView()
+// 	// async function updateLiveview() {
+// 	// 	try {
+// 	// 		const url = await cam.getLiveView()
+// 	// 		if (url) $liveview.src = url
+// 	// 	} finally {
+// 	// 		requestAnimationFrame(updateLiveview)
+// 	// 	}
+// 	// }
+// 	// updateLiveview()
+// }
+
+// function listify(object: Record<string, any>) {
+// 	return Object.entries(object)
+// 		.map(([field, value]) => `<li>${field}: ${JSON.stringify(value)}`)
+// 		.join('')
+// }
+
+// $connect.addEventListener('click', connect)
+
+// connect()
