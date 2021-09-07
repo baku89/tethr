@@ -87,7 +87,8 @@ export class CameraControlSigma extends CameraControl {
 	}
 
 	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
-		return (await this.getCamDataGroup1()).batteryLevel
+		const {batteryLevel} = await this.getCamDataGroup1()
+		return this.decodeBatteryLevel(batteryLevel)
 	}
 
 	public takePicture = async (): Promise<null | string> => {
@@ -212,7 +213,7 @@ export class CameraControlSigma extends CameraControl {
 			mediaFreeSpace: decoder.getUint16(),
 			mediaStatus: decoder.getUint8(),
 			currentLensFocalLength: decoder.getUint16(),
-			batteryLevel: this.decodeBatteryLevel(decoder.getUint8()),
+			batteryLevel: decoder.getUint8(),
 			abShotRemainNumber: decoder.getUint8(),
 			expCompExcludeAB: decoder.getUint8(),
 		}
