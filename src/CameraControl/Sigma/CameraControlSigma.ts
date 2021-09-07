@@ -142,6 +142,7 @@ export class CameraControlSigma extends CameraControl {
 		const {exposureMode} = await this.getCamDataGroup2()
 		return SigmaApexExposureMode.get(exposureMode) ?? null
 	}
+
 	public setExposureMode = async (
 		exposureMode: ExposureMode
 	): Promise<boolean> => {
@@ -149,6 +150,25 @@ export class CameraControlSigma extends CameraControl {
 		if (!byte) return false
 
 		return this.setCamData(2, 2, byte)
+	}
+
+	public getExposureModeDesc = async (): Promise<
+		PropDescEnum<ExposureMode>
+	> => {
+		const ifdEntries = await this.getCamCanSetInfo5()
+		const info = ifdEntries.find(e => e.tag === 200)
+
+		if (!info || !Array.isArray(info.value)) throw new Error('Invalid IFD')
+
+		const range = info.value
+			.map(n => SigmaApexExposureMode.get(n))
+			.filter(m => m !== undefined) as ExposureMode[]
+
+		return {
+			canRead: false,
+			canWrite: false,
+			range,
+		}
 	}
 
 	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {

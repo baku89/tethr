@@ -168,6 +168,16 @@ export class CameraControl {
 		return false
 	}
 
+	public getExposureModeDesc = async (): Promise<
+		PropDescEnum<ExposureMode>
+	> => {
+		return {
+			canRead: false,
+			canWrite: false,
+			range: [],
+		}
+	}
+
 	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
 		const desc = await this.getDevicePropDesc(DevicePropCode.BatteryLevel)
 
