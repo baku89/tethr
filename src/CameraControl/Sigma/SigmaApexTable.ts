@@ -1,6 +1,8 @@
-import {Aperture, ISO} from '../CameraControl'
+import {BiMap} from 'bim'
 
-export const SigmaApexISO = new Map<number, ISO>([
+import {Aperture, BatteryLevel, ExposureMode, ISO} from '../CameraControl'
+
+export const SigmaApexISO = new BiMap<number, ISO>([
 	[0b00000000, 6],
 	[0b00000011, 8],
 	[0b00000101, 10],
@@ -46,7 +48,7 @@ export const SigmaApexISO = new Map<number, ISO>([
 	[0b01110000, 102400],
 ])
 
-export const SigmaApexCompensationThirds = new Map<number, number>([
+export const SigmaApexCompensationThirds = new BiMap<number, number>([
 	[0b00000000, 0.0],
 	[0b00000011, 0.3],
 	[0b00000101, 0.7],
@@ -69,7 +71,7 @@ export const SigmaApexCompensationThirds = new Map<number, number>([
 	[0b00110011, 6.3],
 ])
 
-export const SigmaApexCompensationHalf = new Map<number, number>([
+export const SigmaApexCompensationHalf = new BiMap<number, number>([
 	[0b00000000, 0.0],
 	[0b00000100, 0.5],
 	[0b00001000, 1.0],
@@ -79,7 +81,7 @@ export const SigmaApexCompensationHalf = new Map<number, number>([
 	[0b00011000, 3.0],
 ])
 
-export const SigmaApexShutterSpeedThirds = new Map<number, string>([
+export const SigmaApexShutterSpeedThirds = new BiMap<number, string>([
 	[0b00001000, 'bulb'],
 	[0b00010000, '30"'],
 	[0b00010011, '25"'],
@@ -151,7 +153,7 @@ export const SigmaApexShutterSpeedThirds = new Map<number, string>([
 	[0b10110000, '32000'],
 ])
 
-export const SigmaApexShutterSpeedHalf = new Map<number, string>([
+export const SigmaApexShutterSpeedHalf = new BiMap<number, string>([
 	[0b00001000, 'bulb'],
 	[0b00010001, '30"'],
 	[0b00010100, '20"'],
@@ -189,7 +191,7 @@ export const SigmaApexShutterSpeedHalf = new Map<number, string>([
 	[0b10110000, '32000'],
 ])
 
-export const SigmaApexApertureThirds = new Map<number, Aperture>([
+export const SigmaApexApertureThirds = new BiMap<number, Aperture>([
 	[0b00001000, 1.0],
 	[0b00001011, 1.1],
 	[0b00001101, 1.2],
@@ -232,7 +234,7 @@ export const SigmaApexApertureThirds = new Map<number, Aperture>([
 	[0b01110000, 91],
 ])
 
-export const SigmaApexApertureHalf = new Map<number, Aperture>([
+export const SigmaApexApertureHalf = new BiMap<number, Aperture>([
 	[0b00001000, 1.0],
 	[0b00001100, 1.2],
 	[0b00010000, 1.4],
@@ -260,4 +262,27 @@ export const SigmaApexApertureHalf = new Map<number, Aperture>([
 	[0b01101000, 64],
 	[0b01101100, 76],
 	[0b01110000, 91],
+])
+
+export const SigmaApexExposureMode = new BiMap<number, ExposureMode>([
+	[0x1, ExposureMode.P],
+	[0x2, ExposureMode.A],
+	[0x3, ExposureMode.S],
+	[0x4, ExposureMode.M],
+])
+
+export const SigmaApexBatteryLevel = new Map<number, null | BatteryLevel>([
+	[0x00, null],
+	[0x01, 1],
+	[0x02, 2 / 3],
+	[0x03, 1 / 3],
+	[0x04, 'low'],
+	[0x05, 0],
+	[0x06, null],
+	[0x07, 0],
+	[0x08, 'ac'],
+	[0x09, null],
+	[0x0a, 4 / 5],
+	[0x0b, 3 / 5],
+	[0x0c, null],
 ])

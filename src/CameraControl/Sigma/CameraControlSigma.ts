@@ -9,6 +9,8 @@ import {
 import {
 	SigmaApexApertureHalf,
 	SigmaApexApertureThirds,
+	SigmaApexBatteryLevel,
+	SigmaApexExposureMode,
 	SigmaApexISO,
 	SigmaApexShutterSpeedHalf,
 	SigmaApexShutterSpeedThirds,
@@ -46,6 +48,13 @@ export class CameraControlSigma extends CameraControl {
 		)
 	}
 
+	public setAperture = async (aperture: Aperture): Promise<boolean> => {
+		const byte = SigmaApexApertureThirds.getKey(aperture)
+		if (!byte) return false
+
+		return this.setCamData(1, 1, byte)
+	}
+
 	public getShutterSpeed = async (): Promise<null | string> => {
 		const {shutterSpeed} = await this.getCamDataGroup1()
 		if (shutterSpeed === 0x0) return 'auto'
@@ -54,6 +63,13 @@ export class CameraControlSigma extends CameraControl {
 			SigmaApexShutterSpeedHalf.get(shutterSpeed) ??
 			null
 		)
+	}
+
+	public setShutterSpeed = async (shutterSpeed: string): Promise<boolean> => {
+		const byte = SigmaApexShutterSpeedThirds.getKey(shutterSpeed)
+		if (!byte) return false
+
+		return this.setCamData(1, 0, byte)
 	}
 
 	public getISO = async (): Promise<null | ISO> => {
@@ -65,30 +81,35 @@ export class CameraControlSigma extends CameraControl {
 		}
 	}
 
-	public getExposureMode = async (): Promise<null | ExposureMode> => {
-		return (await this.getCamDataGroup2()).exposureMode
+	public setISO = async (iso: ISO): Promise<boolean> => {
+		if (iso === 'auto') {
+			return await this.setCamData(1, 3, 0x1)
+		}
+
+		const byte = SigmaApexISO.getKey(iso)
+		if (!byte) return false
+
+		return (
+			(await this.setCamData(1, 3, 0x0)) && (await this.setCamData(1, 4, byte))
+		)
 	}
-	public setExposureMode = async (mode: ExposureMode): Promise<boolean> => {
-		const buffer = new ArrayBuffer(3)
-		const dataView = new DataView(buffer)
 
-		dataView.setUint16(0, 1 << 2, true) // Exposure
-		dataView.setUint8(2, this.encodeExposureMode(mode))
+	public getExposureMode = async (): Promise<null | ExposureMode> => {
+		const {exposureMode} = await this.getCamDataGroup2()
+		return SigmaApexExposureMode.get(exposureMode) ?? null
+	}
+	public setExposureMode = async (
+		exposureMode: ExposureMode
+	): Promise<boolean> => {
+		const byte = SigmaApexExposureMode.getKey(exposureMode)
+		if (!byte) return false
 
-		const data = this.encodeParameter(buffer)
-
-		await this.device.sendData({
-			label: 'SigmaFP SetCamDataGroup2',
-			code: 0x9017,
-			data,
-		})
-
-		return true
+		return this.setCamData(2, 2, byte)
 	}
 
 	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
 		const {batteryLevel} = await this.getCamDataGroup1()
-		return this.decodeBatteryLevel(batteryLevel)
+		return SigmaApexBatteryLevel.get(batteryLevel) ?? null
 	}
 
 	public takePicture = async (): Promise<null | string> => {
@@ -223,6 +244,28 @@ export class CameraControlSigma extends CameraControl {
 		return group1
 	}
 
+	private async setCamData(
+		groupNumber: number,
+		propNumber: number,
+		value: number
+	) {
+		const buffer = new ArrayBuffer(3)
+		const dataView = new DataView(buffer)
+
+		dataView.setUint16(0, 1 << propNumber, true)
+		dataView.setUint8(2, value)
+
+		const data = this.encodeParameter(buffer)
+
+		await this.device.sendData({
+			label: 'SigmaFP SetCamDataGroup' + groupNumber,
+			code: 0x9016 + groupNumber - 1,
+			data,
+		})
+
+		return true
+	}
+
 	private async getCamDataGroup2() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup2',
@@ -237,7 +280,7 @@ export class CameraControlSigma extends CameraControl {
 		const group2FirstOct = {
 			driveMode: decoder.getUint8(),
 			specialMode: decoder.getUint8(),
-			exposureMode: this.decodeExposureMode(decoder.getUint8()),
+			exposureMode: decoder.getUint8(),
 			aeMeteringMode: decoder.getUint8(),
 		}
 
@@ -330,66 +373,6 @@ export class CameraControlSigma extends CameraControl {
 			fractional = byte & 0b1111
 
 		return integer + fractional / 10
-	}
-
-	private decodeBatteryLevel(byte: number): null | BatteryLevel {
-		switch (byte) {
-			case 0x00:
-				return null
-			case 0x01:
-				return 1 // Full
-			case 0x02:
-				return 2 / 3
-			case 0x03:
-				return 1 / 3
-			case 0x04:
-				return 0.1 // Low
-			case 0x05:
-				return 0
-			case 0x06:
-				return null
-			case 0x07:
-				return 0
-			case 0x08:
-				return 'ac'
-			case 0x09:
-				return null
-			case 0x0a:
-				return 4 / 5
-			case 0x0b:
-				return 3 / 5
-			case 0x0c:
-				return null
-		}
-
-		return null
-	}
-
-	private decodeExposureMode(byte: number): null | ExposureMode {
-		switch (byte & 0b111) {
-			case 0x1:
-				return ExposureMode.P
-			case 0x2:
-				return ExposureMode.A
-			case 0x3:
-				return ExposureMode.S
-			case 0x4:
-				return ExposureMode.M
-		}
-		return null
-	}
-
-	private encodeExposureMode(mode: ExposureMode): number {
-		switch (mode) {
-			case ExposureMode.P:
-				return 0x1
-			case ExposureMode.A:
-				return 0x2
-			case ExposureMode.S:
-				return 0x3
-			case ExposureMode.M:
-				return 0x4
-		}
 	}
 
 	private encodeParameter(buffer: ArrayBuffer) {
