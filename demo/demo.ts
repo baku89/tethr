@@ -31,16 +31,16 @@ const connect = async () => {
 		if (image) $imageViewer.src = image
 	})
 
-	await cam.startLiveView()
-	async function updateLiveview() {
-		try {
-			const url = await cam.getLiveView()
-			if (url) $liveview.src = url
-		} finally {
-			requestAnimationFrame(updateLiveview)
-		}
-	}
-	updateLiveview()
+	// await cam.startLiveView()
+	// async function updateLiveview() {
+	// 	try {
+	// 		const url = await cam.getLiveView()
+	// 		if (url) $liveview.src = url
+	// 	} finally {
+	// 		requestAnimationFrame(updateLiveview)
+	// 	}
+	// }
+	// updateLiveview()
 }
 
 function listify(object: Record<string, any>) {

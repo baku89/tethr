@@ -1,3 +1,5 @@
+import _ from 'lodash'
+
 import {PTPDecoder} from '../../PTPDecoder'
 import {
 	Aperture,
@@ -5,15 +7,16 @@ import {
 	CameraControl,
 	ExposureMode,
 	ISO,
+	PropDescEnum,
 } from '../CameraControl'
 import {
 	SigmaApexApertureHalf,
-	SigmaApexApertureThirds,
+	SigmaApexApertureOneThird,
 	SigmaApexBatteryLevel,
 	SigmaApexExposureMode,
 	SigmaApexISO,
 	SigmaApexShutterSpeedHalf,
-	SigmaApexShutterSpeedThirds,
+	SigmaApexShutterSpeedOneThird,
 } from './SigmaApexTable'
 
 export class CameraControlSigma extends CameraControl {
@@ -40,31 +43,74 @@ export class CameraControlSigma extends CameraControl {
 		const {aperture} = await this.getCamDataGroup1()
 		if (aperture === 0x0) return 'auto'
 		return (
-			SigmaApexApertureThirds.get(aperture) ??
+			SigmaApexApertureOneThird.get(aperture) ??
 			SigmaApexApertureHalf.get(aperture) ??
 			null
 		)
 	}
 
 	public setAperture = async (aperture: Aperture): Promise<boolean> => {
-		const byte = SigmaApexApertureThirds.getKey(aperture)
+		if (aperture === 'auto') return false
+
+		const byte = SigmaApexApertureOneThird.getKey(aperture)
 		if (!byte) return false
 
 		return this.setCamData(1, 1, byte)
+	}
+
+	public getApertureDesc = async (): Promise<PropDescEnum<Aperture>> => {
+		const ifdEntries = await this.getCamCanSetInfo5()
+		const info = ifdEntries.find(e => e.tag === 210)
+
+		if (!info || !Array.isArray(info.value)) throw new Error('Invalid IFD')
+
+		if (info.value.length === 0) {
+			// Should be auto aperture
+			return {
+				canWrite: false,
+				canRead: true,
+				range: [],
+			}
+		}
+
+		const [svMin, svMax, step] = info.value
+
+		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
+		const table = isStepOneThird
+			? SigmaApexApertureOneThird
+			: SigmaApexApertureHalf
+
+		const apertures = Array.from(table.values())
+
+		const fMinRaw = Math.sqrt(Math.pow(2, svMin))
+		const fMaxRaw = Math.sqrt(Math.pow(2, svMax))
+
+		const fMin = _.minBy(apertures, a => Math.abs(a - fMinRaw))
+		const fMax = _.minBy(apertures, a => Math.abs(a - fMaxRaw))
+
+		if (!fMin || !fMax) throw new Error()
+
+		const range = apertures.filter(a => fMin <= a && a <= fMax)
+
+		return {
+			canWrite: true,
+			canRead: true,
+			range,
+		}
 	}
 
 	public getShutterSpeed = async (): Promise<null | string> => {
 		const {shutterSpeed} = await this.getCamDataGroup1()
 		if (shutterSpeed === 0x0) return 'auto'
 		return (
-			SigmaApexShutterSpeedThirds.get(shutterSpeed) ??
+			SigmaApexShutterSpeedOneThird.get(shutterSpeed) ??
 			SigmaApexShutterSpeedHalf.get(shutterSpeed) ??
 			null
 		)
 	}
 
 	public setShutterSpeed = async (shutterSpeed: string): Promise<boolean> => {
-		const byte = SigmaApexShutterSpeedThirds.getKey(shutterSpeed)
+		const byte = SigmaApexShutterSpeedOneThird.getKey(shutterSpeed)
 		if (!byte) return false
 
 		return this.setCamData(1, 0, byte)
@@ -242,28 +288,6 @@ export class CameraControlSigma extends CameraControl {
 		return group1
 	}
 
-	private async setCamData(
-		groupNumber: number,
-		propNumber: number,
-		value: number
-	) {
-		const buffer = new ArrayBuffer(3)
-		const dataView = new DataView(buffer)
-
-		dataView.setUint16(0, 1 << propNumber, true)
-		dataView.setUint8(2, value)
-
-		const data = this.encodeParameter(buffer)
-
-		await this.device.sendData({
-			label: 'SigmaFP SetCamDataGroup' + groupNumber,
-			code: 0x9016 + groupNumber - 1,
-			data,
-		})
-
-		return true
-	}
-
 	private async getCamDataGroup2() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup2',
@@ -298,6 +322,38 @@ export class CameraControlSigma extends CameraControl {
 		console.log('group2=', group2)
 
 		return group2
+	}
+
+	private async getCamCanSetInfo5() {
+		const {data} = await this.device.receiveData({
+			label: 'SigmaFP GetCamCanSetInfo5',
+			code: 0x9030,
+			parameters: [0x0],
+		})
+
+		return this.decodeIFD(data)
+	}
+
+	private async setCamData(
+		groupNumber: number,
+		propNumber: number,
+		value: number
+	) {
+		const buffer = new ArrayBuffer(3)
+		const dataView = new DataView(buffer)
+
+		dataView.setUint16(0, 1 << propNumber, true)
+		dataView.setUint8(2, value)
+
+		const data = this.encodeParameter(buffer)
+
+		await this.device.sendData({
+			label: 'SigmaFP SetCamDataGroup' + groupNumber,
+			code: 0x9016 + groupNumber - 1,
+			data,
+		})
+
+		return true
 	}
 
 	private decodeCamCaptStatus(data: ArrayBuffer) {
@@ -343,6 +399,8 @@ export class CameraControlSigma extends CameraControl {
 
 		const entryCount = dataView.getUint32(4, true)
 
+		const entries = []
+
 		for (let i = 0; i < entryCount; i++) {
 			const offset = 8 + 12 * i
 
@@ -351,19 +409,43 @@ export class CameraControlSigma extends CameraControl {
 			const count = dataView.getUint32(offset + 4, true)
 			const valueOffset = dataView.getUint32(offset + 8, true)
 
-			let value: any = null
+			let value: number[] | string | null = null
 
 			switch (type) {
-				case 2: {
+				case 0x1: {
+					// BYTES
+					const off = count > 4 ? valueOffset : offset
+					const buf = data.slice(off, off + count)
+					value = [...new Uint8Array(buf)]
+					break
+				}
+				case 0x2: {
 					// ASCII
 					const buf = data.slice(valueOffset, valueOffset + count - 1)
 					value = asciiDecoder.decode(buf)
 					break
 				}
+				case 0x8: {
+					// SSHORT
+					const off = count > 2 ? valueOffset : offset
+					value = Array(count)
+						.fill(0)
+						.map((_, i) => {
+							const f = dataView.getUint8(off + i * 2)
+							const d = dataView.getUint8(off + i * 2 + 1)
+
+							return d + f / 0x100
+						})
+					break
+				}
 			}
 
-			console.log(`IFD entry ${i}:`, {tag, type, count, valueOffset, value})
+			entries.push({tag, value})
+
+			// console.log(`IFD entry ${i}:`, {tag, type, count, valueOffset, value})
 		}
+
+		return entries
 	}
 
 	private decodeFocalLength(byte: number) {
