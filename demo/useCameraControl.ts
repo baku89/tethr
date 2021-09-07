@@ -40,6 +40,8 @@ export function useCameraControl() {
 				await camera.open()
 			}
 
+			;(window as any).cam = camera
+
 			exposureMode.value = await camera.getExposureMode()
 			exposureModeDesc.value = await camera.getExposureModeDesc()
 
