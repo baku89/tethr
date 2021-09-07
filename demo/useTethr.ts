@@ -28,6 +28,13 @@ export function useTethr() {
 		range: [],
 	})
 
+	const shutterSpeed = ref<string | null>(null)
+	const shutterSpeedDesc = ref<PropDescEnum<string>>({
+		canRead: false,
+		canWrite: false,
+		range: [],
+	})
+
 	async function toggleCameraConnection() {
 		if (camera && camera.opened) {
 			await camera.close()
@@ -40,15 +47,20 @@ export function useTethr() {
 				await camera.open()
 			}
 
-			(window as any).cam = camera
+			;(window as any).cam = camera
 
 			exposureMode.value = await camera.getExposureMode()
 			exposureModeDesc.value = await camera.getExposureModeDesc()
 
+			shutterSpeed.value = await camera.getShutterSpeed()
+			shutterSpeedDesc.value = await camera.getShutterSpeedDesc()
+			console.log('shutterspeed', shutterSpeed.value, shutterSpeedDesc.value)
+
 			aperture.value = await camera.getAperture()
 			apertureDesc.value = await camera.getApertureDesc()
 
-			watch(exposureMode, mode => camera?.setExposureMode(mode))
+			watch(exposureMode, v => camera?.setExposureMode(v))
+			watch(shutterSpeed, v => camera?.setShutterSpeed(v))
 			watch(aperture, v => camera?.setAperture(v))
 		}
 	}
@@ -64,6 +76,8 @@ export function useTethr() {
 		connected,
 		aperture,
 		apertureDesc,
+		shutterSpeed,
+		shutterSpeedDesc,
 		exposureMode,
 		exposureModeDesc,
 		liveviewURL,

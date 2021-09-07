@@ -38,6 +38,14 @@
 					</option>
 				</select>
 			</dd>
+			<dt>ShutterSpeed</dt>
+			<dd>
+				<select v-model="shutterSpeed">
+					<option v-for="f in shutterSpeedDesc.range" :key="f" :value="f">
+						{{ f.toString() }}
+					</option>
+				</select>
+			</dd>
 		</dl>
 
 		<h2>Device Info</h2>
@@ -55,6 +63,8 @@ export default defineComponent({
 			connected,
 			aperture,
 			apertureDesc,
+			shutterSpeed,
+			shutterSpeedDesc,
 			exposureMode,
 			exposureModeDesc,
 			liveviewURL,
@@ -67,6 +77,8 @@ export default defineComponent({
 			connected,
 			aperture,
 			apertureDesc,
+			shutterSpeed,
+			shutterSpeedDesc,
 			exposureMode,
 			exposureModeDesc,
 			liveviewURL,
