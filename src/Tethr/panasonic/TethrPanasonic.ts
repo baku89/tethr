@@ -1,6 +1,15 @@
 import {OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
-import {Aperture, ExposureMode, ISO, Tethr} from '../Tethr'
+import {Aperture, ExposureMode, ISO, PropDescEnum, Tethr} from '../Tethr'
+
+enum OpCodePanasonic {
+	OpenSession = 0x9102,
+	CloseSession = 0x9103,
+	GetProperty = 0x9402,
+	InitiateCapture = 0x9404,
+	Liveview = 0x9412,
+	LiveviewImage = 0x9706
+}
 
 export class TethrPanasnoic extends Tethr {
 	public open = async (): Promise<void> => {
@@ -8,7 +17,7 @@ export class TethrPanasnoic extends Tethr {
 
 		await this.device.sendCommand({
 			label: 'Panasonic OpenSession',
-			code: 0x9102,
+			code: OpCodePanasonic.OpenSession,
 			parameters: [0x00010001],
 		})
 	}
@@ -16,7 +25,7 @@ export class TethrPanasnoic extends Tethr {
 	public close = async (): Promise<void> => {
 		await this.device.sendCommand({
 			label: 'Panasonic CloseSession',
-			code: 0x9103,
+			code: OpCodePanasonic.CloseSession,
 			parameters: [0x00010001],
 		})
 
@@ -26,7 +35,7 @@ export class TethrPanasnoic extends Tethr {
 	public getAperture = async (): Promise<null | Aperture> => {
 		const {data} = await this.device.receiveData({
 			label: 'Panasonic GetAperture',
-			code: 0x9402,
+			code: OpCodePanasonic.GetProperty,
 			parameters: [0x02000041],
 		})
 
@@ -42,7 +51,7 @@ export class TethrPanasnoic extends Tethr {
 	public getShutterSpeed = async (): Promise<null | string> => {
 		const {data} = await this.device.receiveData({
 			label: 'Panasonic GetShutterSpeed',
-			code: 0x9402,
+			code: OpCodePanasonic.GetProperty,
 			parameters: [0x02000031],
 		})
 
@@ -71,7 +80,7 @@ export class TethrPanasnoic extends Tethr {
 	public getISO = async (): Promise<null | ISO> => {
 		const {data} = await this.device.receiveData({
 			label: 'Panasonic GetISO',
-			code: 0x9402,
+			code: OpCodePanasonic.GetProperty,
 			parameters: [0x02000021],
 		})
 
@@ -89,8 +98,8 @@ export class TethrPanasnoic extends Tethr {
 
 	public getExposureMode = async (): Promise<null | ExposureMode> => {
 		const {data} = await this.device.receiveData({
-			label: 'Panasonic GetProperty',
-			code: 0x9402,
+			label: 'Panasonic GetExposureMode',
+			code: OpCodePanasonic.GetProperty,
 			parameters: [0x02000082],
 		})
 
@@ -114,10 +123,21 @@ export class TethrPanasnoic extends Tethr {
 		return null
 	}
 
+	public getExposureModeDesc = async(): Promise<PropDescEnum<ExposureMode>> => {
+
+
+
+		return {
+			canRead: true,
+			canWrite: false,
+			range: []
+		}
+	}
+
 	public takePicture = async (): Promise<null | string> => {
 		await this.device.sendCommand({
-			label: 'Panasonic Shutter',
-			code: 0x9404,
+			label: 'Panasonic InitiateCapture',
+			code: OpCodePanasonic.InitiateCapture,
 			parameters: [0x3000011],
 		})
 
@@ -140,24 +160,24 @@ export class TethrPanasnoic extends Tethr {
 
 	public startLiveView = async (): Promise<void> => {
 		await this.device.sendCommand({
-			label: 'Panasonic StartLiveView',
-			code: 0x9412,
+			label: 'Panasonic Liveview',
+			code: OpCodePanasonic.Liveview,
 			parameters: [0x0d000010],
 		})
 	}
 
 	public stopLiveView = async (): Promise<void> => {
 		await this.device.sendCommand({
-			label: 'Panasonic StopLiveView',
-			code: 0x9412,
+			label: 'Panasonic Liveview',
+			code: OpCodePanasonic.Liveview,
 			parameters: [0x0d000011],
 		})
 	}
 
 	public getLiveView = async (): Promise<null | string> => {
 		const {code, data} = await this.device.receiveData({
-			label: 'Panasonic LiveView',
-			code: 0x9706,
+			label: 'Panasonic LiveviewImage',
+			code: OpCodePanasonic.LiveviewImage,
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 		})
 
