@@ -83,8 +83,8 @@ export class CameraControlSigma extends CameraControl {
 
 		const apertures = Array.from(table.values())
 
-		const fMinRaw = Math.sqrt(Math.pow(2, svMin))
-		const fMaxRaw = Math.sqrt(Math.pow(2, svMax))
+		const fMinRaw = Math.sqrt(2 ** svMin)
+		const fMaxRaw = Math.sqrt(2 ** svMax)
 
 		const fMin = _.minBy(apertures, a => Math.abs(a - fMinRaw))
 		const fMax = _.minBy(apertures, a => Math.abs(a - fMaxRaw))
@@ -137,6 +137,29 @@ export class CameraControlSigma extends CameraControl {
 		return (
 			(await this.setCamData(1, 3, 0x0)) && (await this.setCamData(1, 4, byte))
 		)
+	}
+
+	public getISODesc = async (): Promise<PropDescEnum<ISO>> => {
+		const ifdEntries = await this.getCamCanSetInfo5()
+		const info = ifdEntries.find(e => e.tag === 215)
+
+		if (!info || !Array.isArray(info.value)) throw new Error('Invalid IFD')
+
+		const [svMin, svMax] = info.value
+
+		const isoMin = Math.round(3.125 * 2 ** svMin)
+		const isoMax = Math.round(3.125 * 2 ** svMax)
+
+		const isos = Array.from(SigmaApexISO.values())
+		const range = isos.filter(a => isoMin <= a && a <= isoMax)
+
+		range.unshift('auto')
+
+		return {
+			canWrite: true,
+			canRead: true,
+			range,
+		}
 	}
 
 	public getExposureMode = async (): Promise<null | ExposureMode> => {
