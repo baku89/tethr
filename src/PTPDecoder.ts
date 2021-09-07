@@ -16,10 +16,6 @@ export class PTPDecoder {
 		this.byteOffset = 0
 	}
 
-	public get hasNext(): boolean {
-		return this.byteOffset < this.buffer.byteLength
-	}
-
 	public skip(bytes: number): void {
 		if (this.byteOffset + bytes > this.buffer.byteLength) {
 			throw new Error('Not enough byteLength to skip')
