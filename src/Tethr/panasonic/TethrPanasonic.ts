@@ -1,3 +1,5 @@
+import _ from 'lodash'
+
 import {OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
 import {Aperture, ExposureMode, ISO, PropDescEnum, Tethr} from '../Tethr'
@@ -5,10 +7,54 @@ import {Aperture, ExposureMode, ISO, PropDescEnum, Tethr} from '../Tethr'
 enum OpCodePanasonic {
 	OpenSession = 0x9102,
 	CloseSession = 0x9103,
+	ListProperty = 0x9108,
 	GetProperty = 0x9402,
+	SetProperty = 0x9403,
 	InitiateCapture = 0x9404,
 	Liveview = 0x9412,
-	LiveviewImage = 0x9706
+	LiveviewImage = 0x9706,
+}
+
+// Panasonic does not have regular device properties, they use some 32bit values
+enum DevicePropCodePanasonic {
+	PhotoStyle = 0x02000010,
+	ISO = 0x02000020,
+	ISO_Param = 0x02000021,
+	ISO_UpperLimit = 0x02000022,
+	ShutterSpeed = 0x02000030,
+	ShutterSpeed_Param = 0x02000031,
+	ShutterSpeed_RangeLimit = 0x02000032,
+	Aperture = 0x02000040,
+	Aperture_Param = 0x02000041,
+	Aperture_RangeLimit = 0x02000042,
+	WhiteBalance = 0x02000050,
+	WhiteBalance_Param = 0x02000051,
+	WhiteBalance_KSet = 0x02000052,
+	WhiteBalance_ADJ_AB = 0x02000053,
+	WhiteBalance_ADJ_GM = 0x02000054,
+	WhiteBalance_ADJ_AB_Sep = 0x02000055,
+	Exposure = 0x02000060,
+	Exposure_Param = 0x02000061,
+	Exposure_RangeLimit = 0x02000062,
+	AFArea = 0x02000070,
+	AFArea_AFModeParam = 0x02000071,
+	AFArea_AFAreaParam = 0x02000072,
+	AFArea_SetQuickAFParam = 0x02000073,
+	CameraMode = 0x02000080,
+	CameraMode_DriveMode = 0x02000081,
+	CameraMode_ModePos = 0x02000082,
+	CameraMode_CreativeMode = 0x02000083,
+	CameraMode_iAMode = 0x02000084,
+	ImageFormat = 0x020000a2,
+	MeteringInfo = 0x020000b0,
+	IntervalInfo = 0x020000c0,
+	RecDispConfig = 0x020000e0,
+	RecInfoFlash = 0x02000110,
+	BurstBracket = 0x02000140,
+	RecPreviewConfig = 0x02000170,
+	RecInfoSelfTimer = 0x020001a0,
+	RecInfoFlash2 = 0x020001b0,
+	RecCtrlRelease = 0x03000010,
 }
 
 export class TethrPanasnoic extends Tethr {
@@ -32,105 +78,77 @@ export class TethrPanasnoic extends Tethr {
 		await super.open()
 	}
 
-	public getAperture = async (): Promise<null | Aperture> => {
-		const {data} = await this.device.receiveData({
-			label: 'Panasonic GetAperture',
-			code: OpCodePanasonic.GetProperty,
-			parameters: [0x02000041],
-		})
+	public getAperture = this.getPropGetter(
+		DevicePropCodePanasonic.Aperture,
+		this.decodeAperture,
+		2
+	)
 
-		const decoder = new PTPDecoder(data)
+	public setAperture = this.getPropSetter(
+		DevicePropCodePanasonic.Aperture,
+		this.encodeAperture,
+		2
+	)
 
-		/*const dpc =*/ decoder.getUint32()
-		/*const bytes = */ decoder.getUint32()
-		const aperture: Aperture = decoder.getUint16() / 10
-
-		return aperture
-	}
-
-	public getShutterSpeed = async (): Promise<null | string> => {
-		const {data} = await this.device.receiveData({
-			label: 'Panasonic GetShutterSpeed',
-			code: OpCodePanasonic.GetProperty,
-			parameters: [0x02000031],
-		})
-
-		const decoder = new PTPDecoder(data)
-
-		/*const dpc =*/ decoder.getUint32()
-		/*const bytes = */ decoder.getUint32()
-		const value = decoder.getUint32()
-
-		switch (value) {
-			case 0xffffffff:
-				return 'bulb'
-			case 0x0fffffff:
-				return 'auto'
-			case 0x0ffffffe:
-				return 'Unknown'
-			default:
-				if ((value & 0x80000000) === 0x00000000) {
-					return '1/' + value / 1000
-				} else {
-					return ((value & 0x7fffffff) / 1000).toString()
-				}
-		}
-	}
-
-	public getISO = async (): Promise<null | ISO> => {
-		const {data} = await this.device.receiveData({
-			label: 'Panasonic GetISO',
-			code: OpCodePanasonic.GetProperty,
-			parameters: [0x02000021],
-		})
-
-		const decoder = new PTPDecoder(data)
-
-		/*const dpc =*/ decoder.getUint32()
-		/*const bytes = */ decoder.getUint32()
-		let iso: ISO = decoder.getUint32()
-
-		if (iso === 0xffffffff) iso = 'auto'
-		if (iso === 0xfffffffe) iso = 'auto' // i-ISO
-
-		return iso
-	}
-
-	public getExposureMode = async (): Promise<null | ExposureMode> => {
-		const {data} = await this.device.receiveData({
-			label: 'Panasonic GetExposureMode',
-			code: OpCodePanasonic.GetProperty,
-			parameters: [0x02000082],
-		})
-
-		const decoder = new PTPDecoder(data)
-
-		/*const dpc =*/ decoder.getUint32()
-		decoder.skip(4)
-		const mode = decoder.getUint16()
-
-		switch (mode) {
-			case 0x0:
-				return ExposureMode.P
-			case 0x1:
-				return ExposureMode.A
-			case 0x2:
-				return ExposureMode.S
-			case 0x3:
-				return ExposureMode.M
-		}
-
-		return null
-	}
-
-	public getExposureModeDesc = async(): Promise<PropDescEnum<ExposureMode>> => {
-
-
+	public getApertureDesc = async (): Promise<PropDescEnum<Aperture>> => {
+		const {range} = await this.getPropDesc(
+			DevicePropCodePanasonic.Aperture,
+			this.decodeAperture,
+			2
+		)
 
 		return {
 			canRead: true,
-			canWrite: false,
-			range: []
+			canWrite: true,
+			range,
+		}
+	}
+
+	public getShutterSpeed = this.getPropGetter(
+		DevicePropCodePanasonic.ShutterSpeed,
+		this.decoderShutterSpeed,
+		4
+	)
+
+	public getISO = this.getPropGetter(
+		DevicePropCodePanasonic.ISO,
+		this.decodeISO,
+		4
+	)
+
+	public setISO = this.getPropSetter(
+		DevicePropCodePanasonic.ISO,
+		this.encodeISO,
+		4
+	)
+
+	public getISODesc = async (): Promise<PropDescEnum<ISO>> => {
+		const {range} = await this.getPropDesc(
+			DevicePropCodePanasonic.ISO,
+			this.decodeISO,
+			4
+		)
+
+		return {
+			canRead: true,
+			canWrite: true,
+			range,
+		}
+	}
+
+	public getExposureMode = this.getPropGetter(
+		DevicePropCodePanasonic.CameraMode_ModePos,
+		this.decodeExposureMode,
+		2
+	)
+
+	public getExposureModeDesc = async (): Promise<
+		PropDescEnum<ExposureMode>
+	> => {
+		return {
+			canRead: true,
+			canWrite: true,
+			range: [ExposureMode.P, ExposureMode.A, ExposureMode.S, ExposureMode.M],
 		}
 	}
 
@@ -189,5 +207,140 @@ export class TethrPanasnoic extends Tethr {
 		const blob = new Blob([jpegData], {type: 'image/jpg'})
 		const url = window.URL.createObjectURL(blob)
 		return url
+	}
+
+	private getPropGetter<T>(
+		dpc: number,
+		fmap: (n: number) => T = _.identity,
+		size: 2 | 4
+	) {
+		return async () => {
+			const {data} = await this.device.receiveData({
+				label: 'Panasonic GetProperty',
+				code: OpCodePanasonic.GetProperty,
+				parameters: [dpc],
+			})
+
+			const decoder = new PTPDecoder(data)
+
+			const dpc2 = decoder.getUint32().toString(16)
+			const bytes = decoder.getUint32()
+			const value = size === 2 ? decoder.getUint16() : decoder.getUint32()
+
+			console.log({dpc2, bytes, value, data})
+
+			return fmap(value)
+		}
+	}
+
+	private getPropSetter<T>(
+		dpc: number,
+		fmap: (n: T) => number,
+		valuesize: 2 | 4
+	) {
+		return async (value: T) => {
+			const data = new ArrayBuffer(4 + 4 + valuesize)
+			const dataView = new DataView(data)
+
+			dataView.setUint32(0, dpc)
+			dataView.setUint32(4, valuesize)
+			if (valuesize === 2) dataView.setUint16(8, fmap(value))
+			if (valuesize === 4) dataView.setUint16(8, fmap(value))
+
+			console.log(data)
+
+			await this.device.sendData({
+				label: 'Panasonic SetProperty',
+				code: OpCodePanasonic.SetProperty,
+				parameters: [dpc],
+				data,
+			})
+
+			return true
+		}
+	}
+
+	private async getPropDesc<T>(
+		dpc: number,
+		fmap: (n: number) => T = _.identity,
+		size: 2 | 4
+	) {
+		const {data} = await this.device.receiveData({
+			label: 'Panasonic ListProperty',
+			code: OpCodePanasonic.ListProperty,
+			parameters: [dpc],
+		})
+
+		const decoder = new PTPDecoder(data)
+
+		decoder.skip(4) // dpc
+		const headerLength = decoder.getUint32()
+
+		decoder.goTo(headerLength * 4 + 2 * 4)
+
+		const currentValue = fmap(
+			size === 2 ? decoder.getUint16() : decoder.getUint32()
+		)
+
+		const range = [
+			...(size === 2 ? decoder.getUint16Array() : decoder.getUint32Array()),
+		].map(fmap)
+
+		return {
+			currentValue,
+			range,
+		}
+	}
+
+	private decodeAperture(aperture: number) {
+		return aperture / 10
+	}
+
+	private encodeAperture(aperture: Aperture) {
+		if (aperture === 'auto') return 0
+		return aperture * 10
+	}
+
+	private decoderShutterSpeed(value: number) {
+		switch (value) {
+			case 0xffffffff:
+				return 'bulb'
+			case 0x0fffffff:
+				return 'auto'
+			case 0x0ffffffe:
+				return 'Unknown'
+			default:
+				if ((value & 0x80000000) === 0x00000000) {
+					return '1/' + value / 1000
+				} else {
+					return ((value & 0x7fffffff) / 1000).toString()
+				}
+		}
+	}
+
+	private encodeISO(iso: ISO): number {
+		if (iso === 'auto') return 0xffffffff
+		return iso
+	}
+
+	private decodeISO(iso: number): ISO {
+		if (iso === 0xffffffff) return 'auto'
+		if (iso === 0xfffffffe) return 'auto' // i-ISO
+		return iso
+	}
+
+	private decodeExposureMode(mode: number): null | ExposureMode {
+		switch (mode) {
+			case 0x0:
+				return ExposureMode.P
+			case 0x1:
+				return ExposureMode.A
+			case 0x2:
+				return ExposureMode.S
+			case 0x3:
+				return ExposureMode.M
+		}
+
+		return null
 	}
 }
