@@ -68,7 +68,7 @@ export class CameraControlSigma extends CameraControl {
 	public getExposureMode = async (): Promise<null | ExposureMode> => {
 		return (await this.getCamDataGroup2()).exposureMode
 	}
-	public setExposureMode = async (mode: ExposureMode): Promise<void> => {
+	public setExposureMode = async (mode: ExposureMode): Promise<boolean> => {
 		const buffer = new ArrayBuffer(3)
 		const dataView = new DataView(buffer)
 
@@ -82,6 +82,8 @@ export class CameraControlSigma extends CameraControl {
 			code: 0x9017,
 			data,
 		})
+
+		return true
 	}
 
 	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
