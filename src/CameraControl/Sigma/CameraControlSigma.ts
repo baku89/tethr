@@ -209,8 +209,6 @@ export class CameraControlSigma extends CameraControl {
 			if (result.status == 0x0002) break
 			if (result.status == 0x0005) break
 
-			console.log(result.status.toString(16))
-
 			await new Promise(r => setTimeout(r, 500))
 		}
 
@@ -283,8 +281,6 @@ export class CameraControlSigma extends CameraControl {
 			expCompExcludeAB: decoder.getUint8(),
 		}
 
-		console.log('group1=', group1)
-
 		return group1
 	}
 
@@ -318,8 +314,6 @@ export class CameraControlSigma extends CameraControl {
 		}
 
 		const group2 = {...group2FirstOct, ...group2SecondOct}
-
-		console.log('group2=', group2)
 
 		return group2
 	}
