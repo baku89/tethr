@@ -198,10 +198,6 @@ export class CameraControl {
 		return null
 	}
 
-	public getThumb = async (objectID: number): Promise<null> => {
-		return null
-	}
-
 	public startLiveView = async (): Promise<void> => {
 		return
 	}
