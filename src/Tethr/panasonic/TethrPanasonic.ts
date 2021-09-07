@@ -106,9 +106,23 @@ export class TethrPanasnoic extends Tethr {
 
 	public getShutterSpeed = this.getPropGetter(
 		DevicePropCodePanasonic.ShutterSpeed,
-		this.decoderShutterSpeed,
+		this.decodeShutterSpeed,
 		4
 	)
+
+	public getShutterSpeedDesc = async (): Promise<PropDescEnum<string>> => {
+		const {range} = await this.getPropDesc(
+			DevicePropCodePanasonic.ShutterSpeed,
+			this.decodeShutterSpeed,
+			4
+		)
+
+		return {
+			canRead: true,
+			canWrite: true,
+			range,
+		}
+	}
 
 	public getISO = this.getPropGetter(
 		DevicePropCodePanasonic.ISO,
@@ -247,8 +261,6 @@ export class TethrPanasnoic extends Tethr {
 			if (valuesize === 2) dataView.setUint16(8, fmap(value))
 			if (valuesize === 4) dataView.setUint16(8, fmap(value))
 
-			console.log(data)
-
 			await this.device.sendData({
 				label: 'Panasonic SetProperty',
 				code: OpCodePanasonic.SetProperty,
@@ -301,7 +313,7 @@ export class TethrPanasnoic extends Tethr {
 		return aperture * 10
 	}
 
-	private decoderShutterSpeed(value: number) {
+	private decodeShutterSpeed(value: number) {
 		switch (value) {
 			case 0xffffffff:
 				return 'bulb'
