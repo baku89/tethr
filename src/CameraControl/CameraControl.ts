@@ -21,7 +21,7 @@ export enum ExposureMode {
 	M = 'M',
 }
 
-export type BatteryLevel = 'ac' | number
+export type BatteryLevel = 'ac' | 'low' | number
 
 export interface DevicePropDesc<T> {
 	currentValue: T
