@@ -110,16 +110,32 @@ export class CameraControl {
 		return null
 	}
 
+	public setAperture = async (aperture: Aperture): Promise<boolean> => {
+		return false
+	}
+
 	public getShutterSpeed = async (): Promise<null | string> => {
 		return null
+	}
+
+	public setShutterSpeed = async (shutterSpeed: string): Promise<boolean> => {
+		return false
 	}
 
 	public getISO = async (): Promise<null | ISO> => {
 		return null
 	}
 
+	public setISO = async (iso: ISO): Promise<boolean> => {
+		return false
+	}
+
 	public getExposureMode = async (): Promise<null | ExposureMode> => {
 		return null
+	}
+
+	public setExposureMode = async (mode: ExposureMode): Promise<boolean> => {
+		return false
 	}
 
 	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
