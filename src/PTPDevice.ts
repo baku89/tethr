@@ -59,7 +59,7 @@ export class PTPDevice extends EventEmitter {
 			await device.selectConfiguration(1)
 			configuration = device.configuration
 		}
-		if (!configuration) throw new Error('Cannot configurate PTPDevice')
+		if (!configuration) throw new Error('Cannot configure PTPDevice')
 
 		// Claim interface
 		await device.claimInterface(0)
