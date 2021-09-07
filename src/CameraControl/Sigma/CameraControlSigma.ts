@@ -1,7 +1,18 @@
 import {PTPDecoder} from '../../PTPDecoder'
-import {BatteryLevel, CameraControl, ExposureMode} from '../CameraControl'
-
-const SigmaAperture = new Map<number, number>([[1.0, 0b00001000]])
+import {
+	Aperture,
+	BatteryLevel,
+	CameraControl,
+	ExposureMode,
+	ISO,
+} from '../CameraControl'
+import {
+	SigmaApexApertureHalf,
+	SigmaApexApertureThirds,
+	SigmaApexISO,
+	SigmaApexShutterSpeedHalf,
+	SigmaApexShutterSpeedThirds,
+} from './SigmaApexTable'
 
 export class CameraControlSigma extends CameraControl {
 	public open = async (): Promise<void> => {
@@ -16,16 +27,42 @@ export class CameraControlSigma extends CameraControl {
 
 		await this.getCamDataGroup1()
 		await this.getCamDataGroup2()
+
+		await this.setExposureMode(ExposureMode.S)
 	}
 
-	public getFocalLength = async () => {
+	public getFocalLength = async (): Promise<null | number> => {
 		const data = (await this.getCamDataGroup1()).currentLensFocalLength
 		return this.decodeFocalLength(data)
 	}
 
-	public getAperture = async () => {
-		const data = (await this.getCamDataGroup1()).aperture
-		return null
+	public getAperture = async (): Promise<null | Aperture> => {
+		const {aperture} = await this.getCamDataGroup1()
+		if (aperture === 0x0) return 'auto'
+		return (
+			SigmaApexApertureThirds.get(aperture) ??
+			SigmaApexApertureHalf.get(aperture) ??
+			null
+		)
+	}
+
+	public getShutterSpeed = async (): Promise<null | string> => {
+		const {shutterSpeed} = await this.getCamDataGroup1()
+		if (shutterSpeed === 0x0) return 'auto'
+		return (
+			SigmaApexShutterSpeedThirds.get(shutterSpeed) ??
+			SigmaApexShutterSpeedHalf.get(shutterSpeed) ??
+			null
+		)
+	}
+
+	public getISO = async (): Promise<null | ISO> => {
+		const {isoAuto, isoSpeed} = await this.getCamDataGroup1()
+		if (isoAuto === 0x01) {
+			return 'auto'
+		} else {
+			return SigmaApexISO.get(isoSpeed) ?? null
+		}
 	}
 
 	public getExposureMode = async (): Promise<null | ExposureMode> => {
@@ -164,8 +201,8 @@ export class CameraControlSigma extends CameraControl {
 			shutterSpeed: decoder.getUint8(),
 			aperture: decoder.getUint8(),
 			programShift: decoder.getInt8(),
-			iSOAuto: decoder.getUint8(),
-			iSOSpeed: decoder.getUint8().toString(2),
+			isoAuto: decoder.getUint8(),
+			isoSpeed: decoder.getUint8(),
 			expCompensation: decoder.getUint8(),
 			abValue: decoder.getUint8(),
 			abSettings: decoder.getUint8(),
