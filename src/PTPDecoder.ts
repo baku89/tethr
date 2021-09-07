@@ -23,6 +23,14 @@ export class PTPDecoder {
 		this.byteOffset += bytes
 	}
 
+	public goTo(offset: number): void {
+		this.byteOffset = offset
+	}
+
+	public hasNext(bytes = 0): boolean {
+		return this.byteOffset + bytes < this.buffer.byteLength
+	}
+
 	public getUint8 = (): number => {
 		const ret = this.dataView.getUint8(this.byteOffset)
 		this.byteOffset += 1
