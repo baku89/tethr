@@ -1,5 +1,6 @@
 import _ from 'lodash'
 
+import {ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
 import {
 	Aperture,
@@ -259,11 +260,14 @@ export class CameraControlSigma extends CameraControl {
 	}
 
 	public getLiveView = async (): Promise<null | string> => {
-		const {data} = await this.device.receiveData({
+		const {code, data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamViewFrame',
 			code: 0x902b,
 			parameters: [],
+			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 		})
+
+		if (code !== ResCode.OK) return null
 
 		const jpegData = CameraControl.extractJpeg(data)
 
@@ -408,7 +412,6 @@ export class CameraControlSigma extends CameraControl {
 
 	private decodeIFD(data: ArrayBuffer) {
 		const dataView = new DataView(data)
-		const size = data.byteLength
 		const asciiDecoder = new TextDecoder('ascii')
 
 		const entryCount = dataView.getUint32(4, true)

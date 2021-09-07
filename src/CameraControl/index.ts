@@ -27,7 +27,6 @@ export async function connectCamera(): Promise<CameraControl> {
 	}
 
 	await camera.open()
-
 	return camera
 }
 

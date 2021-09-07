@@ -50,7 +50,9 @@ export class CameraControl {
 	}
 
 	public async open(): Promise<void> {
-		await this.device.open()
+		if (!this.device.opened) {
+			await this.device.open()
+		}
 
 		await this.device.sendCommand({
 			label: 'Open Session',
@@ -164,7 +166,9 @@ export class CameraControl {
 		return null
 	}
 
-	public setExposureMode = async (mode: ExposureMode): Promise<boolean> => {
+	public setExposureMode = async (
+		exposureMode: ExposureMode
+	): Promise<boolean> => {
 		return false
 	}
 

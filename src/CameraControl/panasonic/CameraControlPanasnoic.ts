@@ -1,4 +1,4 @@
-import {OpCode} from '../../PTPDatacode'
+import {OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
 import {Aperture, CameraControl, ExposureMode, ISO} from '../CameraControl'
 
@@ -145,11 +145,13 @@ export class CameraControlPanasnoic extends CameraControl {
 	}
 
 	public getLiveView = async (): Promise<null | string> => {
-		const {data} = await this.device.receiveData({
+		const {code, data} = await this.device.receiveData({
 			label: 'Panasonic LiveView',
 			code: 0x9706,
-			parameters: [],
+			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 		})
+
+		if (code !== ResCode.OK) return null
 
 		// This does work somehow
 		const jpegData = data.slice(180) //CameraControlPanasnoic.extractJpeg(data)
