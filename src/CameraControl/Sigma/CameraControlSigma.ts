@@ -110,6 +110,66 @@ export class CameraControlSigma extends CameraControl {
 		)
 	}
 
+	public getShutterSpeedDesc = async (): Promise<PropDescEnum<string>> => {
+		const ifdEntries = await this.getCamCanSetInfo5()
+		const info = ifdEntries.find(e => e.tag === 212)
+
+		if (!info || !Array.isArray(info.value)) throw new Error('Invalid IFD')
+
+		if (info.value.length === 0) {
+			// Should be auto aperture
+			return {
+				canWrite: false,
+				canRead: true,
+				range: [],
+			}
+		}
+
+		const [tvMin, tvMax, step] = info.value
+
+		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
+		const table = isStepOneThird
+			? SigmaApexShutterSpeedOneThird
+			: SigmaApexShutterSpeedHalf
+
+		const shutterSpeeds = Array.from(table.entries()).filter(
+			e => e[1] !== 'sync' && e[1] !== 'bulb'
+		)
+
+		const ssMinRaw = 1 / 2 ** tvMin
+		const ssMaxRaw = 1 / 2 ** tvMax
+
+		const ssMinEntry = _.minBy(shutterSpeeds, e =>
+			Math.abs(convertSSToTime(e[1]) - ssMinRaw)
+		)
+		const ssMaxEntry = _.minBy(shutterSpeeds, e =>
+			Math.abs(convertSSToTime(e[1]) - ssMaxRaw)
+		)
+
+		if (!ssMinEntry || !ssMaxEntry) throw new Error()
+
+		const ssMinIndex = ssMinEntry[0]
+		const ssMaxIndex = ssMaxEntry[0]
+
+		const range = shutterSpeeds
+			.filter(e => ssMinIndex <= e[0] && e[0] <= ssMaxIndex)
+			.map(e => e[1])
+
+		return {
+			canWrite: true,
+			canRead: true,
+			range,
+		}
+
+		function convertSSToTime(ss: string) {
+			if (ss === 'bulk' || ss === 'sync') return Infinity
+
+			if (ss.includes('"')) return parseFloat(ss.replace('"', '.'))
+
+			return 1 / parseInt(ss)
+		}
+	}
+
 	public setShutterSpeed = async (shutterSpeed: string): Promise<boolean> => {
 		const byte = SigmaApexShutterSpeedOneThird.getKey(shutterSpeed)
 		if (!byte) return false
@@ -472,7 +532,7 @@ export class CameraControlSigma extends CameraControl {
 						.fill(0)
 						.map((_, i) => {
 							const f = dataView.getUint8(off + i * 2)
-							const d = dataView.getUint8(off + i * 2 + 1)
+							const d = dataView.getInt8(off + i * 2 + 1)
 
 							return d + f / 0x100
 						})
