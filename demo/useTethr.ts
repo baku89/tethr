@@ -1,7 +1,7 @@
 import {ref, watch} from 'vue'
 
-import {Aperture, connectCamera, Tethr} from '../src/Tethr'
-import {ExposureMode, PropDescEnum} from '../src/Tethr/Tethr'
+import {connectCamera, Tethr} from '../src/Tethr'
+import {Aperture, ExposureMode, PropDescEnum} from '../src/Tethr/Tethr'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -40,7 +40,7 @@ export function useTethr() {
 				await camera.open()
 			}
 
-			;(window as any).cam = camera
+			(window as any).cam = camera
 
 			exposureMode.value = await camera.getExposureMode()
 			exposureModeDesc.value = await camera.getExposureModeDesc()
