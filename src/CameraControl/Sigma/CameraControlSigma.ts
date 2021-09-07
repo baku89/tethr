@@ -29,8 +29,6 @@ export class CameraControlSigma extends CameraControl {
 
 		await this.getCamDataGroup1()
 		await this.getCamDataGroup2()
-
-		await this.setExposureMode(ExposureMode.S)
 	}
 
 	public getFocalLength = async (): Promise<null | number> => {
