@@ -360,7 +360,7 @@ export class PTPDevice extends EventEmitter {
 			const eventName = 'event:0x' + code.toString(16)
 			this.emit(eventName, {type, code, transactionId, payload})
 		} finally {
-			setTimeout(this.listenBulkIn, 0)
+			setTimeout(this.listenInterruptIn, 0)
 		}
 	}
 
