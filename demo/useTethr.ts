@@ -72,6 +72,10 @@ export function useTethr() {
 		}
 	}
 
+	async function runAutoFocus() {
+		await camera?.runAutoFocus()
+	}
+
 	async function takePicture() {
 		if (!camera) return
 
@@ -121,6 +125,7 @@ export function useTethr() {
 		liveviewURL,
 		liveviewing: readonly(liveviewing),
 		lastPictureURL,
+		runAutoFocus,
 		toggleCameraConnection,
 		toggleLiveview,
 		takePicture,

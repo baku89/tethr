@@ -213,6 +213,8 @@ export class Tethr {
 		return (value - min) / (max - min)
 	}
 
+	public runAutoFocus = async (): Promise<boolean> => false
+
 	public takePicture = async (): Promise<null | string> => null
 
 	public startLiveView = async (): Promise<void> => {

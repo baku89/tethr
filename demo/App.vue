@@ -5,6 +5,7 @@
 		<button @click="toggleCameraConnection">
 			{{ connected ? 'Dionnect' : 'Connect' }}
 		</button>
+		<button @click="runAutoFocus">AF-S</button>
 		<button @click="takePicture">Take Picture</button>
 		<button @click="toggleLiveview">
 			{{ liveviewing ? 'Stop LV' : 'Start LV' }}
@@ -70,41 +71,7 @@ import {useTethr} from './useTethr'
 
 export default defineComponent({
 	setup() {
-		const {
-			connected,
-			exposureMode,
-			exposureModeDesc,
-			aperture,
-			apertureDesc,
-			shutterSpeed,
-			shutterSpeedDesc,
-			iso,
-			isoDesc,
-			liveviewURL,
-			liveviewing,
-			lastPictureURL,
-			toggleCameraConnection,
-			toggleLiveview,
-			takePicture,
-		} = useTethr()
-
-		return {
-			exposureMode,
-			exposureModeDesc,
-			connected,
-			aperture,
-			apertureDesc,
-			shutterSpeed,
-			shutterSpeedDesc,
-			iso,
-			isoDesc,
-			liveviewURL,
-			liveviewing,
-			lastPictureURL,
-			toggleCameraConnection,
-			toggleLiveview,
-			takePicture,
-		}
+		return useTethr()
 	},
 })
 </script>

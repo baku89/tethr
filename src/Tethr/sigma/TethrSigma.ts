@@ -443,7 +443,7 @@ export class TethrSigma extends Tethr {
 		return url
 	}
 
-	public startAutoFocus = async (): Promise<boolean> => {
+	public runAutoFocus = async (): Promise<boolean> => {
 		const {data: camCaptStatusData} = await this.device.receiveData({
 			label: 'SigmaFP GetCamCaptStatus',
 			code: OpCodeSigma.GetCamCaptStatus,
