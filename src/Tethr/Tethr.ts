@@ -124,19 +124,13 @@ export class Tethr {
 		}
 	}
 
-	public getFocalLength = async (): Promise<null | number> => {
-		return null
-	}
+	public getFocalLength = async (): Promise<null | number> => null
 
-	public getExposureMode = async (): Promise<null | ExposureMode> => {
-		return null
-	}
+	public getExposureMode = async (): Promise<null | ExposureMode> => null
 
 	public setExposureMode = async (
 		exposureMode: ExposureMode
-	): Promise<boolean> => {
-		return false
-	}
+	): Promise<boolean> => false
 
 	public getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
 		return {
@@ -146,13 +140,9 @@ export class Tethr {
 		}
 	}
 
-	public getAperture = async (): Promise<null | Aperture> => {
-		return null
-	}
+	public getAperture = async (): Promise<null | Aperture> => null
 
-	public setAperture = async (aperture: Aperture): Promise<boolean> => {
-		return false
-	}
+	public setAperture = async (aperture: Aperture): Promise<boolean> => false
 
 	public getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
 		return {
@@ -162,13 +152,10 @@ export class Tethr {
 		}
 	}
 
-	public getShutterSpeed = async (): Promise<null | string> => {
-		return null
-	}
+	public getShutterSpeed = async (): Promise<null | string> => null
 
-	public setShutterSpeed = async (shutterSpeed: string): Promise<boolean> => {
-		return false
-	}
+	public setShutterSpeed = async (shutterSpeed: string): Promise<boolean> =>
+		false
 
 	public getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
 		return {
@@ -178,13 +165,9 @@ export class Tethr {
 		}
 	}
 
-	public getISO = async (): Promise<null | ISO> => {
-		return null
-	}
+	public getISO = async (): Promise<null | ISO> => null
 
-	public setISO = async (iso: ISO): Promise<boolean> => {
-		return false
-	}
+	public setISO = async (iso: ISO): Promise<boolean> => false
 
 	public getISODesc = async (): Promise<PropDesc<ISO>> => {
 		return {
@@ -230,9 +213,7 @@ export class Tethr {
 		return (value - min) / (max - min)
 	}
 
-	public takePicture = async (): Promise<null | string> => {
-		return null
-	}
+	public takePicture = async (): Promise<null | string> => null
 
 	public startLiveView = async (): Promise<void> => {
 		console.info('Liveview is not supported for the current camera')
