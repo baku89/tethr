@@ -1,7 +1,7 @@
 import {ref, watch} from 'vue'
 
 import {connectCamera, Tethr} from '../src/Tethr'
-import {Aperture, ExposureMode, ISO, PropDescEnum} from '../src/Tethr/Tethr'
+import {Aperture, ExposureMode, ISO, PropDesc} from '../src/Tethr/Tethr'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -15,28 +15,28 @@ export function useTethr() {
 	const lastPictureURL = ref(TransparentPng)
 
 	const exposureMode = ref<ExposureMode | null>(null)
-	const exposureModeDesc = ref<PropDescEnum<ExposureMode>>({
+	const exposureModeDesc = ref<PropDesc<ExposureMode>>({
 		canRead: false,
 		canWrite: false,
 		range: [],
 	})
 
 	const aperture = ref<Aperture | null>(null)
-	const apertureDesc = ref<PropDescEnum<Aperture>>({
+	const apertureDesc = ref<PropDesc<Aperture>>({
 		canRead: false,
 		canWrite: false,
 		range: [],
 	})
 
 	const shutterSpeed = ref<string | null>(null)
-	const shutterSpeedDesc = ref<PropDescEnum<string>>({
+	const shutterSpeedDesc = ref<PropDesc<string>>({
 		canRead: false,
 		canWrite: false,
 		range: [],
 	})
 
 	const iso = ref<ISO | null>(null)
-	const isoDesc = ref<PropDescEnum<ISO>>({
+	const isoDesc = ref<PropDesc<ISO>>({
 		canRead: false,
 		canWrite: false,
 		range: [],

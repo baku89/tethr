@@ -8,7 +8,7 @@ import {
 	BatteryLevel,
 	ExposureMode,
 	ISO,
-	PropDescEnum,
+	PropDesc,
 	Tethr,
 	WhiteBalance,
 } from '../Tethr'
@@ -108,7 +108,7 @@ export class TethrSigma extends Tethr {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
 
-	public getApertureDesc = async (): Promise<PropDescEnum<Aperture>> => {
+	public getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
 		const fValue = (await this.getCamCanSetInfo5()).fValue
 
 		if (fValue.length === 0) {
@@ -156,7 +156,7 @@ export class TethrSigma extends Tethr {
 		)
 	}
 
-	public getShutterSpeedDesc = async (): Promise<PropDescEnum<string>> => {
+	public getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
 		const info = (await this.getCamCanSetInfo5()).shutterSpeed
 
 		if (info.length === 0) {
@@ -243,7 +243,7 @@ export class TethrSigma extends Tethr {
 		)
 	}
 
-	public getISODesc = async (): Promise<PropDescEnum<ISO>> => {
+	public getISODesc = async (): Promise<PropDesc<ISO>> => {
 		const {isoManual} = await this.getCamCanSetInfo5()
 
 		const [svMin, svMax] = isoManual
@@ -265,50 +265,63 @@ export class TethrSigma extends Tethr {
 
 	public getWhiteBalance = async (): Promise<null | WhiteBalance> => {
 		const {whiteBalance} = await this.getCamDataGroup2()
-
-		const label = SigmaApexWhiteBalance.get(whiteBalance) ?? null
-
-		if (label === 'manual') {
-			return (await this.getCamDataGroup5()).colorTemp
-		} else {
-			return label
-		}
+		return SigmaApexWhiteBalance.get(whiteBalance) ?? null
 	}
 
-	public setWhiteBalance = async (
-		wb: number | WhiteBalance
-	): Promise<boolean> => {
-		if (typeof wb === 'number') {
-			// Manual
-			return (
-				(await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, 0x0e)) &&
-				(await this.setCamData(OpCodeSigma.SetCamDataGroup5, 1, wb))
-			)
-		} else {
-			// With label
-			const byte = SigmaApexWhiteBalance.getKey(wb)
-			if (!byte) return false
-			return this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, byte)
-		}
+	public setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
+		const byte = SigmaApexWhiteBalance.getKey(wb)
+		if (!byte) return false
+		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, byte)
+		// }
 	}
 
-	public getWhiteBalanceDesc = async (): Promise<
-		PropDescEnum<WhiteBalance>
-	> => {
-		const {whiteBalance, colorTemerature} = await this.getCamCanSetInfo5()
+	public getWhiteBalanceDesc = async (): Promise<PropDesc<WhiteBalance>> => {
+		const {whiteBalance} = await this.getCamCanSetInfo5()
 
-		const presetsRange = whiteBalance
+		const range = whiteBalance
 			.map(v => SigmaApexWhiteBalanceIFD.get(v))
 			.filter(v => !!v) as WhiteBalance[]
-
-		const [min, max, step] = colorTemerature
-
-		const manualRange = _.range(min, max, step)
 
 		return {
 			canRead: true,
 			canWrite: true,
-			range: [...presetsRange, ...manualRange],
+			range,
+		}
+	}
+
+	public getColorTemperature = async (): Promise<null | number> => {
+		const wb = await this.getWhiteBalance()
+		if (wb !== 'manual') return null
+
+		const {colorTemp} = await this.getCamDataGroup5()
+		return colorTemp
+	}
+
+	public setColorTemperature = async (value: number): Promise<boolean> => {
+		return (
+			(await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, 0x0e)) &&
+			(await this.setCamData(OpCodeSigma.SetCamDataGroup5, 1, value))
+		)
+	}
+
+	public getColorTemperatureDesc = async (): Promise<PropDesc<number>> => {
+		const {colorTemerature} = await this.getCamCanSetInfo5()
+
+		if (colorTemerature.length !== 3) {
+			// When WB is not set to 'manual'
+			return {
+				canRead: false,
+				canWrite: false,
+				range: [],
+			}
+		}
+
+		const [min, max, step] = colorTemerature
+
+		return {
+			canRead: true,
+			canWrite: true,
+			range: _.range(min, max, step),
 		}
 	}
 
@@ -326,9 +339,7 @@ export class TethrSigma extends Tethr {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, byte)
 	}
 
-	public getExposureModeDesc = async (): Promise<
-		PropDescEnum<ExposureMode>
-	> => {
+	public getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
 		const {exposureMode} = await this.getCamCanSetInfo5()
 
 		const range = exposureMode

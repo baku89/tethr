@@ -2,7 +2,7 @@ import _ from 'lodash'
 
 import {OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
-import {Aperture, ExposureMode, ISO, PropDescEnum, Tethr} from '../Tethr'
+import {Aperture, ExposureMode, ISO, PropDesc, Tethr} from '../Tethr'
 
 enum OpCodePanasonic {
 	OpenSession = 0x9102,
@@ -90,7 +90,7 @@ export class TethrPanasnoic extends Tethr {
 		2
 	)
 
-	public getApertureDesc = async (): Promise<PropDescEnum<Aperture>> => {
+	public getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
 		const {range} = await this.getPropDesc(
 			DevicePropCodePanasonic.Aperture,
 			this.decodeAperture,
@@ -110,7 +110,7 @@ export class TethrPanasnoic extends Tethr {
 		4
 	)
 
-	public getShutterSpeedDesc = async (): Promise<PropDescEnum<string>> => {
+	public getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
 		const {range} = await this.getPropDesc(
 			DevicePropCodePanasonic.ShutterSpeed,
 			this.decodeShutterSpeed,
@@ -136,7 +136,7 @@ export class TethrPanasnoic extends Tethr {
 		4
 	)
 
-	public getISODesc = async (): Promise<PropDescEnum<ISO>> => {
+	public getISODesc = async (): Promise<PropDesc<ISO>> => {
 		const {range} = await this.getPropDesc(
 			DevicePropCodePanasonic.ISO,
 			this.decodeISO,
@@ -156,9 +156,7 @@ export class TethrPanasnoic extends Tethr {
 		2
 	)
 
-	public getExposureModeDesc = async (): Promise<
-		PropDescEnum<ExposureMode>
-	> => {
+	public getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
 		return {
 			canRead: true,
 			canWrite: true,

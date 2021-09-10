@@ -33,7 +33,7 @@ export type WhiteBalance =
 	| 'florescent'
 	| 'tungsten'
 	| 'flash'
-	| number
+	| 'manual'
 
 export type BatteryLevel = 'ac' | 'low' | number
 
@@ -48,7 +48,7 @@ export interface DevicePropDesc<T> {
 	}
 }
 
-export interface PropDescEnum<T> {
+export type PropDesc<T> = {
 	canRead: boolean
 	canWrite: boolean
 	range: T[]
@@ -138,9 +138,7 @@ export class Tethr {
 		return false
 	}
 
-	public getExposureModeDesc = async (): Promise<
-		PropDescEnum<ExposureMode>
-	> => {
+	public getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
 		return {
 			canRead: false,
 			canWrite: false,
@@ -156,7 +154,7 @@ export class Tethr {
 		return false
 	}
 
-	public getApertureDesc = async (): Promise<PropDescEnum<Aperture>> => {
+	public getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
 		return {
 			canRead: false,
 			canWrite: false,
@@ -172,7 +170,7 @@ export class Tethr {
 		return false
 	}
 
-	public getShutterSpeedDesc = async (): Promise<PropDescEnum<string>> => {
+	public getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
 		return {
 			canRead: false,
 			canWrite: false,
@@ -188,7 +186,7 @@ export class Tethr {
 		return false
 	}
 
-	public getISODesc = async (): Promise<PropDescEnum<ISO>> => {
+	public getISODesc = async (): Promise<PropDesc<ISO>> => {
 		return {
 			canRead: false,
 			canWrite: false,
@@ -196,19 +194,23 @@ export class Tethr {
 		}
 	}
 
-	public getWhiteBalance = async (): Promise<null | WhiteBalance> => {
-		return null
+	public getWhiteBalance = async (): Promise<null | WhiteBalance> => null
+
+	public setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => false
+
+	public getWhiteBalanceDesc = async (): Promise<PropDesc<WhiteBalance>> => {
+		return {
+			canRead: false,
+			canWrite: false,
+			range: [],
+		}
 	}
 
-	public setWhiteBalance = async (
-		wb: number | WhiteBalance
-	): Promise<boolean> => {
-		return false
-	}
+	public getColorTemperature = async (): Promise<null | number> => null
 
-	public getWhiteBalanceDesc = async (): Promise<
-		PropDescEnum<WhiteBalance>
-	> => {
+	public setColorTemperature = async (value: number): Promise<boolean> => false
+
+	public getColorTemperatureDesc = async (): Promise<PropDesc<number>> => {
 		return {
 			canRead: false,
 			canWrite: false,
