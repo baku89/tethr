@@ -10,16 +10,28 @@ import {
 	PTPStorageType,
 } from '../PTPEnum'
 
-export type ISO = 'auto' | number
-
-export type Aperture = 'auto' | number
-
 export enum ExposureMode {
 	P = 'P',
 	A = 'A',
 	S = 'S',
 	M = 'M',
 }
+
+export type Aperture = 'auto' | number
+
+export type ISO = 'auto' | number
+
+export type WhiteBalance =
+	| 'auto'
+	| 'auto cool'
+	| 'auto warm'
+	| 'daylight'
+	| 'cloud'
+	| 'incandescent'
+	| 'florescent'
+	| 'tungsten'
+	| 'flash'
+	| number
 
 export type BatteryLevel = 'ac' | 'low' | number
 
@@ -114,6 +126,26 @@ export class Tethr {
 		return null
 	}
 
+	public getExposureMode = async (): Promise<null | ExposureMode> => {
+		return null
+	}
+
+	public setExposureMode = async (
+		exposureMode: ExposureMode
+	): Promise<boolean> => {
+		return false
+	}
+
+	public getExposureModeDesc = async (): Promise<
+		PropDescEnum<ExposureMode>
+	> => {
+		return {
+			canRead: false,
+			canWrite: false,
+			range: [],
+		}
+	}
+
 	public getAperture = async (): Promise<null | Aperture> => {
 		return null
 	}
@@ -162,18 +194,16 @@ export class Tethr {
 		}
 	}
 
-	public getExposureMode = async (): Promise<null | ExposureMode> => {
+	public getWhiteBalance = async (): Promise<null | WhiteBalance> => {
 		return null
 	}
 
-	public setExposureMode = async (
-		exposureMode: ExposureMode
-	): Promise<boolean> => {
+	public setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
 		return false
 	}
 
-	public getExposureModeDesc = async (): Promise<
-		PropDescEnum<ExposureMode>
+	public getWhiteBalanceDesc = async (): Promise<
+		PropDescEnum<WhiteBalance>
 	> => {
 		return {
 			canRead: false,
