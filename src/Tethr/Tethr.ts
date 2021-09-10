@@ -235,17 +235,21 @@ export class Tethr {
 	public getDevicePropDesc = async (
 		deviceProp: number
 	): Promise<null | DevicePropDesc<number>> => {
-		const info = await this.getDeviceInfo()
-
-		if (!info.DevicePropertiesSupported.includes(deviceProp)) {
-			return null
-		}
-
-		const {data} = await this.device.receiveData({
+		const {code, data} = await this.device.receiveData({
 			label: 'GetDevicePropDesc',
 			code: OpCode.GetDevicePropDesc,
 			parameters: [deviceProp],
+			expectedResCodes: [ResCode.OK, ResCode.DevicePropNotSupported],
 		})
+
+		if (code === ResCode.DevicePropNotSupported) {
+			console.info(
+				`DeviceProp: ${deviceProp.toString(16)} (${
+					DevicePropCode[deviceProp]
+				}) is not supported`
+			)
+			return null
+		}
 
 		const decoder = new PTPDecoder(data.slice(2))
 
