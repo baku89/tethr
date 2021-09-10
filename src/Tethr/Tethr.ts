@@ -180,25 +180,25 @@ export class Tethr<PropType extends {[name: string]: any} = BasePropType> {
 		}
 	}
 
-	public async getProp<K extends keyof PropType>(
+	public async get<K extends keyof PropType>(
 		name: K
 	): Promise<null | PropType[K]>
-	public async getProp(name: string): Promise<null | any> {
+	public async get(name: string): Promise<null | any> {
 		return null
 	}
 
-	public async setProp<K extends keyof PropType>(
+	public async set<K extends keyof PropType>(
 		name: K,
 		value: PropType[K]
 	): Promise<boolean>
-	public async setProp(name: string, value: any): Promise<boolean> {
+	public async set(name: string, value: any): Promise<boolean> {
 		return false
 	}
 
-	public async getPropDesc<K extends keyof PropType>(
+	public async getDesc<K extends keyof PropType>(
 		name: K
 	): Promise<PropDesc<PropType[K]>>
-	public async getPropDesc(name: string): Promise<PropDesc<any>> {
+	public async getDesc(name: string): Promise<PropDesc<any>> {
 		return {
 			canRead: false,
 			canWrite: false,
