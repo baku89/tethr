@@ -10,13 +10,6 @@ import {
 	PTPStorageType,
 } from '../PTPEnum'
 
-export enum ExposureMode {
-	P = 'P',
-	A = 'A',
-	S = 'S',
-	M = 'M',
-}
-
 export type Aperture = 'auto' | number
 
 export type ISO = 'auto' | number
@@ -37,6 +30,32 @@ export type WhiteBalance =
 
 export type BatteryLevel = 'ac' | 'low' | number
 
+export type FunctionalMode = 'standard' | 'sleep'
+
+export type FocusMode = 'af' | 'mf'
+
+export type FlashMode =
+	| 'auto'
+	| 'off'
+	| 'fill'
+	| 'red eye auto'
+	| 'red eye fill'
+	| 'external sync'
+
+export type ExposureMode = 'P' | 'A' | 'S' | 'M'
+
+export type ExposureMeteringMode =
+	| 'average'
+	| 'center-weighted-average'
+	| 'multi-spot'
+	| 'center-spot'
+
+export type StillCaptureMode = 'normal' | 'burst' | 'timelapse'
+
+export type EffectMode = 'standard' | 'bw' | 'sepia' | string
+
+export type FocusMeteringMode = 'center-spot' | 'multi-spot'
+
 export interface DevicePropDesc<T> {
 	currentValue: T
 	factoryDefaultValue: T
@@ -54,7 +73,44 @@ export type PropDesc<T> = {
 	range: T[]
 }
 
-export class Tethr {
+interface BasePropType {
+	batteryLevel: BatteryLevel
+	functionalMode: FunctionalMode
+	imageSize: [number, number]
+	compressionSetting: 0x5004
+	whiteBalance: WhiteBalance
+	rgbGain: [number, number, number]
+	colorTemperature: number // Added
+	aperture: number // fNumber
+	focalLength: number
+	focusDistance: number
+	focusMode: FocusMode
+	exposureMeteringMode: ExposureMeteringMode
+	flashMode: FlashMode
+	// exposureTime: number
+	shutterSpeed: string
+	exposureMode: ExposureMode // exposureProgramMode
+	// exposureIndex: 0x500f
+	exposureCompensation: number // exposureBiasCompensation
+	dateTime: Date
+	captureDelay: number
+	stillCaptureMode: StillCaptureMode
+	contrast: number
+	sharpness: number
+	digitalZoom: number
+	effectMode: EffectMode
+	burstNumber: number
+	burstInterval: number
+	timelapseNumber: number
+	timelapseInterval: number
+	focusMeteringMode: FocusMeteringMode
+	uploadURL: string
+	artist: string
+	copyrightInfo: string
+	iso: ISO // added
+}
+
+export class Tethr<PropType extends {[name: string]: any} = BasePropType> {
 	protected _opened = false
 
 	public constructor(protected device: PTPDevice) {}
@@ -121,6 +177,32 @@ export class Tethr {
 			}
 
 			console.log(`Storage info for ${id}=`, info)
+		}
+	}
+
+	public async getProp<K extends keyof PropType>(
+		name: K
+	): Promise<null | PropType[K]>
+	public async getProp(name: string): Promise<null | any> {
+		return null
+	}
+
+	public async setProp<K extends keyof PropType>(
+		name: K,
+		value: PropType[K]
+	): Promise<boolean>
+	public async setProp(name: string, value: any): Promise<boolean> {
+		return false
+	}
+
+	public async getPropDesc<K extends keyof PropType>(
+		name: K
+	): Promise<PropDesc<PropType[K]>>
+	public async getPropDesc(name: string): Promise<PropDesc<any>> {
+		return {
+			canRead: false,
+			canWrite: false,
+			range: [],
 		}
 	}
 
