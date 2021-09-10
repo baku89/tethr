@@ -461,7 +461,8 @@ export class TethrSigma extends Tethr {
 
 		if (code !== ResCode.OK) return null
 
-		const jpegData = Tethr.extractJpeg(data)
+		// Might be quirky but somehow works
+		const jpegData = data.slice(10)
 
 		const blob = new Blob([jpegData], {type: 'image/jpg'})
 		const url = window.URL.createObjectURL(blob)
