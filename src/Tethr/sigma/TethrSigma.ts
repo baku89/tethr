@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import sleep from 'sleep-promise'
 
 import {decodeIFD, IFDType} from '../../IFD'
 import {ResCode} from '../../PTPDatacode'
@@ -411,7 +412,7 @@ export class TethrSigma extends Tethr {
 			if (result.status == 0x0002) break
 			if (result.status == 0x0005) break
 
-			await new Promise(r => setTimeout(r, 500))
+			await sleep(500)
 		}
 
 		const {data: pictInfoData} = await this.device.receiveData({
