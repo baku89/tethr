@@ -62,7 +62,16 @@ export class PTPDevice extends EventEmitter {
 		if (!configuration) throw new Error('Cannot configure PTPDevice')
 
 		// Claim interface
-		await device.claimInterface(0)
+		try {
+			await device.claimInterface(0)
+		} catch (err) {
+			if (navigator.userAgent.match(/mac/i)) {
+				console.warn(
+					'On macOS, you need to shut down other applications accessing the camera or run "killall -9 PTPCamera" in Terminal'
+				)
+			}
+			throw err
+		}
 
 		// Determine endpoints number
 		const endpoints = configuration.interfaces[0].alternates[0].endpoints
