@@ -583,6 +583,28 @@ export class TethrSigma extends Tethr {
 		})
 	}
 
+	private async getCamDataGroupFocus() {
+		const {data} = await this.device.receiveData({
+			label: 'SigmaFP GetCamDataGroupFocus',
+			code: OpCodeSigma.GetCamDataGroupFocus,
+			parameters: [0x0],
+		})
+
+		return decodeIFD(data, {
+			focusMode: {tag: 1, type: IFDType.Byte},
+			afLock: {tag: 2, type: IFDType.Byte},
+			afFaceEyePriorMode: {tag: 3, type: IFDType.Byte},
+			afFaceEyePriorDetectionStatus: {tag: 4, type: IFDType.Byte},
+			afAreaSelect: {tag: 10, type: IFDType.Byte},
+			afAreaMode: {tag: 11, type: IFDType.Byte},
+			afFrameSize: {tag: 12, type: IFDType.Byte},
+			// afFramePosition: {tag: 13, type: IFDType.Byte},
+			// afFrameFaceFocusDetection: {tag: 14, type: IFDType.Byte},
+			preAlwaysAf: {tag: 51, type: IFDType.Byte},
+			afLimit: {tag: 52, type: IFDType.Byte},
+		})
+	}
+
 	private async setCamData(code: number, propNumber: number, value: number) {
 		const buffer = new ArrayBuffer(4)
 		const dataView = new DataView(buffer)
