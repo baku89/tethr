@@ -1,6 +1,6 @@
 import {readonly, ref, watch} from 'vue'
 
-import {connectCamera, Tethr} from '../src/Tethr'
+import {connectCamera, Tethr} from '../src'
 import {Aperture, ExposureMode, ISO, PropDesc} from '../src/Tethr/Tethr'
 
 const TransparentPng =
