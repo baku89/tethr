@@ -11,9 +11,9 @@ export async function connectCamera(): Promise<Tethr> {
 
 	let camera: Tethr | null = null
 
-	switch (info.VendorExtensionID) {
+	switch (info.vendorExtensionID) {
 		case 0x00000006: // Microsoft / Sigma
-			if (info.VendorExtensionDesc === 'SIGMA') {
+			if (info.vendorExtensionDesc === 'SIGMA') {
 				camera = new TethrSigma(device)
 			}
 			break
