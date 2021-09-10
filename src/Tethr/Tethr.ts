@@ -415,20 +415,20 @@ export class Tethr<PropType extends {[name: string]: any} = BasePropType> {
 		const decoder = new PTPDecoder(data)
 
 		const info: DeviceInfo = {
-			StandardVersion: decoder.getUint16(),
-			VendorExtensionID: decoder.getUint32(),
-			VendorExtensionVersion: decoder.getUint16(),
-			VendorExtensionDesc: decoder.getString(),
-			FunctionalMode: decoder.getUint16(),
-			OperationsSupported: decoder.getUint16Array(),
-			EventsSupported: decoder.getUint16Array(),
-			DevicePropertiesSupported: decoder.getUint16Array(),
-			CaptureFormats: decoder.getUint16Array(),
-			ImageFormats: decoder.getUint16Array(),
-			Manufacturer: decoder.getString(),
-			Model: decoder.getString(),
-			DeviceVersion: decoder.getString(),
-			SerialNumber: decoder.getString(),
+			standardVersion: decoder.getUint16(),
+			vendorExtensionID: decoder.getUint32(),
+			vendorExtensionVersion: decoder.getUint16(),
+			vendorExtensionDesc: decoder.getString(),
+			functionalMode: decoder.getUint16(),
+			operationsSupported: decoder.getUint16Array(),
+			eventsSupported: decoder.getUint16Array(),
+			devicePropertiesSupported: decoder.getUint16Array(),
+			captureFormats: decoder.getUint16Array(),
+			imageFormats: decoder.getUint16Array(),
+			manufacturer: decoder.getString(),
+			model: decoder.getString(),
+			deviceVersion: decoder.getString(),
+			serialNumber: decoder.getString(),
 		}
 
 		return info

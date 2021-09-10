@@ -1,16 +1,16 @@
 export interface DeviceInfo {
-	StandardVersion: number
-	VendorExtensionID: number
-	VendorExtensionVersion: number
-	VendorExtensionDesc: string
-	FunctionalMode: number
-	OperationsSupported: number[]
-	EventsSupported: number[]
-	DevicePropertiesSupported: number[]
-	CaptureFormats: number[]
-	ImageFormats: number[]
-	Manufacturer: string
-	Model: string
-	DeviceVersion: string
-	SerialNumber: string
+	standardVersion: number
+	vendorExtensionID: number
+	vendorExtensionVersion: number
+	vendorExtensionDesc: string
+	functionalMode: number
+	operationsSupported: number[]
+	eventsSupported: number[]
+	devicePropertiesSupported: number[]
+	captureFormats: number[]
+	imageFormats: number[]
+	manufacturer: string
+	model: string
+	deviceVersion: string
+	serialNumber: string
 }
