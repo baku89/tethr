@@ -11,6 +11,8 @@ export function useTethr() {
 
 	const connected = ref(false)
 
+	const deviceInfo = ref('')
+
 	const liveviewURL = ref(TransparentPng)
 	const lastPictureURL = ref(TransparentPng)
 
@@ -55,6 +57,8 @@ export function useTethr() {
 			}
 
 			;(window as any).cam = camera
+
+			deviceInfo.value = JSON.stringify(await camera.getDeviceInfo())
 
 			exposureMode.value = await camera.getExposureMode()
 			exposureModeDesc.value = await camera.getExposureModeDesc()
@@ -114,6 +118,7 @@ export function useTethr() {
 
 	return {
 		connected,
+		deviceInfo,
 		exposureMode,
 		exposureModeDesc,
 		aperture,

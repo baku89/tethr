@@ -61,7 +61,7 @@
 		</dl>
 
 		<h2>Device Info</h2>
-		<div></div>
+		<div>{{ deviceInfo }}</div>
 	</div>
 </template>
 
