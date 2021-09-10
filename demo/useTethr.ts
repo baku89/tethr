@@ -98,7 +98,10 @@ export function useTethr() {
 
 			try {
 				const url = await camera?.getLiveView()
-				if (url) liveviewURL.value = url
+				if (url) {
+					URL.revokeObjectURL(liveviewURL.value)
+					liveviewURL.value = url
+				}
 			} finally {
 				requestAnimationFrame(updateLiveview)
 			}
