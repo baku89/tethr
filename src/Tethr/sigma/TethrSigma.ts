@@ -1,5 +1,6 @@
 import _ from 'lodash'
 
+import {decodeIFD, IFDType} from '../../IFD'
 import {ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
 import {
@@ -78,7 +79,6 @@ export class TethrSigma extends Tethr {
 			code: OpCodeSigma.ConfigApi,
 			parameters: [0x0],
 		})
-		this.decodeIFD(data)
 
 		await this.getCamDataGroup1()
 		await this.getCamDataGroup2()
@@ -109,12 +109,9 @@ export class TethrSigma extends Tethr {
 	}
 
 	public getApertureDesc = async (): Promise<PropDescEnum<Aperture>> => {
-		const ifdEntries = await this.getCamCanSetInfo5()
-		const info = ifdEntries.find(e => e.tag === 210)
+		const fValue = (await this.getCamCanSetInfo5()).fValue
 
-		if (!info || !Array.isArray(info.value)) throw new Error('Invalid IFD')
-
-		if (info.value.length === 0) {
+		if (fValue.length === 0) {
 			// Should be auto aperture
 			return {
 				canWrite: false,
@@ -123,7 +120,7 @@ export class TethrSigma extends Tethr {
 			}
 		}
 
-		const [svMin, svMax, step] = info.value
+		const [svMin, svMax, step] = fValue
 
 		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
 		const table = isStepOneThird
@@ -160,12 +157,9 @@ export class TethrSigma extends Tethr {
 	}
 
 	public getShutterSpeedDesc = async (): Promise<PropDescEnum<string>> => {
-		const ifdEntries = await this.getCamCanSetInfo5()
-		const info = ifdEntries.find(e => e.tag === 212)
+		const info = (await this.getCamCanSetInfo5()).shutterSpeed
 
-		if (!info || !Array.isArray(info.value)) throw new Error('Invalid IFD')
-
-		if (info.value.length === 0) {
+		if (info.length === 0) {
 			// Should be auto aperture
 			return {
 				canWrite: false,
@@ -174,7 +168,7 @@ export class TethrSigma extends Tethr {
 			}
 		}
 
-		const [tvMin, tvMax, step] = info.value
+		const [tvMin, tvMax, step] = info
 
 		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
 		const table = isStepOneThird
@@ -250,12 +244,9 @@ export class TethrSigma extends Tethr {
 	}
 
 	public getISODesc = async (): Promise<PropDescEnum<ISO>> => {
-		const ifdEntries = await this.getCamCanSetInfo5()
-		const info = ifdEntries.find(e => e.tag === 215)
+		const {isoManual} = await this.getCamCanSetInfo5()
 
-		if (!info || !Array.isArray(info.value)) throw new Error('Invalid IFD')
-
-		const [svMin, svMax] = info.value
+		const [svMin, svMax] = isoManual
 
 		const isoMin = Math.round(3.125 * 2 ** svMin)
 		const isoMax = Math.round(3.125 * 2 ** svMax)
@@ -304,23 +295,13 @@ export class TethrSigma extends Tethr {
 	public getWhiteBalanceDesc = async (): Promise<
 		PropDescEnum<WhiteBalance>
 	> => {
-		const ifdEntries = await this.getCamCanSetInfo5()
-		const presets = ifdEntries.find(e => e.tag === 301)
-		const colorTemp = ifdEntries.find(e => e.tag === 302)
+		const {whiteBalance, colorTemerature} = await this.getCamCanSetInfo5()
 
-		if (
-			!presets ||
-			!Array.isArray(presets.value) ||
-			!colorTemp ||
-			!Array.isArray(colorTemp.value)
-		)
-			throw new Error('Invalid IFD')
-
-		const presetsRange = presets.value
+		const presetsRange = whiteBalance
 			.map(v => SigmaApexWhiteBalanceIFD.get(v))
 			.filter(v => !!v) as WhiteBalance[]
 
-		const [min, max, step] = colorTemp.value
+		const [min, max, step] = colorTemerature
 
 		const manualRange = _.range(min, max, step)
 
@@ -348,12 +329,9 @@ export class TethrSigma extends Tethr {
 	public getExposureModeDesc = async (): Promise<
 		PropDescEnum<ExposureMode>
 	> => {
-		const ifdEntries = await this.getCamCanSetInfo5()
-		const info = ifdEntries.find(e => e.tag === 200)
+		const {exposureMode} = await this.getCamCanSetInfo5()
 
-		if (!info || !Array.isArray(info.value)) throw new Error('Invalid IFD')
-
-		const range = info.value
+		const range = exposureMode
 			.map(n => SigmaApexExposureMode.get(n))
 			.filter(m => m !== undefined) as ExposureMode[]
 
@@ -568,7 +546,14 @@ export class TethrSigma extends Tethr {
 			parameters: [0x0],
 		})
 
-		return this.decodeIFD(data)
+		return decodeIFD(data, {
+			exposureMode: {tag: 200, type: IFDType.Byte},
+			fValue: {tag: 210, type: IFDType.SignedShort},
+			shutterSpeed: {tag: 212, type: IFDType.SignedShort},
+			isoManual: {tag: 215, type: IFDType.SignedShort},
+			whiteBalance: {tag: 301, type: IFDType.Byte},
+			colorTemerature: {tag: 302, type: IFDType.Short},
+		})
 	}
 
 	private async setCamData(code: number, propNumber: number, value: number) {
@@ -627,68 +612,6 @@ export class TethrSigma extends Tethr {
 		}
 
 		return {...chunk0, ...chunk1}
-	}
-
-	private decodeIFD(data: ArrayBuffer) {
-		const dataView = new DataView(data)
-		const asciiDecoder = new TextDecoder('ascii')
-
-		const entryCount = dataView.getUint32(4, true)
-
-		const entries = []
-
-		for (let i = 0; i < entryCount; i++) {
-			const offset = 8 + 12 * i
-
-			const tag = dataView.getUint16(offset, true)
-			const type = dataView.getUint16(offset + 2, true)
-			const count = dataView.getUint32(offset + 4, true)
-			const valueOffset = dataView.getUint32(offset + 8, true)
-
-			let value: number[] | string | null = null
-
-			switch (type) {
-				case 0x1: {
-					// BYTES
-					const off = count > 4 ? valueOffset : offset
-					const buf = data.slice(off, off + count)
-					value = [...new Uint8Array(buf)]
-					break
-				}
-				case 0x2: {
-					// ASCII
-					const buf = data.slice(valueOffset, valueOffset + count - 1)
-					value = asciiDecoder.decode(buf)
-					break
-				}
-				case 0x3: {
-					// SHORT
-					const off = count > 2 ? valueOffset : offset
-					const buf = data.slice(off, off + count * 2)
-					value = [...new Uint16Array(buf)]
-					break
-				}
-				case 0x8: {
-					// Signed SHORT
-					const off = count > 2 ? valueOffset : offset
-					value = Array(count)
-						.fill(0)
-						.map((_, i) => {
-							const f = dataView.getUint8(off + i * 2)
-							const d = dataView.getInt8(off + i * 2 + 1)
-
-							return d + f / 0x100
-						})
-					break
-				}
-			}
-
-			entries.push({tag, value})
-
-			// console.log(`IFD entry ${i}:`, {tag, type, count, valueOffset, value})
-		}
-
-		return entries
 	}
 
 	private decodeFocalLength(byte: number) {
