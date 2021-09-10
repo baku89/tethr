@@ -72,6 +72,8 @@ enum OpCodeSigma {
 }
 
 export class TethrSigma extends Tethr {
+	private _liveviewing = false
+
 	public open = async (): Promise<void> => {
 		await super.open()
 
@@ -441,6 +443,14 @@ export class TethrSigma extends Tethr {
 		return url
 	}
 
+	public startLiveView = async (): Promise<void> => {
+		this._liveviewing = true
+	}
+
+	public stopLiveView = async (): Promise<void> => {
+		this._liveviewing = false
+	}
+
 	public getLiveView = async (): Promise<null | string> => {
 		const {code, data} = await this.device.receiveData({
 			label: 'SigmaFP GetViewFrame',
@@ -456,6 +466,10 @@ export class TethrSigma extends Tethr {
 		const blob = new Blob([jpegData], {type: 'image/jpg'})
 		const url = window.URL.createObjectURL(blob)
 		return url
+	}
+
+	public get liveviewing(): boolean {
+		return this._liveviewing
 	}
 
 	private async getCamDataGroup1() {

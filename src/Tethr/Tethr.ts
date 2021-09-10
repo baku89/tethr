@@ -216,12 +216,10 @@ export class Tethr {
 	public takePicture = async (): Promise<null | string> => null
 
 	public startLiveView = async (): Promise<void> => {
-		console.info('Liveview is not supported for the current camera')
 		return
 	}
 
 	public stopLiveView = async (): Promise<void> => {
-		console.info('Liveview is not supported for the current camera')
 		return
 	}
 

@@ -1,4 +1,4 @@
-import {ref, watch} from 'vue'
+import {readonly, ref, watch} from 'vue'
 
 import {connectCamera, Tethr} from '../src/Tethr'
 import {Aperture, ExposureMode, ISO, PropDesc} from '../src/Tethr/Tethr'
@@ -79,6 +79,32 @@ export function useTethr() {
 		if (url) lastPictureURL.value = url
 	}
 
+	const liveviewing = ref(false)
+
+	async function toggleLiveview() {
+		liveviewing.value = !liveviewing.value
+
+		if (!camera) return
+
+		if (liveviewing.value) {
+			await camera.startLiveView()
+			updateLiveview()
+		} else {
+			await camera.stopLiveView()
+		}
+
+		async function updateLiveview() {
+			if (!liveviewing.value) return
+
+			try {
+				const url = await camera?.getLiveView()
+				if (url) liveviewURL.value = url
+			} finally {
+				requestAnimationFrame(updateLiveview)
+			}
+		}
+	}
+
 	return {
 		connected,
 		exposureMode,
@@ -90,8 +116,10 @@ export function useTethr() {
 		iso,
 		isoDesc,
 		liveviewURL,
+		liveviewing: readonly(liveviewing),
 		lastPictureURL,
 		toggleCameraConnection,
+		toggleLiveview,
 		takePicture,
 	}
 }

@@ -6,6 +6,9 @@
 			{{ connected ? 'Dionnect' : 'Connect' }}
 		</button>
 		<button @click="takePicture">Take Picture</button>
+		<button @click="toggleLiveview">
+			{{ liveviewing ? 'Stop LV' : 'Start LV' }}
+		</button>
 
 		<br />
 
@@ -78,8 +81,10 @@ export default defineComponent({
 			iso,
 			isoDesc,
 			liveviewURL,
+			liveviewing,
 			lastPictureURL,
 			toggleCameraConnection,
+			toggleLiveview,
 			takePicture,
 		} = useTethr()
 
@@ -94,8 +99,10 @@ export default defineComponent({
 			iso,
 			isoDesc,
 			liveviewURL,
+			liveviewing,
 			lastPictureURL,
 			toggleCameraConnection,
+			toggleLiveview,
 			takePicture,
 		}
 	},
