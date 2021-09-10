@@ -36,6 +36,12 @@ interface PTPInTransferResult {
 	payload: ArrayBuffer
 }
 
+interface PTPEvent {
+	code: number
+	transactionId: number
+	parameters: number[]
+}
+
 export class PTPDevice extends EventEmitter {
 	private device: USBDevice | undefined
 	private transactionId = 0x00000000
@@ -238,10 +244,20 @@ export class PTPDevice extends EventEmitter {
 		}
 	}
 
-	public waitEvent = (code: number): Promise<PTPInTransferResult> => {
-		return this.onceAsync(
+	public waitEvent = async (code: number): Promise<PTPEvent> => {
+		const {
+			code: eventCode,
+			transactionId,
+			payload,
+		} = (await this.onceAsync(
 			'event:0x' + code.toString(16)
-		) as Promise<PTPInTransferResult>
+		)) as PTPInTransferResult
+
+		return {
+			code: eventCode,
+			transactionId,
+			parameters: [...new Uint32Array(payload)],
+		}
 	}
 
 	private transferOutCommand = async (
