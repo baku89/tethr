@@ -233,15 +233,22 @@ export class Tethr {
 	}
 
 	public startLiveView = async (): Promise<void> => {
+		console.info('Liveview is not supported for the current camera')
 		return
 	}
 
 	public stopLiveView = async (): Promise<void> => {
+		console.info('Liveview is not supported for the current camera')
 		return
 	}
 
 	public getLiveView = async (): Promise<null | string> => {
+		console.info('Liveview is not supported for the current camera')
 		return null
+	}
+
+	public get liveviewing(): boolean {
+		return false
 	}
 
 	public getDevicePropDesc = async (
