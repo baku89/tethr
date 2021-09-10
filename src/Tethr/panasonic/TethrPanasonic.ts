@@ -160,7 +160,7 @@ export class TethrPanasnoic extends Tethr {
 		return {
 			canRead: true,
 			canWrite: true,
-			range: [ExposureMode.P, ExposureMode.A, ExposureMode.S, ExposureMode.M],
+			range: ['P', 'A', 'S', 'M'],
 		}
 	}
 
@@ -342,13 +342,13 @@ export class TethrPanasnoic extends Tethr {
 	private decodeExposureMode(mode: number): null | ExposureMode {
 		switch (mode) {
 			case 0x0:
-				return ExposureMode.P
+				return 'P'
 			case 0x1:
-				return ExposureMode.A
+				return 'A'
 			case 0x2:
-				return ExposureMode.S
+				return 'S'
 			case 0x3:
-				return ExposureMode.M
+				return 'M'
 		}
 
 		return null
