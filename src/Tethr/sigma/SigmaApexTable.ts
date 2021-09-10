@@ -265,10 +265,10 @@ export const SigmaApexApertureHalf = new BiMap<number, number>([
 ])
 
 export const SigmaApexExposureMode = new BiMap<number, ExposureMode>([
-	[0x1, ExposureMode.P],
-	[0x2, ExposureMode.A],
-	[0x3, ExposureMode.S],
-	[0x4, ExposureMode.M],
+	[0x1, 'P'],
+	[0x2, 'A'],
+	[0x3, 'S'],
+	[0x4, 'M'],
 ])
 
 export const SigmaApexBatteryLevel = new Map<number, null | BatteryLevel>([
