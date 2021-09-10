@@ -1,4 +1,5 @@
 import {parse as parseTimestamp} from 'date-format-parse'
+import _ from 'lodash'
 
 export class PTPDecoder {
 	private buffer: ArrayBuffer
@@ -114,6 +115,6 @@ export class PTPDecoder {
 
 	private getArray(getFunc: () => number) {
 		const length = this.getUint32()
-		return new Array(length).fill(0).map(getFunc.bind(this))
+		return _.times(length, getFunc.bind(this))
 	}
 }
