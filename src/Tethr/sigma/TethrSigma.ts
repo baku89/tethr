@@ -71,13 +71,31 @@ enum OpCodeSigma {
 	GetPartialMovieFile = 0x9037, // V5
 }
 
+enum CaptStatus {
+	runSnap = 0x0001,
+	compSnap = 0x0002,
+	runImageCreate = 0x0004,
+	compImageCreate = 0x0005,
+	compMovieStopStandby = 0x0006,
+	compMovieCreate = 0x0007,
+	okAf = 0x8001,
+	okCwb = 0x8002,
+	okImageSave = 0x8003,
+	okNoerrorEtc = 0x8004,
+	ngAf = 0x6001,
+	ngBaffaFull = 0x6002,
+	ngCwb = 0x6003,
+	ngImageCreate = 0x6004,
+	ngGeneral = 0x6005,
+}
+
 export class TethrSigma extends Tethr {
 	private _liveviewing = false
 
 	public open = async (): Promise<void> => {
 		await super.open()
 
-		const {data} = await this.device.receiveData({
+		await this.device.receiveData({
 			label: 'SigmaFP ConfigApi',
 			code: OpCodeSigma.ConfigApi,
 			parameters: [0x0],
@@ -362,15 +380,9 @@ export class TethrSigma extends Tethr {
 	}
 
 	public takePicture = async (): Promise<null | string> => {
-		// https://github.com/gphoto/libgphoto2/blob/96925915768917ef6c245349b787baa275df608c/camlibs/ptp2/library.c#L5426
+		const {imageDBTail: id} = await this.getCamCaptStatus()
 
-		const {data: camCaptStatusData} = await this.device.receiveData({
-			label: 'SigmaFP GetCamCaptStatus',
-			code: OpCodeSigma.GetCamCaptStatus,
-			parameters: [0x0],
-		})
-		const camCaptStatus = this.decodeCamCaptStatus(camCaptStatusData)
-		const id = camCaptStatus.imageDBTail
+		console.log({id})
 
 		// Snap
 		const buffer = new ArrayBuffer(2)
@@ -385,72 +397,59 @@ export class TethrSigma extends Tethr {
 			data: this.encodeParameter(buffer),
 		})
 
-		let tries = 50
-		while (tries--) {
-			const {data} = await this.device.receiveData({
-				label: 'SigmaFP GetCamCaptStatus',
-				code: OpCodeSigma.GetCamCaptStatus,
-				parameters: [id],
+		try {
+			let tries = 50
+			while (tries--) {
+				const {status} = await this.getCamCaptStatus(id)
+
+				switch (status) {
+					case CaptStatus.ngAf:
+						throw new Error('AF failure')
+					case CaptStatus.ngBaffaFull:
+						throw new Error('Buffer full')
+					case CaptStatus.ngCwb:
+						throw new Error('Custom WB failure')
+					case CaptStatus.ngImageCreate:
+						throw new Error('Image generation failed')
+					case CaptStatus.ngGeneral:
+						throw new Error('Capture failed')
+				}
+
+				if (status === CaptStatus.compImageCreate) break
+
+				await sleep(500)
+			}
+			if (tries === 0) throw new Error('Timeout')
+
+			const {data: pictInfoData} = await this.device.receiveData({
+				label: 'SigmaFP GetPictFileInfo2',
+				code: 0x902d,
+			})
+			const pictInfo = this.decodePictureFileInfoData2(pictInfoData)
+
+			// Get file
+			const {data: pictFileData} = await this.device.receiveData({
+				label: 'SigmaFP GetBigPartialPictFile',
+				code: OpCodeSigma.GetBigPartialPictFile,
+				parameters: [pictInfo.fileAddress, 0x0, pictInfo.fileSize],
 			})
 
-			const result = this.decodeCamCaptStatus(data)
-
-			// Failure
-			if ((result.status & 0xf000) === 0x6000) {
-				switch (result.status) {
-					case 0x6001:
-						throw new Error('AF failure')
-					case 0x6002:
-						throw new Error('Buffer full')
-					case 0x6003:
-						throw new Error('Custom WB failure')
-					case 0x6004:
-						throw new Error('Image generation failed')
-				}
-				throw new Error('Capture failed')
-			}
-			// Success
-			if ((result.status & 0xf000) === 0x8000) break
-			if (result.status == 0x0002) break
-			if (result.status == 0x0005) break
-
-			await sleep(500)
+			// Generate Blob URL and return it
+			const blob = new Blob([pictFileData.slice(4)], {type: 'image/jpeg'})
+			const url = window.URL.createObjectURL(blob)
+			return url
+		} finally {
+			await this.device.sendData({
+				label: 'SigmaFP ClearImageDBSingle',
+				code: OpCodeSigma.ClearImageDBSingle,
+				parameters: [id],
+				data: new ArrayBuffer(8),
+			})
 		}
-
-		const {data: pictInfoData} = await this.device.receiveData({
-			label: 'SigmaFP GetPictFileInfo2',
-			code: 0x902d,
-		})
-		const pictInfo = this.decodePictureFileInfoData2(pictInfoData)
-
-		// Get file
-		const {data: pictFileData} = await this.device.receiveData({
-			label: 'SigmaFP GetBigPartialPictFile',
-			code: OpCodeSigma.GetBigPartialPictFile,
-			parameters: [pictInfo.fileAddress, 0x0, pictInfo.fileSize],
-		})
-
-		const blob = new Blob([pictFileData.slice(4)], {type: 'image/jpeg'})
-		const url = window.URL.createObjectURL(blob)
-
-		await this.device.sendData({
-			label: 'SigmaFP ClearImageDBSingle',
-			code: OpCodeSigma.ClearImageDBSingle,
-			parameters: [id],
-			data: new ArrayBuffer(8),
-		})
-
-		return url
 	}
 
 	public runAutoFocus = async (): Promise<boolean> => {
-		const {data: camCaptStatusData} = await this.device.receiveData({
-			label: 'SigmaFP GetCamCaptStatus',
-			code: OpCodeSigma.GetCamCaptStatus,
-			parameters: [0x0],
-		})
-		const camCaptStatus = this.decodeCamCaptStatus(camCaptStatusData)
-		const id = camCaptStatus.imageDBTail
+		const {imageDBTail: id} = await this.getCamCaptStatus()
 
 		// Snap
 		const buffer = new ArrayBuffer(2)
@@ -467,20 +466,12 @@ export class TethrSigma extends Tethr {
 
 		let tries = 50
 		while (tries--) {
-			const {data} = await this.device.receiveData({
-				label: 'SigmaFP GetCamCaptStatus',
-				code: OpCodeSigma.GetCamCaptStatus,
-				parameters: [id],
-			})
-
-			const result = this.decodeCamCaptStatus(data)
+			const {status} = await this.getCamCaptStatus(id)
 
 			// Failure
-			if ((result.status & 0xf000) === 0x6000) return false
+			if ((status & 0xf000) === 0x6000) return false
 			// Success
-			if ((result.status & 0xf000) === 0x8000) break
-			if (result.status == 0x0002) break
-			if (result.status == 0x0005) break
+			if (status === CaptStatus.okAf) break
 
 			await sleep(500)
 		}
@@ -679,8 +670,15 @@ export class TethrSigma extends Tethr {
 		return true
 	}
 
-	private decodeCamCaptStatus(data: ArrayBuffer) {
+	private async getCamCaptStatus(id = 0) {
+		const {data} = await this.device.receiveData({
+			label: 'SigmaFP GetCamCaptStatus',
+			code: OpCodeSigma.GetCamCaptStatus,
+			parameters: [id],
+		})
+
 		const decoder = new PTPDecoder(data.slice(1))
+
 		return {
 			imageId: decoder.getUint8(),
 			imageDBHead: decoder.getUint8(),
