@@ -46,6 +46,14 @@
 					</option>
 				</select>
 			</dd>
+			<dt>ISO</dt>
+			<dd>
+				<select v-model="iso">
+					<option v-for="f in isoDesc.range" :key="f" :value="f">
+						{{ f.toString() }}
+					</option>
+				</select>
+			</dd>
 		</dl>
 
 		<h2>Device Info</h2>
@@ -61,12 +69,14 @@ export default defineComponent({
 	setup() {
 		const {
 			connected,
+			exposureMode,
+			exposureModeDesc,
 			aperture,
 			apertureDesc,
 			shutterSpeed,
 			shutterSpeedDesc,
-			exposureMode,
-			exposureModeDesc,
+			iso,
+			isoDesc,
 			liveviewURL,
 			lastPictureURL,
 			toggleCameraConnection,
@@ -74,13 +84,15 @@ export default defineComponent({
 		} = useTethr()
 
 		return {
+			exposureMode,
+			exposureModeDesc,
 			connected,
 			aperture,
 			apertureDesc,
 			shutterSpeed,
 			shutterSpeedDesc,
-			exposureMode,
-			exposureModeDesc,
+			iso,
+			isoDesc,
 			liveviewURL,
 			lastPictureURL,
 			toggleCameraConnection,

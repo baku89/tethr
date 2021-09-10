@@ -1,7 +1,7 @@
 import {ref, watch} from 'vue'
 
 import {connectCamera, Tethr} from '../src/Tethr'
-import {Aperture, ExposureMode, PropDescEnum} from '../src/Tethr/Tethr'
+import {Aperture, ExposureMode, ISO, PropDescEnum} from '../src/Tethr/Tethr'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -35,6 +35,13 @@ export function useTethr() {
 		range: [],
 	})
 
+	const iso = ref<ISO | null>(null)
+	const isoDesc = ref<PropDescEnum<ISO>>({
+		canRead: false,
+		canWrite: false,
+		range: [],
+	})
+
 	async function toggleCameraConnection() {
 		if (camera && camera.opened) {
 			await camera.close()
@@ -52,16 +59,16 @@ export function useTethr() {
 			exposureMode.value = await camera.getExposureMode()
 			exposureModeDesc.value = await camera.getExposureModeDesc()
 
-			shutterSpeed.value = await camera.getShutterSpeed()
-			shutterSpeedDesc.value = await camera.getShutterSpeedDesc()
-			console.log('shutterspeed', shutterSpeed.value, shutterSpeedDesc.value)
+			iso.value = await camera.getISO()
+			isoDesc.value = await camera.getISODesc()
 
 			aperture.value = await camera.getAperture()
 			apertureDesc.value = await camera.getApertureDesc()
 
 			watch(exposureMode, v => camera?.setExposureMode(v))
-			watch(shutterSpeed, v => camera?.setShutterSpeed(v))
 			watch(aperture, v => camera?.setAperture(v))
+			watch(shutterSpeed, v => camera?.setShutterSpeed(v))
+			watch(iso, v => camera?.setISO(v))
 		}
 	}
 
@@ -74,12 +81,14 @@ export function useTethr() {
 
 	return {
 		connected,
+		exposureMode,
+		exposureModeDesc,
 		aperture,
 		apertureDesc,
 		shutterSpeed,
 		shutterSpeedDesc,
-		exposureMode,
-		exposureModeDesc,
+		iso,
+		isoDesc,
 		liveviewURL,
 		lastPictureURL,
 		toggleCameraConnection,
