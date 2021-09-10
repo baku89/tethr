@@ -511,8 +511,6 @@ export class TethrSigma extends Tethr {
 		decoder.getUint8()
 		decoder.getUint16() // FieldPreset
 
-		console.log(decoder.getRest())
-
 		const group2First = {
 			driveMode: decoder.getUint8(),
 			specialMode: decoder.getUint8(),
@@ -560,8 +558,6 @@ export class TethrSigma extends Tethr {
 
 		const group5 = {...group5FirstOct, ...group5SecondOct}
 
-		console.log('group5=', group5)
-
 		return group5
 	}
 
@@ -591,7 +587,6 @@ export class TethrSigma extends Tethr {
 				data,
 			})
 		} catch (err) {
-			console.log(err)
 			return false
 		}
 
