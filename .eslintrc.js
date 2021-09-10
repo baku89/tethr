@@ -16,5 +16,7 @@ module.exports = {
 		'simple-import-sort/imports': 'error',
 		'unused-imports/no-unused-imports-ts': 'error',
 		'@typescript-eslint/explicit-member-accessibility': 'error',
+		'@typescript-eslint/no-explicit-any': 'off',
+		'@typescript-eslint/explicit-module-boundary-types': 'off',
 	},
 }
