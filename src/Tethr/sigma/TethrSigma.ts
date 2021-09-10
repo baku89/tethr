@@ -443,6 +443,58 @@ export class TethrSigma extends Tethr {
 		return url
 	}
 
+	public startAutoFocus = async (): Promise<boolean> => {
+		const {data: camCaptStatusData} = await this.device.receiveData({
+			label: 'SigmaFP GetCamCaptStatus',
+			code: OpCodeSigma.GetCamCaptStatus,
+			parameters: [0x0],
+		})
+		const camCaptStatus = this.decodeCamCaptStatus(camCaptStatusData)
+		const id = camCaptStatus.imageDBTail
+
+		// Snap
+		const buffer = new ArrayBuffer(2)
+		const dataView = new DataView(buffer)
+
+		dataView.setUint8(0, 0x04)
+		dataView.setUint8(1, 0x01)
+
+		await this.device.sendData({
+			label: 'SigmaFP SnapCommand',
+			code: 0x901b,
+			data: this.encodeParameter(buffer),
+		})
+
+		let tries = 50
+		while (tries--) {
+			const {data} = await this.device.receiveData({
+				label: 'SigmaFP GetCamCaptStatus',
+				code: OpCodeSigma.GetCamCaptStatus,
+				parameters: [id],
+			})
+
+			const result = this.decodeCamCaptStatus(data)
+
+			// Failure
+			if ((result.status & 0xf000) === 0x6000) return false
+			// Success
+			if ((result.status & 0xf000) === 0x8000) break
+			if (result.status == 0x0002) break
+			if (result.status == 0x0005) break
+
+			await sleep(500)
+		}
+
+		await this.device.sendData({
+			label: 'SigmaFP ClearImageDBSingle',
+			code: OpCodeSigma.ClearImageDBSingle,
+			parameters: [id],
+			data: new ArrayBuffer(8),
+		})
+
+		return true
+	}
+
 	public startLiveView = async (): Promise<void> => {
 		this._liveviewing = true
 	}
