@@ -69,6 +69,9 @@ export function useTethr() {
 			aperture.value = await camera.getAperture()
 			apertureDesc.value = await camera.getApertureDesc()
 
+			shutterSpeed.value = await camera.getShutterSpeed()
+			shutterSpeedDesc.value = await camera.getShutterSpeedDesc()
+
 			watch(exposureMode, v => camera?.setExposureMode(v))
 			watch(aperture, v => camera?.setAperture(v))
 			watch(shutterSpeed, v => camera?.setShutterSpeed(v))
