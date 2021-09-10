@@ -9,6 +9,7 @@ import {
 	ISO,
 	PropDescEnum,
 	Tethr,
+	WhiteBalance,
 } from '../Tethr'
 import {
 	SigmaApexApertureHalf,
@@ -18,15 +19,63 @@ import {
 	SigmaApexISO,
 	SigmaApexShutterSpeedHalf,
 	SigmaApexShutterSpeedOneThird,
+	SigmaApexWhiteBalance,
+	SigmaApexWhiteBalanceIFD,
 } from './SigmaApexTable'
+
+enum OpCodeSigma {
+	GetCamConfig = 0x9010,
+	GetCamStatus = 0x9011,
+	GetCamDataGroup1 = 0x9012,
+	GetCamDataGroup2 = 0x9013,
+	GetCamDataGroup3 = 0x9014,
+	GetCamCaptStatus = 0x9015,
+	SetCamDataGroup1 = 0x9016,
+	SetCamDataGroup2 = 0x9017,
+	SetCamDataGroup3 = 0x9018,
+	SetCamClockAdj = 0x9019,
+	GetCamCanSetInfo = 0x901a,
+	SnapCommand = 0x901b,
+	ClearImageDBSingle = 0x901c,
+	ClearImageDBAll = 0x901d,
+	GetPictFileInfo = 0x9020,
+	GetPartialPictFile = 0x9021,
+	GetBigPartialPictFile = 0x9022,
+
+	GetCamDataGroup4 = 0x9023, // ver1.1
+	SetCamDataGroup4 = 0x9024, // ver1.1
+	GetCamCanSetInfo2 = 0x9025, // ver1.1
+
+	GetCamCanSetInfo3 = 0x9026, // ver1.2
+	GetCamDataGroup5 = 0x9027, // ver1.2
+	SetCamDataGroup5 = 0x9028, // ver1.2
+	GetCamDataGroup6 = 0x9029, // ver1.2
+	SetCamDataGroup6 = 0x902a, // ver1.2
+
+	GetViewFrame = 0x902b, // V21
+	GetCamCanSetInfo4 = 0x902e, // V21
+
+	GetCamStatus2 = 0x902c,
+	GetPictFileInfo2 = 0x902d,
+	CloseApplication = 0x902f, // V21
+
+	GetCamCanSetInfo5 = 0x9030, // V5
+	GetCamDataGroupFocus = 0x9031, // V5
+	SetCamDataGroupFocus = 0x9032, // V5
+	GetCamDataGroupMovie = 0x9033, // V5
+	SetCamDataGroupMovie = 0x9034, // V5
+	ConfigApi = 0x9035, // V5
+	GetMovieFileInfo = 0x9036, // V5
+	GetPartialMovieFile = 0x9037, // V5
+}
 
 export class TethrSigma extends Tethr {
 	public open = async (): Promise<void> => {
 		await super.open()
 
 		const {data} = await this.device.receiveData({
-			label: 'SigmaFP ConfigAPI',
-			code: 0x9035,
+			label: 'SigmaFP ConfigApi',
+			code: OpCodeSigma.ConfigApi,
 			parameters: [0x0],
 		})
 		this.decodeIFD(data)
@@ -56,7 +105,7 @@ export class TethrSigma extends Tethr {
 		const byte = SigmaApexApertureOneThird.getKey(aperture)
 		if (!byte) return false
 
-		return this.setCamData(1, 1, byte)
+		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
 
 	public getApertureDesc = async (): Promise<PropDescEnum<Aperture>> => {
@@ -174,7 +223,7 @@ export class TethrSigma extends Tethr {
 		const byte = SigmaApexShutterSpeedOneThird.getKey(shutterSpeed)
 		if (!byte) return false
 
-		return this.setCamData(1, 0, byte)
+		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
 	}
 
 	public getISO = async (): Promise<null | ISO> => {
@@ -188,14 +237,15 @@ export class TethrSigma extends Tethr {
 
 	public setISO = async (iso: ISO): Promise<boolean> => {
 		if (iso === 'auto') {
-			return await this.setCamData(1, 3, 0x1)
+			return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
 		}
 
 		const byte = SigmaApexISO.getKey(iso)
 		if (!byte) return false
 
 		return (
-			(await this.setCamData(1, 3, 0x0)) && (await this.setCamData(1, 4, byte))
+			(await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x0)) &&
+			(await this.setCamData(OpCodeSigma.SetCamDataGroup1, 4, byte))
 		)
 	}
 
@@ -222,6 +272,65 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
+	public getWhiteBalance = async (): Promise<null | WhiteBalance> => {
+		const {whiteBalance} = await this.getCamDataGroup2()
+
+		const label = SigmaApexWhiteBalance.get(whiteBalance) ?? null
+
+		if (label === 'manual') {
+			return (await this.getCamDataGroup5()).colorTemp
+		} else {
+			return label
+		}
+	}
+
+	public setWhiteBalance = async (
+		wb: number | WhiteBalance
+	): Promise<boolean> => {
+		if (typeof wb === 'number') {
+			// Manual
+			return (
+				(await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, 0x0e)) &&
+				(await this.setCamData(OpCodeSigma.SetCamDataGroup5, 1, wb))
+			)
+		} else {
+			// With label
+			const byte = SigmaApexWhiteBalance.getKey(wb)
+			if (!byte) return false
+			return this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, byte)
+		}
+	}
+
+	public getWhiteBalanceDesc = async (): Promise<
+		PropDescEnum<WhiteBalance>
+	> => {
+		const ifdEntries = await this.getCamCanSetInfo5()
+		const presets = ifdEntries.find(e => e.tag === 301)
+		const colorTemp = ifdEntries.find(e => e.tag === 302)
+
+		if (
+			!presets ||
+			!Array.isArray(presets.value) ||
+			!colorTemp ||
+			!Array.isArray(colorTemp.value)
+		)
+			throw new Error('Invalid IFD')
+
+		const presetsRange = presets.value
+			.map(v => SigmaApexWhiteBalanceIFD.get(v))
+			.filter(v => !!v) as WhiteBalance[]
+
+		const [min, max, step] = colorTemp.value
+
+		const manualRange = _.range(min, max, step)
+
+		return {
+			canRead: true,
+			canWrite: true,
+			range: [...presetsRange, ...manualRange],
+		}
+	}
+
 	public getExposureMode = async (): Promise<null | ExposureMode> => {
 		const {exposureMode} = await this.getCamDataGroup2()
 		return SigmaApexExposureMode.get(exposureMode) ?? null
@@ -233,7 +342,7 @@ export class TethrSigma extends Tethr {
 		const byte = SigmaApexExposureMode.getKey(exposureMode)
 		if (!byte) return false
 
-		return this.setCamData(2, 2, byte)
+		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, byte)
 	}
 
 	public getExposureModeDesc = async (): Promise<
@@ -265,7 +374,7 @@ export class TethrSigma extends Tethr {
 
 		const {data: camCaptStatusData} = await this.device.receiveData({
 			label: 'SigmaFP GetCamCaptStatus',
-			code: 0x9015,
+			code: OpCodeSigma.GetCamCaptStatus,
 			parameters: [0x0],
 		})
 		const camCaptStatus = this.decodeCamCaptStatus(camCaptStatusData)
@@ -288,7 +397,7 @@ export class TethrSigma extends Tethr {
 		while (tries--) {
 			const {data} = await this.device.receiveData({
 				label: 'SigmaFP GetCamCaptStatus',
-				code: 0x9015,
+				code: OpCodeSigma.GetCamCaptStatus,
 				parameters: [id],
 			})
 
@@ -325,7 +434,7 @@ export class TethrSigma extends Tethr {
 		// Get file
 		const {data: pictFileData} = await this.device.receiveData({
 			label: 'SigmaFP GetBigPartialPictFile',
-			code: 0x9022,
+			code: OpCodeSigma.GetBigPartialPictFile,
 			parameters: [pictInfo.fileAddress, 0x0, pictInfo.fileSize],
 		})
 
@@ -334,7 +443,7 @@ export class TethrSigma extends Tethr {
 
 		await this.device.sendData({
 			label: 'SigmaFP ClearImageDBSingle',
-			code: 0x901c,
+			code: OpCodeSigma.ClearImageDBSingle,
 			parameters: [id],
 			data: new ArrayBuffer(8),
 		})
@@ -344,8 +453,8 @@ export class TethrSigma extends Tethr {
 
 	public getLiveView = async (): Promise<null | string> => {
 		const {code, data} = await this.device.receiveData({
-			label: 'SigmaFP GetCamViewFrame',
-			code: 0x902b,
+			label: 'SigmaFP GetViewFrame',
+			code: OpCodeSigma.GetViewFrame,
 			parameters: [],
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 		})
@@ -362,7 +471,7 @@ export class TethrSigma extends Tethr {
 	private async getCamDataGroup1() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup1',
-			code: 0x9012,
+			code: OpCodeSigma.GetCamDataGroup1,
 			parameters: [0x0],
 		})
 
@@ -394,7 +503,7 @@ export class TethrSigma extends Tethr {
 	private async getCamDataGroup2() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup2',
-			code: 0x9013,
+			code: OpCodeSigma.GetCamDataGroup2,
 			parameters: [0x0],
 		})
 
@@ -402,57 +511,89 @@ export class TethrSigma extends Tethr {
 		decoder.getUint8()
 		decoder.getUint16() // FieldPreset
 
-		const group2FirstOct = {
+		console.log(decoder.getRest())
+
+		const group2First = {
 			driveMode: decoder.getUint8(),
 			specialMode: decoder.getUint8(),
 			exposureMode: decoder.getUint8(),
 			aeMeteringMode: decoder.getUint8(),
 		}
 
-		decoder.skip(4)
+		decoder.goTo(3 + 10)
 
-		const group2SecondOct = {
-			flashType: decoder.getUint8(),
-			flashMode: decoder.getUint8().toString(2),
-			flashSettings: decoder.getUint8(),
+		const group2Second = {
 			whiteBalance: decoder.getUint8(),
 			resolution: decoder.getUint8(),
 			imageQuality: decoder.getUint8(),
 		}
 
-		const group2 = {...group2FirstOct, ...group2SecondOct}
+		const group2 = {...group2First, ...group2Second}
 
 		return group2
+	}
+
+	private async getCamDataGroup5() {
+		const {data} = await this.device.receiveData({
+			label: 'SigmaFP GetCamDataGroup5',
+			code: OpCodeSigma.GetCamDataGroup5,
+			parameters: [0x0],
+		})
+
+		const decoder = new PTPDecoder(data)
+		decoder.getUint8()
+		decoder.getUint16() // FieldPreset
+
+		const group5FirstOct = {
+			intervalTimerSecond: decoder.getUint16(),
+			intervalTimerFame: decoder.getUint8(),
+			intervalTimerSecond_Remain: decoder.getUint16(),
+			intervalTimerFrame_Remain: decoder.getUint8(),
+			colorTemp: decoder.getUint16(),
+		}
+
+		decoder.skip(2)
+
+		const group5SecondOct = {
+			aspectRatio: decoder.getUint8(),
+		}
+
+		const group5 = {...group5FirstOct, ...group5SecondOct}
+
+		console.log('group5=', group5)
+
+		return group5
 	}
 
 	private async getCamCanSetInfo5() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamCanSetInfo5',
-			code: 0x9030,
+			code: OpCodeSigma.GetCamCanSetInfo5,
 			parameters: [0x0],
 		})
 
 		return this.decodeIFD(data)
 	}
 
-	private async setCamData(
-		groupNumber: number,
-		propNumber: number,
-		value: number
-	) {
-		const buffer = new ArrayBuffer(3)
+	private async setCamData(code: number, propNumber: number, value: number) {
+		const buffer = new ArrayBuffer(4)
 		const dataView = new DataView(buffer)
 
 		dataView.setUint16(0, 1 << propNumber, true)
-		dataView.setUint8(2, value)
+		dataView.setUint16(2, value, true)
 
 		const data = this.encodeParameter(buffer)
 
-		await this.device.sendData({
-			label: 'SigmaFP SetCamDataGroup' + groupNumber,
-			code: 0x9016 + groupNumber - 1,
-			data,
-		})
+		try {
+			await this.device.sendData({
+				label: 'SigmaFP SetCamDataGroup#',
+				code,
+				data,
+			})
+		} catch (err) {
+			console.log(err)
+			return false
+		}
 
 		return true
 	}
@@ -525,8 +666,15 @@ export class TethrSigma extends Tethr {
 					value = asciiDecoder.decode(buf)
 					break
 				}
+				case 0x3: {
+					// SHORT
+					const off = count > 2 ? valueOffset : offset
+					const buf = data.slice(off, off + count * 2)
+					value = [...new Uint16Array(buf)]
+					break
+				}
 				case 0x8: {
-					// SSHORT
+					// Signed SHORT
 					const off = count > 2 ? valueOffset : offset
 					value = Array(count)
 						.fill(0)

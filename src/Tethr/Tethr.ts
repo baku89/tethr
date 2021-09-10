@@ -25,7 +25,9 @@ export type WhiteBalance =
 	| 'auto'
 	| 'auto cool'
 	| 'auto warm'
+	| 'auto ambience'
 	| 'daylight'
+	| 'shade'
 	| 'cloud'
 	| 'incandescent'
 	| 'florescent'
@@ -198,7 +200,9 @@ export class Tethr {
 		return null
 	}
 
-	public setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
+	public setWhiteBalance = async (
+		wb: number | WhiteBalance
+	): Promise<boolean> => {
 		return false
 	}
 
