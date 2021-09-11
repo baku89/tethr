@@ -101,19 +101,19 @@ export class PTPDecoder {
 		return parseTimestamp(timestamp, 'YYYYMMDDThhmmss')
 	}
 
-	public getUint16Array(): number[] {
+	public getUint16Array = (): number[] => {
 		return this.getArray(this.getUint16)
 	}
 
-	public getUint32Array(): number[] {
+	public getUint32Array = (): number[] => {
 		return this.getArray(this.getUint32)
 	}
 
-	public getRest(): ArrayBuffer {
+	public getRest = (): ArrayBuffer => {
 		return this.dataView.buffer.slice(this.byteOffset)
 	}
 
-	private getArray(getFunc: () => number) {
+	private getArray = (getFunc: () => number) => {
 		const length = this.getUint32()
 		return _.times(length, getFunc.bind(this))
 	}
