@@ -60,11 +60,17 @@ export type EffectMode = 'standard' | 'bw' | 'sepia' | string
 export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
 export type PropDesc<T> = {
-	writable: boolean
-	currentValue: T
-	defaultValue: T
-	supportedValues: T[]
-}
+	currentValue: T | typeof Tethr.Unknown
+	defaultValue?: T
+} & (
+	| {
+			writable: true
+			supportedValues: T[]
+	  }
+	| {
+			writable: false
+	  }
+)
 
 export interface BasePropType {
 	batteryLevel: BatteryLevel
@@ -115,6 +121,8 @@ type PropTypeConverter = {
 }
 
 export class Tethr {
+	public static readonly Unknown: unique symbol = Symbol('Tethr.Unknown')
+
 	protected _opened = false
 
 	protected propTypeConverter: PropTypeConverter = {}
