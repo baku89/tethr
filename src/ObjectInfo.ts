@@ -4,13 +4,17 @@ export interface ObjectInfo {
 	objectFormat: number
 	protectionStatus: number
 	objectCompressedSize: number
-	thumbFormat: number
-	thumbCompressedSize: number
-	thumbPixWidth: number
-	thumbPixHeight: number
-	imagePixWidth: number
-	imagePixHeight: number
-	imageBitDepth: number
+	thumb: {
+		format: number
+		compressedSize: number
+		width: number
+		height: number
+	}
+	image: {
+		width: number
+		height: number
+		bitDepth: number
+	}
 	parentObject: number
 	associationType: number
 	associationDesc: number
