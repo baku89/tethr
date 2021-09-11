@@ -2,7 +2,14 @@ import _ from 'lodash'
 
 import {OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
-import {Aperture, ExposureMode, ISO, PropDesc, Tethr} from '../Tethr'
+import {
+	Aperture,
+	BasePropType,
+	ExposureMode,
+	ISO,
+	PropDesc,
+	Tethr,
+} from '../Tethr'
 
 enum OpCodePanasonic {
 	OpenSession = 0x9102,
@@ -78,89 +85,93 @@ export class TethrPanasnoic extends Tethr {
 		await super.open()
 	}
 
-	public getAperture = this.getPropGetter(
-		DevicePropCodePanasonic.Aperture,
-		this.decodeAperture,
-		2
-	)
+	public async set<K extends keyof BasePropType, T extends BasePropType[K]>(
+		name: K,
+		value: T
+	): Promise<boolean> {
+		let dpc: number,
+			valuesize: number,
+			encode: (value: T) => number = _.identity
 
-	public setAperture = this.getPropSetter(
-		DevicePropCodePanasonic.Aperture,
-		this.encodeAperture,
-		2
-	)
-
-	public getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
-		const {range} = await this.getPropDesc(
-			DevicePropCodePanasonic.Aperture,
-			this.decodeAperture,
-			2
-		)
-
-		return {
-			canRead: true,
-			canWrite: range.length > 0,
-			range,
+		switch (name) {
+			case 'exposureMode':
+				dpc = DevicePropCodePanasonic.CameraMode_ModePos
+				valuesize = 2
+				break
+			case 'aperture':
+				dpc = DevicePropCodePanasonic.Aperture_Param
+				valuesize = 2
+				encode = this.encodeAperture as (value: T) => number
+				break
+			case 'shutterSpeed':
+				dpc = DevicePropCodePanasonic.ShutterSpeed_Param
+				valuesize = 4
+				encode = this.encodeShutterSpeed as (value: T) => number
+				break
+			case 'iso':
+				dpc = DevicePropCodePanasonic.ISO_Param
+				valuesize = 4
+				encode = this.encodeISO as (value: T) => number
+				break
+			default:
+				throw new Error('Invalid prop name')
 		}
+
+		const data = new ArrayBuffer(4 + 4 + valuesize)
+		const dataView = new DataView(data)
+		const encodedValue = encode(value)
+
+		dataView.setUint32(0, dpc, true)
+		dataView.setUint32(4, valuesize, true)
+		if (valuesize === 2) dataView.setUint16(8, encodedValue, true)
+		if (valuesize === 4) dataView.setUint32(8, encodedValue, true)
+
+		await this.device.sendData({
+			label: 'Panasonic SetProperty',
+			code: OpCodePanasonic.SetProperty,
+			parameters: [dpc],
+			data,
+		})
+
+		return true
 	}
 
-	public getShutterSpeed = this.getPropGetter(
-		DevicePropCodePanasonic.ShutterSpeed,
-		this.decodeShutterSpeed,
-		4
-	)
-
-	public getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
-		const {range} = await this.getPropDesc(
-			DevicePropCodePanasonic.ShutterSpeed,
-			this.decodeShutterSpeed,
-			4
-		)
-
-		return {
-			canRead: true,
-			canWrite: true,
-			range,
-		}
-	}
-
-	public getISO = this.getPropGetter(
-		DevicePropCodePanasonic.ISO,
-		this.decodeISO,
-		4
-	)
-
-	public setISO = this.getPropSetter(
-		DevicePropCodePanasonic.ISO,
-		this.encodeISO,
-		4
-	)
-
-	public getISODesc = async (): Promise<PropDesc<ISO>> => {
-		const {range} = await this.getPropDesc(
-			DevicePropCodePanasonic.ISO,
-			this.decodeISO,
-			4
-		)
-
-		return {
-			canRead: true,
-			canWrite: true,
-			range,
-		}
-	}
-
-	public getExposureMode = this.getPropGetter(
-		DevicePropCodePanasonic.CameraMode_ModePos,
-		this.decodeExposureMode,
-		2
-	)
-
-	public getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
-		return {
-			canRead: true,
-			canWrite: true,
-			range: ['P', 'A', 'S', 'M'],
+	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
+		name: K
+	): Promise<PropDesc<T>> {
+		switch (name) {
+			case 'exposureMode': {
+				const desc = (await this.listProperty(
+					DevicePropCodePanasonic.CameraMode_ModePos,
+					this.decodeExposureMode,
+					2
+				)) as PropDesc<T>
+				desc.supportedValues = ['P', 'A', 'S', 'M'] as T[]
+				return desc
+			}
+			case 'aperture': {
+				return (await this.listProperty(
+					DevicePropCodePanasonic.Aperture,
+					this.decodeAperture,
+					2
+				)) as PropDesc<T>
+			}
+			case 'shutterSpeed': {
+				return (await this.listProperty(
+					DevicePropCodePanasonic.ShutterSpeed,
+					this.decodeShutterSpeed,
+					4
+				)) as PropDesc<T>
+			}
+			case 'iso': {
+				return (await this.listProperty(
+					DevicePropCodePanasonic.ISO,
+					this.decodeISO,
+					4
+				)) as PropDesc<T>
+			}
+			default:
+				throw new Error(`Device prop ${name} is not supported for this device`)
 		}
 	}
 
@@ -221,60 +232,14 @@ export class TethrPanasnoic extends Tethr {
 		return url
 	}
 
-	private getPropGetter<T>(
+	private async listProperty<
+		K extends keyof BasePropType,
+		T extends BasePropType[K]
+	>(
 		dpc: number,
 		fmap: (n: number) => T = _.identity,
 		size: 2 | 4
-	) {
-		return async () => {
-			const {data} = await this.device.receiveData({
-				label: 'Panasonic GetProperty',
-				code: OpCodePanasonic.GetProperty,
-				parameters: [dpc],
-			})
-
-			const decoder = new PTPDecoder(data)
-
-			const dpc2 = decoder.getUint32().toString(16)
-			const bytes = decoder.getUint32()
-			const value = size === 2 ? decoder.getUint16() : decoder.getUint32()
-
-			console.log({dpc2, bytes, value, data})
-
-			return fmap(value)
-		}
-	}
-
-	private getPropSetter<T>(
-		dpc: number,
-		fmap: (n: T) => number,
-		valuesize: 2 | 4
-	) {
-		return async (value: T) => {
-			const data = new ArrayBuffer(4 + 4 + valuesize)
-			const dataView = new DataView(data)
-
-			dataView.setUint32(0, dpc)
-			dataView.setUint32(4, valuesize)
-			if (valuesize === 2) dataView.setUint16(8, fmap(value))
-			if (valuesize === 4) dataView.setUint16(8, fmap(value))
-
-			await this.device.sendData({
-				label: 'Panasonic SetProperty',
-				code: OpCodePanasonic.SetProperty,
-				parameters: [dpc],
-				data,
-			})
-
-			return true
-		}
-	}
-
-	private async getPropDesc<T>(
-		dpc: number,
-		fmap: (n: number) => T = _.identity,
-		size: 2 | 4
-	) {
+	): Promise<PropDesc<T>> {
 		const {data} = await this.device.receiveData({
 			label: 'Panasonic ListProperty',
 			code: OpCodePanasonic.ListProperty,
@@ -283,22 +248,24 @@ export class TethrPanasnoic extends Tethr {
 
 		const decoder = new PTPDecoder(data)
 
+		const getValue = size === 2 ? decoder.getUint16 : decoder.getUint32
+		const getArray =
+			size === 2 ? decoder.getUint16Array : decoder.getUint32Array
+
 		decoder.skip(4) // dpc
 		const headerLength = decoder.getUint32()
 
 		decoder.goTo(headerLength * 4 + 2 * 4)
 
-		const currentValue = fmap(
-			size === 2 ? decoder.getUint16() : decoder.getUint32()
-		)
+		const currentValue = fmap(getValue())
 
-		const range = [
-			...(size === 2 ? decoder.getUint16Array() : decoder.getUint32Array()),
-		].map(fmap)
+		const supportedValues = [...getArray()].map(fmap)
 
 		return {
+			writable: supportedValues.length > 0,
 			currentValue,
-			range,
+			defaultValue: currentValue,
+			supportedValues,
 		}
 	}
 
@@ -311,6 +278,30 @@ export class TethrPanasnoic extends Tethr {
 		return aperture * 10
 	}
 
+	private encodeShutterSpeed(value: string) {
+		if (value === 'bulb') {
+			return 0xffffffff
+		}
+		if (value === 'auto') {
+			return 0x0ffffffe
+		}
+
+		const fractionMatch = value.match(/^1\/([0-9]+)$/)
+
+		if (fractionMatch) {
+			const denominator = parseInt(fractionMatch[1])
+			return denominator * 1000
+		}
+
+		// Seconds
+		const seconds = parseFloat(value)
+		if (!isNaN(seconds)) {
+			return Math.round(seconds * 1000) | 0x80000000
+		}
+
+		throw new Error('Invalid format of shutter speed')
+	}
+
 	private decodeShutterSpeed(value: number) {
 		switch (value) {
 			case 0xffffffff:
@@ -318,7 +309,7 @@ export class TethrPanasnoic extends Tethr {
 			case 0x0fffffff:
 				return 'auto'
 			case 0x0ffffffe:
-				return 'Unknown'
+				return 'unknown'
 			default:
 				if ((value & 0x80000000) === 0x00000000) {
 					return '1/' + value / 1000
@@ -339,7 +330,7 @@ export class TethrPanasnoic extends Tethr {
 		return iso
 	}
 
-	private decodeExposureMode(mode: number): null | ExposureMode {
+	private decodeExposureMode(mode: number): ExposureMode {
 		switch (mode) {
 			case 0x0:
 				return 'P'
@@ -349,8 +340,8 @@ export class TethrPanasnoic extends Tethr {
 				return 'S'
 			case 0x3:
 				return 'M'
+			default:
+				throw new Error(`Unsupported exposure mode ${mode}`)
 		}
-
-		return null
 	}
 }
