@@ -26,7 +26,7 @@ export function useTethrProp<Name extends keyof BasePropType>(
 		const desc = await cam.getDesc(name)
 
 		propDesc.writable = desc.writable
-		propDesc.value = desc.currentValue
+		propDesc.value = desc.value
 
 		propDesc.update = async (value: any) => {
 			propDesc.updating = true

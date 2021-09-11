@@ -60,7 +60,7 @@ export type EffectMode = 'standard' | 'bw' | 'sepia' | string
 export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
 export type PropDesc<T> = {
-	currentValue: T | typeof Tethr.Unknown
+	value: T | typeof Tethr.Unknown
 	defaultValue?: T
 } & (
 	| {
@@ -208,7 +208,7 @@ export class Tethr {
 	public async get<K extends keyof BasePropType>(
 		name: K
 	): Promise<BasePropType[K]> {
-		return (await this.getDesc(name)).currentValue as BasePropType[K]
+		return (await this.getDesc(name)).value as BasePropType[K]
 	}
 
 	public async set<K extends keyof BasePropType>(
@@ -264,7 +264,7 @@ export class Tethr {
 		}
 
 		const defaultValue = decodeFn(getValue())
-		const currentValue = decodeFn(getValue())
+		const value = decodeFn(getValue())
 
 		// Read supportedValues
 		const formFlag = getValue()
@@ -305,7 +305,7 @@ export class Tethr {
 
 		return {
 			writable,
-			currentValue,
+			value,
 			defaultValue,
 			supportedValues,
 		}

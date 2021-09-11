@@ -257,13 +257,13 @@ export class TethrPanasnoic extends Tethr {
 
 		decoder.goTo(headerLength * 4 + 2 * 4)
 
-		const currentValue = decode(getValue())
+		const value = decode(getValue())
 
 		const supportedValues = [...getArray()].map(decode)
 
 		return {
 			writable: supportedValues.length > 0,
-			currentValue,
+			value,
 			supportedValues,
 		}
 	}

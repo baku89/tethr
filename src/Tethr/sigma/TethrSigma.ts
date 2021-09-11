@@ -172,11 +172,11 @@ export class TethrSigma extends Tethr {
 
 	private getFocalLengthDesc = async (): Promise<PropDesc<number>> => {
 		const data = (await this.getCamDataGroup1()).currentLensFocalLength
-		const currentValue = this.decodeFocalLength(data)
+		const value = this.decodeFocalLength(data)
 
 		return {
 			writable: false,
-			currentValue,
+			value,
 		}
 	}
 
@@ -203,13 +203,13 @@ export class TethrSigma extends Tethr {
 
 	private getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
 		const fValue = (await this.getCamCanSetInfo5()).fValue
-		const currentValue = await this.getAperture()
+		const value = await this.getAperture()
 
 		if (fValue.length === 0) {
 			// Should be auto aperture
 			return {
 				writable: false,
-				currentValue,
+				value,
 			}
 		}
 
@@ -234,7 +234,7 @@ export class TethrSigma extends Tethr {
 
 		return {
 			writable: true,
-			currentValue,
+			value,
 			supportedValues,
 		}
 	}
@@ -251,7 +251,7 @@ export class TethrSigma extends Tethr {
 
 	private getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
 		const info = (await this.getCamCanSetInfo5()).shutterSpeed
-		const currentValue = await this.getShutterSpeed()
+		const value = await this.getShutterSpeed()
 
 		const [tvMin, tvMax, step] = info
 
@@ -285,7 +285,7 @@ export class TethrSigma extends Tethr {
 
 		return {
 			writable: supportedValues.length > 0,
-			currentValue,
+			value,
 			supportedValues,
 		}
 
@@ -332,7 +332,7 @@ export class TethrSigma extends Tethr {
 
 	private getISODesc = async (): Promise<PropDesc<ISO>> => {
 		const {isoManual} = await this.getCamCanSetInfo5()
-		const currentValue = await this.getISO()
+		const value = await this.getISO()
 
 		const [svMin, svMax] = isoManual
 
@@ -346,7 +346,7 @@ export class TethrSigma extends Tethr {
 
 		return {
 			writable: true,
-			currentValue,
+			value,
 			supportedValues,
 		}
 	}
@@ -365,7 +365,7 @@ export class TethrSigma extends Tethr {
 
 	private getWhiteBalanceDesc = async (): Promise<PropDesc<WhiteBalance>> => {
 		const {whiteBalance} = await this.getCamCanSetInfo5()
-		const currentValue = await this.getWhiteBalance()
+		const value = await this.getWhiteBalance()
 
 		const supportedValues = whiteBalance
 			.map(v => SigmaApexWhiteBalanceIFD.get(v))
@@ -373,7 +373,7 @@ export class TethrSigma extends Tethr {
 
 		return {
 			writable: supportedValues.length > 0,
-			currentValue,
+			value,
 			supportedValues,
 		}
 	}
@@ -395,13 +395,13 @@ export class TethrSigma extends Tethr {
 
 	private getColorTemperatureDesc = async () => {
 		const {colorTemerature} = await this.getCamCanSetInfo5()
-		const currentValue = await this.getColorTemperature()
+		const value = await this.getColorTemperature()
 
 		if (colorTemerature.length !== 3) {
 			// When WB is not set to 'manual'
 			return {
 				writable: false,
-				currentValue,
+				value,
 			}
 		}
 
@@ -409,7 +409,7 @@ export class TethrSigma extends Tethr {
 
 		return {
 			writable: true,
-			currentValue,
+			value,
 			supportedValues: _.range(min, max, step),
 		}
 	}
@@ -430,7 +430,7 @@ export class TethrSigma extends Tethr {
 
 	private getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
 		const {exposureMode} = await this.getCamCanSetInfo5()
-		const currentValue = await this.getExposureMode()
+		const value = await this.getExposureMode()
 
 		const supportedValues = exposureMode
 			.map(n => SigmaApexExposureMode.get(n))
@@ -438,19 +438,18 @@ export class TethrSigma extends Tethr {
 
 		return {
 			writable: supportedValues.length > 0,
-			currentValue,
+			value,
 			supportedValues,
 		}
 	}
 
 	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
 		const {batteryLevel} = await this.getCamDataGroup1()
-		const currentValue =
-			SigmaApexBatteryLevel.get(batteryLevel) ?? Tethr.Unknown
+		const value = SigmaApexBatteryLevel.get(batteryLevel) ?? Tethr.Unknown
 
 		return {
 			writable: false,
-			currentValue,
+			value,
 		}
 	}
 
