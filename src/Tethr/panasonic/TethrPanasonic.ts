@@ -1,3 +1,4 @@
+import {BiMap} from 'bim'
 import _ from 'lodash'
 
 import {OpCode, ResCode} from '../../PTPDatacode'
@@ -9,6 +10,7 @@ import {
 	ISO,
 	PropDesc,
 	Tethr,
+	WhiteBalance,
 } from '../Tethr'
 
 enum OpCodePanasonic {
@@ -113,6 +115,11 @@ export class TethrPanasnoic extends Tethr {
 				valuesize = 4
 				encode = this.encodeISO as (value: T) => number
 				break
+			case 'whiteBalance':
+				dpc = DevicePropCodePanasonic.WhiteBalance_Param
+				valuesize = 2
+				encode = this.encodeWhiteBalance as (value: T) => number
+				break
 			default:
 				throw new Error('Invalid prop name')
 		}
@@ -149,27 +156,31 @@ export class TethrPanasnoic extends Tethr {
 				desc.supportedValues = ['P', 'A', 'S', 'M'] as T[]
 				return desc
 			}
-			case 'aperture': {
+			case 'aperture':
 				return (await this.listProperty(
 					DevicePropCodePanasonic.Aperture,
 					this.decodeAperture,
 					2
 				)) as PropDesc<T>
-			}
-			case 'shutterSpeed': {
+			case 'shutterSpeed':
 				return (await this.listProperty(
 					DevicePropCodePanasonic.ShutterSpeed,
 					this.decodeShutterSpeed,
 					4
 				)) as PropDesc<T>
-			}
-			case 'iso': {
+			case 'iso':
 				return (await this.listProperty(
 					DevicePropCodePanasonic.ISO,
 					this.decodeISO,
 					4
 				)) as PropDesc<T>
-			}
+			case 'whiteBalance':
+				return (await this.listProperty(
+					DevicePropCodePanasonic.WhiteBalance,
+					this.decodeWhiteBalance,
+					2
+				)) as PropDesc<T>
+
 			default:
 				throw new Error(`Device prop ${name} is not supported for this device`)
 		}
@@ -344,4 +355,39 @@ export class TethrPanasnoic extends Tethr {
 				throw new Error(`Unsupported exposure mode ${mode}`)
 		}
 	}
+
+	private encodeWhiteBalance(wb: WhiteBalance): number {
+		const data = TethrPanasnoic.WhiteBalanceTable.getKey(wb)
+		if (data === undefined) throw new Error(`Unsupported WB`)
+		return data
+	}
+
+	private decodeWhiteBalance(wb: number): WhiteBalance {
+		const value = TethrPanasnoic.WhiteBalanceTable.get(wb)
+		if (value === undefined)
+			throw new Error(`Unsupported WB ${wb.toString(16)}`)
+		return value
+	}
+
+	private static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
+		[0x0002, 'auto'],
+		[0x0004, 'daylight'],
+		[0x8008, 'cloud'],
+		[0x0006, 'incandescent'],
+		// [0x8009, 'White Set'],
+		[0x0007, 'flash'],
+		[0x0005, 'fluorescent'],
+		// [0x800a, 'Black and White'],
+		// [0x800b, 'WB Setting 1'],
+		// [0x800c, 'WB Setting 2'],
+		// [0x800d, 'WB Setting 3'],
+		// [0x800e, 'WB Setting 4'],
+		[0x800f, 'shade'],
+		// [0x8010, 'Color Temperature (Color Temperature 1)'],
+		// [0x8011, 'Color Temperature 2'],
+		// [0x8012, 'Color Temperature 3'],
+		// [0x8013, 'Color Temperature 4'],
+		[0x8014, 'auto cool'],
+		[0x8015, 'auto warm'],
+	])
 }
