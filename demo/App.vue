@@ -36,11 +36,14 @@
 			</dd>
 			<dt>Aperture</dt>
 			<dd>
-				<select v-model="aperture">
-					<option v-for="f in apertureDesc.range" :key="f" :value="f">
-						{{ f.toString() }}
-					</option>
-				</select>
+				<template v-if="apertureDesc.canWrite">
+					<select v-model="aperture">
+						<option v-for="f in apertureDesc.range" :key="f" :value="f">
+							{{ f.toString() }}
+						</option>
+					</select>
+				</template>
+				<template v-else>{{ aperture }} </template>
 			</dd>
 			<dt>ShutterSpeed</dt>
 			<dd>
