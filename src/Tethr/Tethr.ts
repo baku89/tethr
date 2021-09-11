@@ -1,7 +1,10 @@
+import {BiMap} from 'bim'
+import _ from 'lodash'
+
 import {DeviceInfo} from '@/DeviceInfo'
 import {ObjectInfo} from '@/ObjectInfo'
 
-import {DevicePropCode, OpCode, ResCode} from '../PTPDatacode'
+import {DatatypeCode, DevicePropCode, OpCode, ResCode} from '../PTPDatacode'
 import {PTPDecoder} from '../PTPDecoder'
 import {PTPDevice} from '../PTPDevice'
 import {
@@ -56,21 +59,11 @@ export type EffectMode = 'standard' | 'bw' | 'sepia' | string
 
 export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
-export interface DevicePropDesc<T> {
-	currentValue: T
-	factoryDefaultValue: T
-	getSet: number
-	range?: {
-		min: T
-		max: T
-		step: T
-	}
-}
-
 export type PropDesc<T> = {
-	canRead: boolean
-	canWrite: boolean
-	range: T[]
+	writable: boolean
+	currentValue: T
+	defaultValue: T
+	supportedValues: T[]
 }
 
 interface BasePropType {
@@ -110,8 +103,25 @@ interface BasePropType {
 	iso: ISO // added
 }
 
-export class Tethr<PropType extends {[name: string]: any} = BasePropType> {
+type DevicePropCodeTable = BiMap<keyof BasePropType, number>
+
+interface PropTypeConverterEntry<PropType, DataType = number> {
+	decode?: (data: DataType) => PropType
+	encode?: (value: PropType) => DataType
+}
+
+type PropTypeConverter = {
+	[Name in keyof BasePropType]?: PropTypeConverterEntry<BasePropType[Name]>
+}
+
+export class Tethr {
 	protected _opened = false
+
+	protected propTypeConverter: PropTypeConverter = {}
+
+	protected devicePropCodeTable: DevicePropCodeTable = new BiMap([
+		['batteryLevel', DevicePropCode.BatteryLevel],
+	])
 
 	public constructor(protected device: PTPDevice) {}
 
@@ -180,119 +190,107 @@ export class Tethr<PropType extends {[name: string]: any} = BasePropType> {
 		}
 	}
 
-	public async get<K extends keyof PropType>(
+	public async get<K extends keyof BasePropType>(
 		name: K
-	): Promise<null | PropType[K]>
-	public async get(name: string): Promise<null | any> {
-		return null
+	): Promise<BasePropType[K]> {
+		return (await this.getDesc(name)).currentValue
 	}
 
-	public async set<K extends keyof PropType>(
+	public async set<K extends keyof BasePropType>(
 		name: K,
-		value: PropType[K]
-	): Promise<boolean>
-	public async set(name: string, value: any): Promise<boolean> {
+		value: BasePropType[K]
+	): Promise<boolean> {
 		return false
 	}
 
-	public async getDesc<K extends keyof PropType>(
+	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
 		name: K
-	): Promise<PropDesc<PropType[K]>>
-	public async getDesc(name: string): Promise<PropDesc<any>> {
-		return {
-			canRead: false,
-			canWrite: false,
-			range: [],
+	): Promise<PropDesc<T>> {
+		const dpc = this.devicePropCodeTable.get(name as any)
+
+		if (dpc === undefined)
+			throw new Error(`Prop "${name}"" is not supported for this device`)
+
+		const {code: rescode, data} = await this.device.receiveData({
+			label: 'GetDevicePropDesc',
+			code: OpCode.GetDevicePropDesc,
+			parameters: [dpc],
+			expectedResCodes: [ResCode.OK, ResCode.DevicePropNotSupported],
+		})
+
+		if (rescode === ResCode.DevicePropNotSupported)
+			throw new Error(
+				`DeviceProp ${dpc.toString(16)} (${name}) is not supported`
+			)
+
+		const decodeFn = (this.propTypeConverter[name]?.decode ?? _.identity) as (
+			data: number
+		) => T
+
+		const decoder = new PTPDecoder(data.slice(2))
+
+		const dataType = decoder.getUint16()
+		const writable = decoder.getUint8() === 0x01 // Get/Set
+
+		let getValue: () => number
+		switch (dataType) {
+			case DatatypeCode.Uint8:
+				getValue = decoder.getUint8
+				break
+			default:
+				throw new Error(
+					`PropDesc of datatype ${
+						DatatypeCode[dataType] ?? dataType.toString(16)
+					} is not yet supported`
+				)
 		}
-	}
 
-	public getFocalLength = async (): Promise<null | number> => null
+		const defaultValue = decodeFn(getValue())
+		const currentValue = decodeFn(getValue())
 
-	public getExposureMode = async (): Promise<null | ExposureMode> => null
+		// Read supportedValues
+		const formFlag = getValue()
 
-	public setExposureMode = async (
-		exposureMode: ExposureMode
-	): Promise<boolean> => false
+		let supportedValues: T[]
 
-	public getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
-		return {
-			canRead: false,
-			canWrite: false,
-			range: [],
+		switch (formFlag) {
+			case 0x00:
+				// None
+				supportedValues = []
+				break
+			case 0x01: {
+				// Range
+				const min = decodeFn(getValue())
+				const max = decodeFn(getValue())
+				const step = decodeFn(getValue())
+				if (
+					typeof min !== 'number' ||
+					typeof max !== 'number' ||
+					typeof step !== 'number'
+				) {
+					throw new Error(
+						`Cannot enumerate supported values of device prop ${name}`
+					)
+				}
+				supportedValues = _.range(min, max, step) as T[]
+				break
+			}
+			case 0x02: {
+				// Enumeration
+				const length = decoder.getUint16()
+				supportedValues = _.times(length, getValue).map(decodeFn)
+				break
+			}
+			default:
+				throw new Error(`Invalid form flag ${formFlag}`)
 		}
-	}
 
-	public getAperture = async (): Promise<null | Aperture> => null
-
-	public setAperture = async (aperture: Aperture): Promise<boolean> => false
-
-	public getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
 		return {
-			canRead: false,
-			canWrite: false,
-			range: [],
+			writable,
+			currentValue,
+			defaultValue,
+			supportedValues,
 		}
-	}
-
-	public getShutterSpeed = async (): Promise<null | string> => null
-
-	public setShutterSpeed = async (shutterSpeed: string): Promise<boolean> =>
-		false
-
-	public getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
-		return {
-			canRead: false,
-			canWrite: false,
-			range: [],
-		}
-	}
-
-	public getISO = async (): Promise<null | ISO> => null
-
-	public setISO = async (iso: ISO): Promise<boolean> => false
-
-	public getISODesc = async (): Promise<PropDesc<ISO>> => {
-		return {
-			canRead: false,
-			canWrite: false,
-			range: [],
-		}
-	}
-
-	public getWhiteBalance = async (): Promise<null | WhiteBalance> => null
-
-	public setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => false
-
-	public getWhiteBalanceDesc = async (): Promise<PropDesc<WhiteBalance>> => {
-		return {
-			canRead: false,
-			canWrite: false,
-			range: [],
-		}
-	}
-
-	public getColorTemperature = async (): Promise<null | number> => null
-
-	public setColorTemperature = async (value: number): Promise<boolean> => false
-
-	public getColorTemperatureDesc = async (): Promise<PropDesc<number>> => {
-		return {
-			canRead: false,
-			canWrite: false,
-			range: [],
-		}
-	}
-
-	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
-		const desc = await this.getDevicePropDesc(DevicePropCode.BatteryLevel)
-
-		if (!desc) return null
-
-		const min = desc.range?.min ?? 0
-		const max = desc.range?.max ?? 100
-		const value = desc.currentValue
-
-		return (value - min) / (max - min)
 	}
 
 	public runAutoFocus = async (): Promise<boolean> => false
@@ -314,61 +312,6 @@ export class Tethr<PropType extends {[name: string]: any} = BasePropType> {
 
 	public get liveviewing(): boolean {
 		return false
-	}
-
-	public getDevicePropDesc = async (
-		deviceProp: number
-	): Promise<null | DevicePropDesc<number>> => {
-		const {code, data} = await this.device.receiveData({
-			label: 'GetDevicePropDesc',
-			code: OpCode.GetDevicePropDesc,
-			parameters: [deviceProp],
-			expectedResCodes: [ResCode.OK, ResCode.DevicePropNotSupported],
-		})
-
-		if (code === ResCode.DevicePropNotSupported) {
-			console.info(
-				`DeviceProp: ${deviceProp.toString(16)} (${
-					DevicePropCode[deviceProp]
-				}) is not supported`
-			)
-			return null
-		}
-
-		const decoder = new PTPDecoder(data.slice(2))
-
-		/*const devicePropCode =*/ decoder.getUint16()
-		const dataType = decoder.getUint16()
-		const getSet = decoder.getUint8()
-
-		let getValue: () => number = decoder.getUint8
-
-		if (dataType === 0x0002) {
-			getValue = decoder.getUint8
-		}
-
-		const factoryDefaultValue = getValue()
-		const currentValue = getValue()
-
-		const desc: DevicePropDesc<number> = {
-			getSet,
-			factoryDefaultValue,
-			currentValue,
-		}
-
-		// Read form
-		const formFlag = getValue()
-
-		if (formFlag === 0x01) {
-			const range = {
-				min: getValue(),
-				max: getValue(),
-				step: getValue(),
-			}
-			desc.range = range
-		}
-
-		return desc
 	}
 
 	protected getObjectInfo = async (objectID: number): Promise<ObjectInfo> => {
