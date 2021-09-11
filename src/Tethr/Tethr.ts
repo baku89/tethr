@@ -1,4 +1,3 @@
-import {BiMap} from 'bim'
 import _ from 'lodash'
 
 import {DeviceInfo} from '@/DeviceInfo'
@@ -109,15 +108,14 @@ export interface BasePropType {
 	iso: ISO // added
 }
 
-type DevicePropCodeTable = BiMap<keyof BasePropType, number>
-
-interface PropTypeConverterEntry<PropType, DataType = number> {
+interface PropSchemeEntry<PropType> {
+	code: number
 	decode?: (data: number) => PropType
 	encode?: (value: PropType) => number
 }
 
-type PropTypeConverter = {
-	[Name in keyof BasePropType]?: PropTypeConverterEntry<BasePropType[Name]>
+type PropScheme = {
+	[Name in keyof BasePropType]?: PropSchemeEntry<BasePropType[Name]>
 }
 
 export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid'
@@ -130,11 +128,11 @@ export interface SetPropResult<T extends BasePropType[keyof BasePropType]> {
 export class Tethr {
 	protected _opened = false
 
-	protected propTypeConverter: PropTypeConverter = {}
-
-	protected devicePropCodeTable: DevicePropCodeTable = new BiMap([
-		['batteryLevel', DevicePropCode.BatteryLevel],
-	])
+	protected propScheme: PropScheme = {
+		batteryLevel: {
+			code: DevicePropCode.BatteryLevel,
+		},
+	}
 
 	public constructor(protected device: PTPDevice) {}
 
@@ -222,7 +220,7 @@ export class Tethr {
 	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		const dpc = this.devicePropCodeTable.get(name as any)
+		const dpc = this.propScheme[name]?.code
 
 		if (dpc === undefined)
 			throw new Error(`Prop "${name}"" is not supported for this device`)
@@ -239,7 +237,7 @@ export class Tethr {
 				`DeviceProp ${dpc.toString(16)} (${name}) is not supported`
 			)
 
-		const decodeFn = (this.propTypeConverter[name]?.decode ?? _.identity) as (
+		const decodeFn = (this.propScheme[name]?.decode ?? _.identity) as (
 			data: number
 		) => T
 
