@@ -1,5 +1,4 @@
 import {BiMap} from 'bim'
-import _ from 'lodash'
 
 import {OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
@@ -66,7 +65,107 @@ enum DevicePropCodePanasonic {
 	RecCtrlRelease = 0x03000010,
 }
 
+type PropDescriptor = {
+	[Name in keyof BasePropType]?: {
+		getCode: number
+		setCode?: number
+		decode: (value: number) => BasePropType[Name] | typeof Tethr.Unknown
+		encode?: (value: BasePropType[Name]) => number
+		valueSize: 2 | 4
+	}
+}
+
 export class TethrPanasnoic extends Tethr {
+	private static PropDescriptor: PropDescriptor = {
+		exposureMode: {
+			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
+			valueSize: 2,
+			decode(value: number) {
+				return (['P', 'A', 'S', 'M'] as ExposureMode[])[value] ?? Tethr.Unknown
+			},
+		},
+		aperture: {
+			getCode: DevicePropCodePanasonic.Aperture,
+			setCode: DevicePropCodePanasonic.Aperture_Param,
+			decode(value: number) {
+				return value / 10
+			},
+			encode(value: Aperture) {
+				return value === 'auto' ? 0 : Math.round(value * 10)
+			},
+			valueSize: 2,
+		},
+		shutterSpeed: {
+			getCode: DevicePropCodePanasonic.ShutterSpeed,
+			setCode: DevicePropCodePanasonic.ShutterSpeed_Param,
+			decode(value: number) {
+				switch (value) {
+					case 0xffffffff:
+						return 'bulb'
+					case 0x0fffffff:
+						return 'auto'
+					case 0x0ffffffe:
+						return Tethr.Unknown
+				}
+				if ((value & 0x80000000) === 0x00000000) {
+					return '1/' + value / 1000
+				} else {
+					return ((value & 0x7fffffff) / 1000).toString()
+				}
+			},
+			encode(value: string) {
+				if (value === 'bulb') {
+					return 0xffffffff
+				}
+				if (value === 'auto') {
+					return 0x0ffffffe
+				}
+
+				const fractionMatch = value.match(/^1\/([0-9]+)$/)
+
+				if (fractionMatch) {
+					const denominator = parseInt(fractionMatch[1])
+					return denominator * 1000
+				}
+
+				// Seconds
+				const seconds = parseFloat(value)
+				if (!isNaN(seconds)) {
+					return Math.round(seconds * 1000) | 0x80000000
+				}
+
+				throw new Error('Invalid format of shutter speed')
+			},
+			valueSize: 4,
+		},
+		iso: {
+			getCode: DevicePropCodePanasonic.ISO,
+			setCode: DevicePropCodePanasonic.ISO_Param,
+			decode(value: number) {
+				if (value === 0xffffffff) return 'auto'
+				if (value === 0xfffffffe) return 'auto' // i-ISO
+				return value
+			},
+			encode(value: ISO) {
+				return value === 'auto' ? 0xffffffff : value
+			},
+			valueSize: 4,
+		},
+		whiteBalance: {
+			getCode: DevicePropCodePanasonic.WhiteBalance,
+			setCode: DevicePropCodePanasonic.WhiteBalance_Param,
+			decode(value: number) {
+				return TethrPanasnoic.WhiteBalanceTable.get(value) ?? Tethr.Unknown
+			},
+			encode(value: WhiteBalance) {
+				const data = TethrPanasnoic.WhiteBalanceTable.getKey(value)
+				if (data === undefined) throw new Error(`Unsupported WB`)
+				return data
+			},
+			valueSize: 2,
+		},
+	}
+
 	public open = async (): Promise<void> => {
 		await super.open()
 
@@ -91,52 +190,30 @@ export class TethrPanasnoic extends Tethr {
 		name: K,
 		value: T
 	): Promise<boolean> {
-		let dpc: number,
-			valuesize: number,
-			encode: (value: T) => number = _.identity
+		const descriptor = TethrPanasnoic.PropDescriptor[name]
 
-		switch (name) {
-			case 'exposureMode':
-				dpc = DevicePropCodePanasonic.CameraMode_ModePos
-				valuesize = 2
-				break
-			case 'aperture':
-				dpc = DevicePropCodePanasonic.Aperture_Param
-				valuesize = 2
-				encode = this.encodeAperture as (value: T) => number
-				break
-			case 'shutterSpeed':
-				dpc = DevicePropCodePanasonic.ShutterSpeed_Param
-				valuesize = 4
-				encode = this.encodeShutterSpeed as (value: T) => number
-				break
-			case 'iso':
-				dpc = DevicePropCodePanasonic.ISO_Param
-				valuesize = 4
-				encode = this.encodeISO as (value: T) => number
-				break
-			case 'whiteBalance':
-				dpc = DevicePropCodePanasonic.WhiteBalance_Param
-				valuesize = 2
-				encode = this.encodeWhiteBalance as (value: T) => number
-				break
-			default:
-				throw new Error('Invalid prop name')
-		}
+		if (!descriptor)
+			throw new Error(`Prop ${name} is not supported for this device`)
 
-		const data = new ArrayBuffer(4 + 4 + valuesize)
+		const setCode = descriptor.setCode
+		const encode = descriptor.encode
+		const valueSize = descriptor.valueSize
+
+		if (!(setCode && encode)) throw new Error(`Prop ${name} is readonly`)
+
+		const data = new ArrayBuffer(4 + 4 + valueSize)
 		const dataView = new DataView(data)
 		const encodedValue = encode(value)
 
-		dataView.setUint32(0, dpc, true)
-		dataView.setUint32(4, valuesize, true)
-		if (valuesize === 2) dataView.setUint16(8, encodedValue, true)
-		if (valuesize === 4) dataView.setUint32(8, encodedValue, true)
+		dataView.setUint32(0, setCode, true)
+		dataView.setUint32(4, valueSize, true)
+		if (valueSize === 2) dataView.setUint16(8, encodedValue, true)
+		if (valueSize === 4) dataView.setUint32(8, encodedValue, true)
 
 		await this.device.sendData({
 			label: 'Panasonic SetProperty',
 			code: OpCodePanasonic.SetProperty,
-			parameters: [dpc],
+			parameters: [setCode],
 			data,
 		})
 
@@ -146,43 +223,39 @@ export class TethrPanasnoic extends Tethr {
 	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		switch (name) {
-			case 'exposureMode': {
-				const desc = (await this.listProperty(
-					DevicePropCodePanasonic.CameraMode_ModePos,
-					this.decodeExposureMode,
-					2
-				)) as PropDesc<T>
-				desc.supportedValues = ['P', 'A', 'S', 'M'] as T[]
-				return desc
-			}
-			case 'aperture':
-				return (await this.listProperty(
-					DevicePropCodePanasonic.Aperture,
-					this.decodeAperture,
-					2
-				)) as PropDesc<T>
-			case 'shutterSpeed':
-				return (await this.listProperty(
-					DevicePropCodePanasonic.ShutterSpeed,
-					this.decodeShutterSpeed,
-					4
-				)) as PropDesc<T>
-			case 'iso':
-				return (await this.listProperty(
-					DevicePropCodePanasonic.ISO,
-					this.decodeISO,
-					4
-				)) as PropDesc<T>
-			case 'whiteBalance':
-				return (await this.listProperty(
-					DevicePropCodePanasonic.WhiteBalance,
-					this.decodeWhiteBalance,
-					2
-				)) as PropDesc<T>
+		const descriptor = TethrPanasnoic.PropDescriptor[name]
 
-			default:
-				throw new Error(`Device prop ${name} is not supported for this device`)
+		if (!descriptor) throw new Error(`Device prop ${name} is not readable`)
+
+		const getCode = descriptor.getCode
+		const decode = descriptor.decode
+		const valueSize = descriptor.valueSize
+
+		const {data} = await this.device.receiveData({
+			label: 'Panasonic ListProperty',
+			code: OpCodePanasonic.ListProperty,
+			parameters: [getCode],
+		})
+
+		const decoder = new PTPDecoder(data)
+
+		const getValue = valueSize === 2 ? decoder.getUint16 : decoder.getUint32
+		const getArray =
+			valueSize === 2 ? decoder.getUint16Array : decoder.getUint32Array
+
+		decoder.skip(4) // dpc
+		const headerLength = decoder.getUint32()
+
+		decoder.goTo(headerLength * 4 + 2 * 4)
+
+		const currentValue = decode(getValue())
+
+		const supportedValues = [...getArray()].map(decode)
+
+		return {
+			writable: supportedValues.length > 0,
+			currentValue,
+			supportedValues,
 		}
 	}
 
@@ -241,132 +314,6 @@ export class TethrPanasnoic extends Tethr {
 		const blob = new Blob([jpegData], {type: 'image/jpg'})
 		const url = window.URL.createObjectURL(blob)
 		return url
-	}
-
-	private async listProperty<
-		K extends keyof BasePropType,
-		T extends BasePropType[K]
-	>(
-		dpc: number,
-		fmap: (n: number) => T = _.identity,
-		size: 2 | 4
-	): Promise<PropDesc<T>> {
-		const {data} = await this.device.receiveData({
-			label: 'Panasonic ListProperty',
-			code: OpCodePanasonic.ListProperty,
-			parameters: [dpc],
-		})
-
-		const decoder = new PTPDecoder(data)
-
-		const getValue = size === 2 ? decoder.getUint16 : decoder.getUint32
-		const getArray =
-			size === 2 ? decoder.getUint16Array : decoder.getUint32Array
-
-		decoder.skip(4) // dpc
-		const headerLength = decoder.getUint32()
-
-		decoder.goTo(headerLength * 4 + 2 * 4)
-
-		const currentValue = fmap(getValue())
-
-		const supportedValues = [...getArray()].map(fmap)
-
-		return {
-			writable: supportedValues.length > 0,
-			currentValue,
-			defaultValue: currentValue,
-			supportedValues,
-		}
-	}
-
-	private decodeAperture(aperture: number) {
-		return aperture / 10
-	}
-
-	private encodeAperture(aperture: Aperture) {
-		if (aperture === 'auto') return 0
-		return aperture * 10
-	}
-
-	private encodeShutterSpeed(value: string) {
-		if (value === 'bulb') {
-			return 0xffffffff
-		}
-		if (value === 'auto') {
-			return 0x0ffffffe
-		}
-
-		const fractionMatch = value.match(/^1\/([0-9]+)$/)
-
-		if (fractionMatch) {
-			const denominator = parseInt(fractionMatch[1])
-			return denominator * 1000
-		}
-
-		// Seconds
-		const seconds = parseFloat(value)
-		if (!isNaN(seconds)) {
-			return Math.round(seconds * 1000) | 0x80000000
-		}
-
-		throw new Error('Invalid format of shutter speed')
-	}
-
-	private decodeShutterSpeed(value: number) {
-		switch (value) {
-			case 0xffffffff:
-				return 'bulb'
-			case 0x0fffffff:
-				return 'auto'
-			case 0x0ffffffe:
-				return 'unknown'
-			default:
-				if ((value & 0x80000000) === 0x00000000) {
-					return '1/' + value / 1000
-				} else {
-					return ((value & 0x7fffffff) / 1000).toString()
-				}
-		}
-	}
-
-	private encodeISO(iso: ISO): number {
-		if (iso === 'auto') return 0xffffffff
-		return iso
-	}
-
-	private decodeISO(iso: number): ISO {
-		if (iso === 0xffffffff) return 'auto'
-		if (iso === 0xfffffffe) return 'auto' // i-ISO
-		return iso
-	}
-
-	private decodeExposureMode(mode: number): ExposureMode {
-		switch (mode) {
-			case 0x0:
-				return 'P'
-			case 0x1:
-				return 'A'
-			case 0x2:
-				return 'S'
-			case 0x3:
-				return 'M'
-			default:
-				throw new Error(`Unsupported exposure mode ${mode}`)
-		}
-	}
-
-	private encodeWhiteBalance(wb: WhiteBalance): number {
-		const data = TethrPanasnoic.WhiteBalanceTable.getKey(wb)
-		if (data === undefined) throw new Error(`Unsupported WB`)
-		return data
-	}
-
-	private decodeWhiteBalance(wb: number): WhiteBalance {
-		const value = TethrPanasnoic.WhiteBalanceTable.get(wb)
-		if (value === undefined)
-			throw new Error(`Unsupported WB ${wb.toString(16)}`)
-		return value
 	}
 
 	private static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
