@@ -379,7 +379,7 @@ export class PTPDevice extends EventEmitter {
 				'code= 0x' + code.toString(16),
 				'id= ' + transactionId,
 				'payload= ',
-				payload
+				[...new Uint32Array(payload)].map(v => v.toString(16)).join(' ')
 			)
 
 			const eventName = 'event:0x' + code.toString(16)
