@@ -99,7 +99,7 @@ export class TethrPanasnoic extends Tethr {
 
 		return {
 			canRead: true,
-			canWrite: true,
+			canWrite: range.length > 0,
 			range,
 		}
 	}
