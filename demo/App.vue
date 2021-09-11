@@ -30,25 +30,28 @@
 			<dt>Exposure Mode</dt>
 			<dd>
 				<template v-if="exposureMode.writable">
-					<div v-for="v in exposureMode.supportedValues" :key="v">
-						<input
-							type="radio"
-							:id="v"
+					<select
+						:modelValue="exposureMode.value"
+						@change="exposureMode.update($event.target.value)"
+						:disabled="exposureMode.updating"
+					>
+						<option
+							v-for="v in exposureMode.supportedValues"
+							:key="v"
 							:value="v"
-							:modelValue="exposureMode.value"
-							@input="exposureMode.update($event.target.value)"
-						/>
-						<label :for="v">{{ v }}</label>
-					</div>
+						>
+							{{ v }}
+						</option>
+					</select>
 				</template>
-				<template v-else>{{ exposureMode.value }}</template>
+				<template v-else>{{ aperture.value }} </template>
 			</dd>
 			<dt>Aperture</dt>
 			<dd>
 				<template v-if="aperture.writable">
 					<select
 						:modelValue="aperture.value"
-						@change="aperture.update($event.target.value)"
+						@change="aperture.update(parseFloat($event.target.value))"
 						:disabled="aperture.updating"
 					>
 						<option v-for="v in aperture.supportedValues" :key="v" :value="v">
@@ -71,7 +74,7 @@
 							:key="v"
 							:value="v"
 						>
-							{{ v.toString() }}
+							{{ v }}
 						</option>
 					</select>
 				</template>
@@ -82,7 +85,7 @@
 				<template v-if="iso.writable">
 					<select
 						:modelValue="iso.value"
-						@change="iso.update($event.target.value)"
+						@change="iso.update(parseInt($event.target.value))"
 						:disabled="iso.updating"
 					>
 						<option v-for="v in iso.supportedValues" :key="v" :value="v">
