@@ -60,7 +60,7 @@ export type EffectMode = 'standard' | 'bw' | 'sepia' | string
 export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
 export type PropDesc<T> = {
-	value: T | typeof Tethr.Unknown
+	value: T | null
 	defaultValue?: T
 } & (
 	| {
@@ -112,8 +112,8 @@ export interface BasePropType {
 type DevicePropCodeTable = BiMap<keyof BasePropType, number>
 
 interface PropTypeConverterEntry<PropType, DataType = number> {
-	decode?: (data: DataType) => PropType
-	encode?: (value: PropType) => DataType
+	decode?: (data: number) => PropType
+	encode?: (value: PropType) => number
 }
 
 type PropTypeConverter = {
@@ -124,12 +124,10 @@ export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid'
 
 export interface SetPropResult<T extends BasePropType[keyof BasePropType]> {
 	status: SetPropResultStatus
-	value: T | typeof Tethr.Unknown
+	value: T | null
 }
 
 export class Tethr {
-	public static readonly Unknown: unique symbol = Symbol('Tethr.Unknown')
-
 	protected _opened = false
 
 	protected propTypeConverter: PropTypeConverter = {}
@@ -217,7 +215,7 @@ export class Tethr {
 	): Promise<SetPropResult<BasePropType[K]>> {
 		return {
 			status: 'unsupported',
-			value: Tethr.Unknown,
+			value: null,
 		}
 	}
 

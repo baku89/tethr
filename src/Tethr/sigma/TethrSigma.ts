@@ -245,7 +245,7 @@ export class TethrSigma extends Tethr {
 		return (
 			SigmaApexShutterSpeedOneThird.get(shutterSpeed) ??
 			SigmaApexShutterSpeedHalf.get(shutterSpeed) ??
-			Tethr.Unknown
+			null
 		)
 	}
 
@@ -312,7 +312,7 @@ export class TethrSigma extends Tethr {
 		if (isoAuto === 0x01) {
 			return 'auto'
 		} else {
-			return SigmaApexISO.get(isoSpeed) ?? Tethr.Unknown
+			return SigmaApexISO.get(isoSpeed) ?? null
 		}
 	}
 
@@ -353,7 +353,7 @@ export class TethrSigma extends Tethr {
 
 	private getWhiteBalance = async () => {
 		const {whiteBalance} = await this.getCamDataGroup2()
-		return SigmaApexWhiteBalance.get(whiteBalance) ?? Tethr.Unknown
+		return SigmaApexWhiteBalance.get(whiteBalance) ?? null
 	}
 
 	private setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
@@ -416,7 +416,7 @@ export class TethrSigma extends Tethr {
 
 	private getExposureMode = async () => {
 		const {exposureMode} = await this.getCamDataGroup2()
-		return SigmaApexExposureMode.get(exposureMode) ?? Tethr.Unknown
+		return SigmaApexExposureMode.get(exposureMode) ?? null
 	}
 
 	private setExposureMode = async (
@@ -445,7 +445,7 @@ export class TethrSigma extends Tethr {
 
 	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
 		const {batteryLevel} = await this.getCamDataGroup1()
-		const value = SigmaApexBatteryLevel.get(batteryLevel) ?? Tethr.Unknown
+		const value = SigmaApexBatteryLevel.get(batteryLevel) ?? null
 
 		return {
 			writable: false,

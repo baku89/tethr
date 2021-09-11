@@ -12,7 +12,7 @@ export function useTethrProp<Name extends keyof BasePropType>(
 ) {
 	const propDesc = reactive({
 		writable: false,
-		value: Tethr.Unknown as any,
+		value: null as any,
 		updating: false,
 		update(value: any) {
 			return

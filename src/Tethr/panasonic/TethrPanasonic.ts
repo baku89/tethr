@@ -66,23 +66,23 @@ enum DevicePropCodePanasonic {
 	RecCtrlRelease = 0x03000010,
 }
 
-type PropDescriptor = {
+type PropScheme = {
 	[Name in keyof BasePropType]?: {
 		getCode: number
 		setCode?: number
-		decode: (value: number) => BasePropType[Name] | typeof Tethr.Unknown
+		decode: (value: number) => BasePropType[Name] | null
 		encode?: (value: BasePropType[Name]) => number
 		valueSize: 2 | 4
 	}
 }
 
 export class TethrPanasnoic extends Tethr {
-	private static PropDescriptor: PropDescriptor = {
+	private static PropScheme: PropScheme = {
 		exposureMode: {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
 			valueSize: 2,
 			decode(value: number) {
-				return (['P', 'A', 'S', 'M'] as ExposureMode[])[value] ?? Tethr.Unknown
+				return (['P', 'A', 'S', 'M'] as ExposureMode[])[value] ?? null
 			},
 		},
 		aperture: {
@@ -106,7 +106,7 @@ export class TethrPanasnoic extends Tethr {
 					case 0x0fffffff:
 						return 'auto'
 					case 0x0ffffffe:
-						return Tethr.Unknown
+						return null
 				}
 				if ((value & 0x80000000) === 0x00000000) {
 					return '1/' + value / 1000
@@ -156,7 +156,7 @@ export class TethrPanasnoic extends Tethr {
 			getCode: DevicePropCodePanasonic.WhiteBalance,
 			setCode: DevicePropCodePanasonic.WhiteBalance_Param,
 			decode(value: number) {
-				return TethrPanasnoic.WhiteBalanceTable.get(value) ?? Tethr.Unknown
+				return TethrPanasnoic.WhiteBalanceTable.get(value) ?? null
 			},
 			encode(value: WhiteBalance) {
 				const data = TethrPanasnoic.WhiteBalanceTable.getKey(value)
@@ -191,7 +191,9 @@ export class TethrPanasnoic extends Tethr {
 		name: K,
 		value: T
 	): Promise<SetPropResult<T>> {
-		const descriptor = TethrPanasnoic.PropDescriptor[name]
+		const descriptor = TethrPanasnoic.PropScheme[name] as
+			| PropScheme<T>
+			| undefined
 
 		if (!descriptor)
 			throw new Error(`Prop ${name} is not supported for this device`)
@@ -232,13 +234,13 @@ export class TethrPanasnoic extends Tethr {
 	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		const descriptor = TethrPanasnoic.PropDescriptor[name]
+		const scheme = TethrPanasnoic.PropScheme[name]
 
-		if (!descriptor) throw new Error(`Device prop ${name} is not readable`)
+		if (!scheme) throw new Error(`Device prop ${name} is not readable`)
 
-		const getCode = descriptor.getCode
-		const decode = descriptor.decode
-		const valueSize = descriptor.valueSize
+		const getCode = scheme.getCode
+		const decode = scheme.decode
+		const valueSize = scheme.valueSize
 
 		const {data} = await this.device.receiveData({
 			label: 'Panasonic ListProperty',
