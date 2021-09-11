@@ -26,7 +26,7 @@ export type WhiteBalance =
 	| 'shade'
 	| 'cloud'
 	| 'incandescent'
-	| 'florescent'
+	| 'fluorescent'
 	| 'tungsten'
 	| 'flash'
 	| 'manual'
@@ -66,7 +66,7 @@ export type PropDesc<T> = {
 	supportedValues: T[]
 }
 
-interface BasePropType {
+export interface BasePropType {
 	batteryLevel: BatteryLevel
 	functionalMode: FunctionalMode
 	imageSize: [number, number]
