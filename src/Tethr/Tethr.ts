@@ -201,7 +201,7 @@ export class Tethr {
 	public async get<K extends keyof BasePropType>(
 		name: K
 	): Promise<BasePropType[K]> {
-		return (await this.getDesc(name)).currentValue
+		return (await this.getDesc(name)).currentValue as BasePropType[K]
 	}
 
 	public async set<K extends keyof BasePropType>(
