@@ -3,7 +3,7 @@
 		<h1>Tethr</h1>
 
 		<button @click="toggleCameraConnection">
-			{{ connected ? 'Dionnect' : 'Connect' }}
+			{{ connected ? 'Disconnect' : 'Connect' }}
 		</button>
 		<button @click="runAutoFocus">AF-S</button>
 		<button @click="takePicture">Take Picture</button>
@@ -29,37 +29,68 @@
 		<dl>
 			<dt>Exposure Mode</dt>
 			<dd>
-				<div v-for="mode in exposureModeDesc.range" :key="mode">
-					<input type="radio" :id="mode" :value="mode" v-model="exposureMode" />
-					<label :for="mode">{{ mode }}</label>
-				</div>
+				<template v-if="exposureMode.writable">
+					<div v-for="v in exposureMode.supportedValues" :key="v">
+						<input
+							type="radio"
+							:id="v"
+							:value="v"
+							:modelValue="exposureMode.value"
+							@input="exposureMode.update($event.target.value)"
+						/>
+						<label :for="v">{{ v }}</label>
+					</div>
+				</template>
+				<template v-else>{{ exposureMode.value }}</template>
 			</dd>
 			<dt>Aperture</dt>
 			<dd>
-				<template v-if="apertureDesc.canWrite">
-					<select v-model="aperture">
-						<option v-for="f in apertureDesc.range" :key="f" :value="f">
-							{{ f.toString() }}
+				<template v-if="aperture.writable">
+					<select
+						:modelValue="aperture.value"
+						@change="aperture.update($event.target.value)"
+						:disabled="aperture.updating"
+					>
+						<option v-for="v in aperture.supportedValues" :key="v" :value="v">
+							{{ v.toString() }}
 						</option>
 					</select>
 				</template>
-				<template v-else>{{ aperture }} </template>
+				<template v-else>{{ aperture.value }} </template>
 			</dd>
 			<dt>ShutterSpeed</dt>
 			<dd>
-				<select v-model="shutterSpeed">
-					<option v-for="f in shutterSpeedDesc.range" :key="f" :value="f">
-						{{ f.toString() }}
-					</option>
-				</select>
+				<template v-if="shutterSpeed.writable">
+					<select
+						:modelValue="shutterSpeed.value"
+						@change="shutterSpeed.update($event.target.value)"
+						:disabled="shutterSpeed.updating"
+					>
+						<option
+							v-for="v in shutterSpeed.supportedValues"
+							:key="v"
+							:value="v"
+						>
+							{{ v.toString() }}
+						</option>
+					</select>
+				</template>
+				<template v-else>{{ shutterSpeed.value }} </template>
 			</dd>
 			<dt>ISO</dt>
 			<dd>
-				<select v-model="iso">
-					<option v-for="f in isoDesc.range" :key="f" :value="f">
-						{{ f.toString() }}
-					</option>
-				</select>
+				<template v-if="iso.writable">
+					<select
+						:modelValue="iso.value"
+						@change="iso.update($event.target.value)"
+						:disabled="iso.updating"
+					>
+						<option v-for="v in iso.supportedValues" :key="v" :value="v">
+							{{ v.toString() }}
+						</option>
+					</select>
+				</template>
+				<template v-else>{{ iso.value }}</template>
 			</dd>
 		</dl>
 

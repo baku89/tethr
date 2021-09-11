@@ -1,13 +1,49 @@
-import {readonly, ref, watch} from 'vue'
+import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 import {connectCamera, Tethr} from '../src'
-import {Aperture, ExposureMode, ISO, PropDesc} from '../src/Tethr/Tethr'
+import {BasePropType} from '../src/Tethr/Tethr'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 
+export function useTethrProp(
+	camera: Ref<Tethr | null>,
+	name: keyof BasePropType
+) {
+	const propDesc = reactive({
+		writable: false,
+		value: Tethr.Unknown as any,
+		updating: false,
+		update(value: any) {
+			return
+		},
+		supportedValues: null as null | any[],
+	})
+
+	watch(camera, async cam => {
+		if (!cam) return
+
+		const desc = await cam.getDesc(name)
+
+		propDesc.writable = desc.writable
+		propDesc.value = desc.currentValue
+
+		propDesc.update = async (value: any) => {
+			propDesc.updating = true
+			await cam.set(name, value)
+			propDesc.updating = false
+		}
+
+		if (desc.writable) {
+			propDesc.supportedValues = desc.supportedValues
+		}
+	})
+
+	return readonly(propDesc)
+}
+
 export function useTethr() {
-	let camera: Tethr | null = null
+	const camera = shallowRef<Tethr | null>(null)
 
 	const connected = ref(false)
 
@@ -16,77 +52,35 @@ export function useTethr() {
 	const liveviewURL = ref(TransparentPng)
 	const lastPictureURL = ref(TransparentPng)
 
-	const exposureMode = ref<ExposureMode | null>(null)
-	const exposureModeDesc = ref<PropDesc<ExposureMode>>({
-		canRead: false,
-		canWrite: false,
-		range: [],
-	})
-
-	const aperture = ref<Aperture | null>(null)
-	const apertureDesc = ref<PropDesc<Aperture>>({
-		canRead: false,
-		canWrite: false,
-		range: [],
-	})
-
-	const shutterSpeed = ref<string | null>(null)
-	const shutterSpeedDesc = ref<PropDesc<string>>({
-		canRead: false,
-		canWrite: false,
-		range: [],
-	})
-
-	const iso = ref<ISO | null>(null)
-	const isoDesc = ref<PropDesc<ISO>>({
-		canRead: false,
-		canWrite: false,
-		range: [],
-	})
+	const exposureMode = useTethrProp(camera, 'exposureMode')
+	const aperture = useTethrProp(camera, 'aperture')
+	const shutterSpeed = useTethrProp(camera, 'shutterSpeed')
+	const iso = useTethrProp(camera, 'iso')
 
 	async function toggleCameraConnection() {
-		if (camera && camera.opened) {
-			await camera.close()
+		if (camera.value && camera.value.opened) {
+			await camera.value.close()
 		} else {
-			if (!camera) {
-				camera = await connectCamera()
+			if (!camera.value) {
+				camera.value = await connectCamera()
 				connected.value = true
 			}
-			if (!camera.opened) {
-				await camera.open()
+			if (!camera.value.open) {
+				await camera.value.open()
 			}
 
-			;(window as any).cam = camera
-
-			deviceInfo.value = JSON.stringify(await camera.getDeviceInfo())
-
-			exposureMode.value = await camera.getExposureMode()
-			exposureModeDesc.value = await camera.getExposureModeDesc()
-
-			iso.value = await camera.getISO()
-			isoDesc.value = await camera.getISODesc()
-
-			aperture.value = await camera.getAperture()
-			apertureDesc.value = await camera.getApertureDesc()
-
-			shutterSpeed.value = await camera.getShutterSpeed()
-			shutterSpeedDesc.value = await camera.getShutterSpeedDesc()
-
-			watch(exposureMode, v => camera?.setExposureMode(v))
-			watch(aperture, v => camera?.setAperture(v))
-			watch(shutterSpeed, v => camera?.setShutterSpeed(v))
-			watch(iso, v => camera?.setISO(v))
+			;(window as any).cam = camera.value
 		}
 	}
 
 	async function runAutoFocus() {
-		await camera?.runAutoFocus()
+		await camera.value?.runAutoFocus()
 	}
 
 	async function takePicture() {
-		if (!camera) return
+		if (!camera.value) return
 
-		const url = await camera.takePicture()
+		const url = await camera.value.takePicture()
 		if (url) lastPictureURL.value = url
 	}
 
@@ -95,20 +89,20 @@ export function useTethr() {
 	async function toggleLiveview() {
 		liveviewing.value = !liveviewing.value
 
-		if (!camera) return
+		if (!camera.value) return
 
 		if (liveviewing.value) {
-			await camera.startLiveView()
+			await camera.value.startLiveView()
 			updateLiveview()
 		} else {
-			await camera.stopLiveView()
+			await camera.value.stopLiveView()
 		}
 
 		async function updateLiveview() {
-			if (!liveviewing.value) return
+			if (!liveviewing.value || !camera.value) return
 
 			try {
-				const url = await camera?.getLiveView()
+				const url = await camera.value.getLiveView()
 				if (url) {
 					URL.revokeObjectURL(liveviewURL.value)
 					liveviewURL.value = url
@@ -123,13 +117,9 @@ export function useTethr() {
 		connected,
 		deviceInfo,
 		exposureMode,
-		exposureModeDesc,
 		aperture,
-		apertureDesc,
 		shutterSpeed,
-		shutterSpeedDesc,
 		iso,
-		isoDesc,
 		liveviewURL,
 		liveviewing: readonly(liveviewing),
 		lastPictureURL,
