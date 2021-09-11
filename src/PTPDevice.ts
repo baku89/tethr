@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3'
 
 import {ResCode} from './PTPDatacode'
+import {getHexString} from './util'
 
 enum PTPType {
 	Command = 0x1,
@@ -286,7 +287,8 @@ export class PTPDevice extends EventEmitter {
 			'transferOutBulk',
 			'type= Command',
 			'code= 0x' + code.toString(16),
-			'id= ' + transactionId
+			'id= ' + transactionId,
+			'params= ' + parameters.map(v => v.toString(16)).join(',')
 		)
 
 		if (sent.status !== 'ok') throw new Error()
@@ -315,9 +317,10 @@ export class PTPDevice extends EventEmitter {
 		const sent = await this.device.transferOut(this.bulkOut, buffer)
 		console.log(
 			'transferOutBulk',
-			'type= Data',
-			'code= 0x' + code.toString(16),
-			'id= ' + transactionId
+			'type=Data',
+			'code=0x' + code.toString(16),
+			'id=' + transactionId,
+			'payload=' + getHexString(data)
 		)
 
 		return sent.status === 'ok'
