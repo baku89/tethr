@@ -6,9 +6,9 @@ import {BasePropType} from '../src/Tethr/Tethr'
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 
-export function useTethrProp(
+export function useTethrProp<Name extends keyof BasePropType>(
 	camera: Ref<Tethr | null>,
-	name: keyof BasePropType
+	name: Name
 ) {
 	const propDesc = reactive({
 		writable: false,
@@ -30,7 +30,7 @@ export function useTethrProp(
 
 		propDesc.update = async (value: any) => {
 			propDesc.updating = true
-			await cam.set(name, value)
+			propDesc.value = await cam.set(name, value)
 			propDesc.updating = false
 		}
 

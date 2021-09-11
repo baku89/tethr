@@ -120,6 +120,13 @@ type PropTypeConverter = {
 	[Name in keyof BasePropType]?: PropTypeConverterEntry<BasePropType[Name]>
 }
 
+export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid'
+
+export interface SetPropResult<T extends BasePropType[keyof BasePropType]> {
+	status: SetPropResultStatus
+	value: T | typeof Tethr.Unknown
+}
+
 export class Tethr {
 	public static readonly Unknown: unique symbol = Symbol('Tethr.Unknown')
 
@@ -207,8 +214,11 @@ export class Tethr {
 	public async set<K extends keyof BasePropType>(
 		name: K,
 		value: BasePropType[K]
-	): Promise<boolean> {
-		return false
+	): Promise<SetPropResult<BasePropType[K]>> {
+		return {
+			status: 'unsupported',
+			value: Tethr.Unknown,
+		}
 	}
 
 	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(

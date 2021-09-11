@@ -11,6 +11,8 @@ import {
 	ExposureMode,
 	ISO,
 	PropDesc,
+	SetPropResult,
+	SetPropResultStatus,
 	Tethr,
 	WhiteBalance,
 } from '../Tethr'
@@ -109,22 +111,37 @@ export class TethrSigma extends Tethr {
 	public async set<K extends keyof BasePropType>(
 		name: K,
 		value: BasePropType[K]
-	): Promise<boolean> {
+	): Promise<SetPropResult<BasePropType[K]>> {
+		let succeed = false
+		let status: SetPropResultStatus | undefined
 		switch (name) {
 			case 'exposureMode':
-				return await this.setExposureMode(value as ExposureMode)
+				succeed = await this.setExposureMode(value as ExposureMode)
+				break
 			case 'aperture':
-				return await this.setAperture(value as Aperture)
+				succeed = await this.setAperture(value as Aperture)
+				break
 			case 'shutterSpeed':
-				return await this.setShutterSpeed(value as string)
+				succeed = await this.setShutterSpeed(value as string)
+				break
 			case 'iso':
-				return await this.setISO(value as ISO)
+				succeed = await this.setISO(value as ISO)
+				break
 			case 'whiteBalance':
-				return await this.setWhiteBalance(value as WhiteBalance)
+				succeed = await this.setWhiteBalance(value as WhiteBalance)
+				break
 			case 'colorTemperature':
-				return await this.setColorTemperature(value as number)
+				succeed = await this.setColorTemperature(value as number)
+				break
 			default:
-				throw new Error(`Prop desc ${name} is not writable`)
+				status = 'unsupported'
+		}
+
+		const postValue = await this.get(name)
+
+		return {
+			status: status ?? (succeed ? 'ok' : 'invalid'),
+			value: postValue,
 		}
 	}
 
@@ -181,7 +198,7 @@ export class TethrSigma extends Tethr {
 		const byte = SigmaApexApertureOneThird.getKey(aperture)
 		if (!byte) return false
 
-		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
+		return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
 
 	private getApertureDesc = async (): Promise<PropDesc<Aperture>> => {

@@ -8,6 +8,7 @@ import {
 	ExposureMode,
 	ISO,
 	PropDesc,
+	SetPropResult,
 	Tethr,
 	WhiteBalance,
 } from '../Tethr'
@@ -189,7 +190,7 @@ export class TethrPanasnoic extends Tethr {
 	public async set<K extends keyof BasePropType, T extends BasePropType[K]>(
 		name: K,
 		value: T
-	): Promise<boolean> {
+	): Promise<SetPropResult<T>> {
 		const descriptor = TethrPanasnoic.PropDescriptor[name]
 
 		if (!descriptor)
@@ -199,7 +200,12 @@ export class TethrPanasnoic extends Tethr {
 		const encode = descriptor.encode
 		const valueSize = descriptor.valueSize
 
-		if (!(setCode && encode)) throw new Error(`Prop ${name} is readonly`)
+		if (!(setCode && encode)) {
+			return {
+				status: 'unsupported',
+				value: (await this.get(name)) as T,
+			}
+		}
 
 		const data = new ArrayBuffer(4 + 4 + valueSize)
 		const dataView = new DataView(data)
@@ -210,14 +216,17 @@ export class TethrPanasnoic extends Tethr {
 		if (valueSize === 2) dataView.setUint16(8, encodedValue, true)
 		if (valueSize === 4) dataView.setUint32(8, encodedValue, true)
 
-		await this.device.sendData({
+		const succeed = await this.device.sendData({
 			label: 'Panasonic SetProperty',
 			code: OpCodePanasonic.SetProperty,
 			parameters: [setCode],
 			data,
 		})
 
-		return true
+		return {
+			status: succeed ? 'ok' : 'invalid',
+			value: (await this.get(name)) as T,
+		}
 	}
 
 	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
