@@ -6,6 +6,7 @@ import {ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
 import {
 	Aperture,
+	BasePropType,
 	BatteryLevel,
 	ExposureMode,
 	ISO,
@@ -105,22 +106,76 @@ export class TethrSigma extends Tethr {
 		await this.getCamDataGroup2()
 	}
 
-	public getFocalLength = async (): Promise<null | number> => {
-		const data = (await this.getCamDataGroup1()).currentLensFocalLength
-		return this.decodeFocalLength(data)
+	public async set<K extends keyof BasePropType>(
+		name: K,
+		value: BasePropType[K]
+	): Promise<boolean> {
+		switch (name) {
+			case 'exposureMode':
+				return await this.setExposureMode(value as ExposureMode)
+			case 'aperture':
+				return await this.setAperture(value as Aperture)
+			case 'shutterSpeed':
+				return await this.setShutterSpeed(value as string)
+			case 'iso':
+				return await this.setISO(value as ISO)
+			case 'whiteBalance':
+				return await this.setWhiteBalance(value as WhiteBalance)
+			case 'colorTemperature':
+				return await this.setColorTemperature(value as number)
+			default:
+				throw new Error(`Prop desc ${name} is not writable`)
+		}
 	}
 
-	public getAperture = async (): Promise<null | Aperture> => {
+	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
+		name: K
+	): Promise<PropDesc<T>> {
+		switch (name) {
+			case 'batteryLevel':
+				return (await this.getBatteryLevelDesc()) as PropDesc<T>
+			case 'focalLength':
+				return (await this.getFocalLengthDesc()) as PropDesc<T>
+			case 'exposureMode':
+				return (await this.getExposureModeDesc()) as PropDesc<T>
+			case 'aperture':
+				return (await this.getApertureDesc()) as PropDesc<T>
+			case 'shutterSpeed':
+				return (await this.getShutterSpeedDesc()) as PropDesc<T>
+			case 'iso':
+				return (await this.getISODesc()) as PropDesc<T>
+			case 'whiteBalance':
+				return (await this.getWhiteBalanceDesc()) as PropDesc<T>
+			case 'colorTemperature':
+				return (await this.getColorTemperatureDesc()) as PropDesc<T>
+			default:
+				throw new Error(`Prop desc ${name} is not supported for Sigma`)
+		}
+	}
+
+	private getFocalLengthDesc = async (): Promise<PropDesc<number>> => {
+		const data = (await this.getCamDataGroup1()).currentLensFocalLength
+		const currentValue = this.decodeFocalLength(data)
+
+		return {
+			writable: false,
+			currentValue,
+		}
+	}
+
+	private getAperture = async (): Promise<Aperture> => {
 		const {aperture} = await this.getCamDataGroup1()
 		if (aperture === 0x0) return 'auto'
-		return (
+		const value =
 			SigmaApexApertureOneThird.get(aperture) ??
-			SigmaApexApertureHalf.get(aperture) ??
-			null
-		)
+			SigmaApexApertureHalf.get(aperture)
+
+		if (value === undefined) throw new Error('Invalid Aperture')
+
+		return value
 	}
 
-	public setAperture = async (aperture: Aperture): Promise<boolean> => {
+	private setAperture = async (aperture: Aperture): Promise<boolean> => {
 		if (aperture === 'auto') return false
 
 		const byte = SigmaApexApertureOneThird.getKey(aperture)
@@ -129,15 +184,15 @@ export class TethrSigma extends Tethr {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
 
-	public getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
+	private getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
 		const fValue = (await this.getCamCanSetInfo5()).fValue
+		const currentValue = await this.getAperture()
 
 		if (fValue.length === 0) {
 			// Should be auto aperture
 			return {
-				canWrite: false,
-				canRead: true,
-				range: [],
+				writable: false,
+				currentValue,
 			}
 		}
 
@@ -158,36 +213,28 @@ export class TethrSigma extends Tethr {
 
 		if (!fMin || !fMax) throw new Error()
 
-		const range = apertures.filter(a => fMin <= a && a <= fMax)
+		const supportedValues = apertures.filter(a => fMin <= a && a <= fMax)
 
 		return {
-			canWrite: true,
-			canRead: true,
-			range,
+			writable: true,
+			currentValue,
+			supportedValues,
 		}
 	}
 
-	public getShutterSpeed = async (): Promise<null | string> => {
+	private getShutterSpeed = async () => {
 		const {shutterSpeed} = await this.getCamDataGroup1()
 		if (shutterSpeed === 0x0) return 'auto'
 		return (
 			SigmaApexShutterSpeedOneThird.get(shutterSpeed) ??
 			SigmaApexShutterSpeedHalf.get(shutterSpeed) ??
-			null
+			Tethr.Unknown
 		)
 	}
 
-	public getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
+	private getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
 		const info = (await this.getCamCanSetInfo5()).shutterSpeed
-
-		if (info.length === 0) {
-			// Should be auto aperture
-			return {
-				canWrite: false,
-				canRead: true,
-				range: [],
-			}
-		}
+		const currentValue = await this.getShutterSpeed()
 
 		const [tvMin, tvMax, step] = info
 
@@ -215,42 +262,44 @@ export class TethrSigma extends Tethr {
 		const ssMinIndex = ssMinEntry[0]
 		const ssMaxIndex = ssMaxEntry[0]
 
-		const range = shutterSpeeds
+		const supportedValues = shutterSpeeds
 			.filter(e => ssMinIndex <= e[0] && e[0] <= ssMaxIndex)
 			.map(e => e[1])
 
 		return {
-			canWrite: true,
-			canRead: true,
-			range,
+			writable: supportedValues.length > 0,
+			currentValue,
+			supportedValues,
 		}
 
 		function convertSSToTime(ss: string) {
 			if (ss === 'bulk' || ss === 'sync') return Infinity
 
-			if (ss.includes('"')) return parseFloat(ss.replace('"', '.'))
+			if (ss.startsWith('1/')) {
+				return 1 / parseInt(ss.slice(2))
+			}
 
-			return 1 / parseInt(ss)
+			return parseFloat(ss)
 		}
 	}
 
-	public setShutterSpeed = async (shutterSpeed: string): Promise<boolean> => {
+	private setShutterSpeed = async (shutterSpeed: string): Promise<boolean> => {
 		const byte = SigmaApexShutterSpeedOneThird.getKey(shutterSpeed)
 		if (!byte) return false
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
 	}
 
-	public getISO = async (): Promise<null | ISO> => {
+	private getISO = async () => {
 		const {isoAuto, isoSpeed} = await this.getCamDataGroup1()
 		if (isoAuto === 0x01) {
 			return 'auto'
 		} else {
-			return SigmaApexISO.get(isoSpeed) ?? null
+			return SigmaApexISO.get(isoSpeed) ?? Tethr.Unknown
 		}
 	}
 
-	public setISO = async (iso: ISO): Promise<boolean> => {
+	private setISO = async (iso: ISO): Promise<boolean> => {
 		if (iso === 'auto') {
 			return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
 		}
@@ -264,8 +313,9 @@ export class TethrSigma extends Tethr {
 		)
 	}
 
-	public getISODesc = async (): Promise<PropDesc<ISO>> => {
+	private getISODesc = async (): Promise<PropDesc<ISO>> => {
 		const {isoManual} = await this.getCamCanSetInfo5()
+		const currentValue = await this.getISO()
 
 		const [svMin, svMax] = isoManual
 
@@ -273,44 +323,45 @@ export class TethrSigma extends Tethr {
 		const isoMax = Math.round(3.125 * 2 ** svMax)
 
 		const isos = Array.from(SigmaApexISO.values())
-		const range = isos.filter(a => isoMin <= a && a <= isoMax)
+		const supportedValues = isos.filter(a => isoMin <= a && a <= isoMax)
 
-		range.unshift('auto')
+		supportedValues.unshift('auto')
 
 		return {
-			canWrite: true,
-			canRead: true,
-			range,
+			writable: true,
+			currentValue,
+			supportedValues,
 		}
 	}
 
-	public getWhiteBalance = async (): Promise<null | WhiteBalance> => {
+	private getWhiteBalance = async () => {
 		const {whiteBalance} = await this.getCamDataGroup2()
-		return SigmaApexWhiteBalance.get(whiteBalance) ?? null
+		return SigmaApexWhiteBalance.get(whiteBalance) ?? Tethr.Unknown
 	}
 
-	public setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
+	private setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
 		const byte = SigmaApexWhiteBalance.getKey(wb)
 		if (!byte) return false
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, byte)
 		// }
 	}
 
-	public getWhiteBalanceDesc = async (): Promise<PropDesc<WhiteBalance>> => {
+	private getWhiteBalanceDesc = async (): Promise<PropDesc<WhiteBalance>> => {
 		const {whiteBalance} = await this.getCamCanSetInfo5()
+		const currentValue = await this.getWhiteBalance()
 
-		const range = whiteBalance
+		const supportedValues = whiteBalance
 			.map(v => SigmaApexWhiteBalanceIFD.get(v))
 			.filter(v => !!v) as WhiteBalance[]
 
 		return {
-			canRead: true,
-			canWrite: true,
-			range,
+			writable: supportedValues.length > 0,
+			currentValue,
+			supportedValues,
 		}
 	}
 
-	public getColorTemperature = async (): Promise<null | number> => {
+	private getColorTemperature = async () => {
 		const wb = await this.getWhiteBalance()
 		if (wb !== 'manual') return null
 
@@ -318,40 +369,40 @@ export class TethrSigma extends Tethr {
 		return colorTemp
 	}
 
-	public setColorTemperature = async (value: number): Promise<boolean> => {
+	private setColorTemperature = async (value: number) => {
 		return (
 			(await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, 0x0e)) &&
 			(await this.setCamData(OpCodeSigma.SetCamDataGroup5, 1, value))
 		)
 	}
 
-	public getColorTemperatureDesc = async (): Promise<PropDesc<number>> => {
+	private getColorTemperatureDesc = async () => {
 		const {colorTemerature} = await this.getCamCanSetInfo5()
+		const currentValue = await this.getColorTemperature()
 
 		if (colorTemerature.length !== 3) {
 			// When WB is not set to 'manual'
 			return {
-				canRead: false,
-				canWrite: false,
-				range: [],
+				writable: false,
+				currentValue,
 			}
 		}
 
 		const [min, max, step] = colorTemerature
 
 		return {
-			canRead: true,
-			canWrite: true,
-			range: _.range(min, max, step),
+			writable: true,
+			currentValue,
+			supportedValues: _.range(min, max, step),
 		}
 	}
 
-	public getExposureMode = async (): Promise<null | ExposureMode> => {
+	private getExposureMode = async () => {
 		const {exposureMode} = await this.getCamDataGroup2()
-		return SigmaApexExposureMode.get(exposureMode) ?? null
+		return SigmaApexExposureMode.get(exposureMode) ?? Tethr.Unknown
 	}
 
-	public setExposureMode = async (
+	private setExposureMode = async (
 		exposureMode: ExposureMode
 	): Promise<boolean> => {
 		const byte = SigmaApexExposureMode.getKey(exposureMode)
@@ -360,23 +411,30 @@ export class TethrSigma extends Tethr {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, byte)
 	}
 
-	public getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
+	private getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
 		const {exposureMode} = await this.getCamCanSetInfo5()
+		const currentValue = await this.getExposureMode()
 
-		const range = exposureMode
+		const supportedValues = exposureMode
 			.map(n => SigmaApexExposureMode.get(n))
 			.filter(m => m !== undefined) as ExposureMode[]
 
 		return {
-			canRead: false,
-			canWrite: false,
-			range,
+			writable: supportedValues.length > 0,
+			currentValue,
+			supportedValues,
 		}
 	}
 
-	public getBatteryLevel = async (): Promise<null | BatteryLevel> => {
+	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
 		const {batteryLevel} = await this.getCamDataGroup1()
-		return SigmaApexBatteryLevel.get(batteryLevel) ?? null
+		const currentValue =
+			SigmaApexBatteryLevel.get(batteryLevel) ?? Tethr.Unknown
+
+		return {
+			writable: false,
+			currentValue,
+		}
 	}
 
 	public takePicture = async (): Promise<null | string> => {
