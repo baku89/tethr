@@ -1,6 +1,6 @@
+import {BiMap} from 'bim'
 import _ from 'lodash'
 
-import {DeviceInfo} from '@/DeviceInfo'
 import {ObjectInfo} from '@/ObjectInfo'
 
 import {DatatypeCode, DevicePropCode, OpCode, ResCode} from '../PTPDatacode'
@@ -11,6 +11,10 @@ import {
 	PTPFilesystemType,
 	PTPStorageType,
 } from '../PTPEnum'
+
+function isntNil<T>(value: T): value is NonNullable<T> {
+	return value != null
+}
 
 export type Aperture = 'auto' | number
 
@@ -76,6 +80,23 @@ export type PropDesc<T> = {
 	  }
 )
 
+export interface DeviceInfo {
+	standardVersion: number
+	vendorExtensionID: number
+	vendorExtensionVersion: number
+	vendorExtensionDesc: string
+	functionalMode: number
+	operationsSupported: number[]
+	eventsSupported: number[]
+	propsSupported: (keyof BasePropType)[]
+	captureFormats: number[]
+	imageFormats: number[]
+	manufacturer: string
+	model: string
+	deviceVersion: string
+	serialNumber: string
+}
+
 export interface BasePropType {
 	batteryLevel: BatteryLevel
 	functionalMode: FunctionalMode
@@ -94,7 +115,7 @@ export interface BasePropType {
 	shutterSpeed: string
 	exposureMode: ExposureMode // exposureProgramMode
 	// exposureIndex: 0x500f
-	exposureCompensation: number // exposureBiasCompensation
+	exposureComp: number // exposureBiasCompensation
 	dateTime: Date
 	captureDelay: number
 	stillCaptureMode: StillCaptureMode
@@ -112,6 +133,40 @@ export interface BasePropType {
 	copyrightInfo: string
 	iso: ISO // added
 }
+
+const PropCode = new BiMap<keyof BasePropType, number>([
+	['batteryLevel', 0x5001],
+	['functionalMode', 0x5002],
+	['imageSize', 0x5003],
+	['compressionSetting', 0x5004],
+	['whiteBalance', 0x5005],
+	['rgbGain', 0x5006],
+	['aperture', 0x5007],
+	['focalLength', 0x5008],
+	['focusDistance', 0x5009],
+	['focusMode', 0x500a],
+	['exposureMeteringMode', 0x500b],
+	['flashMode', 0x500c],
+	// ['exposureTime', 0x500d],
+	['exposureMode', 0x500e],
+	// ['exposureIndex', 0x500f],
+	['exposureComp', 0x5010],
+	['dateTime', 0x5011],
+	['captureDelay', 0x5012],
+	['stillCaptureMode', 0x5013],
+	['contrast', 0x5014],
+	['sharpness', 0x5015],
+	['digitalZoom', 0x5016],
+	['effectMode', 0x5017],
+	['burstNumber', 0x5018],
+	['burstInterval', 0x5019],
+	['timelapseNumber', 0x501a],
+	['timelapseInterval', 0x501b],
+	['focusMeteringMode', 0x501c],
+	['uploadURL', 0x501d],
+	['artist', 0x501e],
+	['copyrightInfo', 0x501f],
+])
 
 interface PropSchemeEntry<PropType> {
 	code: number
@@ -208,8 +263,8 @@ export class Tethr {
 
 	public async get<K extends keyof BasePropType>(
 		name: K
-	): Promise<BasePropType[K]> {
-		return (await this.getDesc(name)).value as BasePropType[K]
+	): Promise<BasePropType[K] | null> {
+		return (await this.getDesc(name)).value
 	}
 
 	public async set<K extends keyof BasePropType>(
@@ -227,8 +282,14 @@ export class Tethr {
 	): Promise<PropDesc<T>> {
 		const dpc = this.propScheme[name]?.code
 
-		if (dpc === undefined)
-			throw new Error(`Prop "${name}"" is not supported for this device`)
+		if (dpc === undefined) {
+			console.warn(`GetDesc for prop ${name} is not yet implemented`)
+
+			return {
+				writable: false,
+				value: null,
+			}
+		}
 
 		const {code: rescode, data} = await this.device.receiveData({
 			label: 'GetDevicePropDesc',
@@ -388,7 +449,9 @@ export class Tethr {
 			functionalMode: decoder.getUint16(),
 			operationsSupported: decoder.getUint16Array(),
 			eventsSupported: decoder.getUint16Array(),
-			devicePropertiesSupported: decoder.getUint16Array(),
+			propsSupported: [...decoder.getUint16Array()]
+				.map(c => PropCode.getKey(c))
+				.filter(isntNil),
 			captureFormats: decoder.getUint16Array(),
 			imageFormats: decoder.getUint16Array(),
 			manufacturer: decoder.getString(),
