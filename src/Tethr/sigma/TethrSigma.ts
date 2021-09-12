@@ -383,8 +383,8 @@ export class TethrSigma extends Tethr {
 		const wb = await this.getWhiteBalance()
 		if (wb !== 'manual') return null
 
-		const {colorTemp} = await this.getCamDataGroup5()
-		return colorTemp
+		const {colorTemperature} = await this.getCamDataGroup5()
+		return colorTemperature
 	}
 
 	private setColorTemperature = async (value: number) => {
@@ -602,7 +602,7 @@ export class TethrSigma extends Tethr {
 		const decoder = new PTPDecoder(data)
 		decoder.skip(3) // OC + FieldPreset
 
-		const group1 = {
+		return {
 			shutterSpeed: decoder.readUint8(),
 			aperture: decoder.readUint8(),
 			programShift: decoder.readInt8(),
@@ -619,8 +619,6 @@ export class TethrSigma extends Tethr {
 			abShotRemainNumber: decoder.readUint8(),
 			expCompExcludeAB: decoder.readUint8(),
 		}
-
-		return group1
 	}
 
 	private async getCamDataGroup2() {
@@ -633,24 +631,15 @@ export class TethrSigma extends Tethr {
 		const decoder = new PTPDecoder(data)
 		decoder.skip(3) // OC + FieldPreset
 
-		const group2First = {
+		return {
 			driveMode: decoder.readUint8(),
 			specialMode: decoder.readUint8(),
 			exposureMode: decoder.readUint8(),
 			aeMeteringMode: decoder.readUint8(),
-		}
-
-		decoder.goto(3 + 10)
-
-		const group2Second = {
-			whiteBalance: decoder.readUint8(),
+			whiteBalance: decoder.goto(3 + 10).readUint8(),
 			resolution: decoder.readUint8(),
 			imageQuality: decoder.readUint8(),
 		}
-
-		const group2 = {...group2First, ...group2Second}
-
-		return group2
 	}
 
 	private async getCamDataGroup5() {
@@ -663,23 +652,14 @@ export class TethrSigma extends Tethr {
 		const decoder = new PTPDecoder(data)
 		decoder.skip(3) // OC + FieldPreset
 
-		const group5FirstOct = {
+		return {
 			intervalTimerSecond: decoder.readUint16(),
 			intervalTimerFame: decoder.readUint8(),
 			intervalTimerSecond_Remain: decoder.readUint16(),
 			intervalTimerFrame_Remain: decoder.readUint8(),
-			colorTemp: decoder.readUint16(),
+			colorTemperature: decoder.readUint16(),
+			aspectRatio: decoder.skip(2).readUint8(),
 		}
-
-		decoder.skip(2)
-
-		const group5SecondOct = {
-			aspectRatio: decoder.readUint8(),
-		}
-
-		const group5 = {...group5FirstOct, ...group5SecondOct}
-
-		return group5
 	}
 
 	private async getCamCanSetInfo5() {
@@ -766,15 +746,10 @@ export class TethrSigma extends Tethr {
 
 		decoder.skip(12)
 
-		const chunk0 = {
+		return {
 			fileAddress: decoder.readUint32(),
 			fileSize: decoder.readUint32(),
-		}
-
-		decoder.skip(8)
-
-		const chunk1 = {
-			fileExt: decoder.readByteString(),
+			fileExt: decoder.skip(8).readByteString(),
 			resolution: {
 				width: decoder.readUint16(),
 				height: decoder.readUint16(),
@@ -782,8 +757,6 @@ export class TethrSigma extends Tethr {
 			folderName: decoder.readByteString(),
 			fileName: decoder.readByteString(),
 		}
-
-		return {...chunk0, ...chunk1}
 	}
 
 	private decodeFocalLength(byte: number) {
