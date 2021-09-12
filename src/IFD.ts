@@ -14,6 +14,8 @@ export enum IFDType {
 
 export type IFDValue<Type extends IFDType> = Type extends IFDType.Ascii
 	? string
+	: Type extends IFDType.Undefined
+	? ArrayBuffer
 	: number[]
 
 export interface IFDScheme {
@@ -38,7 +40,7 @@ export function decodeIFD<Scheme extends IFDScheme>(
 	)
 
 	const entryCount = dataView.getUint32(4, true)
-	const result: Record<string, string | number[]> = {}
+	const result: Record<string, string | number[] | ArrayBuffer> = {}
 
 	for (let i = 0; i < entryCount; i++) {
 		const offset = 8 + 12 * i
@@ -52,10 +54,14 @@ export function decodeIFD<Scheme extends IFDScheme>(
 		if (!entryScheme) continue
 		if (type !== entryScheme.type)
 			throw new Error(
-				`Invalid IFD: Tag type for entry ${entryScheme.name} does not match`
+				`Invalid IFD: Tag type for entry ${
+					entryScheme.name
+				} does not match. Expected ${IFDType[entryScheme.type]}, got ${
+					IFDType[type]
+				}`
 			)
 
-		let value: null | string | number[] = null
+		let value: null | string | number[] | ArrayBuffer = null
 
 		switch (type) {
 			case IFDType.Byte: {
@@ -74,6 +80,11 @@ export function decodeIFD<Scheme extends IFDScheme>(
 				const off = count > 2 ? valueOffset : offset
 				const buf = data.slice(off, off + count * 2)
 				value = [...new Uint16Array(buf)]
+				break
+			}
+			case IFDType.Undefined: {
+				const off = count > 4 ? valueOffset : offset
+				value = data.slice(off, off + count)
 				break
 			}
 			case IFDType.SignedShort: {
