@@ -402,7 +402,7 @@ export class PTPDevice extends EventEmitter {
 
 	private generateTransactionId = (): number => {
 		this.transactionId += 1
-		if (this.transactionId >= 0xfffffffe) {
+		if (this.transactionId > 0xfffffffe) {
 			this.transactionId = 1
 		}
 
