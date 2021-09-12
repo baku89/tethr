@@ -30,19 +30,19 @@ type PTPDataResponse = PTPResponse & {
 	data: ArrayBuffer
 }
 
-interface PTPEvent {
+export interface PTPDeviceEvent {
 	code: number
 	parameters: number[]
 }
 
-interface PTPBulkInEvent {
+interface PTPDeviceBulkInEvent {
 	type: PTPType
 	code: number
 	transactionId: number
 	payload: ArrayBuffer
 }
 
-export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
+export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	private device: USBDevice | undefined
 	private transactionId = 0x00000000
 
@@ -51,7 +51,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 	private interruptIn = 0x0
 
 	private bulkInEventEmitter = new EventEmitter<
-		Record<string, PTPBulkInEvent>
+		Record<string, PTPDeviceBulkInEvent>
 	>()
 
 	private _opened = false
@@ -255,7 +255,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 		}
 	}
 
-	public waitEvent = async (code: number): Promise<PTPEvent> => {
+	public waitEvent = async (code: number): Promise<PTPDeviceEvent> => {
 		const eventName = '0x' + ('0000' + code.toString(16)).substr(-4)
 
 		return new Promise(resolve => {
@@ -382,19 +382,20 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 			const type = data.getUint16(4, true)
 			const code = data.getUint16(6, true)
 			const transactionId = data.getUint32(8, true)
-			const payload = data.buffer.slice(12)
+			const parameters = new Uint32Array(data.buffer.slice(12))
+
+			const eventName = '0x' + ('0000' + code.toString(16)).substr(-4)
 
 			console.log(
 				'transferInInterrupt',
 				'type= ' + type,
-				'code= 0x' + code.toString(16),
+				'code= ' + eventName,
 				'id= ' + transactionId,
-				'payload= ',
-				[...new Uint32Array(payload)].map(v => v.toString(16)).join(' ')
+				'parameters= ',
+				[...parameters].map(v => v.toString(16)).join(' ')
 			)
 
-			const eventName = 'event:0x' + code.toString(16)
-			this.emit(eventName, {type, code, transactionId, payload})
+			this.emit(eventName, {code, parameters})
 		} finally {
 			setTimeout(this.listenInterruptIn, 0)
 		}
@@ -402,7 +403,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 
 	private waitBulkIn = async (
 		transactionId: number
-	): Promise<PTPBulkInEvent> => {
+	): Promise<PTPDeviceBulkInEvent> => {
 		const eventName = transactionId.toString()
 		return new Promise(resolve => {
 			this.bulkInEventEmitter.once(eventName, resolve)

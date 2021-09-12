@@ -1,6 +1,8 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
+import {PTPDeviceEvent} from '@/PTPDevice'
+
 import {OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
 import {isntNil} from '../../util'
@@ -19,13 +21,17 @@ import {
 enum OpCodePanasonic {
 	OpenSession = 0x9102,
 	CloseSession = 0x9103,
-	ListProperty = 0x9108,
-	GetProperty = 0x9402,
-	SetProperty = 0x9403,
+	GetDevicePropDesc = 0x9108,
+	GetDevicePropValue = 0x9402,
+	SetDevicePropValue = 0x9403,
 	InitiateCapture = 0x9404,
 	Liveview = 0x9412,
 	ManualFocusDrive = 0x9416,
 	LiveviewImage = 0x9706,
+}
+
+enum EventCodePanasonic {
+	PropChanged = 0xc102,
 }
 
 // Panasonic does not have regular device properties, they use some 32bit values
@@ -160,8 +166,7 @@ export class TethrPanasnoic extends Tethr {
 			getCode: DevicePropCodePanasonic.WhiteBalance,
 			setCode: DevicePropCodePanasonic.WhiteBalance_Param,
 			decode(value: number) {
-				console.log(value.toString(16))
-				return TethrPanasnoic.WhiteBalanceTable.get(value) ?? value
+				return TethrPanasnoic.WhiteBalanceTable.get(value) ?? null
 			},
 			encode(value: WhiteBalance) {
 				const data = TethrPanasnoic.WhiteBalanceTable.getKey(value)
@@ -187,6 +192,8 @@ export class TethrPanasnoic extends Tethr {
 			code: OpCodePanasonic.OpenSession,
 			parameters: [0x00010001],
 		})
+
+		this.device.on('0xc102', this.onPropChanged)
 	}
 
 	public close = async (): Promise<void> => {
@@ -231,8 +238,8 @@ export class TethrPanasnoic extends Tethr {
 		if (valueSize === 4) dataView.setUint32(8, encodedValue, true)
 
 		const succeed = await this.device.sendData({
-			label: 'Panasonic SetProperty',
-			code: OpCodePanasonic.SetProperty,
+			label: 'Panasonic SetDevicePropValue',
+			code: OpCodePanasonic.SetDevicePropValue,
 			parameters: [setCode],
 			data,
 		})
@@ -255,8 +262,8 @@ export class TethrPanasnoic extends Tethr {
 		const valueSize = scheme.valueSize
 
 		const {data} = await this.device.receiveData({
-			label: 'Panasonic ListProperty',
-			code: OpCodePanasonic.ListProperty,
+			label: 'Panasonic GetDevicePropDesc',
+			code: OpCodePanasonic.GetDevicePropDesc,
 			parameters: [getCode],
 		})
 
@@ -372,6 +379,38 @@ export class TethrPanasnoic extends Tethr {
 			data,
 		})
 	}
+
+	private onPropChanged = async (ev: PTPDeviceEvent) => {
+		const code = ev.parameters[0]
+
+		let props: (keyof BasePropType)[]
+
+		switch (code) {
+			case DevicePropCodePanasonic.CameraMode:
+				props = ['exposureMode', 'aperture', 'shutterSpeed']
+				break
+			case DevicePropCodePanasonic.Aperture:
+				props = ['aperture']
+				break
+			case DevicePropCodePanasonic.ShutterSpeed:
+				props = ['shutterSpeed']
+				break
+			case DevicePropCodePanasonic.ISO:
+				props = ['iso']
+				break
+			case DevicePropCodePanasonic.WhiteBalance:
+				props = ['whiteBalance', 'colorTemperature']
+				break
+			default:
+				return
+		}
+
+		for (const prop of props) {
+			const desc = await this.getDesc(prop)
+			this.emit(`${prop}Changed`, desc)
+		}
+	}
+
 	private static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
 		[0x0002, 'auto'],
 		[0x0004, 'daylight'],

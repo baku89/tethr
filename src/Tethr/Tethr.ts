@@ -1,4 +1,5 @@
 import {BiMap} from 'bim'
+import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
 
 import {ObjectInfo} from '@/ObjectInfo'
@@ -182,7 +183,11 @@ export interface SetPropResult<T extends BasePropType[keyof BasePropType]> {
 	value: T | null
 }
 
-export class Tethr {
+type TethrEventTypes = {
+	[Name in keyof BasePropType as `${Name}Changed`]: PropDesc<BasePropType[Name]>
+}
+
+export class Tethr extends EventEmitter<TethrEventTypes> {
 	protected _opened = false
 
 	protected propScheme: PropScheme = {
@@ -191,7 +196,9 @@ export class Tethr {
 		},
 	}
 
-	public constructor(protected device: PTPDevice) {}
+	public constructor(protected device: PTPDevice) {
+		super()
+	}
 
 	public get opened(): boolean {
 		return this._opened
