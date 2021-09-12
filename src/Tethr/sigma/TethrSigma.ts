@@ -1,6 +1,8 @@
 import _ from 'lodash'
 import sleep from 'sleep-promise'
 
+import {isntNil} from '@/util'
+
 import {decodeIFD, IFDType} from '../../IFD'
 import {ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
@@ -165,8 +167,12 @@ export class TethrSigma extends Tethr {
 				return (await this.getWhiteBalanceDesc()) as PropDesc<T>
 			case 'colorTemperature':
 				return (await this.getColorTemperatureDesc()) as PropDesc<T>
-			default:
-				throw new Error(`Prop desc ${name} is not supported for Sigma`)
+		}
+
+		return {
+			writable: false,
+			value: null,
+			supportedValues: [],
 		}
 	}
 
@@ -177,19 +183,18 @@ export class TethrSigma extends Tethr {
 		return {
 			writable: false,
 			value,
+			supportedValues: [],
 		}
 	}
 
-	private getAperture = async (): Promise<Aperture> => {
+	private getAperture = async () => {
 		const {aperture} = await this.getCamDataGroup1()
 		if (aperture === 0x0) return 'auto'
-		const value =
+		return (
 			SigmaApexApertureOneThird.get(aperture) ??
-			SigmaApexApertureHalf.get(aperture)
-
-		if (value === undefined) throw new Error('Invalid Aperture')
-
-		return value
+			SigmaApexApertureHalf.get(aperture) ??
+			null
+		)
 	}
 
 	private setAperture = async (aperture: Aperture): Promise<boolean> => {
@@ -210,6 +215,7 @@ export class TethrSigma extends Tethr {
 			return {
 				writable: false,
 				value,
+				supportedValues: [],
 			}
 		}
 
@@ -291,11 +297,7 @@ export class TethrSigma extends Tethr {
 
 		function convertSSToTime(ss: string) {
 			if (ss === 'bulk' || ss === 'sync') return Infinity
-
-			if (ss.startsWith('1/')) {
-				return 1 / parseInt(ss.slice(2))
-			}
-
+			if (ss.startsWith('1/')) return 1 / parseInt(ss.slice(2))
 			return parseFloat(ss)
 		}
 	}
@@ -339,7 +341,7 @@ export class TethrSigma extends Tethr {
 		const isoMin = Math.round(3.125 * 2 ** svMin)
 		const isoMax = Math.round(3.125 * 2 ** svMax)
 
-		const isos = Array.from(SigmaApexISO.values())
+		const isos = [...SigmaApexISO.values()]
 		const supportedValues = isos.filter(a => isoMin <= a && a <= isoMax)
 
 		supportedValues.unshift('auto')
@@ -359,8 +361,7 @@ export class TethrSigma extends Tethr {
 	private setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
 		const byte = SigmaApexWhiteBalance.getKey(wb)
 		if (!byte) return false
-		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, byte)
-		// }
+		return await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, byte)
 	}
 
 	private getWhiteBalanceDesc = async (): Promise<PropDesc<WhiteBalance>> => {
@@ -369,7 +370,7 @@ export class TethrSigma extends Tethr {
 
 		const supportedValues = whiteBalance
 			.map(v => SigmaApexWhiteBalanceIFD.get(v))
-			.filter(v => !!v) as WhiteBalance[]
+			.filter(isntNil)
 
 		return {
 			writable: supportedValues.length > 0,
@@ -450,6 +451,7 @@ export class TethrSigma extends Tethr {
 		return {
 			writable: false,
 			value,
+			supportedValues: [],
 		}
 	}
 
@@ -598,8 +600,7 @@ export class TethrSigma extends Tethr {
 		})
 
 		const decoder = new PTPDecoder(data)
-		decoder.getUint8() // Size
-		decoder.getUint16() // FieldPreset
+		decoder.skip(3) // OC + FieldPreset
 
 		const group1 = {
 			shutterSpeed: decoder.getUint8(),
@@ -630,8 +631,7 @@ export class TethrSigma extends Tethr {
 		})
 
 		const decoder = new PTPDecoder(data)
-		decoder.getUint8()
-		decoder.getUint16() // FieldPreset
+		decoder.skip(3) // OC + FieldPreset
 
 		const group2First = {
 			driveMode: decoder.getUint8(),
@@ -661,8 +661,7 @@ export class TethrSigma extends Tethr {
 		})
 
 		const decoder = new PTPDecoder(data)
-		decoder.getUint8()
-		decoder.getUint16() // FieldPreset
+		decoder.skip(3) // OC + FieldPreset
 
 		const group5FirstOct = {
 			intervalTimerSecond: decoder.getUint16(),
