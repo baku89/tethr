@@ -66,15 +66,9 @@ export type ManualFocusDriveOption = {
 export type PropDesc<T> = {
 	value: T | null
 	defaultValue?: T
-} & (
-	| {
-			writable: true
-			supportedValues: T[]
-	  }
-	| {
-			writable: false
-	  }
-)
+	writable: boolean
+	supportedValues: T[]
+}
 
 export interface DeviceInfo {
 	standardVersion: number
@@ -301,6 +295,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			return {
 				writable: false,
 				value: null,
+				supportedValues: [],
 			}
 		}
 

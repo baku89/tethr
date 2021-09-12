@@ -340,6 +340,7 @@ export class TethrPanasnoic extends Tethr {
 			return {
 				writable: false,
 				value: null,
+				supportedValues: [],
 			}
 		}
 

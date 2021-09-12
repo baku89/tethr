@@ -1,7 +1,7 @@
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 import {connectCamera, Tethr} from '../src'
-import {BasePropType} from '../src/Tethr/Tethr'
+import {BasePropType, PropDesc} from '../src/Tethr/Tethr'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -33,6 +33,7 @@ export function useTethrProp<Name extends keyof BasePropType>(
 
 		prop.writable = desc.writable
 		prop.value = desc.value
+		prop.supportedValues = desc.supportedValues
 
 		prop.update = async (value: any) => {
 			prop.updating = true
@@ -43,14 +44,8 @@ export function useTethrProp<Name extends keyof BasePropType>(
 		cam.on(`${name}Changed`, (desc: PropDesc<BasePropType[Name]>) => {
 			prop.value = desc.value
 			prop.writable = desc.writable
-			if (desc.writable) {
-				prop.supportedValues = desc.supportedValues
-			}
-		})
-
-		if (desc.writable) {
 			prop.supportedValues = desc.supportedValues
-		}
+		})
 	})
 
 	return readonly(prop)
