@@ -122,10 +122,12 @@ export class PTPDevice extends EventEmitter {
 	}
 
 	public sendCommand = async (option: PTPSendOption): Promise<PTPResponse> => {
-		const {code} = option
-		const label = option.label ?? ''
-		const parameters = option.parameters ?? []
-		const expectedResCodes = option.expectedResCodes ?? [ResCode.OK]
+		const {code, label, parameters, expectedResCodes} = {
+			label: '',
+			parameters: [],
+			expectedResCodes: [ResCode.OK],
+			...option,
+		}
 		const id = this.generateTransactionId()
 
 		try {
@@ -160,10 +162,12 @@ export class PTPDevice extends EventEmitter {
 	}
 
 	public sendData = async (option: PTPSendDataOption): Promise<PTPResponse> => {
-		const {code, data} = option
-		const label = option.label ?? ''
-		const parameters = option.parameters ?? []
-		const expectedResCodes = option.expectedResCodes ?? [ResCode.OK]
+		const {code, data, label, parameters, expectedResCodes} = {
+			label: '',
+			parameters: [],
+			expectedResCodes: [ResCode.OK],
+			...option,
+		}
 		const id = this.generateTransactionId()
 
 		try {
@@ -201,10 +205,12 @@ export class PTPDevice extends EventEmitter {
 	public receiveData = async (
 		option: PTPSendOption
 	): Promise<PTPDataResponse> => {
-		const {code} = option
-		const label = option.label ?? ''
-		const parameters = option.parameters ?? []
-		const expectedResCodes = option.expectedResCodes ?? [ResCode.OK]
+		const {code, label, parameters, expectedResCodes} = {
+			label: '',
+			parameters: [],
+			expectedResCodes: [ResCode.OK],
+			...option,
+		}
 		const id = this.generateTransactionId()
 
 		console.groupCollapsed(`Send Command [${label}]`)
