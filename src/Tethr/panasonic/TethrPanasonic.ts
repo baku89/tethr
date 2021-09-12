@@ -189,25 +189,25 @@ export class TethrPanasnoic extends Tethr {
 		await super.open()
 	}
 
-	public async set<K extends keyof BasePropType, T extends BasePropType[K]>(
+	public async set<K extends keyof BasePropType>(
 		name: K,
-		value: T
-	): Promise<SetPropResult<T>> {
+		value: BasePropType[K]
+	): Promise<SetPropResult<BasePropType[K]>> {
 		const descriptor = TethrPanasnoic.PropScheme[name] as
-			| PropScheme<T>
+			| PropScheme[K]
 			| undefined
 
 		if (!descriptor)
 			throw new Error(`Prop ${name} is not supported for this device`)
 
 		const setCode = descriptor.setCode
-		const encode = descriptor.encode
+		const encode = descriptor.encode as (value: BasePropType[K]) => number
 		const valueSize = descriptor.valueSize
 
 		if (!(setCode && encode)) {
 			return {
 				status: 'unsupported',
-				value: (await this.get(name)) as T,
+				value: (await this.get(name)) as BasePropType[K],
 			}
 		}
 
@@ -229,7 +229,7 @@ export class TethrPanasnoic extends Tethr {
 
 		return {
 			status: succeed ? 'ok' : 'invalid',
-			value: (await this.get(name)) as T,
+			value: (await this.get(name)) as BasePropType[K],
 		}
 	}
 
@@ -241,7 +241,7 @@ export class TethrPanasnoic extends Tethr {
 		if (!scheme) throw new Error(`Device prop ${name} is not readable`)
 
 		const getCode = scheme.getCode
-		const decode = scheme.decode
+		const decode = scheme.decode as (data: number) => T
 		const valueSize = scheme.valueSize
 
 		const {data} = await this.device.receiveData({
