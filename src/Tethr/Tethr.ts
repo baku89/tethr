@@ -56,8 +56,6 @@ export type ExposureMeteringMode =
 
 export type StillCaptureMode = 'normal' | 'burst' | 'timelapse'
 
-export type EffectMode = 'standard' | 'bw' | 'sepia' | string
-
 export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
 export type ManualFocusDriveOption = {
@@ -99,7 +97,7 @@ export interface BasePropType {
 	batteryLevel: BatteryLevel
 	functionalMode: FunctionalMode
 	imageSize: [number, number]
-	compressionSetting: 0x5004
+	compressionSetting: number
 	whiteBalance: WhiteBalance
 	rgbGain: [number, number, number]
 	colorTemperature: number // Added
@@ -120,7 +118,7 @@ export interface BasePropType {
 	contrast: number
 	sharpness: number
 	digitalZoom: number
-	effectMode: EffectMode
+	effectMode: string
 	burstNumber: number
 	burstInterval: number
 	timelapseNumber: number

@@ -37,6 +37,7 @@ enum EventCodePanasonic {
 // Panasonic does not have regular device properties, they use some 32bit values
 enum DevicePropCodePanasonic {
 	PhotoStyle = 0x02000010,
+	PhotoStyle_Param = 0x02000011,
 	ISO = 0x02000020,
 	ISO_Param = 0x02000021,
 	ISO_UpperLimit = 0x02000022,
@@ -81,7 +82,7 @@ type PropScheme = {
 		getCode: number
 		setCode?: number
 		decode: (value: number) => BasePropType[Name] | null
-		encode?: (value: BasePropType[Name]) => number
+		encode?: (value: BasePropType[Name]) => number | null
 		valueSize: 2 | 4
 	}
 }
@@ -169,9 +170,7 @@ export class TethrPanasnoic extends Tethr {
 				return TethrPanasnoic.WhiteBalanceTable.get(value) ?? null
 			},
 			encode(value: WhiteBalance) {
-				const data = TethrPanasnoic.WhiteBalanceTable.getKey(value)
-				if (data === undefined) throw new Error(`Unsupported WB`)
-				return data
+				return TethrPanasnoic.WhiteBalanceTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -180,6 +179,17 @@ export class TethrPanasnoic extends Tethr {
 			setCode: DevicePropCodePanasonic.WhiteBalance_KSet,
 			decode: _.identity,
 			encode: _.identity,
+			valueSize: 2,
+		},
+		effectMode: {
+			getCode: DevicePropCodePanasonic.PhotoStyle,
+			setCode: DevicePropCodePanasonic.PhotoStyle_Param,
+			decode(value: number) {
+				return TethrPanasnoic.EffectModeTable.get(value) ?? null
+			},
+			encode(value: string) {
+				return TethrPanasnoic.EffectModeTable.getKey(value) ?? null
+			},
 			valueSize: 2,
 		},
 	}
@@ -218,7 +228,9 @@ export class TethrPanasnoic extends Tethr {
 			throw new Error(`Prop ${name} is not supported for this device`)
 
 		const setCode = descriptor.setCode
-		const encode = descriptor.encode as (value: BasePropType[K]) => number
+		const encode = descriptor.encode as (
+			value: BasePropType[K]
+		) => number | null
 		const valueSize = descriptor.valueSize
 
 		if (!(setCode && encode)) {
@@ -231,6 +243,13 @@ export class TethrPanasnoic extends Tethr {
 		const data = new ArrayBuffer(4 + 4 + valueSize)
 		const dataView = new DataView(data)
 		const encodedValue = encode(value)
+
+		if (encodedValue === null) {
+			return {
+				status: 'unsupported',
+				value: (await this.get(name)) as BasePropType[K],
+			}
+		}
 
 		dataView.setUint32(0, setCode, true)
 		dataView.setUint32(4, valueSize, true)
@@ -401,6 +420,9 @@ export class TethrPanasnoic extends Tethr {
 			case DevicePropCodePanasonic.WhiteBalance:
 				props = ['whiteBalance', 'colorTemperature']
 				break
+			case DevicePropCodePanasonic.PhotoStyle:
+				props = ['effectMode']
+				break
 			default:
 				return
 		}
@@ -431,5 +453,25 @@ export class TethrPanasnoic extends Tethr {
 		[0x8013, 'manual4'],
 		[0x8014, 'auto cool'],
 		[0x8015, 'auto warm'],
+	])
+
+	private static EffectModeTable = new BiMap<number, string>([
+		[0, 'Standard'],
+		[1, 'Vivid'],
+		[2, 'Natural'],
+		[18, 'Flat'],
+		[4, 'Landscape'],
+		[5, 'Portrait'],
+		[3, 'Monochorme'],
+		[15, 'L.Monochrome'],
+		[17, 'L.Monochrome D'],
+		[41, 'Cinelike D2'],
+		[42, 'Cinelike V2'],
+		[14, 'Like709'],
+		[40, 'V-Log'],
+		[19, 'MY PHOTOSTYLE 1'],
+		[20, 'MY PHOTOSTYLE 2'],
+		[21, 'MY PHOTOSTYLE 3'],
+		[22, 'MY PHOTOSTYLE 4'],
 	])
 }
