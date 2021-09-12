@@ -490,6 +490,9 @@ export class TethrPanasnoic extends Tethr {
 			case DevicePropCodePanasonic.ISO:
 				props = ['iso']
 				break
+			case DevicePropCodePanasonic.Exposure:
+				props = ['exposureComp']
+				break
 			case DevicePropCodePanasonic.WhiteBalance:
 				props = ['whiteBalance', 'colorTemperature']
 				break
