@@ -7,6 +7,7 @@ import {
 	BasePropType,
 	ExposureMode,
 	ISO,
+	ManualFocusDriveOption,
 	PropDesc,
 	SetPropResult,
 	Tethr,
@@ -21,6 +22,7 @@ enum OpCodePanasonic {
 	SetProperty = 0x9403,
 	InitiateCapture = 0x9404,
 	Liveview = 0x9412,
+	ManualFocusDrive = 0x9416,
 	LiveviewImage = 0x9706,
 }
 
@@ -327,6 +329,39 @@ export class TethrPanasnoic extends Tethr {
 		return url
 	}
 
+	public async manualFocusDrive(option: ManualFocusDriveOption) {
+		const {direction, speed} = option
+
+		let mode = 0
+
+		if (direction === 'far') {
+			if (speed === 1) mode = 2
+			else if (speed === 2) mode = 1
+		} else if (direction === 'near') {
+			if (speed === 1) mode = 3
+			else if (speed === 2) mode = 4
+		}
+
+		if (!mode) {
+			throw new Error('This speed is not supported')
+		}
+
+		const propCode = 0x03010011
+
+		const data = new ArrayBuffer(10)
+		const dataView = new DataView(data)
+
+		dataView.setUint32(0, propCode, true)
+		dataView.setUint32(4, 2, true)
+		dataView.setUint16(8, mode, true)
+
+		await this.device.sendData({
+			label: 'Panasonic ManualFocusDrive',
+			code: OpCodePanasonic.ManualFocusDrive,
+			parameters: [propCode],
+			data,
+		})
+	}
 	private static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
 		[0x0002, 'auto'],
 		[0x0004, 'daylight'],

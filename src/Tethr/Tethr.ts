@@ -58,6 +58,11 @@ export type EffectMode = 'standard' | 'bw' | 'sepia' | string
 
 export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
+export type ManualFocusDriveOption = {
+	direction: 'near' | 'far'
+	speed: 1 | 2 | 3
+}
+
 export type PropDesc<T> = {
 	value: T | null
 	defaultValue?: T
