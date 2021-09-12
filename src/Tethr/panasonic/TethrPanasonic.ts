@@ -172,28 +172,43 @@ export class TethrPanasnoic extends Tethr {
 			getCode: DevicePropCodePanasonic.Exposure,
 			setCode: DevicePropCodePanasonic.Exposure_Param,
 			decode(v) {
-				if (v === 0x0) return '±0'
+				if (v === 0x0) return '0'
 
 				const steps = v & 0xf
 				const digits = Math.floor(steps / 3)
 				const thirds = steps % 3
 				const negative = v & 0x8000
-				return (
-					(negative ? '-' : '+') +
-					(digits > 0 ? digits : '') +
-					(thirds === 1 ? '⅓' : thirds === 2 ? '⅔' : '')
-				)
+
+				const sign = negative ? '-' : '+'
+				const thirdsSymbol = thirds === 1 ? '1/3' : thirds === 2 ? '2/3' : ''
+
+				if (digits === 0) return sign + thirdsSymbol
+				if (thirds === 0) return sign + digits
+
+				return sign + digits + ' ' + thirdsSymbol
 			},
 			encode(v) {
-				if (v === '±0') return 0x0
+				if (v === '0') return 0x0
 
-				const match = v.match(/^([+-]?)([0-9]*)([⅓⅔]?)$/)
+				const match1 = v.match(/^([+-]?)([0-9]+)( 1\/3| 2\/3)?$/)
 
-				if (!match) return null
+				let negative = false,
+					digits = 0,
+					thirds = 0
 
-				const negative = match[1] === '-'
-				const digits = parseInt(match[2] || '0')
-				const thirds = match[3] === '' ? 0 : match[3] === '⅓' ? 1 : 2
+				if (match1) {
+					negative = match1[1] === '-'
+					digits = parseInt(match1[2])
+					thirds = match1[3] === '' ? 0 : match1[3] === ' 1/3' ? 1 : 2
+				}
+
+				const match2 = match1 && v.match(/^([+-]?)(1\/3|1\/3)?$/)
+
+				if (match2) {
+					negative = match2[1] === '-'
+					thirds = match1[3] === '' ? 0 : match1[3] === '1/3' ? 1 : 2
+				}
+
 				const steps = digits * 3 + thirds
 
 				return (negative ? 0x8000 : 0x0000) | steps
@@ -336,7 +351,7 @@ export class TethrPanasnoic extends Tethr {
 		const scheme = this.propSchemePanasonic[name]
 
 		if (!scheme) {
-			console.warn(`Prop ${name} is not supported`)
+			// console.warn(`Prop ${name} is not supported`)
 			return {
 				writable: false,
 				value: null,
