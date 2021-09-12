@@ -75,6 +75,11 @@ enum DevicePropCodePanasonic {
 	RecInfoSelfTimer = 0x020001a0,
 	RecInfoFlash2 = 0x020001b0,
 	RecCtrlRelease = 0x03000010,
+
+	ImageMode = 0x20000a0,
+	ImageMode_Param = 0x20000a1,
+	ImageMode_Quality = 0x20000a2,
+	ImageMode_AspectRatio = 0x20000a3,
 }
 
 type PropScheme = {
@@ -83,12 +88,12 @@ type PropScheme = {
 		setCode?: number
 		decode: (value: number) => BasePropType[Name] | null
 		encode?: (value: BasePropType[Name]) => number | null
-		valueSize: 2 | 4
+		valueSize: 1 | 2 | 4
 	}
 }
 
 export class TethrPanasnoic extends Tethr {
-	private static PropScheme: PropScheme = {
+	private propSchemePanasonic: PropScheme = {
 		exposureMode: {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
 			valueSize: 2,
@@ -146,7 +151,7 @@ export class TethrPanasnoic extends Tethr {
 					return Math.round(seconds * 1000) | 0x80000000
 				}
 
-				throw new Error('Invalid format of shutter speed')
+				return null
 			},
 			valueSize: 4,
 		},
@@ -162,6 +167,38 @@ export class TethrPanasnoic extends Tethr {
 				return value === 'auto' ? 0xffffffff : value
 			},
 			valueSize: 4,
+		},
+		exposureComp: {
+			getCode: DevicePropCodePanasonic.Exposure,
+			setCode: DevicePropCodePanasonic.Exposure_Param,
+			decode(v) {
+				if (v === 0x0) return '±0'
+
+				const steps = v & 0xf
+				const digits = Math.floor(steps / 3)
+				const thirds = steps % 3
+				const negative = v & 0x8000
+				return (
+					(negative ? '-' : '+') +
+					(digits > 0 ? digits : '') +
+					(thirds === 1 ? '⅓' : thirds === 2 ? '⅔' : '')
+				)
+			},
+			encode(v) {
+				if (v === '±0') return 0x0
+
+				const match = v.match(/^([+-]?)([0-9]*)([⅓⅔]?)$/)
+
+				if (!match) return null
+
+				const negative = match[1] === '-'
+				const digits = parseInt(match[2] || '0')
+				const thirds = match[3] === '' ? 0 : match[3] === '⅓' ? 1 : 2
+				const steps = digits * 3 + thirds
+
+				return (negative ? 0x8000 : 0x0000) | steps
+			},
+			valueSize: 2,
 		},
 		whiteBalance: {
 			getCode: DevicePropCodePanasonic.WhiteBalance,
@@ -189,6 +226,28 @@ export class TethrPanasnoic extends Tethr {
 			},
 			encode(value: string) {
 				return TethrPanasnoic.EffectModeTable.getKey(value) ?? null
+			},
+			valueSize: 2,
+		},
+		aspectRatio: {
+			getCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
+			setCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
+			decode(value: number) {
+				return TethrPanasnoic.AspectRatioTable.get(value) ?? null
+			},
+			encode(value: string) {
+				return TethrPanasnoic.AspectRatioTable.getKey(value) ?? null
+			},
+			valueSize: 2,
+		},
+		imageQuality: {
+			getCode: DevicePropCodePanasonic.ImageMode_Quality,
+			setCode: DevicePropCodePanasonic.ImageMode_Quality,
+			decode(value: number) {
+				return TethrPanasnoic.ImageQualityTable.get(value) ?? null
+			},
+			encode(value: string) {
+				return TethrPanasnoic.ImageQualityTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -220,20 +279,18 @@ export class TethrPanasnoic extends Tethr {
 		name: K,
 		value: BasePropType[K]
 	): Promise<SetPropResult<BasePropType[K]>> {
-		const descriptor = TethrPanasnoic.PropScheme[name] as
-			| PropScheme[K]
-			| undefined
+		const scheme = this.propSchemePanasonic[name] as PropScheme[K] | undefined
 
-		if (!descriptor)
+		if (!scheme)
 			throw new Error(`Prop ${name} is not supported for this device`)
 
-		const setCode = descriptor.setCode
-		const encode = descriptor.encode as (
-			value: BasePropType[K]
-		) => number | null
-		const valueSize = descriptor.valueSize
+		const setCode = scheme.setCode
+		const encode = scheme.encode as (value: BasePropType[K]) => number | null
+		const valueSize = scheme.valueSize
 
-		if (!(setCode && encode)) {
+		const desc = await this.getDesc(name)
+
+		if (!(setCode && encode && desc.writable)) {
 			return {
 				status: 'unsupported',
 				value: (await this.get(name)) as BasePropType[K],
@@ -242,7 +299,7 @@ export class TethrPanasnoic extends Tethr {
 
 		const data = new ArrayBuffer(4 + 4 + valueSize)
 		const dataView = new DataView(data)
-		const encodedValue = encode(value)
+		const encodedValue = await encode(value)
 
 		if (encodedValue === null) {
 			return {
@@ -253,6 +310,7 @@ export class TethrPanasnoic extends Tethr {
 
 		dataView.setUint32(0, setCode, true)
 		dataView.setUint32(4, valueSize, true)
+		if (valueSize === 1) dataView.setUint8(8, encodedValue)
 		if (valueSize === 2) dataView.setUint16(8, encodedValue, true)
 		if (valueSize === 4) dataView.setUint32(8, encodedValue, true)
 
@@ -272,9 +330,15 @@ export class TethrPanasnoic extends Tethr {
 	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		const scheme = TethrPanasnoic.PropScheme[name]
+		const scheme = this.propSchemePanasonic[name]
 
-		if (!scheme) throw new Error(`Device prop ${name} is not readable`)
+		if (!scheme) {
+			console.warn(`Prop ${name} is not supported`)
+			return {
+				writable: false,
+				value: null,
+			}
+		}
 
 		const getCode = scheme.getCode
 		const decode = scheme.decode as (data: number) => T
@@ -288,9 +352,18 @@ export class TethrPanasnoic extends Tethr {
 
 		const decoder = new PTPDecoder(data)
 
-		const getValue = valueSize === 2 ? decoder.getUint16 : decoder.getUint32
+		const getValue =
+			valueSize === 1
+				? decoder.getUint8
+				: valueSize === 2
+				? decoder.getUint16
+				: decoder.getUint32
 		const getArray =
-			valueSize === 2 ? decoder.getUint16Array : decoder.getUint32Array
+			valueSize === 1
+				? decoder.getUint8Array
+				: valueSize === 2
+				? decoder.getUint16Array
+				: decoder.getUint32Array
 
 		decoder.skip(4) // dpc
 		const headerLength = decoder.getUint32()
@@ -406,7 +479,7 @@ export class TethrPanasnoic extends Tethr {
 
 		switch (code) {
 			case DevicePropCodePanasonic.CameraMode:
-				props = ['exposureMode', 'aperture', 'shutterSpeed']
+				props = ['exposureMode', 'aperture', 'shutterSpeed', 'exposureComp']
 				break
 			case DevicePropCodePanasonic.Aperture:
 				props = ['aperture']
@@ -422,6 +495,9 @@ export class TethrPanasnoic extends Tethr {
 				break
 			case DevicePropCodePanasonic.PhotoStyle:
 				props = ['effectMode']
+				break
+			case DevicePropCodePanasonic.ImageMode:
+				props = ['imageResolution', 'aspectRatio', 'imageQuality']
 				break
 			default:
 				return
@@ -473,5 +549,22 @@ export class TethrPanasnoic extends Tethr {
 		[20, 'MY PHOTOSTYLE 2'],
 		[21, 'MY PHOTOSTYLE 3'],
 		[22, 'MY PHOTOSTYLE 4'],
+	])
+
+	private static AspectRatioTable = new BiMap<number, string>([
+		[1, '4:3'],
+		[2, '3:2'],
+		[3, '16:9'],
+		[4, '1:1'],
+		[10, '65:24'],
+		[11, '2:1'],
+	])
+
+	private static ImageQualityTable = new BiMap<number, string>([
+		[0, 'fine'],
+		[1, 'std'],
+		[2, 'raw + fine'],
+		[3, 'raw + std'],
+		[4, 'raw'],
 	])
 }

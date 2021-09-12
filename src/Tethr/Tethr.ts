@@ -98,6 +98,11 @@ export interface BasePropType {
 	functionalMode: FunctionalMode
 	imageSize: [number, number]
 	compressionSetting: number
+
+	imageResolution: string // Added e.g. L, M, S...
+	imageQuality: string // Added e.g. JPEG, JPEG+RAW...
+	aspectRatio: string // Added e.g. 16:9, 3:2...
+
 	whiteBalance: WhiteBalance
 	rgbGain: [number, number, number]
 	colorTemperature: number // Added
@@ -111,7 +116,7 @@ export interface BasePropType {
 	shutterSpeed: string
 	exposureMode: ExposureMode // exposureProgramMode
 	// exposureIndex: 0x500f
-	exposureComp: number // exposureBiasCompensation
+	exposureComp: string // exposureBiasCompensation
 	dateTime: Date
 	captureDelay: number
 	stillCaptureMode: StillCaptureMode
