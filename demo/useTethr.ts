@@ -11,7 +11,7 @@ export interface TethrProp<T extends BasePropType[keyof BasePropType]> {
 	value: T | null
 	updating: boolean
 	update: (value: T) => void
-	supportedValues: null | T[]
+	supportedValues: T[]
 }
 
 export function useTethrProp<Name extends keyof BasePropType>(
@@ -23,7 +23,7 @@ export function useTethrProp<Name extends keyof BasePropType>(
 		value: null,
 		updating: false,
 		update: () => null,
-		supportedValues: null,
+		supportedValues: [],
 	}) as TethrProp<BasePropType[Name]>
 
 	watch(camera, async cam => {
