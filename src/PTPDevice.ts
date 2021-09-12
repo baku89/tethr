@@ -274,7 +274,7 @@ export class PTPDevice extends EventEmitter {
 		const dataView = new DataView(buffer)
 
 		dataView.setUint32(0, length, true)
-		dataView.setUint16(4, PTPType.Command, false)
+		dataView.setUint16(4, PTPType.Command, true)
 		dataView.setUint16(6, code, true)
 		dataView.setUint32(8, transactionId, true)
 
@@ -307,7 +307,7 @@ export class PTPDevice extends EventEmitter {
 		const dataView = new DataView(buffer)
 
 		dataView.setUint32(0, length, true)
-		dataView.setUint16(4, PTPType.Data, false)
+		dataView.setUint16(4, PTPType.Data, true)
 		dataView.setUint16(6, code, true)
 		dataView.setUint32(8, transactionId, true)
 
