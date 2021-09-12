@@ -35,12 +35,32 @@ export interface PTPDeviceEvent {
 	parameters: number[]
 }
 
-interface PTPDeviceBulkInEvent {
+interface BulkInInfo {
 	type: PTPType
 	code: number
 	transactionId: number
 	payload: ArrayBuffer
 }
+
+interface BulkQueueSendCommand {
+	type: 'sendCommand'
+	option: PTPSendOption
+	resolve: (res: PTPResponse) => void
+}
+
+interface BulkQueueSendData {
+	type: 'sendData'
+	option: PTPSendDataOption
+	resolve: (res: PTPResponse) => void
+}
+
+interface BulkQueueReceiveData {
+	type: 'receiveData'
+	option: PTPSendOption
+	resolve: (res: PTPDataResponse) => void
+}
+
+type BulkQueue = BulkQueueSendCommand | BulkQueueSendData | BulkQueueReceiveData
 
 export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	private device: USBDevice | undefined
@@ -50,17 +70,12 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	private bulkIn = 0x0
 	private interruptIn = 0x0
 
-	private bulkInEventEmitter = new EventEmitter<
-		Record<string, PTPDeviceBulkInEvent>
-	>()
-
 	private _opened = false
 
-	public open = async (): Promise<void> => {
-		// let [device] = await navigator.usb.getDevices()
-		const device: USBDevice = await navigator.usb.requestDevice({filters: []})
+	private bulkQueues: BulkQueue[] = []
 
-		console.log(device)
+	public open = async (): Promise<void> => {
+		const device: USBDevice = await navigator.usb.requestDevice({filters: []})
 
 		await device.open()
 
@@ -107,8 +122,6 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 		this.device = device
 
-		// Listen event
-		this.listenBulkIn()
 		this.listenInterruptIn()
 
 		this._opened = true
@@ -125,7 +138,63 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		return this._opened
 	}
 
-	public sendCommand = async (option: PTPSendOption): Promise<PTPResponse> => {
+	public sendCommand = (option: PTPSendOption): Promise<PTPResponse> => {
+		return new Promise(resolve => {
+			this.bulkQueues.push({
+				type: 'sendCommand',
+				option,
+				resolve,
+			})
+			if (this.bulkQueues.length === 1) this.execBulkQueue()
+		})
+	}
+
+	public sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
+		return new Promise(resolve => {
+			this.bulkQueues.push({
+				type: 'sendData',
+				option,
+				resolve,
+			})
+			if (this.bulkQueues.length === 1) this.execBulkQueue()
+		})
+	}
+
+	public receiveData = (option: PTPSendOption): Promise<PTPDataResponse> => {
+		return new Promise(resolve => {
+			this.bulkQueues.push({
+				type: 'receiveData',
+				option,
+				resolve,
+			})
+			if (this.bulkQueues.length === 1) this.execBulkQueue()
+		})
+	}
+
+	private execBulkQueue = async () => {
+		const queue = this.bulkQueues[0]
+
+		try {
+			switch (queue.type) {
+				case 'sendCommand':
+					queue.resolve(await this.sendCommandNow(queue.option))
+					break
+				case 'sendData':
+					queue.resolve(await this.sendDataNow(queue.option))
+					break
+				case 'receiveData':
+					queue.resolve(await this.receiveDataNow(queue.option))
+					break
+			}
+		} finally {
+			this.bulkQueues.shift()
+			if (this.bulkQueues.length > 0) setTimeout(this.execBulkQueue, 0)
+		}
+	}
+
+	private sendCommandNow = async (
+		option: PTPSendOption
+	): Promise<PTPResponse> => {
 		const {code, label, parameters, expectedResCodes} = {
 			label: '',
 			parameters: [],
@@ -165,7 +234,9 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		}
 	}
 
-	public sendData = async (option: PTPSendDataOption): Promise<PTPResponse> => {
+	private sendDataNow = async (
+		option: PTPSendDataOption
+	): Promise<PTPResponse> => {
 		const {code, data, label, parameters, expectedResCodes} = {
 			label: '',
 			parameters: [],
@@ -206,7 +277,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		}
 	}
 
-	public receiveData = async (
+	private receiveDataNow = async (
 		option: PTPSendOption
 	): Promise<PTPDataResponse> => {
 		const {code, label, parameters, expectedResCodes} = {
@@ -217,7 +288,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		}
 		const id = this.generateTransactionId()
 
-		console.groupCollapsed(`Send Command [${label}]`)
+		console.groupCollapsed(`Receive Data [${label}]`)
 
 		try {
 			await this.transferOutCommand(code, id, parameters)
@@ -225,6 +296,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 			if (res1.type === PTPType.Response) {
 				if (expectedResCodes.includes(res1.code)) {
+					console.groupEnd()
 					return {
 						code: res1.code,
 						parameters: [],
@@ -328,41 +400,39 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		return sent.status === 'ok'
 	}
 
-	private listenBulkIn = async () => {
-		if (!this.device || !this.device.opened) return
+	private waitBulkIn = async (id: number): Promise<BulkInInfo> => {
+		if (!this.device || !this.device.opened) throw new Error()
 
-		try {
-			const {data, status} = await this.device.transferIn(this.bulkIn, 0x800000)
+		const {data, status} = await this.device.transferIn(this.bulkIn, 0x800000)
 
-			// Error checking
-			if (status !== 'ok') throw new Error(`BulkIn returned status: ${status}`)
-			if (!data || data.byteLength < 12) throw new Error('Invalid bulkIn data')
+		// Error checking
+		if (status !== 'ok') throw new Error(`BulkIn returned status: ${status}`)
+		if (!data || data.byteLength < 12) throw new Error('Invalid bulkIn data')
 
-			// Unpack packet
-			const type = data.getUint16(4, true)
-			const code = data.getUint16(6, true)
-			const transactionId = data.getUint32(8, true)
-			const payload = data.buffer.slice(12)
+		// Unpack packet
+		const type = data.getUint16(4, true)
+		const code = data.getUint16(6, true)
+		const transactionId = data.getUint32(8, true)
+		const payload = data.buffer.slice(12)
 
-			console.log(
-				'transferInBulk',
-				'type= ' + type,
-				'code= 0x' + code.toString(16),
-				'id= ' + transactionId,
-				'payload= ',
-				payload
+		if (id !== transactionId)
+			throw new Error(
+				`Transaction ID mismatch. Expected=${id}, got=${transactionId}`
 			)
 
-			const eventName = transactionId.toString()
-			const event = {
-				type,
-				code,
-				transactionId,
-				payload,
-			}
-			this.bulkInEventEmitter.emit(eventName, event)
-		} finally {
-			setTimeout(this.listenBulkIn, 0)
+		console.log(
+			'transferInBulk',
+			'type= ' + type,
+			'code= 0x' + code.toString(16),
+			'id= ' + transactionId,
+			'payload= ',
+			payload
+		)
+		return {
+			type,
+			code,
+			transactionId,
+			payload,
 		}
 	}
 
@@ -399,15 +469,6 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		} finally {
 			setTimeout(this.listenInterruptIn, 0)
 		}
-	}
-
-	private waitBulkIn = async (
-		transactionId: number
-	): Promise<PTPDeviceBulkInEvent> => {
-		const eventName = transactionId.toString()
-		return new Promise(resolve => {
-			this.bulkInEventEmitter.once(eventName, resolve)
-		})
 	}
 
 	private generateTransactionId = (): number => {
