@@ -30,33 +30,37 @@ type PTPDataResponse = PTPResponse & {
 	data: ArrayBuffer
 }
 
-interface PTPInTransferResult {
+interface PTPEvent {
+	code: number
+	parameters: number[]
+}
+
+interface PTPBulkInEvent {
 	type: PTPType
 	code: number
 	transactionId: number
 	payload: ArrayBuffer
 }
 
-interface PTPEvent {
-	code: number
-	transactionId: number
-	parameters: number[]
-}
-
-export class PTPDevice extends EventEmitter {
+export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 	private device: USBDevice | undefined
 	private transactionId = 0x00000000
 
 	private bulkOut = 0x0
 	private bulkIn = 0x0
 	private interruptIn = 0x0
+
+	private bulkInEventEmitter = new EventEmitter<
+		Record<string, PTPBulkInEvent>
+	>()
+
 	private _opened = false
 
 	public open = async (): Promise<void> => {
-		let [device] = await navigator.usb.getDevices()
-		if (!device) {
-			device = await navigator.usb.requestDevice({filters: []})
-		}
+		// let [device] = await navigator.usb.getDevices()
+		const device: USBDevice = await navigator.usb.requestDevice({filters: []})
+
+		console.log(device)
 
 		await device.open()
 
@@ -73,7 +77,7 @@ export class PTPDevice extends EventEmitter {
 			await device.claimInterface(0)
 		} catch (err) {
 			if (navigator.userAgent.match(/mac/i)) {
-				console.warn(
+				console.error(
 					'On macOS, you need to shut down other applications accessing the camera or run "killall -9 PTPCamera" in Terminal'
 				)
 			}
@@ -252,19 +256,11 @@ export class PTPDevice extends EventEmitter {
 	}
 
 	public waitEvent = async (code: number): Promise<PTPEvent> => {
-		const {
-			code: eventCode,
-			transactionId,
-			payload,
-		} = (await this.onceAsync(
-			'event:0x' + code.toString(16)
-		)) as PTPInTransferResult
+		const eventName = '0x' + ('0000' + code.toString(16)).substr(-4)
 
-		return {
-			code: eventCode,
-			transactionId,
-			parameters: [...new Uint32Array(payload)],
-		}
+		return new Promise(resolve => {
+			this.once(eventName, resolve)
+		})
 	}
 
 	private transferOutCommand = async (
@@ -358,7 +354,13 @@ export class PTPDevice extends EventEmitter {
 			)
 
 			const eventName = transactionId.toString()
-			this.emit(eventName, {type, code, transactionId, payload})
+			const event = {
+				type,
+				code,
+				transactionId,
+				payload,
+			}
+			this.bulkInEventEmitter.emit(eventName, event)
 		} finally {
 			setTimeout(this.listenBulkIn, 0)
 		}
@@ -398,12 +400,13 @@ export class PTPDevice extends EventEmitter {
 		}
 	}
 
-	private waitBulkIn = async (transactionId: number) => {
-		if (!this.device) throw new Error('Device is not opened')
-
+	private waitBulkIn = async (
+		transactionId: number
+	): Promise<PTPBulkInEvent> => {
 		const eventName = transactionId.toString()
-
-		return (await this.onceAsync(eventName)) as PTPInTransferResult
+		return new Promise(resolve => {
+			this.bulkInEventEmitter.once(eventName, resolve)
+		})
 	}
 
 	private generateTransactionId = (): number => {
@@ -413,11 +416,5 @@ export class PTPDevice extends EventEmitter {
 		}
 
 		return this.transactionId
-	}
-
-	private onceAsync = (event: string | symbol) => {
-		return new Promise(resolve => {
-			this.once(event, resolve)
-		})
 	}
 }
