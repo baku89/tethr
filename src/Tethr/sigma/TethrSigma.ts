@@ -1,11 +1,10 @@
 import _ from 'lodash'
 import sleep from 'sleep-promise'
 
-import {isntNil} from '@/util'
-
 import {decodeIFD, IFDType} from '../../IFD'
 import {ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
+import {isntNil} from '../../util'
 import {
 	Aperture,
 	BasePropType,
