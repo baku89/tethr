@@ -255,10 +255,18 @@ export class TethrSigma extends Tethr {
 	}
 
 	private getShutterSpeedDesc = async (): Promise<PropDesc<string>> => {
-		const info = (await this.getCamCanSetInfo5()).shutterSpeed
+		const range = (await this.getCamCanSetInfo5()).shutterSpeed
 		const value = await this.getShutterSpeed()
 
-		const [tvMin, tvMax, step] = info
+		if (range.length < 3) {
+			return {
+				writable: false,
+				value,
+				supportedValues: [],
+			}
+		}
+
+		const [tvMin, tvMax, step] = range
 
 		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
 		const table = isStepOneThird
