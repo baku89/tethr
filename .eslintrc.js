@@ -13,6 +13,7 @@ module.exports = {
 	},
 	plugins: ['simple-import-sort', 'unused-imports'],
 	rules: {
+		'no-mixed-spaces-and-tabs': 'off',
 		'simple-import-sort/imports': 'error',
 		'unused-imports/no-unused-imports-ts': 'error',
 		'@typescript-eslint/explicit-member-accessibility': 'error',
