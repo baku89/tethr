@@ -40,6 +40,14 @@ export function useTethrProp<Name extends keyof BasePropType>(
 			prop.updating = false
 		}
 
+		cam.on(`${name}Changed`, (desc: PropDesc<BasePropType[Name]>) => {
+			prop.value = desc.value
+			prop.writable = desc.writable
+			if (desc.writable) {
+				prop.supportedValues = desc.supportedValues
+			}
+		})
+
 		if (desc.writable) {
 			prop.supportedValues = desc.supportedValues
 		}
@@ -120,12 +128,19 @@ export function useTethr() {
 		deviceInfo,
 
 		// DPC
-		exposureMode: useTethrProp(camera, 'exposureMode'),
-		aperture: useTethrProp(camera, 'aperture'),
-		shutterSpeed: useTethrProp(camera, 'shutterSpeed'),
-		iso: useTethrProp(camera, 'iso'),
-		whiteBalance: useTethrProp(camera, 'whiteBalance'),
-		colorTemperature: useTethrProp(camera, 'colorTemperature'),
+		deviceProps: {
+			exposureMode: useTethrProp(camera, 'exposureMode'),
+			aperture: useTethrProp(camera, 'aperture'),
+			shutterSpeed: useTethrProp(camera, 'shutterSpeed'),
+			iso: useTethrProp(camera, 'iso'),
+			exposureComp: useTethrProp(camera, 'exposureComp'),
+			whiteBalance: useTethrProp(camera, 'whiteBalance'),
+			colorTemperature: useTethrProp(camera, 'colorTemperature'),
+			effectMode: useTethrProp(camera, 'effectMode'),
+			imageResolution: useTethrProp(camera, 'imageResolution'),
+			aspectRatio: useTethrProp(camera, 'aspectRatio'),
+			imageQuality: useTethrProp(camera, 'imageQuality'),
+		},
 
 		liveviewURL,
 		liveviewing: readonly(liveviewing),

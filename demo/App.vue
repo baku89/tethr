@@ -27,12 +27,9 @@
 
 		<h2>Device Props</h2>
 		<dl>
-			<TethrProp label="Exposure Mode" :prop="exposureMode" />
-			<TethrProp label="Aperture" :prop="aperture" />
-			<TethrProp label="Shutter Speed" :prop="shutterSpeed" />
-			<TethrProp label="ISO" :prop="iso" />
-			<TethrProp label="White Balance" :prop="whiteBalance" />
-			<TethrProp label="Color Temperature" :prop="colorTemperature" />
+			<template v-for="(dp, name) in deviceProps" :key="name">
+				<TethrProp :label="name" :prop="dp" />
+			</template>
 		</dl>
 
 		<h2>Device Info</h2>
