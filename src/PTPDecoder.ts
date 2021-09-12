@@ -50,6 +50,12 @@ export class PTPDecoder {
 		return ret
 	}
 
+	public getInt16 = (): number => {
+		const ret = this.dataView.getInt16(this.byteOffset)
+		this.byteOffset += 2
+		return ret
+	}
+
 	public getUint32 = (): number => {
 		const ret = this.dataView.getUint32(this.byteOffset, true)
 		this.byteOffset += 4
@@ -101,8 +107,16 @@ export class PTPDecoder {
 		return parseTimestamp(timestamp, 'YYYYMMDDThhmmss')
 	}
 
+	public getUint8Array = (): number[] => {
+		return this.getArray(this.getUint8)
+	}
+
 	public getUint16Array = (): number[] => {
 		return this.getArray(this.getUint16)
+	}
+
+	public getInt16Array = (): number[] => {
+		return this.getArray(this.getInt16)
 	}
 
 	public getUint32Array = (): number[] => {
