@@ -6,40 +6,46 @@ import {BasePropType} from '../src/Tethr/Tethr'
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 
+export interface TethrProp<T extends BasePropType[keyof BasePropType]> {
+	writable: boolean
+	value: T | null
+	updating: boolean
+	update: (value: T) => void
+	supportedValues: null | T[]
+}
+
 export function useTethrProp<Name extends keyof BasePropType>(
 	camera: Ref<Tethr | null>,
 	name: Name
 ) {
-	const propDesc = reactive({
+	const prop = reactive({
 		writable: false,
-		value: null as any,
+		value: null,
 		updating: false,
-		update(value: any) {
-			return
-		},
-		supportedValues: null as null | any[],
-	})
+		update: () => null,
+		supportedValues: null,
+	}) as TethrProp<BasePropType[Name]>
 
 	watch(camera, async cam => {
 		if (!cam) return
 
 		const desc = await cam.getDesc(name)
 
-		propDesc.writable = desc.writable
-		propDesc.value = desc.value
+		prop.writable = desc.writable
+		prop.value = desc.value
 
-		propDesc.update = async (value: any) => {
-			propDesc.updating = true
-			propDesc.value = await cam.set(name, value)
-			propDesc.updating = false
+		prop.update = async (value: any) => {
+			prop.updating = true
+			prop.value = (await cam.set(name, value)).value
+			prop.updating = false
 		}
 
 		if (desc.writable) {
-			propDesc.supportedValues = desc.supportedValues
+			prop.supportedValues = desc.supportedValues
 		}
 	})
 
-	return readonly(propDesc)
+	return readonly(prop)
 }
 
 export function useTethr() {
@@ -51,11 +57,6 @@ export function useTethr() {
 
 	const liveviewURL = ref(TransparentPng)
 	const lastPictureURL = ref(TransparentPng)
-
-	const exposureMode = useTethrProp(camera, 'exposureMode')
-	const aperture = useTethrProp(camera, 'aperture')
-	const shutterSpeed = useTethrProp(camera, 'shutterSpeed')
-	const iso = useTethrProp(camera, 'iso')
 
 	async function toggleCameraConnection() {
 		if (camera.value && camera.value.opened) {
@@ -69,6 +70,7 @@ export function useTethr() {
 				await camera.value.open()
 			}
 
+			deviceInfo.value = JSON.stringify(await camera.value.getDeviceInfo())
 			;(window as any).cam = camera.value
 		}
 	}
@@ -116,10 +118,13 @@ export function useTethr() {
 	return {
 		connected,
 		deviceInfo,
-		exposureMode,
-		aperture,
-		shutterSpeed,
-		iso,
+
+		// DPC
+		exposureMode: useTethrProp(camera, 'exposureMode'),
+		aperture: useTethrProp(camera, 'aperture'),
+		shutterSpeed: useTethrProp(camera, 'shutterSpeed'),
+		iso: useTethrProp(camera, 'iso'),
+
 		liveviewURL,
 		liveviewing: readonly(liveviewing),
 		lastPictureURL,
