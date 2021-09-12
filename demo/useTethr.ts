@@ -124,6 +124,8 @@ export function useTethr() {
 		aperture: useTethrProp(camera, 'aperture'),
 		shutterSpeed: useTethrProp(camera, 'shutterSpeed'),
 		iso: useTethrProp(camera, 'iso'),
+		whiteBalance: useTethrProp(camera, 'whiteBalance'),
+		colorTemperature: useTethrProp(camera, 'colorTemperature'),
 
 		liveviewURL,
 		liveviewing: readonly(liveviewing),

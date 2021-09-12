@@ -31,6 +31,8 @@
 			<TethrProp label="Aperture" :prop="aperture" />
 			<TethrProp label="Shutter Speed" :prop="shutterSpeed" />
 			<TethrProp label="ISO" :prop="iso" />
+			<TethrProp label="White Balance" :prop="whiteBalance" />
+			<TethrProp label="Color Temperature" :prop="colorTemperature" />
 		</dl>
 
 		<h2>Device Info</h2>
