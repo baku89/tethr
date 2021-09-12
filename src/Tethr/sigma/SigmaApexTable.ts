@@ -287,25 +287,23 @@ export const SigmaApexBatteryLevel = new Map<number, null | BatteryLevel>([
 	[0x0c, null],
 ])
 
-export const SigmaApexWhiteBalance = new BiMap<number, WhiteBalance | 'manual'>(
-	[
-		[0x01, 'auto'],
-		[0x02, 'daylight'], // Sunlight
-		[0x03, 'shade'],
-		[0x04, 'cloud'], // Overcast
-		[0x05, 'incandescent'],
-		[0x06, 'florescent'],
-		[0x07, 'flash'],
-		// [0x08, null], // Custom 1
-		// [0x09, null], // CustomCapture 1
-		// [0x0a, null], // Custom 2
-		// [0x0b, null], // CustomCapture 2
-		// [0x0c, null], // Custom 3
-		// [0x0d, null], // CustomCapture 3
-		[0x0e, 'manual'], // Custom Temperature
-		[0x0f, 'auto ambience'], // Auto (Light Source Priority)
-	]
-)
+export const SigmaApexWhiteBalance = new BiMap<number, WhiteBalance>([
+	[0x01, 'auto'],
+	[0x02, 'daylight'], // Sunlight
+	[0x03, 'shade'],
+	[0x04, 'cloud'], // Overcast
+	[0x05, 'incandescent'],
+	[0x06, 'fluorescent'],
+	[0x07, 'flash'],
+	// // [0x08, null], // Custom 1
+	// // [0x09, null], // CustomCapture 1
+	// // [0x0a, null], // Custom 2
+	// // [0x0b, null], // CustomCapture 2
+	// // [0x0c, null], // Custom 3
+	// // [0x0d, null], // CustomCapture 3
+	[0x0e, 'manual'], // Custom Temperature
+	[0x0f, 'auto ambience'], // Auto (Light Source Priority)
+])
 
 export const SigmaApexWhiteBalanceIFD = new Map<number, WhiteBalance>([
 	[0x1, 'auto'],
@@ -313,6 +311,6 @@ export const SigmaApexWhiteBalanceIFD = new Map<number, WhiteBalance>([
 	[0x3, 'daylight'],
 	[0x4, 'shade'],
 	[0x5, 'tungsten'],
-	[0x6, 'florescent'],
+	[0x6, 'fluorescent'],
 	[0x7, 'flash'],
 ])
