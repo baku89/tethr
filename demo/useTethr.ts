@@ -140,6 +140,7 @@ export function useTethr() {
 			imageResolution: useTethrProp(camera, 'imageResolution'),
 			aspectRatio: useTethrProp(camera, 'aspectRatio'),
 			imageQuality: useTethrProp(camera, 'imageQuality'),
+			batteryLevel: useTethrProp(camera, 'batteryLevel'),
 		},
 
 		liveviewURL,
