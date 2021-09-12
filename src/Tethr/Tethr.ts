@@ -32,6 +32,10 @@ export type WhiteBalance =
 	| 'flash'
 	| `manual${'' | '2' | '3' | '4'}`
 
+export type ShutterSpeed = string
+
+export type ExposureComp = string
+
 export type BatteryLevel = 'ac' | 'low' | number
 
 export type FunctionalMode = 'standard' | 'sleep'
@@ -107,10 +111,10 @@ export interface BasePropType {
 	exposureMeteringMode: ExposureMeteringMode
 	flashMode: FlashMode
 	// exposureTime: number
-	shutterSpeed: string
+	shutterSpeed: ShutterSpeed
 	exposureMode: ExposureMode // exposureProgramMode
 	// exposureIndex: 0x500f
-	exposureComp: string // exposureBiasCompensation
+	exposureComp: ExposureComp // exposureBiasCompensation
 	dateTime: Date
 	captureDelay: number
 	stillCaptureMode: StillCaptureMode
@@ -290,8 +294,6 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		const dpc = this.propScheme[name]?.code
 
 		if (dpc === undefined) {
-			console.warn(`GetDesc for prop ${name} is not yet implemented`)
-
 			return {
 				writable: false,
 				value: null,
