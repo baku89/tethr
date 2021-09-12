@@ -11,10 +11,7 @@ import {
 	PTPFilesystemType,
 	PTPStorageType,
 } from '../PTPEnum'
-
-function isntNil<T>(value: T): value is NonNullable<T> {
-	return value != null
-}
+import {isntNil} from '../util'
 
 export type Aperture = 'auto' | number
 
