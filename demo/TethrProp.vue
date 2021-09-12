@@ -1,6 +1,6 @@
 <template>
 	<dt>{{ label }}</dt>
-	<dd>
+	<dd style="font-family: monospace">
 		<template v-if="prop.writable">
 			<select :value="valueIndex" @change="update" :disabled="prop.updating">
 				<option
