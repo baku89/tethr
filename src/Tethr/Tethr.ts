@@ -29,7 +29,7 @@ export type WhiteBalance =
 	| 'fluorescent'
 	| 'tungsten'
 	| 'flash'
-	| 'manual'
+	| `manual${'' | '2' | '3' | '4'}`
 
 export type BatteryLevel = 'ac' | 'low' | number
 

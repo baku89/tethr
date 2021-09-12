@@ -1,7 +1,9 @@
 import {BiMap} from 'bim'
+import _ from 'lodash'
 
 import {OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
+import {isntNil} from '../../util'
 import {
 	Aperture,
 	BasePropType,
@@ -158,13 +160,21 @@ export class TethrPanasnoic extends Tethr {
 			getCode: DevicePropCodePanasonic.WhiteBalance,
 			setCode: DevicePropCodePanasonic.WhiteBalance_Param,
 			decode(value: number) {
-				return TethrPanasnoic.WhiteBalanceTable.get(value) ?? null
+				console.log(value.toString(16))
+				return TethrPanasnoic.WhiteBalanceTable.get(value) ?? value
 			},
 			encode(value: WhiteBalance) {
 				const data = TethrPanasnoic.WhiteBalanceTable.getKey(value)
 				if (data === undefined) throw new Error(`Unsupported WB`)
 				return data
 			},
+			valueSize: 2,
+		},
+		colorTemperature: {
+			getCode: DevicePropCodePanasonic.WhiteBalance_KSet,
+			setCode: DevicePropCodePanasonic.WhiteBalance_KSet,
+			decode: _.identity,
+			encode: _.identity,
 			valueSize: 2,
 		},
 	}
@@ -263,7 +273,7 @@ export class TethrPanasnoic extends Tethr {
 
 		const value = decode(getValue())
 
-		const supportedValues = [...getArray()].map(decode)
+		const supportedValues = [...getArray()].map(decode).filter(isntNil)
 
 		return {
 			writable: supportedValues.length > 0,
@@ -376,10 +386,10 @@ export class TethrPanasnoic extends Tethr {
 		// [0x800d, 'WB Setting 3'],
 		// [0x800e, 'WB Setting 4'],
 		[0x800f, 'shade'],
-		// [0x8010, 'Color Temperature (Color Temperature 1)'],
-		// [0x8011, 'Color Temperature 2'],
-		// [0x8012, 'Color Temperature 3'],
-		// [0x8013, 'Color Temperature 4'],
+		[0x8010, 'manual'],
+		[0x8011, 'manual2'],
+		[0x8012, 'manual3'],
+		[0x8013, 'manual4'],
 		[0x8014, 'auto cool'],
 		[0x8015, 'auto warm'],
 	])
