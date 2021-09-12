@@ -197,6 +197,12 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		batteryLevel: {
 			code: DevicePropCode.BatteryLevel,
 		},
+		exposureComp: {
+			code: DevicePropCode.ExposureBiasCompensation,
+		},
+		exposureMode: {
+			code: DevicePropCode.ExposureProgramMode,
+		},
 	}
 
 	public constructor(protected device: PTPDevice) {
@@ -320,9 +326,16 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		const writable = decoder.getUint8() === 0x01 // Get/Set
 
 		let getValue: () => number
+
 		switch (dataType) {
 			case DatatypeCode.Uint8:
 				getValue = decoder.getUint8
+				break
+			case DatatypeCode.Uint16:
+				getValue = decoder.getUint16
+				break
+			case DatatypeCode.Int16:
+				getValue = decoder.getInt16
 				break
 			default:
 				throw new Error(
@@ -332,7 +345,6 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				)
 		}
 
-		const defaultValue = decodeFn(getValue())
 		const value = decodeFn(getValue())
 
 		// Read supportedValues
@@ -375,7 +387,6 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		return {
 			writable,
 			value,
-			defaultValue,
 			supportedValues,
 		}
 	}
