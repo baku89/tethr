@@ -36,43 +36,43 @@ export class PTPDecoder {
 		return this.byteOffset + bytes < this.buffer.byteLength
 	}
 
-	public getUint8 = (): number => {
+	public readUint8 = (): number => {
 		const ret = this.dataView.getUint8(this.byteOffset)
 		this.byteOffset += 1
 		return ret
 	}
 
-	public getInt8 = (): number => {
+	public readInt8 = (): number => {
 		const ret = this.dataView.getInt8(this.byteOffset)
 		this.byteOffset += 1
 		return ret
 	}
 
-	public getUint16 = (): number => {
+	public readUint16 = (): number => {
 		const ret = this.dataView.getUint16(this.byteOffset, true)
 		this.byteOffset += 2
 		return ret
 	}
 
-	public getInt16 = (): number => {
+	public readInt16 = (): number => {
 		const ret = this.dataView.getInt16(this.byteOffset)
 		this.byteOffset += 2
 		return ret
 	}
 
-	public getUint32 = (): number => {
+	public readUint32 = (): number => {
 		const ret = this.dataView.getUint32(this.byteOffset, true)
 		this.byteOffset += 4
 		return ret
 	}
 
-	public getUint64 = (): bigint => {
+	public readUint64 = (): bigint => {
 		const ret = this.dataView.getBigUint64(this.byteOffset, true)
 		this.byteOffset += 8
 		return ret
 	}
 
-	public getByteString = (): string => {
+	public readByteString = (): string => {
 		const start = this.byteOffset
 		let end = start
 		while (end < this.buffer.byteLength) {
@@ -88,8 +88,8 @@ export class PTPDecoder {
 		return ret
 	}
 
-	public getString = (): string => {
-		const numChars = this.getUint8()
+	public readString = (): string => {
+		const numChars = this.readUint8()
 
 		if (numChars == 0) {
 			return ''
@@ -106,33 +106,33 @@ export class PTPDecoder {
 		return ret
 	}
 
-	public getDate = (): Date => {
-		const timestamp = this.getString()
+	public readDate = (): Date => {
+		const timestamp = this.readString()
 		return parseTimestamp(timestamp, 'YYYYMMDDThhmmss')
 	}
 
-	public getUint8Array = (): number[] => {
-		return this.getArray(this.getUint8)
+	public readUint8Array = (): number[] => {
+		return this.readArray(this.readUint8)
 	}
 
-	public getUint16Array = (): number[] => {
-		return this.getArray(this.getUint16)
+	public readUint16Array = (): number[] => {
+		return this.readArray(this.readUint16)
 	}
 
-	public getInt16Array = (): number[] => {
-		return this.getArray(this.getInt16)
+	public readInt16Array = (): number[] => {
+		return this.readArray(this.readInt16)
 	}
 
-	public getUint32Array = (): number[] => {
-		return this.getArray(this.getUint32)
+	public readUint32Array = (): number[] => {
+		return this.readArray(this.readUint32)
 	}
 
-	public getRest = (): ArrayBuffer => {
+	public peekRest = (): ArrayBuffer => {
 		return this.dataView.buffer.slice(this.byteOffset)
 	}
 
-	private getArray = (getFunc: () => number) => {
-		const length = this.getUint32()
+	private readArray = (getFunc: () => number) => {
+		const length = this.readUint32()
 		return _.times(length, getFunc.bind(this))
 	}
 }

@@ -603,21 +603,21 @@ export class TethrSigma extends Tethr {
 		decoder.skip(3) // OC + FieldPreset
 
 		const group1 = {
-			shutterSpeed: decoder.getUint8(),
-			aperture: decoder.getUint8(),
-			programShift: decoder.getInt8(),
-			isoAuto: decoder.getUint8(),
-			isoSpeed: decoder.getUint8(),
-			expCompensation: decoder.getUint8(),
-			abValue: decoder.getUint8(),
-			abSettings: decoder.getUint8(),
-			frameBufferState: decoder.getUint8(),
-			mediaFreeSpace: decoder.getUint16(),
-			mediaStatus: decoder.getUint8(),
-			currentLensFocalLength: decoder.getUint16(),
-			batteryLevel: decoder.getUint8(),
-			abShotRemainNumber: decoder.getUint8(),
-			expCompExcludeAB: decoder.getUint8(),
+			shutterSpeed: decoder.readUint8(),
+			aperture: decoder.readUint8(),
+			programShift: decoder.readInt8(),
+			isoAuto: decoder.readUint8(),
+			isoSpeed: decoder.readUint8(),
+			expCompensation: decoder.readUint8(),
+			abValue: decoder.readUint8(),
+			abSettings: decoder.readUint8(),
+			frameBufferState: decoder.readUint8(),
+			mediaFreeSpace: decoder.readUint16(),
+			mediaStatus: decoder.readUint8(),
+			currentLensFocalLength: decoder.readUint16(),
+			batteryLevel: decoder.readUint8(),
+			abShotRemainNumber: decoder.readUint8(),
+			expCompExcludeAB: decoder.readUint8(),
 		}
 
 		return group1
@@ -634,18 +634,18 @@ export class TethrSigma extends Tethr {
 		decoder.skip(3) // OC + FieldPreset
 
 		const group2First = {
-			driveMode: decoder.getUint8(),
-			specialMode: decoder.getUint8(),
-			exposureMode: decoder.getUint8(),
-			aeMeteringMode: decoder.getUint8(),
+			driveMode: decoder.readUint8(),
+			specialMode: decoder.readUint8(),
+			exposureMode: decoder.readUint8(),
+			aeMeteringMode: decoder.readUint8(),
 		}
 
 		decoder.goto(3 + 10)
 
 		const group2Second = {
-			whiteBalance: decoder.getUint8(),
-			resolution: decoder.getUint8(),
-			imageQuality: decoder.getUint8(),
+			whiteBalance: decoder.readUint8(),
+			resolution: decoder.readUint8(),
+			imageQuality: decoder.readUint8(),
 		}
 
 		const group2 = {...group2First, ...group2Second}
@@ -664,17 +664,17 @@ export class TethrSigma extends Tethr {
 		decoder.skip(3) // OC + FieldPreset
 
 		const group5FirstOct = {
-			intervalTimerSecond: decoder.getUint16(),
-			intervalTimerFame: decoder.getUint8(),
-			intervalTimerSecond_Remain: decoder.getUint16(),
-			intervalTimerFrame_Remain: decoder.getUint8(),
-			colorTemp: decoder.getUint16(),
+			intervalTimerSecond: decoder.readUint16(),
+			intervalTimerFame: decoder.readUint8(),
+			intervalTimerSecond_Remain: decoder.readUint16(),
+			intervalTimerFrame_Remain: decoder.readUint8(),
+			colorTemp: decoder.readUint16(),
 		}
 
 		decoder.skip(2)
 
 		const group5SecondOct = {
-			aspectRatio: decoder.getUint8(),
+			aspectRatio: decoder.readUint8(),
 		}
 
 		const group5 = {...group5FirstOct, ...group5SecondOct}
@@ -753,11 +753,11 @@ export class TethrSigma extends Tethr {
 		const decoder = new PTPDecoder(data.slice(1))
 
 		return {
-			imageId: decoder.getUint8(),
-			imageDBHead: decoder.getUint8(),
-			imageDBTail: decoder.getUint8(),
-			status: decoder.getUint16(),
-			destination: decoder.getUint8(),
+			imageId: decoder.readUint8(),
+			imageDBHead: decoder.readUint8(),
+			imageDBTail: decoder.readUint8(),
+			status: decoder.readUint16(),
+			destination: decoder.readUint8(),
 		}
 	}
 
@@ -767,20 +767,20 @@ export class TethrSigma extends Tethr {
 		decoder.skip(12)
 
 		const chunk0 = {
-			fileAddress: decoder.getUint32(),
-			fileSize: decoder.getUint32(),
+			fileAddress: decoder.readUint32(),
+			fileSize: decoder.readUint32(),
 		}
 
 		decoder.skip(8)
 
 		const chunk1 = {
-			fileExt: decoder.getByteString(),
+			fileExt: decoder.readByteString(),
 			resolution: {
-				width: decoder.getUint16(),
-				height: decoder.getUint16(),
+				width: decoder.readUint16(),
+				height: decoder.readUint16(),
 			},
-			folderName: decoder.getByteString(),
-			fileName: decoder.getByteString(),
+			folderName: decoder.readByteString(),
+			fileName: decoder.readByteString(),
 		}
 
 		return {...chunk0, ...chunk1}

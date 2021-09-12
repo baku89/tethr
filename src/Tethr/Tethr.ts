@@ -243,7 +243,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		})
 		const decoder = new PTPDecoder(data)
 
-		const storageIDs = decoder.getUint32Array()
+		const storageIDs = decoder.readUint32Array()
 		console.log('Storage IDs =', storageIDs)
 
 		for (const id of storageIDs) {
@@ -256,12 +256,12 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			const storageInfo = new PTPDecoder(data)
 
 			const info = {
-				storageType: PTPStorageType[storageInfo.getUint16()],
-				filesystemType: PTPFilesystemType[storageInfo.getUint16()],
-				accessCapability: PTPAccessCapability[storageInfo.getUint16()],
-				maxCapability: storageInfo.getUint64(),
-				freeSpaceInBytes: storageInfo.getUint64(),
-				freeSpaceInImages: storageInfo.getUint32(),
+				storageType: PTPStorageType[storageInfo.readUint16()],
+				filesystemType: PTPFilesystemType[storageInfo.readUint16()],
+				accessCapability: PTPAccessCapability[storageInfo.readUint16()],
+				maxCapability: storageInfo.readUint64(),
+				freeSpaceInBytes: storageInfo.readUint64(),
+				freeSpaceInImages: storageInfo.readUint32(),
 			}
 
 			console.log(`Storage info for ${id}=`, info)
@@ -317,20 +317,20 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 		const decoder = new PTPDecoder(data.slice(2))
 
-		const dataType = decoder.getUint16()
-		const writable = decoder.getUint8() === 0x01 // Get/Set
+		const dataType = decoder.readUint16()
+		const writable = decoder.readUint8() === 0x01 // Get/Set
 
 		let getValue: () => number
 
 		switch (dataType) {
 			case DatatypeCode.Uint8:
-				getValue = decoder.getUint8
+				getValue = decoder.readUint8
 				break
 			case DatatypeCode.Uint16:
-				getValue = decoder.getUint16
+				getValue = decoder.readUint16
 				break
 			case DatatypeCode.Int16:
-				getValue = decoder.getInt16
+				getValue = decoder.readInt16
 				break
 			default:
 				throw new Error(
@@ -371,7 +371,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			}
 			case 0x02: {
 				// Enumeration
-				const length = decoder.getUint16()
+				const length = decoder.readUint16()
 				supportedValues = _.times(length, getValue).map(decodeFn)
 				break
 			}
@@ -418,29 +418,29 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 		return {
 			objectID,
-			storageID: decoder.getUint32(),
-			objectFormat: decoder.getUint16(),
-			protectionStatus: decoder.getUint16(),
-			objectCompressedSize: decoder.getUint32(),
+			storageID: decoder.readUint32(),
+			objectFormat: decoder.readUint16(),
+			protectionStatus: decoder.readUint16(),
+			objectCompressedSize: decoder.readUint32(),
 			thumb: {
-				format: decoder.getUint16(),
-				compressedSize: decoder.getUint32(),
-				width: decoder.getUint32(),
-				height: decoder.getUint32(),
+				format: decoder.readUint16(),
+				compressedSize: decoder.readUint32(),
+				width: decoder.readUint32(),
+				height: decoder.readUint32(),
 			},
 			image: {
-				width: decoder.getUint32(),
-				height: decoder.getUint32(),
-				bitDepth: decoder.getUint32(),
+				width: decoder.readUint32(),
+				height: decoder.readUint32(),
+				bitDepth: decoder.readUint32(),
 			},
-			parentObject: decoder.getUint32(),
-			associationType: decoder.getUint16(),
-			associationDesc: decoder.getUint32(),
-			sequenceNumber: decoder.getUint32(),
-			filename: decoder.getString(),
-			captureDate: decoder.getDate(),
-			modificationDate: decoder.getDate(),
-			keywords: decoder.getString(),
+			parentObject: decoder.readUint32(),
+			associationType: decoder.readUint16(),
+			associationDesc: decoder.readUint32(),
+			sequenceNumber: decoder.readUint32(),
+			filename: decoder.readString(),
+			captureDate: decoder.readDate(),
+			modificationDate: decoder.readDate(),
+			keywords: decoder.readString(),
 		}
 	}
 
@@ -455,22 +455,22 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		const decoder = new PTPDecoder(data)
 
 		const info: DeviceInfo = {
-			standardVersion: decoder.getUint16(),
-			vendorExtensionID: decoder.getUint32(),
-			vendorExtensionVersion: decoder.getUint16(),
-			vendorExtensionDesc: decoder.getString(),
-			functionalMode: decoder.getUint16(),
-			operationsSupported: decoder.getUint16Array(),
-			eventsSupported: decoder.getUint16Array(),
-			propsSupported: [...decoder.getUint16Array()]
+			standardVersion: decoder.readUint16(),
+			vendorExtensionID: decoder.readUint32(),
+			vendorExtensionVersion: decoder.readUint16(),
+			vendorExtensionDesc: decoder.readString(),
+			functionalMode: decoder.readUint16(),
+			operationsSupported: decoder.readUint16Array(),
+			eventsSupported: decoder.readUint16Array(),
+			propsSupported: [...decoder.readUint16Array()]
 				.map(c => PropCode.getKey(c))
 				.filter(isntNil),
-			captureFormats: decoder.getUint16Array(),
-			imageFormats: decoder.getUint16Array(),
-			manufacturer: decoder.getString(),
-			model: decoder.getString(),
-			deviceVersion: decoder.getString(),
-			serialNumber: decoder.getString(),
+			captureFormats: decoder.readUint16Array(),
+			imageFormats: decoder.readUint16Array(),
+			manufacturer: decoder.readString(),
+			model: decoder.readString(),
+			deviceVersion: decoder.readString(),
+			serialNumber: decoder.readString(),
 		}
 
 		return info

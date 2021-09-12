@@ -358,19 +358,19 @@ export class TethrPanasnoic extends Tethr {
 
 		const getValue =
 			valueSize === 1
-				? decoder.getUint8
+				? decoder.readUint8
 				: valueSize === 2
-				? decoder.getUint16
-				: decoder.getUint32
+				? decoder.readUint16
+				: decoder.readUint32
 		const getArray =
 			valueSize === 1
-				? decoder.getUint8Array
+				? decoder.readUint8Array
 				: valueSize === 2
-				? decoder.getUint16Array
-				: decoder.getUint32Array
+				? decoder.readUint16Array
+				: decoder.readUint32Array
 
 		decoder.skip(4) // dpc
-		const headerLength = decoder.getUint32()
+		const headerLength = decoder.readUint32()
 
 		decoder.goto(headerLength * 4 + 2 * 4)
 
