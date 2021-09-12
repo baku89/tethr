@@ -372,7 +372,7 @@ export class TethrPanasnoic extends Tethr {
 		decoder.skip(4) // dpc
 		const headerLength = decoder.getUint32()
 
-		decoder.goTo(headerLength * 4 + 2 * 4)
+		decoder.goto(headerLength * 4 + 2 * 4)
 
 		const value = decode(getValue())
 

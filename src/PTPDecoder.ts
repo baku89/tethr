@@ -17,15 +17,19 @@ export class PTPDecoder {
 		this.byteOffset = 0
 	}
 
-	public skip(bytes: number): void {
+	public skip(bytes: number) {
 		if (this.byteOffset + bytes > this.buffer.byteLength) {
 			throw new Error('Not enough byteLength to skip')
 		}
 		this.byteOffset += bytes
+
+		return this
 	}
 
-	public goTo(offset: number): void {
+	public goto(offset: number) {
 		this.byteOffset = offset
+
+		return this
 	}
 
 	public hasNext(bytes = 0): boolean {

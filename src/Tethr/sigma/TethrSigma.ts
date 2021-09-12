@@ -640,7 +640,7 @@ export class TethrSigma extends Tethr {
 			aeMeteringMode: decoder.getUint8(),
 		}
 
-		decoder.goTo(3 + 10)
+		decoder.goto(3 + 10)
 
 		const group2Second = {
 			whiteBalance: decoder.getUint8(),
