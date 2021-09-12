@@ -443,6 +443,37 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
+	private getExposureComp = async () => {
+		const {expCompensation} = await this.getCamDataGroup1()
+
+		return expCompensation.toString(2)
+	}
+
+	private setExposureComp = async (value: string): Promise<boolean> => {
+		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, value)
+	}
+
+	private getExposureCompDesc = async (): Promise<PropDesc<string>> => {
+		const {exposureComp} = await this.getCamCanSetInfo5()
+		const value = await this.getExposureComp()
+
+		if (exposureComp.length < 3) {
+			return {
+				writable: false,
+				value,
+				supportedValues: [],
+			}
+		}
+
+		const [min, max, step] = exposureComp
+
+		return {
+			writable: exposureComp.length > 0,
+			value,
+			supportedValues,
+		}
+	}
+
 	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
 		const {batteryLevel} = await this.getCamDataGroup1()
 		const value = SigmaApexBatteryLevel.get(batteryLevel) ?? null
@@ -673,6 +704,7 @@ export class TethrSigma extends Tethr {
 			fValue: {tag: 210, type: IFDType.SignedShort},
 			shutterSpeed: {tag: 212, type: IFDType.SignedShort},
 			isoManual: {tag: 215, type: IFDType.SignedShort},
+			exposureComp: {tag: 217, type: IFDType.SignedShort},
 			whiteBalance: {tag: 301, type: IFDType.Byte},
 			colorTemerature: {tag: 302, type: IFDType.Short},
 		})
