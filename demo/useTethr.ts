@@ -66,11 +66,12 @@ export function useTethr() {
 			await camera.value.close()
 		} else {
 			if (!camera.value) {
-				camera.value = await connectCamera()
+				const cam = await connectCamera()
+				if (!cam.open) {
+					await cam.open()
+				}
+				camera.value = cam
 				connected.value = true
-			}
-			if (!camera.value.open) {
-				await camera.value.open()
 			}
 
 			deviceInfo.value = JSON.stringify(await camera.value.getDeviceInfo())
@@ -132,10 +133,10 @@ export function useTethr() {
 			whiteBalance: useTethrProp(camera, 'whiteBalance'),
 			colorTemperature: useTethrProp(camera, 'colorTemperature'),
 			effectMode: useTethrProp(camera, 'effectMode'),
-			imageResolution: useTethrProp(camera, 'imageResolution'),
+			// imageResolution: useTethrProp(camera, 'imageResolution'),
 			aspectRatio: useTethrProp(camera, 'aspectRatio'),
 			imageQuality: useTethrProp(camera, 'imageQuality'),
-			batteryLevel: useTethrProp(camera, 'batteryLevel'),
+			// batteryLevel: useTethrProp(camera, 'batteryLevel'),
 		},
 
 		liveviewURL,
