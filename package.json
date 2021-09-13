@@ -13,6 +13,7 @@
 		"@parcel/transformer-vue": "2.0.0-rc.0",
 		"@parcel/validator-typescript": "^2.0.0-rc.0",
 		"@types/lodash": "^4.14.172",
+		"@types/promise-queue": "^2.2.0",
 		"@types/w3c-web-usb": "^1.0.5",
 		"@typescript-eslint/eslint-plugin": "^4.28.2",
 		"@typescript-eslint/parser": "^4.28.2",
@@ -27,6 +28,7 @@
 		"lodash": "^4.17.21",
 		"parcel": "^2.0.0-rc.0",
 		"prettier": "^2.3.2",
+		"promise-queue": "^2.2.5",
 		"sleep-promise": "^9.1.0",
 		"typescript": "^4.4.2",
 		"vue": "^3.2.9"

@@ -1,4 +1,5 @@
 import EventEmitter from 'eventemitter3'
+import PromiseQueue from 'promise-queue'
 
 import {ResCode} from './PTPDatacode'
 import {toHexString} from './util'
@@ -72,7 +73,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 	private _opened = false
 
-	private bulkQueues: BulkQueue[] = []
+	private bulkInQueue = new PromiseQueue(1, Infinity)
 
 	public open = async (): Promise<void> => {
 		const device: USBDevice = await navigator.usb.requestDevice({filters: []})
@@ -139,57 +140,15 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	}
 
 	public sendCommand = (option: PTPSendOption): Promise<PTPResponse> => {
-		return new Promise(resolve => {
-			this.bulkQueues.push({
-				type: 'sendCommand',
-				option,
-				resolve,
-			})
-			if (this.bulkQueues.length === 1) this.execBulkQueue()
-		})
+		return this.bulkInQueue.add(() => this.sendCommandNow(option))
 	}
 
 	public sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
-		return new Promise(resolve => {
-			this.bulkQueues.push({
-				type: 'sendData',
-				option,
-				resolve,
-			})
-			if (this.bulkQueues.length === 1) this.execBulkQueue()
-		})
+		return this.bulkInQueue.add(() => this.sendDataNow(option))
 	}
 
 	public receiveData = (option: PTPSendOption): Promise<PTPDataResponse> => {
-		return new Promise(resolve => {
-			this.bulkQueues.push({
-				type: 'receiveData',
-				option,
-				resolve,
-			})
-			if (this.bulkQueues.length === 1) this.execBulkQueue()
-		})
-	}
-
-	private execBulkQueue = async () => {
-		const queue = this.bulkQueues[0]
-
-		try {
-			switch (queue.type) {
-				case 'sendCommand':
-					queue.resolve(await this.sendCommandNow(queue.option))
-					break
-				case 'sendData':
-					queue.resolve(await this.sendDataNow(queue.option))
-					break
-				case 'receiveData':
-					queue.resolve(await this.receiveDataNow(queue.option))
-					break
-			}
-		} finally {
-			this.bulkQueues.shift()
-			if (this.bulkQueues.length > 0) setTimeout(this.execBulkQueue, 0)
-		}
+		return this.bulkInQueue.add(() => this.receiveDataNow(option))
 	}
 
 	private sendCommandNow = async (
