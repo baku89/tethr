@@ -1,21 +1,23 @@
 <template>
-	<dt>{{ label }}</dt>
-	<dd style="font-family: monospace">
-		<template v-if="prop.writable">
-			<select :value="valueIndex" @change="update" :disabled="prop.updating">
-				<option
-					v-for="(v, i) in prop.supportedValues"
-					:key="i"
-					:label="v"
-					:value="i"
-					:data-index="i"
-				>
-					{{ v }}
-				</option>
-			</select>
-		</template>
-		<input v-else :value="prop.value" disabled />
-	</dd>
+	<template v-if="prop.value !== null">
+		<dt>{{ label }}</dt>
+		<dd style="font-family: monospace">
+			<template v-if="prop.writable">
+				<select :value="valueIndex" @change="update" :disabled="prop.updating">
+					<option
+						v-for="(v, i) in prop.supportedValues"
+						:key="i"
+						:label="v"
+						:value="i"
+						:data-index="i"
+					>
+						{{ v }}
+					</option>
+				</select>
+			</template>
+			<input v-else :value="prop.value" disabled />
+		</dd>
+	</template>
 </template>
 
 <script lang="ts">
