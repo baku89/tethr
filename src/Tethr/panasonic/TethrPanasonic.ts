@@ -2,6 +2,7 @@ import {BiMap} from 'bim'
 import _ from 'lodash'
 
 import {PTPDeviceEvent} from '@/PTPDevice'
+import {TethrObject, TethrObjectInfo} from '@/TethrObject'
 
 import {ObjectFormatCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
@@ -12,7 +13,6 @@ import {
 	ExposureMode,
 	ISO,
 	ManualFocusDriveOption,
-	ObjectData,
 	PropDesc,
 	SetPropResult,
 	Tethr,
@@ -407,44 +407,35 @@ export class TethrPanasnoic extends Tethr {
 			supportedValues,
 		}
 	}
-
 	public takePicture = async ({
 		download = true,
-	}: {download?: boolean} = {}): Promise<null | ObjectData[]> => {
+	}: {download?: boolean} = {}): Promise<null | TethrObject[]> => {
 		const quality = await this.get('imageQuality')
 		let restNumPhotos = quality?.includes('+') ? 2 : 1
 
-		console.log('shouldDownload', download, restNumPhotos)
-
-		await this.device.sendCommand({
+		const a = await this.device.sendCommand({
 			label: 'Panasonic InitiateCapture',
 			code: OpCodePanasonic.InitiateCapture,
 			parameters: [0x3000011],
 		})
 
-		type ObjectInfoWithOption = Omit<ObjectData, 'blob'> & {objectID: number}
-
-		const objectInfos = await new Promise<ObjectInfoWithOption[]>(resolve => {
-			const infos: ObjectInfoWithOption[] = []
+		const infos = await new Promise<TethrObjectInfo[]>(resolve => {
+			const infos: TethrObjectInfo[] = []
 
 			const onObjectAdded = async (ev: PTPDeviceEvent) => {
 				const objectID = ev.parameters[0]
 				const info = await this.getObjectInfo(objectID)
 
 				switch (info.format) {
-					case ObjectFormatCode.ExifJpeg:
-					case ObjectFormatCodePanasonic.Raw: {
-						const isRaw = info.format === ObjectFormatCodePanasonic.Raw
-						const mimetype = isRaw ? 'image/x-panasonic-rw2' : 'image/jpeg'
-						const {filename, id: objectID} = info
-						infos.push({mimetype, isRaw, filename, objectID})
+					case 'jpeg':
+					case 'raw':
+						infos.push(info)
 						break
-					}
-					case ObjectFormatCode.Association:
+					case 'association':
 						// Ignore folder
 						return
 					default:
-						throw new Error('Received unexpected objectFormat')
+						throw new Error('Received unexpected objectFormat' + info.format)
 				}
 
 				if (--restNumPhotos === 0) {
@@ -459,15 +450,18 @@ export class TethrPanasnoic extends Tethr {
 			return null
 		}
 
-		const dataList: ObjectData[] = []
+		const objects: TethrObject[] = []
 
-		for (const objectInfo of objectInfos) {
-			const data = await this.getObject(objectInfo.objectID)
-			const blob = new Blob([data], {type: objectInfo.mimetype})
-			dataList.push({...objectInfo, blob})
+		for (const info of infos) {
+			const data = await this.getObject(info.id)
+			const isRaw = info.format === 'raw'
+			const type = isRaw ? 'image/x-panasonic-rw2' : 'image/jpeg'
+
+			const blob = new Blob([data], {type})
+			objects.push({...info, blob})
 		}
 
-		return dataList
+		return objects
 	}
 
 	public startLiveView = async (): Promise<void> => {
@@ -577,6 +571,12 @@ export class TethrPanasnoic extends Tethr {
 		}
 	}
 
+	protected getObjectFormat(code: number) {
+		return (
+			ObjectFormatCode[code] ?? ObjectFormatCodePanasonic[code]
+		).toLowerCase()
+	}
+
 	private static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
 		[0x0002, 'auto'],
 		[0x0004, 'daylight'],
@@ -632,7 +632,7 @@ export class TethrPanasnoic extends Tethr {
 		[0, 'fine'],
 		[1, 'std'],
 		[2, 'raw'],
-		[3, 'raw +fine'],
+		[3, 'raw + fine'],
 		[4, 'raw + std'],
 	])
 }

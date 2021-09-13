@@ -2,7 +2,7 @@ import {BiMap} from 'bim'
 import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
 
-import {TethrObject} from '@/TethrObject'
+import {TethrObject, TethrObjectInfo} from '@/TethrObject'
 
 import {
 	DatatypeCode,
@@ -198,13 +198,6 @@ export interface SetPropResult<T extends BasePropType[keyof BasePropType]> {
 
 type TethrEventTypes = {
 	[Name in keyof BasePropType as `${Name}Changed`]: PropDesc<BasePropType[Name]>
-}
-
-export type ObjectData = {
-	isRaw: boolean
-	mimetype: string
-	filename: string
-	blob: Blob
 }
 
 export class Tethr extends EventEmitter<TethrEventTypes> {
@@ -416,7 +409,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 	public takePicture = async (option?: {
 		download?: boolean
-	}): Promise<null | ObjectData[]> => null
+	}): Promise<null | TethrObject[]> => null
 
 	public startLiveView = async (): Promise<void> => {
 		return
@@ -435,23 +428,23 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		return false
 	}
 
-	protected getObjectInfo = async (objectID: number): Promise<TethrObject> => {
+	protected getObjectInfo = async (id: number): Promise<TethrObjectInfo> => {
 		const {data} = await this.device.receiveData({
 			label: 'GetObjectInfo',
 			code: OpCode.GetObjectInfo,
-			parameters: [objectID],
+			parameters: [id],
 		})
 
 		const decoder = new PTPDecoder(data)
 
 		return {
-			id: objectID,
+			id,
 			storageID: decoder.readUint32(),
-			format: ObjectFormatCode[decoder.readUint16()],
+			format: this.getObjectFormat(decoder.readUint16()),
 			protectionStatus: decoder.readUint16(),
 			byteLength: decoder.readUint32(),
 			thumb: {
-				format: ObjectFormatCode[decoder.readUint16()],
+				format: this.getObjectFormat(decoder.readUint16()),
 				compressedSize: decoder.readUint32(),
 				width: decoder.readUint32(),
 				height: decoder.readUint32(),
@@ -472,11 +465,11 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 	}
 
-	protected getObject = async (objectID: number): Promise<ArrayBuffer> => {
+	protected getObject = async (id: number): Promise<ArrayBuffer> => {
 		const {data} = await this.device.receiveData({
 			label: 'GetObject',
 			code: OpCode.GetObject,
-			parameters: [objectID],
+			parameters: [id],
 		})
 
 		return data
@@ -545,5 +538,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			throw new Error('EOI not found')
 
 		return buffer.slice(start, end)
+	}
+
+	protected getObjectFormat(code: number) {
+		return ObjectFormatCode[code].toLowerCase()
 	}
 }

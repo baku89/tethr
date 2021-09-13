@@ -1,11 +1,11 @@
-export interface TethrObject {
+export interface TethrObjectInfo {
 	id: number
 	storageID: number
-	format: string
+	format: string | number
 	byteLength: number
 	protectionStatus: number
 	thumb: {
-		format: string
+		format: string | number
 		compressedSize: number
 		width: number
 		height: number
@@ -23,4 +23,8 @@ export interface TethrObject {
 	captureDate: Date
 	modificationDate: Date
 	keywords: string
+}
+
+export type TethrObject = TethrObjectInfo & {
+	blob: Blob
 }
