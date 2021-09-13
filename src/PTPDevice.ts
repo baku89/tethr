@@ -337,7 +337,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	private waitBulkIn = async (id: number): Promise<BulkInInfo> => {
 		if (!this.device || !this.device.opened) throw new Error()
 
-		const {data, status} = await this.device.transferIn(this.bulkIn, 0x800000)
+		const {data, status} = await this.device.transferIn(this.bulkIn, 0x8000000)
 
 		// Error checking
 		if (status !== 'ok') throw new Error(`BulkIn returned status: ${status}`)
@@ -349,19 +349,20 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		const transactionId = data.getUint32(8, true)
 		const payload = data.buffer.slice(12)
 
-		if (id !== transactionId)
-			throw new Error(
-				`Transaction ID mismatch. Expected=${id}, got=${transactionId}`
-			)
-
 		console.log(
 			'transferInBulk',
-			'type=Event',
+			'type=' + PTPType[type] ?? type,
 			'code=' + toHexString(code, 2),
 			'id=' + transactionId,
 			'payload=',
 			payload
 		)
+
+		if (id !== transactionId)
+			throw new Error(
+				`Transaction ID mismatch. Expected=${id}, got=${transactionId}`
+			)
+
 		return {
 			type,
 			code,
@@ -374,7 +375,10 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		if (!this.device || !this.device.opened) return
 
 		try {
-			const {data, status} = await this.device.transferIn(this.interruptIn, 64)
+			const {data, status} = await this.device.transferIn(
+				this.interruptIn,
+				0x800000
+			)
 
 			// Error checking
 			if (status !== 'ok')
@@ -392,7 +396,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 			console.log(
 				'transferInInterrupt',
-				'type=' + type,
+				'type=' + PTPType[type],
 				'code=' + eventName,
 				'id=' + transactionId,
 				'parameters=' + [...parameters].map(v => toHexString(v, 4))
