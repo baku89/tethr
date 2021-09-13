@@ -356,7 +356,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 		console.log(
 			'transferInBulk',
-			'type=' + type,
+			'type=Event',
 			'code=' + toHexString(code, 2),
 			'id=' + transactionId,
 			'payload=',
