@@ -1,6 +1,7 @@
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 import {connectCamera, Tethr} from '../src'
+import {listCameras} from '../src/connect-camera'
 import {BasePropType, PropDesc} from '../src/Tethr/Tethr'
 
 const TransparentPng =
@@ -66,7 +67,9 @@ export function useTethr() {
 			await camera.value.close()
 		} else {
 			if (!camera.value) {
-				const cam = await connectCamera()
+				const cams = await listCameras()
+				if (cams.length === 0) throw new Error('No cameras')
+				const cam = await connectCamera(cams[0])
 				if (!cam.open) {
 					await cam.open()
 				}
