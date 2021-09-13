@@ -1,4 +1,4 @@
-export interface ObjectInfo {
+export interface TethrObject {
 	objectID: number
 	storageID: number
 	objectFormat: number

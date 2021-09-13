@@ -2,7 +2,7 @@ import {BiMap} from 'bim'
 import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
 
-import {ObjectInfo} from '@/ObjectInfo'
+import {TethrObject} from '@/TethrObject'
 
 import {DatatypeCode, DevicePropCode, OpCode, ResCode} from '../PTPDatacode'
 import {PTPDecoder} from '../PTPDecoder'
@@ -429,7 +429,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		return false
 	}
 
-	protected getObjectInfo = async (objectID: number): Promise<ObjectInfo> => {
+	protected getObjectInfo = async (objectID: number): Promise<TethrObject> => {
 		const {data} = await this.device.receiveData({
 			label: 'GetObjectInfo',
 			code: OpCode.GetObjectInfo,
