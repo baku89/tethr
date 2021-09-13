@@ -44,7 +44,6 @@ interface BulkInInfo {
 }
 
 export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
-	private device: USBDevice | undefined
 	private transactionId = 0x00000000
 
 	private bulkOut = 0x0
@@ -55,22 +54,23 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 	private bulkInQueue = new PromiseQueue(1, Infinity)
 
+	public constructor(public device: USBDevice) {
+		super()
+	}
+
 	public open = async (): Promise<void> => {
-		const device: USBDevice = await navigator.usb.requestDevice({filters: []})
-
-		await device.open()
-
+		await this.device.open()
 		// Configurate
-		let {configuration} = device
+		let {configuration} = this.device
 		if (!configuration) {
-			await device.selectConfiguration(1)
-			configuration = device.configuration
+			await this.device.selectConfiguration(1)
+			configuration = this.device.configuration
 		}
 		if (!configuration) throw new Error('Cannot configure PTPDevice')
 
 		// Claim interface
 		try {
-			await device.claimInterface(0)
+			await this.device.claimInterface(0)
 		} catch (err) {
 			if (navigator.userAgent.match(/mac/i)) {
 				console.error(
@@ -95,13 +95,12 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 		if (!endpointOut || !endpointIn || !endpointEvent)
 			throw new Error('Invalid endpoints')
+
 		this.bulkOut = endpointOut.endpointNumber
 		this.bulkIn = endpointIn.endpointNumber
 		this.interruptIn = endpointEvent.endpointNumber
 
-		console.log(`PTPDevice = ${device.productName}`, device)
-
-		this.device = device
+		console.log(`PTPDevice = ${this.device.productName}`, this.device)
 
 		this.listenInterruptIn()
 
