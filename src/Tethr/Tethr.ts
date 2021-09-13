@@ -194,6 +194,13 @@ type TethrEventTypes = {
 	[Name in keyof BasePropType as `${Name}Changed`]: PropDesc<BasePropType[Name]>
 }
 
+export type ObjectData = {
+	isRaw: boolean
+	mimetype: string
+	filename: string
+	blob: Blob
+}
+
 export class Tethr extends EventEmitter<TethrEventTypes> {
 	protected _opened = false
 
@@ -401,7 +408,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 	public runAutoFocus = async (): Promise<boolean> => false
 
-	public takePicture = async (): Promise<null | string> => null
+	public takePicture = async (option?: {
+		download?: boolean
+	}): Promise<null | ObjectData[]> => null
 
 	public startLiveView = async (): Promise<void> => {
 		return

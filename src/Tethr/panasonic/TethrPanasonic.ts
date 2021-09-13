@@ -3,7 +3,7 @@ import _ from 'lodash'
 
 import {PTPDeviceEvent} from '@/PTPDevice'
 
-import {OpCode, ResCode} from '../../PTPDatacode'
+import {ObjectFormatCode, OpCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
 import {isntNil} from '../../util'
 import {
@@ -12,6 +12,7 @@ import {
 	ExposureMode,
 	ISO,
 	ManualFocusDriveOption,
+	ObjectData,
 	PropDesc,
 	SetPropResult,
 	Tethr,
@@ -32,6 +33,7 @@ enum OpCodePanasonic {
 
 enum EventCodePanasonic {
 	PropChanged = 0xc102,
+	ObjectAdded = 0xc108,
 }
 
 // Panasonic does not have regular device properties, they use some 32bit values
@@ -80,6 +82,10 @@ enum DevicePropCodePanasonic {
 	ImageMode_Param = 0x20000a1,
 	ImageMode_Quality = 0x20000a2,
 	ImageMode_AspectRatio = 0x20000a3,
+}
+
+enum ObjectFormatCodePanasonic {
+	Raw = 0x3800,
 }
 
 type PropScheme = {
@@ -402,28 +408,72 @@ export class TethrPanasnoic extends Tethr {
 		}
 	}
 
-	public takePicture = async (): Promise<null | string> => {
+	public takePicture = async ({
+		download = true,
+	}: {download?: boolean} = {}): Promise<null | ObjectData[]> => {
+		const quality = await this.get('imageQuality')
+		let restNumPhotos = quality?.includes('+') ? 2 : 1
+
+		console.log('shouldDownload', download, restNumPhotos)
+
 		await this.device.sendCommand({
 			label: 'Panasonic InitiateCapture',
 			code: OpCodePanasonic.InitiateCapture,
 			parameters: [0x3000011],
 		})
 
-		const objectAdded = await this.device.waitEvent(0xc108)
-		const objectID = objectAdded.parameters[0]
+		type ObjectInfoWithOption = Omit<ObjectData, 'data'> & {objectID: number}
 
-		const objectInfo = await this.getObjectInfo(objectID)
+		const objectInfos = await new Promise<ObjectInfoWithOption[]>(resolve => {
+			const infos: ObjectInfoWithOption[] = []
 
-		const {data} = await this.device.receiveData({
-			label: 'GetObject',
-			code: OpCode.GetObject,
-			parameters: [objectInfo.objectID],
+			const onObjectAdded = async (ev: PTPDeviceEvent) => {
+				const objectID = ev.parameters[0]
+				const info = await this.getObjectInfo(objectID)
+
+				switch (info.objectFormat) {
+					case ObjectFormatCode.ExifJpeg:
+					case ObjectFormatCodePanasonic.Raw: {
+						const isRaw = info.objectFormat === ObjectFormatCodePanasonic.Raw
+						const mimetype = isRaw ? 'image/x-panasonic-rw2' : 'image/jpeg'
+						const {filename, objectID} = info
+						infos.push({mimetype, isRaw, filename, objectID})
+						break
+					}
+					case ObjectFormatCode.Association:
+						// Ignore folder
+						return
+					default:
+						throw new Error('Received unexpected objectFormat')
+				}
+
+				if (--restNumPhotos === 0) {
+					this.device.off('0xc108')
+					resolve(infos)
+				}
+			}
+			this.device.on('0xc108', onObjectAdded)
 		})
 
-		const blob = new Blob([data], {type: 'image/jpeg'})
-		const url = window.URL.createObjectURL(blob)
+		if (!download) {
+			return null
+		}
 
-		return url
+		const dataList: ObjectData[] = []
+
+		for (const objectInfo of objectInfos) {
+			const {data} = await this.device.receiveData({
+				label: 'GetObject',
+				code: OpCode.GetObject,
+				parameters: [objectInfo.objectID],
+			})
+
+			const blob = new Blob([data], {type: objectInfo.mimetype})
+
+			dataList.push({...objectInfo, blob})
+		}
+
+		return dataList
 	}
 
 	public startLiveView = async (): Promise<void> => {
