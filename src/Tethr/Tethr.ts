@@ -129,7 +129,7 @@ export interface BasePropType {
 	exposureComp: ExposureComp // exposureBiasCompensation
 	dateTime: Date
 	captureDelay: number
-	stillCaptureMode: StillCaptureMode
+	driveMode: StillCaptureMode // stillCaptureMode
 	contrast: number
 	sharpness: number
 	digitalZoom: number
@@ -164,7 +164,7 @@ const PropCode = new BiMap<keyof BasePropType, number>([
 	['exposureComp', 0x5010],
 	['dateTime', 0x5011],
 	['captureDelay', 0x5012],
-	['stillCaptureMode', 0x5013],
+	['driveMode', 0x5013],
 	['contrast', 0x5014],
 	['sharpness', 0x5015],
 	['digitalZoom', 0x5016],

@@ -139,6 +139,7 @@ export function useTethr() {
 		// DPC
 		deviceProps: {
 			exposureMode: useTethrProp(camera, 'exposureMode'),
+			driveMode: useTethrProp(camera, 'driveMode'),
 			aperture: useTethrProp(camera, 'aperture'),
 			shutterSpeed: useTethrProp(camera, 'shutterSpeed'),
 			iso: useTethrProp(camera, 'iso'),
