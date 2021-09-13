@@ -359,10 +359,10 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		const sent = await this.device.transferOut(this.bulkOut, buffer)
 		console.log(
 			'transferOutBulk',
-			'type= Command',
-			'code= 0x' + code.toString(16),
-			'id= ' + transactionId,
-			'params= ' + parameters.map(v => v.toString(16)).join(',')
+			'type=Command',
+			'code=0x' + code.toString(16),
+			'id=' + transactionId,
+			'params=' + parameters.map(v => v.toString(16)).join(',')
 		)
 
 		if (sent.status !== 'ok') throw new Error()
@@ -422,10 +422,10 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 		console.log(
 			'transferInBulk',
-			'type= ' + type,
+			'type=' + type,
 			'code= 0x' + code.toString(16),
-			'id= ' + transactionId,
-			'payload= ',
+			'id=' + transactionId,
+			'payload=',
 			payload
 		)
 		return {
@@ -458,10 +458,10 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 			console.log(
 				'transferInInterrupt',
-				'type= ' + type,
-				'code= ' + eventName,
-				'id= ' + transactionId,
-				'parameters= ',
+				'type=' + type,
+				'code=' + eventName,
+				'id=' + transactionId,
+				'parameters=',
 				[...parameters].map(v => v.toString(16)).join(' ')
 			)
 
