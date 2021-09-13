@@ -347,8 +347,8 @@ export class TethrPanasnoic extends Tethr {
 	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		const superDesc = await super.getDesc(name)
-		if (superDesc.value !== null) return superDesc as PropDesc<T>
+		// const superDesc = await super.getDesc(name)
+		// if (superDesc.value !== null) return superDesc as PropDesc<T>
 
 		const scheme = this.propSchemePanasonic[name]
 
