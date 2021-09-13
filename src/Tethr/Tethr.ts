@@ -4,7 +4,13 @@ import _ from 'lodash'
 
 import {TethrObject} from '@/TethrObject'
 
-import {DatatypeCode, DevicePropCode, OpCode, ResCode} from '../PTPDatacode'
+import {
+	DatatypeCode,
+	DevicePropCode,
+	ObjectFormatCode,
+	OpCode,
+	ResCode,
+} from '../PTPDatacode'
 import {PTPDecoder} from '../PTPDecoder'
 import {PTPDevice} from '../PTPDevice'
 import {
@@ -439,13 +445,13 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		const decoder = new PTPDecoder(data)
 
 		return {
-			objectID,
+			id: objectID,
 			storageID: decoder.readUint32(),
-			objectFormat: decoder.readUint16(),
+			format: ObjectFormatCode[decoder.readUint16()],
 			protectionStatus: decoder.readUint16(),
-			objectCompressedSize: decoder.readUint32(),
+			byteLength: decoder.readUint32(),
 			thumb: {
-				format: decoder.readUint16(),
+				format: ObjectFormatCode[decoder.readUint16()],
 				compressedSize: decoder.readUint32(),
 				width: decoder.readUint32(),
 				height: decoder.readUint32(),
@@ -455,10 +461,10 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				height: decoder.readUint32(),
 				bitDepth: decoder.readUint32(),
 			},
-			parentObject: decoder.readUint32(),
-			associationType: decoder.readUint16(),
-			associationDesc: decoder.readUint32(),
-			sequenceNumber: decoder.readUint32(),
+			parent: decoder.readUint32(),
+			// associationType: decoder.readUint16(),
+			// associationDesc: decoder.readUint32(),
+			sequenceNumber: decoder.skip(2 + 4).readUint32(),
 			filename: decoder.readString(),
 			captureDate: decoder.readDate(),
 			modificationDate: decoder.readDate(),

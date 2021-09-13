@@ -431,12 +431,12 @@ export class TethrPanasnoic extends Tethr {
 				const objectID = ev.parameters[0]
 				const info = await this.getObjectInfo(objectID)
 
-				switch (info.objectFormat) {
+				switch (info.format) {
 					case ObjectFormatCode.ExifJpeg:
 					case ObjectFormatCodePanasonic.Raw: {
-						const isRaw = info.objectFormat === ObjectFormatCodePanasonic.Raw
+						const isRaw = info.format === ObjectFormatCodePanasonic.Raw
 						const mimetype = isRaw ? 'image/x-panasonic-rw2' : 'image/jpeg'
-						const {filename, objectID} = info
+						const {filename, id: objectID} = info
 						infos.push({mimetype, isRaw, filename, objectID})
 						break
 					}

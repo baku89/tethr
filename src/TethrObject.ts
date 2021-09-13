@@ -1,11 +1,11 @@
 export interface TethrObject {
-	objectID: number
+	id: number
 	storageID: number
-	objectFormat: number
+	format: string
+	byteLength: number
 	protectionStatus: number
-	objectCompressedSize: number
 	thumb: {
-		format: number
+		format: string
 		compressedSize: number
 		width: number
 		height: number
@@ -15,9 +15,9 @@ export interface TethrObject {
 		height: number
 		bitDepth: number
 	}
-	parentObject: number
-	associationType: number
-	associationDesc: number
+	parent: number
+	// associationType: number
+	// associationDesc: number
 	sequenceNumber: number
 	filename: string
 	captureDate: Date

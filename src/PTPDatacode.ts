@@ -98,7 +98,7 @@ export enum ObjectFormatCode {
 	AVI = 0x300a,
 	MPEG = 0x300b,
 	ASF = 0x300c,
-	ExifJpeg = 0x3801,
+	Jpeg = 0x3801,
 	TiffEp = 0x3802,
 	FlashPix = 0x3803,
 	Bmp = 0x3804,
