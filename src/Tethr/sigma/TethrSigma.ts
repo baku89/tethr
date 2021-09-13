@@ -14,6 +14,7 @@ import {
 	PropDesc,
 	SetPropResult,
 	SetPropResultStatus,
+	ShutterSpeed,
 	Tethr,
 	WhiteBalance,
 } from '../Tethr'
@@ -21,6 +22,7 @@ import {
 	SigmaApexApertureHalf,
 	SigmaApexApertureOneThird,
 	SigmaApexBatteryLevel,
+	SigmaApexCompensationOneThird,
 	SigmaApexExposureMode,
 	SigmaApexISO,
 	SigmaApexShutterSpeedHalf,
@@ -123,13 +125,17 @@ export class TethrSigma extends Tethr {
 				succeed = await this.setAperture(value as Aperture)
 				break
 			case 'shutterSpeed':
-				succeed = await this.setShutterSpeed(value as string)
+				succeed = await this.setShutterSpeed(value as ShutterSpeed)
 				break
 			case 'iso':
 				succeed = await this.setISO(value as ISO)
 				break
+			case 'exposureComp':
+				succeed = await this.setExposureComp(value as string)
+				break
 			case 'whiteBalance':
 				succeed = await this.setWhiteBalance(value as WhiteBalance)
+				break
 				break
 			case 'colorTemperature':
 				succeed = await this.setColorTemperature(value as number)
@@ -164,6 +170,8 @@ export class TethrSigma extends Tethr {
 				return (await this.getISODesc()) as PropDesc<T>
 			case 'whiteBalance':
 				return (await this.getWhiteBalanceDesc()) as PropDesc<T>
+			case 'exposureComp':
+				return (await this.getExposureCompDesc()) as PropDesc<T>
 			case 'colorTemperature':
 				return (await this.getColorTemperatureDesc()) as PropDesc<T>
 		}
@@ -309,8 +317,8 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setShutterSpeed = async (shutterSpeed: string): Promise<boolean> => {
-		const byte = SigmaApexShutterSpeedOneThird.getKey(shutterSpeed)
+	private setShutterSpeed = async (ss: ShutterSpeed): Promise<boolean> => {
+		const byte = SigmaApexShutterSpeedOneThird.getKey(ss)
 		if (!byte) return false
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
@@ -452,13 +460,14 @@ export class TethrSigma extends Tethr {
 	}
 
 	private getExposureComp = async () => {
-		const {expCompensation} = await this.getCamDataGroup1()
-
-		return expCompensation.toString(2)
+		const {exposureComp} = await this.getCamDataGroup1()
+		return SigmaApexCompensationOneThird.get(exposureComp) ?? null
 	}
 
 	private setExposureComp = async (value: string): Promise<boolean> => {
-		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, value)
+		const bits = SigmaApexCompensationOneThird.getKey(value)
+		if (!bits) return false
+		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, bits)
 	}
 
 	private getExposureCompDesc = async (): Promise<PropDesc<string>> => {
@@ -473,12 +482,46 @@ export class TethrSigma extends Tethr {
 			}
 		}
 
-		const [min, max, step] = exposureComp
+		const [min, max] = exposureComp
+
+		const allValues = [...SigmaApexCompensationOneThird.values()]
+		const supportedValues = allValues
+			.map(v => [v, getExposureCompNumber(v)] as [string, number])
+			.sort((a, b) => a[1] - b[1])
+			.filter(([, n]) => min - 1e-4 <= n && n <= max + 1e-4)
+			.map(([v]) => v)
 
 		return {
 			writable: exposureComp.length > 0,
 			value,
 			supportedValues,
+		}
+
+		function getExposureCompNumber(v: string) {
+			if (v === '0') return 0x0
+
+			let negative = false,
+				digits = 0,
+				thirds = 0
+
+			const match1 = v.match(/^([+-]?)([0-9]+)( 1\/3| 2\/3)?$/)
+
+			if (match1) {
+				negative = match1[1] === '-'
+				digits = parseInt(match1[2])
+				thirds = !match1[3] ? 0 : match1[3] === ' 1/3' ? 1 : 2
+			}
+
+			const match2 = !match1 && v.match(/^([+-]?)(1\/3|2\/3)$/)
+
+			if (match2) {
+				negative = match2[1] === '-'
+				thirds = match2[2] === '1/3' ? 1 : 2
+			}
+
+			if (!match1 && !match2) return null
+
+			return (negative ? -1 : 1) * (digits + thirds / 3)
 		}
 	}
 
@@ -646,7 +689,7 @@ export class TethrSigma extends Tethr {
 			programShift: decoder.readInt8(),
 			isoAuto: decoder.readUint8(),
 			isoSpeed: decoder.readUint8(),
-			expCompensation: decoder.readUint8(),
+			exposureComp: decoder.readUint8(),
 			abValue: decoder.readUint8(),
 			abSettings: decoder.readUint8(),
 			frameBufferState: decoder.readUint8(),
