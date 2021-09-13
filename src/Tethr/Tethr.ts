@@ -12,7 +12,7 @@ import {
 	PTPFilesystemType,
 	PTPStorageType,
 } from '../PTPEnum'
-import {isntNil} from '../util'
+import {isntNil, toHexString} from '../util'
 
 export type Aperture = 'auto' | number
 
@@ -310,7 +310,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 		if (rescode === ResCode.DevicePropNotSupported)
 			throw new Error(
-				`DeviceProp ${dpc.toString(16)} (${name}) is not supported`
+				`DeviceProp ${toHexString(dpc)} (${name}) is not supported`
 			)
 
 		const decodeFn = (this.propScheme[name]?.decode ?? _.identity) as (
@@ -334,12 +334,10 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			case DatatypeCode.Int16:
 				getValue = decoder.readInt16
 				break
-			default:
-				throw new Error(
-					`PropDesc of datatype ${
-						DatatypeCode[dataType] ?? dataType.toString(16)
-					} is not yet supported`
-				)
+			default: {
+				const label = DatatypeCode[dataType] ?? toHexString(16)
+				throw new Error(`PropDesc of datatype ${label} is not yet supported`)
+			}
 		}
 
 		const value = decodeFn(getValue())

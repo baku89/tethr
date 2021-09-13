@@ -218,11 +218,9 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			}
 
 			if (!expectedResCodes.includes(res.code)) {
-				throw new Error(
-					`Expected rescode=0x[${expectedResCodes.map(c =>
-						c.toString(16)
-					)}], got= ${res.code.toString(16)}`
-				)
+				const expected = expectedResCodes.map(toHexString)
+				const got = toHexString(res.code)
+				throw new Error(`Expected rescode=[${expected}], got= ${got}`)
 			}
 
 			return {
@@ -261,11 +259,9 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			}
 
 			if (!expectedResCodes.includes(res.code)) {
-				throw new Error(
-					`Expected rescode=[${expectedResCodes.map(s =>
-						s.toString(16)
-					)}], got= ${res.code.toString(16)}`
-				)
+				const expected = expectedResCodes.map(toHexString)
+				const got = toHexString(res.code)
+				throw new Error(`Expected rescode=[${expected}], got=${got}`)
 			}
 
 			return {
@@ -306,7 +302,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			}
 
 			if (res1.type !== PTPType.Data) {
-				throw new Error(`Cannot receive data code=0x${res1.code.toString(16)}`)
+				throw new Error(`Cannot receive data code=${toHexString(res1.code)}`)
 			}
 
 			const res2 = await this.waitBulkIn(id)
@@ -328,7 +324,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	}
 
 	public waitEvent = async (code: number): Promise<PTPDeviceEvent> => {
-		const eventName = '0x' + ('0000' + code.toString(16)).substr(-4)
+		const eventName = toHexString(code, 2)
 
 		return new Promise(resolve => {
 			this.once(eventName, resolve)
@@ -360,9 +356,9 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		console.log(
 			'transferOutBulk',
 			'type=Command',
-			'code=0x' + code.toString(16),
+			'code=' + toHexString(code, 2),
 			'id=' + transactionId,
-			'params=' + parameters.map(v => v.toString(16)).join(',')
+			'params=' + parameters.map(v => toHexString(v, 4))
 		)
 
 		if (sent.status !== 'ok') throw new Error()
@@ -392,7 +388,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		console.log(
 			'transferOutBulk',
 			'type=Data',
-			'code=0x' + code.toString(16),
+			'code=' + toHexString(code, 2),
 			'id=' + transactionId,
 			'payload=' + toHexString(data)
 		)
@@ -423,7 +419,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		console.log(
 			'transferInBulk',
 			'type=' + type,
-			'code= 0x' + code.toString(16),
+			'code=' + toHexString(code, 2),
 			'id=' + transactionId,
 			'payload=',
 			payload
@@ -454,15 +450,14 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			const transactionId = data.getUint32(8, true)
 			const parameters = new Uint32Array(data.buffer.slice(12))
 
-			const eventName = '0x' + ('0000' + code.toString(16)).substr(-4)
+			const eventName = toHexString(code, 2)
 
 			console.log(
 				'transferInInterrupt',
 				'type=' + type,
 				'code=' + eventName,
 				'id=' + transactionId,
-				'parameters=',
-				[...parameters].map(v => v.toString(16)).join(' ')
+				'parameters=' + [...parameters].map(v => toHexString(v, 4))
 			)
 
 			this.emit(eventName, {code, parameters})
