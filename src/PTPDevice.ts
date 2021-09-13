@@ -1,7 +1,7 @@
 import EventEmitter from 'eventemitter3'
 
 import {ResCode} from './PTPDatacode'
-import {getHexString} from './util'
+import {toHexString} from './util'
 
 enum PTPType {
 	Command = 0x1,
@@ -394,7 +394,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			'type=Data',
 			'code=0x' + code.toString(16),
 			'id=' + transactionId,
-			'payload=' + getHexString(data)
+			'payload=' + toHexString(data)
 		)
 
 		return sent.status === 'ok'
