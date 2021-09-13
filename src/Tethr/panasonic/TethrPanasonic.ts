@@ -190,24 +190,26 @@ export class TethrPanasnoic extends Tethr {
 			encode(v) {
 				if (v === '0') return 0x0
 
-				const match1 = v.match(/^([+-]?)([0-9]+)( 1\/3| 2\/3)?$/)
-
 				let negative = false,
 					digits = 0,
 					thirds = 0
 
+				const match1 = v.match(/^([+-]?)([0-9]+)( 1\/3| 2\/3)?$/)
+
 				if (match1) {
 					negative = match1[1] === '-'
 					digits = parseInt(match1[2])
-					thirds = match1[3] === '' ? 0 : match1[3] === ' 1/3' ? 1 : 2
+					thirds = !match1[3] ? 0 : match1[3] === ' 1/3' ? 1 : 2
 				}
 
-				const match2 = match1 && v.match(/^([+-]?)(1\/3|1\/3)?$/)
+				const match2 = match1 && v.match(/^([+-]?)(1\/3|2\/3)$/)
 
 				if (match2) {
 					negative = match2[1] === '-'
-					thirds = match1[3] === '' ? 0 : match1[3] === '1/3' ? 1 : 2
+					thirds = match2[2] === '1/3' ? 1 : 2
 				}
+
+				if (!match1 && !match2) return null
 
 				const steps = digits * 3 + thirds
 
