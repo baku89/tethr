@@ -3,7 +3,7 @@ import _ from 'lodash'
 
 import {PTPDeviceEvent} from '@/PTPDevice'
 
-import {ObjectFormatCode, OpCode, ResCode} from '../../PTPDatacode'
+import {ObjectFormatCode, ResCode} from '../../PTPDatacode'
 import {PTPDecoder} from '../../PTPDecoder'
 import {isntNil} from '../../util'
 import {
@@ -422,7 +422,7 @@ export class TethrPanasnoic extends Tethr {
 			parameters: [0x3000011],
 		})
 
-		type ObjectInfoWithOption = Omit<ObjectData, 'data'> & {objectID: number}
+		type ObjectInfoWithOption = Omit<ObjectData, 'blob'> & {objectID: number}
 
 		const objectInfos = await new Promise<ObjectInfoWithOption[]>(resolve => {
 			const infos: ObjectInfoWithOption[] = []
@@ -462,14 +462,8 @@ export class TethrPanasnoic extends Tethr {
 		const dataList: ObjectData[] = []
 
 		for (const objectInfo of objectInfos) {
-			const {data} = await this.device.receiveData({
-				label: 'GetObject',
-				code: OpCode.GetObject,
-				parameters: [objectInfo.objectID],
-			})
-
+			const data = await this.getObject(objectInfo.objectID)
 			const blob = new Blob([data], {type: objectInfo.mimetype})
-
 			dataList.push({...objectInfo, blob})
 		}
 

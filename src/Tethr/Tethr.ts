@@ -466,6 +466,16 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 	}
 
+	protected getObject = async (objectID: number): Promise<ArrayBuffer> => {
+		const {data} = await this.device.receiveData({
+			label: 'GetObject',
+			code: OpCode.GetObject,
+			parameters: [objectID],
+		})
+
+		return data
+	}
+
 	public static getDeviceInfo = async function (
 		device: PTPDevice
 	): Promise<DeviceInfo> {
