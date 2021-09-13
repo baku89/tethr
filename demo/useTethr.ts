@@ -90,14 +90,14 @@ export function useTethr() {
 	async function takePicture() {
 		if (!camera.value) return
 
-		const dataList = await camera.value.takePicture()
+		const objects = await camera.value.takePicture()
 
-		if (dataList) {
-			for (const data of dataList) {
-				if (data.isRaw) {
-					saveAs(data.blob, data.filename)
+		if (objects) {
+			for (const object of objects) {
+				if (object.format === 'raw') {
+					saveAs(object.blob, object.filename)
 				} else {
-					lastPictureURL.value = URL.createObjectURL(data.blob)
+					lastPictureURL.value = URL.createObjectURL(object.blob)
 				}
 			}
 		}
