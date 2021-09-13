@@ -1,3 +1,4 @@
+import {saveAs} from 'file-saver'
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 import {connectCamera, Tethr} from '../src'
@@ -89,8 +90,17 @@ export function useTethr() {
 	async function takePicture() {
 		if (!camera.value) return
 
-		const url = await camera.value.takePicture()
-		if (url) lastPictureURL.value = url
+		const dataList = await camera.value.takePicture()
+
+		if (dataList) {
+			for (const data of dataList) {
+				if (data.isRaw) {
+					saveAs(data.blob, data.filename)
+				} else {
+					lastPictureURL.value = URL.createObjectURL(data.blob)
+				}
+			}
+		}
 	}
 
 	const liveviewing = ref(false)
