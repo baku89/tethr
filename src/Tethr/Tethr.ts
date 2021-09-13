@@ -224,6 +224,10 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		})
 
 		this._opened = true
+
+		window.addEventListener('beforeunload', async () => {
+			await this.close()
+		})
 	}
 
 	public close = async (): Promise<void> => {
@@ -308,10 +312,13 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			expectedResCodes: [ResCode.OK, ResCode.DevicePropNotSupported],
 		})
 
-		if (rescode === ResCode.DevicePropNotSupported)
-			throw new Error(
-				`DeviceProp ${toHexString(dpc)} (${name}) is not supported`
-			)
+		if (rescode === ResCode.DevicePropNotSupported) {
+			return {
+				writable: false,
+				value: null,
+				supportedValues: [],
+			}
+		}
 
 		const decodeFn = (this.propScheme[name]?.decode ?? _.identity) as (
 			data: number
