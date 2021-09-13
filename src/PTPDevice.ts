@@ -43,26 +43,6 @@ interface BulkInInfo {
 	payload: ArrayBuffer
 }
 
-interface BulkQueueSendCommand {
-	type: 'sendCommand'
-	option: PTPSendOption
-	resolve: (res: PTPResponse) => void
-}
-
-interface BulkQueueSendData {
-	type: 'sendData'
-	option: PTPSendDataOption
-	resolve: (res: PTPResponse) => void
-}
-
-interface BulkQueueReceiveData {
-	type: 'receiveData'
-	option: PTPSendOption
-	resolve: (res: PTPDataResponse) => void
-}
-
-type BulkQueue = BulkQueueSendCommand | BulkQueueSendData | BulkQueueReceiveData
-
 export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	private device: USBDevice | undefined
 	private transactionId = 0x00000000
