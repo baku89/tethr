@@ -14,7 +14,7 @@
 				</option>
 			</select>
 		</template>
-		<template v-else>{{ prop.value }} </template>
+		<input v-else :value="prop.value" disabled />
 	</dd>
 </template>
 

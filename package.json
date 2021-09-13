@@ -8,6 +8,7 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
+		"@parcel/transformer-stylus": "2.0.0-rc.0",
 		"@parcel/transformer-typescript-tsc": "2.0.0-rc.0",
 		"@parcel/transformer-vue": "2.0.0-rc.0",
 		"@parcel/validator-typescript": "^2.0.0-rc.0",

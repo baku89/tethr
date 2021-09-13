@@ -1,39 +1,35 @@
 <template>
-	<div>
-		<h1>Tethr</h1>
+	<div class="app">
+		<main>
+			<button @click="toggleCameraConnection">
+				{{ connected ? 'Disconnect' : 'Connect' }}
+			</button>
+			<button @click="runAutoFocus">AF-S</button>
+			<button @click="takePicture">Take Picture</button>
+			<button @click="toggleLiveview">
+				{{ liveviewing ? 'Stop LV' : 'Start LV' }}
+			</button>
 
-		<button @click="toggleCameraConnection">
-			{{ connected ? 'Disconnect' : 'Connect' }}
-		</button>
-		<button @click="runAutoFocus">AF-S</button>
-		<button @click="takePicture">Take Picture</button>
-		<button @click="toggleLiveview">
-			{{ liveviewing ? 'Stop LV' : 'Start LV' }}
-		</button>
+			<br />
 
-		<br />
+			<img class="view lv" id="liveview" :src="liveviewURL" />
 
-		<img
-			id="liveview"
-			style="width: 25%; background: whiteSmoke"
-			:src="liveviewURL"
-		/>
+			<img class="view picture" id="imageViewer" :src="lastPictureURL" />
+		</main>
 
-		<img
-			id="imageViewer"
-			style="width: 25%; background: gray"
-			:src="lastPictureURL"
-		/>
+		<aside>
+			<h1>Tethr</h1>
 
-		<h2>Device Props</h2>
-		<dl>
-			<template v-for="(dp, name) in deviceProps" :key="name">
-				<TethrProp :label="name" :prop="dp" />
-			</template>
-		</dl>
+			<h2>Device Props</h2>
+			<dl>
+				<template v-for="(dp, name) in deviceProps" :key="name">
+					<TethrProp :label="name" :prop="dp" />
+				</template>
+			</dl>
 
-		<h2>Device Info</h2>
-		<div>{{ deviceInfo }}</div>
+			<h2>Device Info</h2>
+			<pre>{{ deviceInfo }}</pre>
+		</aside>
 	</div>
 </template>
 
