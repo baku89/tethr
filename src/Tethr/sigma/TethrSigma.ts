@@ -9,6 +9,7 @@ import {
 	Aperture,
 	BasePropType,
 	BatteryLevel,
+	convertShutterSpeedToTime,
 	ExposureMode,
 	ISO,
 	PropDesc,
@@ -298,10 +299,10 @@ export class TethrSigma extends Tethr {
 		const ssMaxRaw = 1 / 2 ** tvMax
 
 		const ssMinEntry = _.minBy(shutterSpeeds, e =>
-			Math.abs(convertSSToTime(e[1]) - ssMinRaw)
+			Math.abs(convertShutterSpeedToTime(e[1]) - ssMinRaw)
 		)
 		const ssMaxEntry = _.minBy(shutterSpeeds, e =>
-			Math.abs(convertSSToTime(e[1]) - ssMaxRaw)
+			Math.abs(convertShutterSpeedToTime(e[1]) - ssMaxRaw)
 		)
 
 		if (!ssMinEntry || !ssMaxEntry) throw new Error()
@@ -317,12 +318,6 @@ export class TethrSigma extends Tethr {
 			writable: supportedValues.length > 0,
 			value,
 			supportedValues,
-		}
-
-		function convertSSToTime(ss: string) {
-			if (ss === 'bulk' || ss === 'sync') return Infinity
-			if (ss.startsWith('1/')) return 1 / parseInt(ss.slice(2))
-			return parseFloat(ss)
 		}
 	}
 

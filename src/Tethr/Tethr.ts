@@ -34,6 +34,12 @@ export type WhiteBalance =
 
 export type ShutterSpeed = string
 
+export function convertShutterSpeedToTime(ss: string) {
+	if (ss === 'bulk' || ss === 'sync') return Infinity
+	if (ss.startsWith('1/')) return 1 / parseInt(ss.slice(2))
+	return parseFloat(ss)
+}
+
 export type ExposureComp = string
 
 export type BatteryLevel = 'ac' | 'low' | number
