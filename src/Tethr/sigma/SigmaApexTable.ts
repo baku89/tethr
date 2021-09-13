@@ -334,4 +334,5 @@ export const SigmaApexWhiteBalanceIFD = new Map<number, WhiteBalance>([
 	[0x5, 'tungsten'],
 	[0x6, 'fluorescent'],
 	[0x7, 'flash'],
+	[0x8, 'manual'],
 ])
