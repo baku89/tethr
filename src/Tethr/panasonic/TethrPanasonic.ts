@@ -28,6 +28,8 @@ enum OpCodePanasonic {
 	InitiateCapture = 0x9404,
 	CtrlLiveview = 0x9405,
 	Liveview = 0x9412,
+	GetLiveviewSettings = 0x9414,
+	SetLiveviewSettings = 0x9415,
 	ManualFocusDrive = 0x9416,
 	LiveviewImage = 0x9706,
 }
@@ -83,6 +85,9 @@ enum DevicePropCodePanasonic {
 	ImageMode_Param = 0x20000a1,
 	ImageMode_Quality = 0x20000a2,
 	ImageMode_AspectRatio = 0x20000a3,
+
+	Liveview_TransImg = 0xd800011,
+	Liveview_RecomImg = 0xd800012,
 }
 
 enum ObjectFormatCodePanasonic {
@@ -482,11 +487,9 @@ export class TethrPanasnoic extends Tethr {
 	}
 
 	public getLiveviewRecommendedSettings = async () => {
-		const propCode = 0xd800012
-
 		const {data} = await this.device.receiveData({
-			code: 0x9414,
-			parameters: [propCode],
+			code: OpCodePanasonic.GetLiveviewSettings,
+			parameters: [DevicePropCodePanasonic.Liveview_RecomImg],
 		})
 
 		const decoder = new PTPDecoder(data)
@@ -510,11 +513,9 @@ export class TethrPanasnoic extends Tethr {
 	}
 
 	public getLiveviewSetting = async () => {
-		const propCode = 0xd800011
-
 		const {data} = await this.device.receiveData({
-			code: 0x9414,
-			parameters: [propCode],
+			code: OpCodePanasonic.GetLiveviewSettings,
+			parameters: [DevicePropCodePanasonic.Liveview_TransImg],
 		})
 
 		const decoder = new PTPDecoder(data)
@@ -536,12 +537,10 @@ export class TethrPanasnoic extends Tethr {
 		frameSize: number,
 		fps: number
 	): Promise<void> => {
-		const propCode = 0xd800011
-
 		const data = new ArrayBuffer(16)
 		const dataView = new DataView(data)
 
-		dataView.setUint32(0, propCode, true)
+		dataView.setUint32(0, DevicePropCodePanasonic.Liveview_TransImg, true)
 		dataView.setUint32(4, 8, true)
 		dataView.setUint16(8, height, true)
 		dataView.setUint16(10, width, true)
@@ -549,8 +548,8 @@ export class TethrPanasnoic extends Tethr {
 		dataView.setUint16(14, fps, true)
 
 		await this.device.sendData({
-			code: 0x9415,
-			parameters: [propCode],
+			code: OpCodePanasonic.SetLiveviewSettings,
+			parameters: [DevicePropCodePanasonic.Liveview_TransImg],
 			data,
 		})
 	}
