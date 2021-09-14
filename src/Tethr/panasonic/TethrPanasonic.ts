@@ -481,6 +481,80 @@ export class TethrPanasnoic extends Tethr {
 		})
 	}
 
+	public getLiveviewRecommendedSettings = async () => {
+		const propCode = 0xd800012
+
+		const {data} = await this.device.receiveData({
+			code: 0x9414,
+			parameters: [propCode],
+		})
+
+		const decoder = new PTPDecoder(data)
+
+		const receivedPropCode = decoder.readUint32()
+		const dataSize = decoder.readUint32()
+
+		const settingsNum = decoder.readUint16()
+		const structSize = decoder.readUint16()
+
+		const settings = _.times(settingsNum, () => {
+			return {
+				height: decoder.readUint16(),
+				width: decoder.readUint16(),
+				frameSize: decoder.readUint16(),
+				fps: decoder.readUint16(),
+			}
+		})
+
+		return settings
+	}
+
+	public getLiveviewSetting = async () => {
+		const propCode = 0xd800011
+
+		const {data} = await this.device.receiveData({
+			code: 0x9414,
+			parameters: [propCode],
+		})
+
+		const decoder = new PTPDecoder(data)
+
+		const receivedPropCode = decoder.readUint32()
+		const dataSize = decoder.readUint32()
+
+		return {
+			height: decoder.readUint16(),
+			width: decoder.readUint16(),
+			frameSize: decoder.readUint16(),
+			fps: decoder.readUint16(),
+		}
+	}
+
+	public setLiveviewSetting = async (
+		width: number,
+		height: number,
+		frameSize: number,
+		fps: number
+	): Promise<void> => {
+		const propCode = 0xd800011
+
+		const data = new ArrayBuffer(16)
+		const dataView = new DataView(data)
+
+		dataView.setUint32(0, propCode, true)
+		dataView.setUint32(4, 8, true)
+		dataView.setUint16(8, height, true)
+		dataView.setUint16(10, width, true)
+		dataView.setUint16(12, frameSize, true)
+		dataView.setUint16(14, fps, true)
+
+		await this.device.sendData({
+			code: 0x9415,
+			parameters: [propCode],
+			data,
+		})
+	}
+
 	public getLiveView = async (): Promise<null | string> => {
 		const {code, data} = await this.device.receiveData({
 			label: 'Panasonic LiveviewImage',
