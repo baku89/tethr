@@ -34,14 +34,14 @@ export async function listCameras(): Promise<TethrDeviceDescriptor[]> {
 		}
 	}
 
-	if (navigator.mediaDevices) {
-		try {
-			const device = await navigator.mediaDevices.getUserMedia({video: true})
-			descs.push({type: 'webcam', device})
-		} catch (err) {
-			null
-		}
-	}
+	// if (navigator.mediaDevices) {
+	// 	try {
+	// 		const device = await navigator.mediaDevices.getUserMedia({video: true})
+	// 		descs.push({type: 'webcam', device})
+	// 	} catch (err) {
+	// 		null
+	// 	}
+	// }
 
 	return descs
 }
