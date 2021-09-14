@@ -26,6 +26,7 @@ enum OpCodePanasonic {
 	GetDevicePropValue = 0x9402,
 	SetDevicePropValue = 0x9403,
 	InitiateCapture = 0x9404,
+	CtrlLiveview = 0x9405,
 	Liveview = 0x9412,
 	ManualFocusDrive = 0x9416,
 	LiveviewImage = 0x9706,
@@ -489,8 +490,58 @@ export class TethrPanasnoic extends Tethr {
 
 		if (code !== ResCode.OK) return null
 
-		// This does work somehow
-		const jpegData = data.slice(180) //TethrPanasnoic.extractJpeg(data)
+		const dataView = new DataView(data)
+
+		let jpegOffset = 180
+
+		for (let offset = 0; offset < 180; ) {
+			const id = dataView.getUint32(offset, true)
+			offset += 4
+			const dataSize = dataView.getUint32(offset, true)
+			offset += 4
+			// const sessionID = dataView.getUint32(offset, true)
+
+			switch (id) {
+				case 0x17000001: {
+					// Jpeg Offset
+					jpegOffset = dataView.getUint32(offset + 4, true)
+					break
+				}
+				/*
+				case 0x17000002: {
+					// Jpeg Length?
+					jpegLength = dataView.getUint32(offset + 4, true)
+					break
+				}*/
+				case 0x17000003: {
+					// Histogram
+					const valid = dataView.getUint32(offset + 4, true)
+					const samples = dataView.getUint32(offset + 8, true)
+					const elems = dataView.getUint32(offset + 12, true)
+					const histogram = new Uint8Array(
+						data.slice(offset + 16, offset + 16 + samples)
+					)
+					break
+				}
+				case 0x17000004: {
+					// Posture?
+					const posture = dataView.getUint16(offset + 4, true)
+					break
+				}
+				case 0x17000005: {
+					// Level gauge
+					const roll = dataView.getInt16(offset + 4, true) / 10
+					const pitch = dataView.getInt16(offset + 6, true) / 10
+					break
+				}
+			}
+
+			offset += dataSize
+		}
+
+		if (!jpegOffset) return null
+
+		const jpegData = data.slice(jpegOffset)
 
 		const blob = new Blob([jpegData], {type: 'image/jpg'})
 		const url = window.URL.createObjectURL(blob)
@@ -529,6 +580,16 @@ export class TethrPanasnoic extends Tethr {
 			parameters: [propCode],
 			data,
 		})
+	}
+
+	public runAutoFocus = async (): Promise<boolean> => {
+		await this.device.sendCommand({
+			label: 'Panasonic Ctrl LiveView',
+			code: OpCodePanasonic.CtrlLiveview,
+			parameters: [0x03000024],
+		})
+
+		return true
 	}
 
 	private onPropChanged = async (ev: PTPDeviceEvent) => {
