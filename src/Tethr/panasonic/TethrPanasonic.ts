@@ -470,7 +470,7 @@ export class TethrPanasnoic extends Tethr {
 		return objects
 	}
 
-	public startLiveView = async (): Promise<void> => {
+	public startLiveview = async (): Promise<void> => {
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
 			code: OpCodePanasonic.Liveview,
@@ -478,7 +478,7 @@ export class TethrPanasnoic extends Tethr {
 		})
 	}
 
-	public stopLiveView = async (): Promise<void> => {
+	public stopLiveview = async (): Promise<void> => {
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
 			code: OpCodePanasonic.Liveview,
@@ -554,7 +554,7 @@ export class TethrPanasnoic extends Tethr {
 		})
 	}
 
-	public getLiveView = async (): Promise<null | string> => {
+	public getLiveview = async (): Promise<null | string> => {
 		const {code, data} = await this.device.receiveData({
 			label: 'Panasonic LiveviewImage',
 			code: OpCodePanasonic.LiveviewImage,
@@ -657,7 +657,7 @@ export class TethrPanasnoic extends Tethr {
 
 	public runAutoFocus = async (): Promise<boolean> => {
 		await this.device.sendCommand({
-			label: 'Panasonic Ctrl LiveView',
+			label: 'Panasonic Ctrl Liveview',
 			code: OpCodePanasonic.CtrlLiveview,
 			parameters: [0x03000024],
 		})

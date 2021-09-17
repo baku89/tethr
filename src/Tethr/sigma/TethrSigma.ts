@@ -645,15 +645,15 @@ export class TethrSigma extends Tethr {
 		return true
 	}
 
-	public startLiveView = async (): Promise<void> => {
+	public startLiveview = async (): Promise<void> => {
 		this._liveviewing = true
 	}
 
-	public stopLiveView = async (): Promise<void> => {
+	public stopLiveview = async (): Promise<void> => {
 		this._liveviewing = false
 	}
 
-	public getLiveView = async (): Promise<null | string> => {
+	public getLiveview = async (): Promise<null | string> => {
 		const {code, data} = await this.device.receiveData({
 			label: 'SigmaFP GetViewFrame',
 			code: OpCodeSigma.GetViewFrame,

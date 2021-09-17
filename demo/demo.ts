@@ -37,10 +37,10 @@ createApp(App).mount('#app')
 // 		if (image) $imageViewer.src = image
 // 	})
 
-// 	// await cam.startLiveView()
+// 	// await cam.startLiveview()
 // 	// async function updateLiveview() {
 // 	// 	try {
-// 	// 		const url = await cam.getLiveView()
+// 	// 		const url = await cam.getLiveview()
 // 	// 		if (url) $liveview.src = url
 // 	// 	} finally {
 // 	// 		requestAnimationFrame(updateLiveview)

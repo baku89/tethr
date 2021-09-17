@@ -411,15 +411,15 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		download?: boolean
 	}): Promise<null | TethrObject[]> => null
 
-	public startLiveView = async (): Promise<void> => {
+	public startLiveview = async (): Promise<void> => {
 		return
 	}
 
-	public stopLiveView = async (): Promise<void> => {
+	public stopLiveview = async (): Promise<void> => {
 		return
 	}
 
-	public getLiveView = async (): Promise<null | string> => {
+	public getLiveview = async (): Promise<null | string> => {
 		console.info('Liveview is not supported for the current camera')
 		return null
 	}

@@ -111,17 +111,17 @@ export function useTethr() {
 		if (!camera.value) return
 
 		if (liveviewing.value) {
-			await camera.value.startLiveView()
+			await camera.value.startLiveview()
 			updateLiveview()
 		} else {
-			await camera.value.stopLiveView()
+			await camera.value.stopLiveview()
 		}
 
 		async function updateLiveview() {
 			if (!liveviewing.value || !camera.value) return
 
 			try {
-				const url = await camera.value.getLiveView()
+				const url = await camera.value.getLiveview()
 				if (url) {
 					URL.revokeObjectURL(liveviewURL.value)
 					liveviewURL.value = url
