@@ -543,8 +543,6 @@ export class TethrSigma extends Tethr {
 	public takePicture = async (): Promise<null | string> => {
 		const {imageDBTail: id} = await this.getCamCaptStatus()
 
-		console.log({id})
-
 		// Snap
 		const buffer = new ArrayBuffer(2)
 		const dataView = new DataView(buffer)
