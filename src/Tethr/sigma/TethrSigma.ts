@@ -454,7 +454,7 @@ export class TethrSigma extends Tethr {
 
 		const supportedValues = exposureMode
 			.map(n => SigmaApexExposureMode.get(n))
-			.filter(m => m !== undefined) as ExposureMode[]
+			.filter(isntNil)
 
 		return {
 			writable: supportedValues.length > 0,
