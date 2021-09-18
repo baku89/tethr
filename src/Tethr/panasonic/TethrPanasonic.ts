@@ -1,11 +1,11 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
+import {PTPDataView} from '@/PTPDataView'
 import {PTPDeviceEvent} from '@/PTPDevice'
 import {TethrObject, TethrObjectInfo} from '@/TethrObject'
 
 import {ObjectFormatCode, ResCode} from '../../PTPDatacode'
-import {PTPDecoder} from '../../PTPDecoder'
 import {isntNil} from '../../util'
 import {
 	Aperture,
@@ -383,25 +383,25 @@ export class TethrPanasnoic extends Tethr {
 			parameters: [getCode],
 		})
 
-		const decoder = new PTPDecoder(data)
+		const dataView = new PTPDataView(data)
 
 		const getValue =
 			valueSize === 1
-				? decoder.readUint8
+				? dataView.readUint8
 				: valueSize === 2
-				? decoder.readUint16
-				: decoder.readUint32
+				? dataView.readUint16
+				: dataView.readUint32
 		const getArray =
 			valueSize === 1
-				? decoder.readUint8Array
+				? dataView.readUint8Array
 				: valueSize === 2
-				? decoder.readUint16Array
-				: decoder.readUint32Array
+				? dataView.readUint16Array
+				: dataView.readUint32Array
 
-		decoder.skip(4) // dpc
-		const headerLength = decoder.readUint32()
+		dataView.skip(4) // dpc
+		const headerLength = dataView.readUint32()
 
-		decoder.goto(headerLength * 4 + 2 * 4)
+		dataView.goto(headerLength * 4 + 2 * 4)
 
 		const value = decode(getValue())
 
@@ -419,7 +419,7 @@ export class TethrPanasnoic extends Tethr {
 		const quality = await this.get('imageQuality')
 		let restNumPhotos = quality?.includes('+') ? 2 : 1
 
-		const a = await this.device.sendCommand({
+		await this.device.sendCommand({
 			label: 'Panasonic InitiateCapture',
 			code: OpCodePanasonic.InitiateCapture,
 			parameters: [0x3000011],
@@ -492,20 +492,20 @@ export class TethrPanasnoic extends Tethr {
 			parameters: [DevicePropCodePanasonic.Liveview_RecomImg],
 		})
 
-		const decoder = new PTPDecoder(data)
+		const dataView = new PTPDataView(data)
 
-		const receivedPropCode = decoder.readUint32()
-		const dataSize = decoder.readUint32()
+		const receivedPropCode = dataView.readUint32()
+		const dataSize = dataView.readUint32()
 
-		const settingsNum = decoder.readUint16()
-		const structSize = decoder.readUint16()
+		const settingsNum = dataView.readUint16()
+		const structSize = dataView.readUint16()
 
 		const settings = _.times(settingsNum, () => {
 			return {
-				height: decoder.readUint16(),
-				width: decoder.readUint16(),
-				frameSize: decoder.readUint16(),
-				fps: decoder.readUint16(),
+				height: dataView.readUint16(),
+				width: dataView.readUint16(),
+				frameSize: dataView.readUint16(),
+				fps: dataView.readUint16(),
 			}
 		})
 
@@ -518,16 +518,16 @@ export class TethrPanasnoic extends Tethr {
 			parameters: [DevicePropCodePanasonic.Liveview_TransImg],
 		})
 
-		const decoder = new PTPDecoder(data)
+		const dataView = new PTPDataView(data)
 
-		const receivedPropCode = decoder.readUint32()
-		const dataSize = decoder.readUint32()
+		const receivedPropCode = dataView.readUint32()
+		const dataSize = dataView.readUint32()
 
 		return {
-			height: decoder.readUint16(),
-			width: decoder.readUint16(),
-			frameSize: decoder.readUint16(),
-			fps: decoder.readUint16(),
+			height: dataView.readUint16(),
+			width: dataView.readUint16(),
+			frameSize: dataView.readUint16(),
+			fps: dataView.readUint16(),
 		}
 	}
 

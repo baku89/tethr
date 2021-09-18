@@ -3,7 +3,7 @@ import sleep from 'sleep-promise'
 
 import {decodeIFD, IFDType} from '../../IFD'
 import {ResCode} from '../../PTPDatacode'
-import {PTPDecoder} from '../../PTPDecoder'
+import {PTPDataView} from '../../PTPDataView'
 import {isntNil} from '../../util'
 import {
 	Aperture,
@@ -682,25 +682,25 @@ export class TethrSigma extends Tethr {
 			parameters: [0x0],
 		})
 
-		const decoder = new PTPDecoder(data)
-		decoder.skip(3) // OC + FieldPreset
+		const dataView = new PTPDataView(data)
+		dataView.skip(3) // OC + FieldPreset
 
 		return {
-			shutterSpeed: decoder.readUint8(),
-			aperture: decoder.readUint8(),
-			programShift: decoder.readInt8(),
-			isoAuto: decoder.readUint8(),
-			isoSpeed: decoder.readUint8(),
-			exposureComp: decoder.readUint8(),
-			abValue: decoder.readUint8(),
-			abSettings: decoder.readUint8(),
-			frameBufferState: decoder.readUint8(),
-			mediaFreeSpace: decoder.readUint16(),
-			mediaStatus: decoder.readUint8(),
-			currentLensFocalLength: decoder.readUint16(),
-			batteryLevel: decoder.readUint8(),
-			abShotRemainNumber: decoder.readUint8(),
-			expCompExcludeAB: decoder.readUint8(),
+			shutterSpeed: dataView.readUint8(),
+			aperture: dataView.readUint8(),
+			programShift: dataView.readInt8(),
+			isoAuto: dataView.readUint8(),
+			isoSpeed: dataView.readUint8(),
+			exposureComp: dataView.readUint8(),
+			abValue: dataView.readUint8(),
+			abSettings: dataView.readUint8(),
+			frameBufferState: dataView.readUint8(),
+			mediaFreeSpace: dataView.readUint16(),
+			mediaStatus: dataView.readUint8(),
+			currentLensFocalLength: dataView.readUint16(),
+			batteryLevel: dataView.readUint8(),
+			abShotRemainNumber: dataView.readUint8(),
+			expCompExcludeAB: dataView.readUint8(),
 		}
 	}
 
@@ -711,17 +711,17 @@ export class TethrSigma extends Tethr {
 			parameters: [0x0],
 		})
 
-		const decoder = new PTPDecoder(data)
-		decoder.skip(3) // OC + FieldPreset
+		const dataView = new PTPDataView(data)
+		dataView.skip(3) // OC + FieldPreset
 
 		return {
-			driveMode: decoder.readUint8(),
-			specialMode: decoder.readUint8(),
-			exposureMode: decoder.readUint8(),
-			aeMeteringMode: decoder.readUint8(),
-			whiteBalance: decoder.goto(3 + 10).readUint8(),
-			resolution: decoder.readUint8(),
-			imageQuality: decoder.readUint8(),
+			driveMode: dataView.readUint8(),
+			specialMode: dataView.readUint8(),
+			exposureMode: dataView.readUint8(),
+			aeMeteringMode: dataView.readUint8(),
+			whiteBalance: dataView.goto(3 + 10).readUint8(),
+			resolution: dataView.readUint8(),
+			imageQuality: dataView.readUint8(),
 		}
 	}
 
@@ -732,16 +732,16 @@ export class TethrSigma extends Tethr {
 			parameters: [0x0],
 		})
 
-		const decoder = new PTPDecoder(data)
-		decoder.skip(3) // OC + FieldPreset
+		const dataView = new PTPDataView(data)
+		dataView.skip(3) // OC + FieldPreset
 
 		return {
-			intervalTimerSecond: decoder.readUint16(),
-			intervalTimerFame: decoder.readUint8(),
-			intervalTimerSecond_Remain: decoder.readUint16(),
-			intervalTimerFrame_Remain: decoder.readUint8(),
-			colorTemperature: decoder.readUint16(),
-			aspectRatio: decoder.skip(2).readUint8(),
+			intervalTimerSecond: dataView.readUint16(),
+			intervalTimerFame: dataView.readUint8(),
+			intervalTimerSecond_Remain: dataView.readUint16(),
+			intervalTimerFrame_Remain: dataView.readUint8(),
+			colorTemperature: dataView.readUint16(),
+			aspectRatio: dataView.skip(2).readUint8(),
 		}
 	}
 
@@ -814,32 +814,32 @@ export class TethrSigma extends Tethr {
 			parameters: [id],
 		})
 
-		const decoder = new PTPDecoder(data.slice(1))
+		const dataView = new PTPDataView(data.slice(1))
 
 		return {
-			imageId: decoder.readUint8(),
-			imageDBHead: decoder.readUint8(),
-			imageDBTail: decoder.readUint8(),
-			status: decoder.readUint16(),
-			destination: decoder.readUint8(),
+			imageId: dataView.readUint8(),
+			imageDBHead: dataView.readUint8(),
+			imageDBTail: dataView.readUint8(),
+			status: dataView.readUint16(),
+			destination: dataView.readUint8(),
 		}
 	}
 
 	private decodePictureFileInfoData2(data: ArrayBuffer) {
-		const decoder = new PTPDecoder(data)
+		const dataView = new PTPDataView(data)
 
-		decoder.skip(12)
+		dataView.skip(12)
 
 		return {
-			fileAddress: decoder.readUint32(),
-			fileSize: decoder.readUint32(),
-			fileExt: decoder.skip(8).readByteString(),
+			fileAddress: dataView.readUint32(),
+			fileSize: dataView.readUint32(),
+			fileExt: dataView.skip(8).readByteString(),
 			resolution: {
-				width: decoder.readUint16(),
-				height: decoder.readUint16(),
+				width: dataView.readUint16(),
+				height: dataView.readUint16(),
 			},
-			folderName: decoder.readByteString(),
-			fileName: decoder.readByteString(),
+			folderName: dataView.readByteString(),
+			fileName: dataView.readByteString(),
 		}
 	}
 

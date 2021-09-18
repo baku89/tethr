@@ -11,7 +11,7 @@ import {
 	OpCode,
 	ResCode,
 } from '../PTPDatacode'
-import {PTPDecoder} from '../PTPDecoder'
+import {PTPDataView} from '../PTPDataView'
 import {PTPDevice} from '../PTPDevice'
 import {
 	PTPAccessCapability,
@@ -261,9 +261,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			label: 'Get Storage IDs',
 			code: OpCode.GetStorageIDs,
 		})
-		const decoder = new PTPDecoder(data)
+		const dataView = new PTPDataView(data)
 
-		const storageIDs = decoder.readUint32Array()
+		const storageIDs = dataView.readUint32Array()
 		console.log('Storage IDs =', storageIDs)
 
 		for (const id of storageIDs) {
@@ -273,7 +273,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				code: OpCode.GetStorageInfo,
 			})
 
-			const storageInfo = new PTPDecoder(data)
+			const storageInfo = new PTPDataView(data)
 
 			const info = {
 				storageType: PTPStorageType[storageInfo.readUint16()],
@@ -336,22 +336,22 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			data: number
 		) => T
 
-		const decoder = new PTPDecoder(data.slice(2))
+		const dataView = new PTPDataView(data, 2)
 
-		const dataType = decoder.readUint16()
-		const writable = decoder.readUint8() === 0x01 // Get/Set
+		const dataType = dataView.readUint16()
+		const writable = dataView.readUint8() === 0x01 // Get/Set
 
 		let getValue: () => number
 
 		switch (dataType) {
 			case DatatypeCode.Uint8:
-				getValue = decoder.readUint8
+				getValue = dataView.readUint8
 				break
 			case DatatypeCode.Uint16:
-				getValue = decoder.readUint16
+				getValue = dataView.readUint16
 				break
 			case DatatypeCode.Int16:
-				getValue = decoder.readInt16
+				getValue = dataView.readInt16
 				break
 			default: {
 				const label = DatatypeCode[dataType] ?? toHexString(16)
@@ -390,7 +390,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			}
 			case 0x02: {
 				// Enumeration
-				const length = decoder.readUint16()
+				const length = dataView.readUint16()
 				supportedValues = _.times(length, getValue).map(decodeFn)
 				break
 			}
@@ -435,33 +435,33 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			parameters: [id],
 		})
 
-		const decoder = new PTPDecoder(data)
+		const dataView = new PTPDataView(data)
 
 		return {
 			id,
-			storageID: decoder.readUint32(),
-			format: this.getObjectFormat(decoder.readUint16()),
-			protectionStatus: decoder.readUint16(),
-			byteLength: decoder.readUint32(),
+			storageID: dataView.readUint32(),
+			format: this.getObjectFormat(dataView.readUint16()),
+			protectionStatus: dataView.readUint16(),
+			byteLength: dataView.readUint32(),
 			thumb: {
-				format: this.getObjectFormat(decoder.readUint16()),
-				compressedSize: decoder.readUint32(),
-				width: decoder.readUint32(),
-				height: decoder.readUint32(),
+				format: this.getObjectFormat(dataView.readUint16()),
+				compressedSize: dataView.readUint32(),
+				width: dataView.readUint32(),
+				height: dataView.readUint32(),
 			},
 			image: {
-				width: decoder.readUint32(),
-				height: decoder.readUint32(),
-				bitDepth: decoder.readUint32(),
+				width: dataView.readUint32(),
+				height: dataView.readUint32(),
+				bitDepth: dataView.readUint32(),
 			},
-			parent: decoder.readUint32(),
-			// associationType: decoder.readUint16(),
-			// associationDesc: decoder.readUint32(),
-			sequenceNumber: decoder.skip(2 + 4).readUint32(),
-			filename: decoder.readString(),
-			captureDate: decoder.readDate(),
-			modificationDate: decoder.readDate(),
-			keywords: decoder.readString(),
+			parent: dataView.readUint32(),
+			// associationType: dataView.readUint16(),
+			// associationDesc: dataView.readUint32(),
+			sequenceNumber: dataView.skip(2 + 4).readUint32(),
+			filename: dataView.readFixedUTF16String(),
+			captureDate: dataView.readDate(),
+			modificationDate: dataView.readDate(),
+			keywords: dataView.readFixedUTF16String(),
 		}
 	}
 
@@ -483,25 +483,25 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			code: OpCode.GetDeviceInfo,
 		})
 
-		const decoder = new PTPDecoder(data)
+		const dataView = new PTPDataView(data)
 
 		const info: DeviceInfo = {
-			standardVersion: decoder.readUint16(),
-			vendorExtensionID: decoder.readUint32(),
-			vendorExtensionVersion: decoder.readUint16(),
-			vendorExtensionDesc: decoder.readString(),
-			functionalMode: decoder.readUint16(),
-			operationsSupported: decoder.readUint16Array(),
-			eventsSupported: decoder.readUint16Array(),
-			propsSupported: [...decoder.readUint16Array()]
+			standardVersion: dataView.readUint16(),
+			vendorExtensionID: dataView.readUint32(),
+			vendorExtensionVersion: dataView.readUint16(),
+			vendorExtensionDesc: dataView.readFixedUTF16String(),
+			functionalMode: dataView.readUint16(),
+			operationsSupported: dataView.readUint16Array(),
+			eventsSupported: dataView.readUint16Array(),
+			propsSupported: [...dataView.readUint16Array()]
 				.map(c => PropCode.getKey(c))
 				.filter(isntNil),
-			captureFormats: decoder.readUint16Array(),
-			imageFormats: decoder.readUint16Array(),
-			manufacturer: decoder.readString(),
-			model: decoder.readString(),
-			deviceVersion: decoder.readString(),
-			serialNumber: decoder.readString(),
+			captureFormats: dataView.readUint16Array(),
+			imageFormats: dataView.readUint16Array(),
+			manufacturer: dataView.readFixedUTF16String(),
+			model: dataView.readFixedUTF16String(),
+			deviceVersion: dataView.readFixedUTF16String(),
+			serialNumber: dataView.readFixedUTF16String(),
 		}
 
 		return info
