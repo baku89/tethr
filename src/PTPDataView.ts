@@ -26,10 +26,6 @@ export class PTPDataView extends DataView {
 		return this
 	}
 
-	public hasNext(bytes = 0): boolean {
-		return this.currentReadOffset + bytes < this.buffer.byteLength
-	}
-
 	public readUint8 = () => {
 		const off = this.currentReadOffset
 		this.currentReadOffset += 1
