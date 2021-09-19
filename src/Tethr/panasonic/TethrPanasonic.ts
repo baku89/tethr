@@ -724,20 +724,20 @@ export class TethrPanasnoic extends Tethr {
 		).toLowerCase()
 	}
 
-	private static ExposureModeTable = new BiMap<number, ExposureMode>([
+	protected static ExposureModeTable = new BiMap<number, ExposureMode>([
 		[0, 'P'],
 		[1, 'A'],
 		[2, 'S'],
 		[3, 'M'],
-		[5, 'Video'],
-		[7, 'iA'],
+		[5, 'video'],
+		[7, 'vendor iA'],
 		[8, 'C1'],
 		[9, 'C2'],
 		[10, 'C3'],
-		[12, 'S&Q'],
+		[12, 'vendor S&Q'],
 	])
 
-	private static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
+	protected static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
 		[0x0002, 'auto'],
 		[0x0004, 'daylight'],
 		[0x8008, 'cloud'],
@@ -759,7 +759,7 @@ export class TethrPanasnoic extends Tethr {
 		[0x8015, 'auto warm'],
 	])
 
-	private static ColorModeTable = new BiMap<number, string>([
+	protected static ColorModeTable = new BiMap<number, string>([
 		[0, 'Standard'],
 		[1, 'Vivid'],
 		[2, 'Natural'],
@@ -779,7 +779,7 @@ export class TethrPanasnoic extends Tethr {
 		[22, 'MY PHOTOSTYLE 4'],
 	])
 
-	private static AspectRatioTable = new BiMap<number, string>([
+	protected static AspectRatioTable = new BiMap<number, string>([
 		[1, '4:3'],
 		[2, '3:2'],
 		[3, '16:9'],
@@ -788,7 +788,7 @@ export class TethrPanasnoic extends Tethr {
 		[11, '2:1'],
 	])
 
-	private static ImageQualityTable = new BiMap<number, string>([
+	protected static ImageQualityTable = new BiMap<number, string>([
 		[0, 'fine'],
 		[1, 'standard'],
 		[2, 'raw'],

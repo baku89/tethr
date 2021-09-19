@@ -35,8 +35,9 @@ export type WhiteBalance =
 	| 'fluorescent'
 	| 'tungsten'
 	| 'flash'
-	| `manual${'' | '2' | '3' | '4'}`
-	| `custom${'' | '2' | '3' | '4'}`
+	| `manual${'' | 2 | 3 | 4}`
+	| `custom${'' | 2 | 3 | 4}`
+	| `vendor ${string}`
 
 export type ShutterSpeed = string
 
@@ -62,7 +63,17 @@ export type FlashMode =
 	| 'red eye fill'
 	| 'external sync'
 
-export type ExposureMode = 'P' | 'A' | 'S' | 'M' | string
+export type ExposureMode =
+	| 'P'
+	| 'A'
+	| 'S'
+	| 'M'
+	| 'creative'
+	| 'action'
+	| 'portrait'
+	| 'video'
+	| `C${1 | 2 | 3}`
+	| `vendor ${string}`
 
 export type ExposureMeteringMode =
 	| 'average'
