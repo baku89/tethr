@@ -415,7 +415,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 	public takePicture = async (
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		option: TakePictureOption
+		option?: TakePictureOption
 	): Promise<null | TethrObject[]> => null
 
 	public startLiveview = async (): Promise<void> => {
