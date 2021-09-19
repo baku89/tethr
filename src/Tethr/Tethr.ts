@@ -197,10 +197,15 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			dataType: DatatypeCode.Uint16,
 			decode(data) {
-				return Tethr.ExposureModeTable.get(data) ?? toHexString(data, 4)
+				return (
+					Tethr.ExposureModeTable.get(data) ?? `vendor ${toHexString(data, 4)}`
+				)
 			},
 			encode(value) {
-				return Tethr.ExposureModeTable.getKey(value) ?? parseInt(value, 16)
+				return (
+					Tethr.ExposureModeTable.getKey(value) ??
+					parseInt(value.split(' ')[1], 16)
+				)
 			},
 		},
 		exposureComp: {
