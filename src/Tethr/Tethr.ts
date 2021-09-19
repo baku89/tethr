@@ -1,4 +1,3 @@
-import {BiMap} from 'bim'
 import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
 
@@ -146,40 +145,6 @@ export interface PropType {
 }
 
 export type PropNames = keyof PropType
-
-const PropCode = new BiMap<PropNames, number>([
-	['batteryLevel', 0x5001],
-	['functionalMode', 0x5002],
-	['imageSize', 0x5003],
-	['compressionSetting', 0x5004],
-	['whiteBalance', 0x5005],
-	['rgbGain', 0x5006],
-	['aperture', 0x5007],
-	['focalLength', 0x5008],
-	['focusDistance', 0x5009],
-	['focusMode', 0x500a],
-	['exposureMeteringMode', 0x500b],
-	['flashMode', 0x500c],
-	// ['exposureTime', 0x500d],
-	['exposureMode', 0x500e],
-	// ['exposureIndex', 0x500f],
-	['exposureComp', 0x5010],
-	['dateTime', 0x5011],
-	['captureDelay', 0x5012],
-	['driveMode', 0x5013],
-	['contrast', 0x5014],
-	['sharpness', 0x5015],
-	['digitalZoom', 0x5016],
-	['colorMode', 0x5017],
-	['burstNumber', 0x5018],
-	['burstInterval', 0x5019],
-	['timelapseNumber', 0x501a],
-	['timelapseInterval', 0x501b],
-	['focusMeteringMode', 0x501c],
-	['uploadURL', 0x501d],
-	['artist', 0x501e],
-	['copyrightInfo', 0x501f],
-])
 
 interface PropSchemeEntry<PropType> {
 	devicePropCode: number
