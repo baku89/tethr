@@ -516,7 +516,7 @@ export class TethrSigma extends Tethr {
 
 		const allValues = [...SigmaApexCompensationOneThird.values()]
 		const supportedValues = allValues
-			.map(v => [v, getExposureCompNumber(v)] as [string, number])
+			.map(v => [v, decodeExposureComp(v)] as [string, number])
 			.sort((a, b) => a[1] - b[1])
 			.filter(([, n]) => min - 1e-4 <= n && n <= max + 1e-4)
 			.map(([v]) => v)
@@ -527,7 +527,7 @@ export class TethrSigma extends Tethr {
 			supportedValues,
 		}
 
-		function getExposureCompNumber(v: string) {
+		function decodeExposureComp(v: string) {
 			if (v === '0') return 0x0
 
 			let negative = false,
@@ -553,6 +553,10 @@ export class TethrSigma extends Tethr {
 
 			return (negative ? -1 : 1) * (digits + thirds / 3)
 		}
+	}
+
+	private getEffectModeDesc = async (): Promise<PropDesc<string>> => {
+		const {colorMode} = await this.GetCamDataGroup3()
 	}
 
 	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
@@ -690,6 +694,29 @@ export class TethrSigma extends Tethr {
 			whiteBalance: dataView.goto(3 + 10).readUint8(),
 			resolution: dataView.readUint8(),
 			imageQuality: dataView.readUint8(),
+		}
+	}
+
+	private async getCamDataGroup3() {
+		const {data} = await this.device.receiveData({
+			label: 'SigmaFP GetCamDataGroup3',
+			opcode: OpCodeSigma.GetCamDataGroup3,
+			parameters: [0x0],
+		})
+
+		const dataView = new PTPDataView(data)
+		dataView.skip(3) // OC + FieldPreset
+
+		return {
+			colorSpace: dataView.skip(3).readUint8(),
+			colorMode: dataView.readUint8(),
+			batteryKind: dataView.readUint8(),
+			lensWideFocalLength: dataView.readUint16(),
+			lensTeleFocalLength: dataView.readUint16(),
+			afAuxiliaryLight: dataView.readUint8(),
+			afBeep: dataView.readUint8(),
+			timerSound: dataView.skip(3).readUint8(),
+			destinationToSave: dataView.skip(1).readUint8(),
 		}
 	}
 
