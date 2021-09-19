@@ -35,10 +35,12 @@ type PTPDataResponse = PTPResponse & {
 	data: ArrayBuffer
 }
 
-export interface PTPDeviceEvent {
+export interface PTPEvent {
 	eventCode: number
 	parameters: number[]
 }
+
+export type PTPEventCallback = (event: PTPEvent) => void
 
 interface BulkInInfo {
 	type: PTPType
@@ -49,7 +51,7 @@ interface BulkInInfo {
 
 const PTP_COMMAND_BYTES_MAX = 12 + 4 * 3
 
-export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
+export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 	private transactionId = 0x00000000
 
 	private bulkOut = 0x0
@@ -122,6 +124,16 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 	public get opened(): boolean {
 		return this._opened
+	}
+
+	public onEventCode(eventCode: number, callback: PTPEventCallback) {
+		const eventName = toHexString(eventCode, 2)
+		this.on(eventName, callback)
+	}
+
+	public offEventCode(eventCode: number, callback?: PTPEventCallback) {
+		const eventName = toHexString(eventCode, 2)
+		this.off(eventName, callback)
 	}
 
 	public sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse> => {
@@ -270,7 +282,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		}
 	}
 
-	public waitEvent = async (code: number): Promise<PTPDeviceEvent> => {
+	public waitEvent = async (code: number): Promise<PTPEvent> => {
 		const eventName = toHexString(code, 2)
 
 		return new Promise(resolve => {

@@ -3,7 +3,7 @@ import _ from 'lodash'
 
 import {ObjectFormatCode, ResCode} from '../../PTPDatacode'
 import {PTPDataView} from '../../PTPDataView'
-import {PTPDeviceEvent} from '../../PTPDevice'
+import {PTPEvent} from '../../PTPDevice'
 import {TethrObject, TethrObjectInfo} from '../../TethrObject'
 import {isntNil} from '../../util'
 import {
@@ -291,7 +291,7 @@ export class TethrPanasnoic extends Tethr {
 			parameters: [0x00010001],
 		})
 
-		this.device.on('0xc102', this.onPropChanged)
+		this.device.onEventCode(EventCodePanasonic.PropChanged, this.onPropChanged)
 	}
 
 	public close = async (): Promise<void> => {
@@ -429,7 +429,7 @@ export class TethrPanasnoic extends Tethr {
 		const infos = await new Promise<TethrObjectInfo[]>(resolve => {
 			const infos: TethrObjectInfo[] = []
 
-			const onObjectAdded = async (ev: PTPDeviceEvent) => {
+			const onObjectAdded = async (ev: PTPEvent) => {
 				const objectID = ev.parameters[0]
 				const info = await this.getObjectInfo(objectID)
 
@@ -446,11 +446,15 @@ export class TethrPanasnoic extends Tethr {
 				}
 
 				if (--restNumPhotos === 0) {
-					this.device.off('0xc108')
+					this.device.offEventCode(
+						EventCodePanasonic.ObjectAdded,
+						onObjectAdded
+					)
 					resolve(infos)
 				}
 			}
-			this.device.on('0xc108', onObjectAdded)
+
+			this.device.onEventCode(EventCodePanasonic.ObjectAdded, onObjectAdded)
 		})
 
 		if (!download) {
@@ -667,7 +671,7 @@ export class TethrPanasnoic extends Tethr {
 		return true
 	}
 
-	private onPropChanged = async (ev: PTPDeviceEvent) => {
+	private onPropChanged = async (ev: PTPEvent) => {
 		const devicdPropCode = ev.parameters[0]
 
 		let props: (keyof BasePropType)[]
