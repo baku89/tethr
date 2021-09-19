@@ -695,50 +695,19 @@ export class TethrSigma extends Tethr {
 			return dngImageQuality + 'bit'
 		})()
 
-		const supportedImageQualities: ImageQualityConfig[] = await (async () => {
-			const {imageQuality} = await this.getCamCanSetInfo5()
-
-			return imageQuality.map(id => {
-				let jpegQuality: string | null = null
-				switch (id >> 4) {
-					case 1:
-						jpegQuality = 'Fine'
-						break
-					case 2:
-						jpegQuality = 'Normal'
-						break
-					case 3:
-						jpegQuality = 'Basic'
-						break
-				}
-
-				const hasDNG = (id & 0x0f) === 2
-
-				return {jpegQuality, hasDNG}
-			})
-		})()
-
-		const supportedDNGBitDepths = await (async () => {
-			const {dngImageQuality} = await this.getCamCanSetInfo5()
-			return dngImageQuality
-				.filter(bitDepth => bitDepth !== 0)
-				.map(v => v + 'bit')
-		})()
-
-		const supportedValues = supportedImageQualities.flatMap(imageQuality => {
-			if (imageQuality.hasDNG) {
-				return supportedDNGBitDepths.map(bitDepth =>
-					stringifyImageQuality(imageQuality, bitDepth)
-				)
-			} else {
-				return [stringifyImageQuality(imageQuality)]
-			}
-		})
-
 		return {
-			writable: supportedValues.length > 0,
+			writable: true,
 			value: stringifyImageQuality(imageQuality, dngBitDepth),
-			supportedValues: supportedValues,
+			supportedValues: [
+				// NOTE: Hard-coded so this might not work for some cases
+				'Basic',
+				'Normal',
+				'Fine',
+				'DNG 12bit + Fine',
+				'DNG 14bit + Fine',
+				'DNG 12bit',
+				'DNG 14bit',
+			],
 		}
 
 		function stringifyImageQuality(
