@@ -2,11 +2,10 @@ import {BiMap} from 'bim'
 import _ from 'lodash'
 import sleep from 'sleep-promise'
 
-import {TethrObject} from '@/TethrObject'
-
 import {decodeIFD, IFDType} from '../../IFD'
 import {ResCode} from '../../PTPDatacode'
 import {PTPDataView} from '../../PTPDataView'
+import {TethrObject} from '../../TethrObject'
 import {isntNil} from '../../util'
 import {
 	Aperture,
