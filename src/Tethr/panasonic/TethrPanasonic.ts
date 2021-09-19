@@ -107,21 +107,23 @@ type PropScheme = {
 }
 
 export class TethrPanasonic extends Tethr {
+	protected _class = TethrPanasonic
+
 	private propSchemePanasonic: PropScheme = {
 		exposureMode: {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
 			valueSize: 2,
-			decode(value: number) {
-				return TethrPanasonic.ExposureModeTable.get(value) ?? null
+			decode: (value: number) => {
+				return this._class.ExposureModeTable.get(value) ?? null
 			},
 		},
 		aperture: {
 			getCode: DevicePropCodePanasonic.Aperture,
 			setCode: DevicePropCodePanasonic.Aperture_Param,
-			decode(value: number) {
+			decode: (value: number) => {
 				return value / 10
 			},
-			encode(value: Aperture) {
+			encode: (value: Aperture) => {
 				return value === 'auto' ? 0 : Math.round(value * 10)
 			},
 			valueSize: 2,
@@ -129,7 +131,7 @@ export class TethrPanasonic extends Tethr {
 		shutterSpeed: {
 			getCode: DevicePropCodePanasonic.ShutterSpeed,
 			setCode: DevicePropCodePanasonic.ShutterSpeed_Param,
-			decode(value: number) {
+			decode: (value: number) => {
 				switch (value) {
 					case 0xffffffff:
 						return 'bulb'
@@ -144,7 +146,7 @@ export class TethrPanasonic extends Tethr {
 					return ((value & 0x7fffffff) / 1000).toString()
 				}
 			},
-			encode(value: string) {
+			encode: (value: string) => {
 				if (value === 'bulb') {
 					return 0xffffffff
 				}
@@ -172,12 +174,12 @@ export class TethrPanasonic extends Tethr {
 		iso: {
 			getCode: DevicePropCodePanasonic.ISO,
 			setCode: DevicePropCodePanasonic.ISO_Param,
-			decode(value: number) {
+			decode: (value: number) => {
 				if (value === 0xffffffff) return 'auto'
 				if (value === 0xfffffffe) return 'auto' // i-ISO
 				return value
 			},
-			encode(value: ISO) {
+			encode: (value: ISO) => {
 				return value === 'auto' ? 0xffffffff : value
 			},
 			valueSize: 4,
@@ -185,7 +187,7 @@ export class TethrPanasonic extends Tethr {
 		exposureComp: {
 			getCode: DevicePropCodePanasonic.Exposure,
 			setCode: DevicePropCodePanasonic.Exposure_Param,
-			decode(v) {
+			decode: v => {
 				if (v === 0x0) return '0'
 
 				const steps = v & 0xf
@@ -201,7 +203,7 @@ export class TethrPanasonic extends Tethr {
 
 				return sign + digits + ' ' + thirdsSymbol
 			},
-			encode(v) {
+			encode: v => {
 				if (v === '0') return 0x0
 
 				let negative = false,
@@ -234,11 +236,11 @@ export class TethrPanasonic extends Tethr {
 		whiteBalance: {
 			getCode: DevicePropCodePanasonic.WhiteBalance,
 			setCode: DevicePropCodePanasonic.WhiteBalance_Param,
-			decode(value: number) {
-				return TethrPanasonic.WhiteBalanceTable.get(value) ?? null
+			decode: (value: number) => {
+				return this._class.WhiteBalanceTable.get(value) ?? null
 			},
-			encode(value: WhiteBalance) {
-				return TethrPanasonic.WhiteBalanceTable.getKey(value) ?? null
+			encode: (value: WhiteBalance) => {
+				return this._class.WhiteBalanceTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -252,33 +254,33 @@ export class TethrPanasonic extends Tethr {
 		colorMode: {
 			getCode: DevicePropCodePanasonic.PhotoStyle,
 			setCode: DevicePropCodePanasonic.PhotoStyle_Param,
-			decode(value: number) {
-				return TethrPanasonic.ColorModeTable.get(value) ?? null
+			decode: (value: number) => {
+				return this._class.ColorModeTable.get(value) ?? null
 			},
-			encode(value: string) {
-				return TethrPanasonic.ColorModeTable.getKey(value) ?? null
+			encode: (value: string) => {
+				return this._class.ColorModeTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
 		aspectRatio: {
 			getCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
 			setCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
-			decode(value: number) {
-				return TethrPanasonic.AspectRatioTable.get(value) ?? null
+			decode: (value: number) => {
+				return this._class.AspectRatioTable.get(value) ?? null
 			},
-			encode(value: string) {
-				return TethrPanasonic.AspectRatioTable.getKey(value) ?? null
+			encode: (value: string) => {
+				return this._class.AspectRatioTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
 		imageQuality: {
 			getCode: DevicePropCodePanasonic.ImageMode_Quality,
 			setCode: DevicePropCodePanasonic.ImageMode_Quality,
-			decode(value: number) {
-				return TethrPanasonic.ImageQualityTable.get(value) ?? null
+			decode: (value: number) => {
+				return this._class.ImageQualityTable.get(value) ?? null
 			},
-			encode(value: string) {
-				return TethrPanasonic.ImageQualityTable.getKey(value) ?? null
+			encode: (value: string) => {
+				return this._class.ImageQualityTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},

@@ -19,8 +19,6 @@ import {
 } from '../PTPEnum'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
-import {TethrPanasonic} from './panasonic/TethrPanasonic'
-import {TethrSigma} from './sigma/TethrSigma'
 
 export type Aperture = 'auto' | number
 
@@ -191,37 +189,7 @@ type TethrEventTypes = {
 }
 
 export class Tethr extends EventEmitter<TethrEventTypes> {
-	public static async initWithUSBDevice(usb: USBDevice): Promise<Tethr | null> {
-		const device = new PTPDevice(usb)
-		await device.open()
-
-		let info: DeviceInfo
-
-		try {
-			info = await this.getDeviceInfo(device)
-		} catch {
-			return null
-		}
-
-		let tethr: Tethr | null = null
-
-		switch (info.vendorExtensionID) {
-			case 0x00000006: // Microsoft / Sigma
-				if (info.vendorExtensionDesc === 'SIGMA') {
-					tethr = new TethrSigma(device)
-				}
-				break
-			case 0x0000001c: // Panasnoic
-				tethr = new TethrPanasonic(device)
-				break
-			default:
-				tethr = new Tethr(device)
-		}
-
-		return tethr
-	}
-
-	protected _class: typeof Tethr = Tethr
+	protected _class = Tethr
 	protected _opened = false
 
 	public constructor(protected device: PTPDevice) {
