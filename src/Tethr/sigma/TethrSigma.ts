@@ -214,6 +214,8 @@ export class TethrSigma extends Tethr {
 				return this.getColorModeDesc() as ReturnType
 			case 'aspectRatio':
 				return this.getAspectRatioDesc() as ReturnType
+			case 'imageQuality':
+				return this.getImageQualityDesc() as ReturnType
 		}
 
 		return {
@@ -612,6 +614,102 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
+	private getImageQualityDesc = async (): Promise<PropDesc<string>> => {
+		type ImageQualityConfig = {
+			jpegQuality: string | null
+			hasDNG: boolean
+		}
+
+		const imageQuality: ImageQualityConfig = await (async () => {
+			const {imageQuality} = await this.getCamDataGroup2()
+
+			let jpegQuality: string | null = null
+			switch (imageQuality & 0x0f) {
+				case 0x02:
+					jpegQuality = 'FINE'
+					break
+				case 0x04:
+					jpegQuality = 'NORMAL'
+					break
+				case 0x08:
+					jpegQuality = 'BASIC'
+					break
+			}
+
+			const hasDNG = !!(imageQuality & 0x10)
+
+			return {
+				jpegQuality,
+				hasDNG,
+			}
+		})()
+
+		const dngBit = await (async () => {
+			const {dngImageQuality} = await this.getCamDataGroup4()
+			return dngImageQuality + 'bit'
+		})()
+
+		const supportedImageQualities: ImageQualityConfig[] = await (async () => {
+			const {imageQuality} = await this.getCamCanSetInfo5()
+
+			return imageQuality.map(id => {
+				let jpegQuality: string | null = null
+				switch (id >> 4) {
+					case 1:
+						jpegQuality = 'FINE'
+						break
+					case 2:
+						jpegQuality = 'NORMAL'
+						break
+					case 3:
+						jpegQuality = 'BASIC'
+						break
+				}
+
+				const hasDNG = (id & 0x0f) === 2
+
+				return {jpegQuality, hasDNG}
+			})
+		})()
+
+		const supportedDNGBits = await (async () => {
+			const {dngImageQuality} = await this.getCamCanSetInfo5()
+			return dngImageQuality.filter(bit => bit !== 0).map(v => v + 'bit')
+		})()
+
+		const supportedValues = supportedImageQualities.flatMap(imageQuality => {
+			if (imageQuality.hasDNG) {
+				return supportedDNGBits.map(bit =>
+					stringifyImageQuality(imageQuality, bit)
+				)
+			} else {
+				return [stringifyImageQuality(imageQuality)]
+			}
+		})
+
+		return {
+			writable: supportedValues.length > 0,
+			value: stringifyImageQuality(imageQuality, dngBit),
+			supportedValues: supportedValues,
+		}
+
+		function stringifyImageQuality(quality: ImageQualityConfig, dngBit = '') {
+			if (quality.hasDNG) {
+				if (quality.jpegQuality) {
+					return `DNG ${dngBit} + ${quality.jpegQuality}`
+				} else {
+					return `DNG ${dngBit}`
+				}
+			} else {
+				if (quality.jpegQuality) {
+					return quality.jpegQuality
+				} else {
+					throw new Error('Invalid ImageQualityConfig')
+				}
+			}
+		}
+	}
+
 	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
 		const {batteryLevel} = await this.getCamDataGroup1()
 		const value = SigmaApexBatteryLevel.get(batteryLevel) ?? null
@@ -822,6 +920,8 @@ export class TethrSigma extends Tethr {
 		})
 
 		return decodeIFD(data, {
+			imageQuality: {tag: 11, type: IFDType.Byte},
+			dngImageQuality: {tag: 12, type: IFDType.Byte},
 			aspectRatio: {tag: 21, type: IFDType.Byte},
 			exposureMode: {tag: 200, type: IFDType.Byte},
 			fValue: {tag: 210, type: IFDType.SignedShort},
