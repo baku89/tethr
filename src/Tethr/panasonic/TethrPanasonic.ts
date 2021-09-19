@@ -106,13 +106,13 @@ type PropScheme = {
 	}
 }
 
-export class TethrPanasnoic extends Tethr {
+export class TethrPanasonic extends Tethr {
 	private propSchemePanasonic: PropScheme = {
 		exposureMode: {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
 			valueSize: 2,
 			decode(value: number) {
-				return TethrPanasnoic.ExposureModeTable.get(value) ?? null
+				return TethrPanasonic.ExposureModeTable.get(value) ?? null
 			},
 		},
 		aperture: {
@@ -235,10 +235,10 @@ export class TethrPanasnoic extends Tethr {
 			getCode: DevicePropCodePanasonic.WhiteBalance,
 			setCode: DevicePropCodePanasonic.WhiteBalance_Param,
 			decode(value: number) {
-				return TethrPanasnoic.WhiteBalanceTable.get(value) ?? null
+				return TethrPanasonic.WhiteBalanceTable.get(value) ?? null
 			},
 			encode(value: WhiteBalance) {
-				return TethrPanasnoic.WhiteBalanceTable.getKey(value) ?? null
+				return TethrPanasonic.WhiteBalanceTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -253,10 +253,10 @@ export class TethrPanasnoic extends Tethr {
 			getCode: DevicePropCodePanasonic.PhotoStyle,
 			setCode: DevicePropCodePanasonic.PhotoStyle_Param,
 			decode(value: number) {
-				return TethrPanasnoic.ColorModeTable.get(value) ?? null
+				return TethrPanasonic.ColorModeTable.get(value) ?? null
 			},
 			encode(value: string) {
-				return TethrPanasnoic.ColorModeTable.getKey(value) ?? null
+				return TethrPanasonic.ColorModeTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -264,10 +264,10 @@ export class TethrPanasnoic extends Tethr {
 			getCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
 			setCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
 			decode(value: number) {
-				return TethrPanasnoic.AspectRatioTable.get(value) ?? null
+				return TethrPanasonic.AspectRatioTable.get(value) ?? null
 			},
 			encode(value: string) {
-				return TethrPanasnoic.AspectRatioTable.getKey(value) ?? null
+				return TethrPanasonic.AspectRatioTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -275,10 +275,10 @@ export class TethrPanasnoic extends Tethr {
 			getCode: DevicePropCodePanasonic.ImageMode_Quality,
 			setCode: DevicePropCodePanasonic.ImageMode_Quality,
 			decode(value: number) {
-				return TethrPanasnoic.ImageQualityTable.get(value) ?? null
+				return TethrPanasonic.ImageQualityTable.get(value) ?? null
 			},
 			encode(value: string) {
-				return TethrPanasnoic.ImageQualityTable.getKey(value) ?? null
+				return TethrPanasonic.ImageQualityTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},

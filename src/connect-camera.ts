@@ -1,6 +1,6 @@
 import {PTPDevice} from './PTPDevice'
 import {Tethr} from './Tethr'
-import {TethrPanasnoic} from './Tethr/panasonic/TethrPanasonic'
+import {TethrPanasonic} from './Tethr/panasonic/TethrPanasonic'
 import {TethrSigma} from './Tethr/sigma/TethrSigma'
 
 interface TethrDeviceDescriptorPTPUSB {
@@ -70,7 +70,7 @@ export async function connectCamera(
 			}
 			break
 		case 0x0000001c: // Panasnoic
-			camera = new TethrPanasnoic(device)
+			camera = new TethrPanasonic(device)
 			break
 	}
 
