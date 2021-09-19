@@ -163,8 +163,8 @@ export class TethrSigma extends Tethr {
 			case 'colorTemperature':
 				succeed = await this.setColorTemperature(value as number)
 				break
-			case 'effectMode':
-				succeed = await this.setEffectMode(value as string)
+			case 'colorMode':
+				succeed = await this.setColorMode(value as string)
 				break
 			default:
 				status = 'unsupported'
@@ -207,8 +207,8 @@ export class TethrSigma extends Tethr {
 				return (await this.getExposureCompDesc()) as ReturnType
 			case 'colorTemperature':
 				return (await this.getColorTemperatureDesc()) as ReturnType
-			case 'effectMode':
-				return (await this.getEffectModeDesc()) as ReturnType
+			case 'colorMode':
+				return (await this.getColorModeDesc()) as ReturnType
 		}
 
 		return {
@@ -561,13 +561,13 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setEffectMode = async (effectMode: string): Promise<boolean> => {
-		const id = TethrSigma.ColorModeTable.getKey(effectMode)
+	private setColorMode = async (colorMode: string): Promise<boolean> => {
+		const id = TethrSigma.ColorModeTable.getKey(colorMode)
 		if (id === undefined) return false
 		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
 	}
 
-	private getEffectModeDesc = async (): Promise<PropDesc<string>> => {
+	private getColorModeDesc = async (): Promise<PropDesc<string>> => {
 		const {colorMode} = await this.getCamDataGroup3()
 		const {colorMode: supportedColorModes} = await this.getCamCanSetInfo5()
 

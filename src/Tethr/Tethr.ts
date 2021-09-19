@@ -132,7 +132,7 @@ export interface PropType {
 	contrast: number
 	sharpness: number
 	digitalZoom: number
-	effectMode: string
+	colorMode: string
 	burstNumber: number
 	burstInterval: number
 	timelapseNumber: number
@@ -169,7 +169,7 @@ const PropCode = new BiMap<PropNames, number>([
 	['contrast', 0x5014],
 	['sharpness', 0x5015],
 	['digitalZoom', 0x5016],
-	['effectMode', 0x5017],
+	['colorMode', 0x5017],
 	['burstNumber', 0x5018],
 	['burstInterval', 0x5019],
 	['timelapseNumber', 0x501a],

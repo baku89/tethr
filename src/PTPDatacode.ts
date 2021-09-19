@@ -139,7 +139,7 @@ export enum DevicePropCode {
 	Contrast = 0x5014,
 	Sharpness = 0x5015,
 	DigitalZoom = 0x5016,
-	EffectMode = 0x5017,
+	ColorMode = 0x5017,
 	BurstNumber = 0x5018,
 	BurstInterval = 0x5019,
 	TimelapseNumber = 0x501a,

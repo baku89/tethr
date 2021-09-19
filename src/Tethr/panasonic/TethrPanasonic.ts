@@ -248,14 +248,14 @@ export class TethrPanasnoic extends Tethr {
 			encode: _.identity,
 			valueSize: 2,
 		},
-		effectMode: {
+		colorMode: {
 			getCode: DevicePropCodePanasonic.PhotoStyle,
 			setCode: DevicePropCodePanasonic.PhotoStyle_Param,
 			decode(value: number) {
-				return TethrPanasnoic.EffectModeTable.get(value) ?? null
+				return TethrPanasnoic.ColorModeTable.get(value) ?? null
 			},
 			encode(value: string) {
-				return TethrPanasnoic.EffectModeTable.getKey(value) ?? null
+				return TethrPanasnoic.ColorModeTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -697,7 +697,7 @@ export class TethrPanasnoic extends Tethr {
 				props = ['whiteBalance', 'colorTemperature']
 				break
 			case DevicePropCodePanasonic.PhotoStyle:
-				props = ['effectMode']
+				props = ['colorMode']
 				break
 			case DevicePropCodePanasonic.ImageMode:
 				props = ['imageResolution', 'aspectRatio', 'imageQuality']
@@ -740,7 +740,7 @@ export class TethrPanasnoic extends Tethr {
 		[0x8015, 'auto warm'],
 	])
 
-	private static EffectModeTable = new BiMap<number, string>([
+	private static ColorModeTable = new BiMap<number, string>([
 		[0, 'Standard'],
 		[1, 'Vivid'],
 		[2, 'Natural'],
