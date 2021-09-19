@@ -1,6 +1,9 @@
 import {parse as parseTimestamp} from 'date-format-parse'
 import _ from 'lodash'
 
+/**
+ * DataView's subclass with some utility methods for PTP packet decoding
+ */
 export class PTPDataView extends DataView {
 	private currentReadOffset = 0
 
