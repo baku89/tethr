@@ -159,15 +159,13 @@ export interface PropType {
 
 export type PropNames = keyof PropType
 
-interface PropSchemeEntry<PropType> {
-	devicePropCode: number
-	dataType: DatatypeCode
-	decode: (data: number) => PropType | null
-	encode: (value: PropType) => number | null
-}
-
 type PropScheme = {
-	[Name in PropNames]?: PropSchemeEntry<PropType[Name]>
+	[Name in PropNames]?: {
+		devicePropCode: number
+		dataType: DatatypeCode
+		decode: (data: number) => PropType[Name] | null
+		encode: (value: PropType[Name]) => number | null
+	}
 }
 
 export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
@@ -191,6 +189,7 @@ type TethrEventTypes = {
 }
 
 export class Tethr extends EventEmitter<TethrEventTypes> {
+	protected _class: typeof Tethr = Tethr
 	protected _opened = false
 
 	protected propScheme: PropScheme = {
