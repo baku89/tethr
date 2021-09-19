@@ -411,8 +411,9 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 			// Error checking
 			if (status !== 'ok')
 				throw new Error(`InterruptIn returned status: ${status}`)
-			if (!data || data.byteLength < 12)
-				throw new Error('Invalid interruptIn data')
+			if (!data || data.byteLength < 12) {
+				return
+			}
 
 			// Unpack packet
 			const type = data.getUint16(4, true)
