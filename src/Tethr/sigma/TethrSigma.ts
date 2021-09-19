@@ -208,12 +208,19 @@ export class TethrSigma extends Tethr {
 
 	private getFocalLengthDesc = async (): Promise<PropDesc<number>> => {
 		const data = (await this.getCamDataGroup1()).currentLensFocalLength
-		const value = this.decodeFocalLength(data)
+		const value = decodeFocalLength(data)
 
 		return {
 			writable: false,
 			value,
 			supportedValues: [],
+		}
+
+		function decodeFocalLength(byte: number) {
+			const integer = byte >> 4,
+				fractional = byte & 0b1111
+
+			return integer + fractional / 10
 		}
 	}
 
@@ -742,7 +749,7 @@ export class TethrSigma extends Tethr {
 		dataView.setUint16(0, 1 << propNumber, true)
 		dataView.setUint16(2, value, true)
 
-		const data = this.encodeParameter(buffer)
+		const data = TethrSigma.encodeParameter(buffer)
 
 		try {
 			await this.device.sendData({
@@ -790,7 +797,7 @@ export class TethrSigma extends Tethr {
 		await this.device.sendData({
 			label: 'Sigma SnapCommand',
 			opcode: OpCodeSigma.SnapCommand,
-			data: this.encodeParameter(snapState),
+			data: TethrSigma.encodeParameter(snapState),
 		})
 
 		for (let restTries = 50; restTries > 0; restTries--) {
@@ -841,14 +848,7 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private decodeFocalLength(byte: number) {
-		const integer = byte >> 4,
-			fractional = byte & 0b1111
-
-		return integer + fractional / 10
-	}
-
-	private encodeParameter(buffer: ArrayBuffer) {
+	private static encodeParameter(buffer: ArrayBuffer) {
 		const bytes = new Uint8Array(buffer)
 
 		const size = buffer.byteLength
