@@ -75,8 +75,6 @@ async function initTethrWithUSBDevice(usb: USBDevice): Promise<Tethr | null> {
 
 	let tethr: Tethr | null = null
 
-	console.log(info)
-
 	switch (info.vendorExtensionID) {
 		case 0x00000006: // Microsoft / Sigma / Ricoh
 			if (info.vendorExtensionDesc === 'SIGMA') {
@@ -93,6 +91,8 @@ async function initTethrWithUSBDevice(usb: USBDevice): Promise<Tethr | null> {
 	if (!tethr) {
 		tethr = new Tethr(device)
 	}
+
+	await tethr.open()
 
 	return tethr
 }
