@@ -1,3 +1,4 @@
+import {BiMap} from 'bim'
 import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
 
@@ -69,7 +70,7 @@ export type ExposureMeteringMode =
 	| 'multi-spot'
 	| 'center-spot'
 
-export type StillCaptureMode = 'normal' | 'burst' | 'timelapse'
+export type DriveMode = 'normal' | 'burst' | 'timelapse'
 
 export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
@@ -128,7 +129,7 @@ export interface PropType {
 	exposureComp: ExposureComp // exposureBiasCompensation
 	dateTime: Date
 	captureDelay: number
-	driveMode: StillCaptureMode // stillCaptureMode
+	driveMode: DriveMode // stillCaptureMode
 	contrast: number
 	sharpness: number
 	digitalZoom: number
@@ -148,15 +149,16 @@ export type PropNames = keyof PropType
 
 interface PropSchemeEntry<PropType> {
 	devicePropCode: number
-	decode?: (data: number) => PropType
-	encode?: (value: PropType) => number
+	dataType: DatatypeCode
+	decode: (data: number) => PropType | null
+	encode: (value: PropType) => number | null
 }
 
 type PropScheme = {
 	[Name in PropNames]?: PropSchemeEntry<PropType[Name]>
 }
 
-export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid'
+export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
 
 export interface SetPropResult<T extends PropType[PropNames]> {
 	status: SetPropResultStatus
@@ -180,14 +182,128 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	protected _opened = false
 
 	protected propScheme: PropScheme = {
-		batteryLevel: {
-			devicePropCode: DevicePropCode.BatteryLevel,
+		exposureMode: {
+			devicePropCode: DevicePropCode.ExposureProgramMode,
+			dataType: DatatypeCode.Uint16,
+			decode(data) {
+				return Tethr.ExposureModeTable.get(data) ?? toHexString(data, 4)
+			},
+			encode(value) {
+				return Tethr.ExposureModeTable.getKey(value) ?? parseInt(value, 16)
+			},
 		},
 		exposureComp: {
 			devicePropCode: DevicePropCode.ExposureBiasCompensation,
+			dataType: DatatypeCode.Int16,
+			decode(mills) {
+				if (mills === 0) return '0'
+
+				const millsAbs = Math.abs(mills)
+
+				const sign = mills > 0 ? '+' : '-'
+				const integer = Math.floor(millsAbs / 1000)
+				const fracMills = millsAbs % 1000
+
+				let fraction = ''
+
+				switch (fracMills) {
+					case 300:
+						fraction = '1/3'
+						break
+					case 500:
+						fraction = '1/2'
+						break
+					case 700:
+						fraction = '2/3'
+						break
+				}
+
+				if (integer === 0) return `${sign}${fraction}`
+				if (fraction === '') return `${sign}${integer}`
+				return `${sign}${integer} ${fraction}`
+			},
+			encode(str) {
+				if (str === '0') return 0
+
+				const match = str.match(/^([+-]?)([0-9]+)?\s?(1\/2|1\/3|2\/3)?$/)
+
+				if (!match) return null
+
+				const [, signStr, integerStr, fractionStr] = match
+
+				const sign = signStr === '-' ? -1 : +1
+				const integer = parseInt(integerStr)
+				let fracMills = 0
+				switch (fractionStr) {
+					case '1/3':
+						fracMills = 300
+						break
+					case '1/2':
+						fracMills = 500
+						break
+					case '2/3':
+						fracMills = 700
+						break
+				}
+
+				return sign * (integer * 1000 + fracMills)
+			},
 		},
-		exposureMode: {
-			devicePropCode: DevicePropCode.ExposureProgramMode,
+		whiteBalance: {
+			devicePropCode: DevicePropCode.WhiteBalance,
+			dataType: DatatypeCode.Uint16,
+			decode(data) {
+				return Tethr.WhiteBalanceTable.get(data) ?? 'auto'
+			},
+			encode(value) {
+				return Tethr.WhiteBalanceTable.getKey(value) ?? 0x2 // = auto
+			},
+		},
+		iso: {
+			devicePropCode: DevicePropCode.ExposureIndex,
+			dataType: DatatypeCode.Uint16,
+			decode(data) {
+				if (data === 0xffff) return 'auto'
+				return data
+			},
+			encode(iso) {
+				if (iso === 'auto') return 0xffff
+				return iso
+			},
+		},
+		captureDelay: {
+			devicePropCode: DevicePropCode.CaptureDelay,
+			dataType: DatatypeCode.Uint32,
+			decode: _.identity,
+			encode: _.identity,
+		},
+		driveMode: {
+			devicePropCode: DevicePropCode.StillCaptureMode,
+			dataType: DatatypeCode.Uint16,
+			decode(data) {
+				return Tethr.DriveModeTable.get(data) ?? 'normal'
+			},
+			encode(value) {
+				return Tethr.DriveModeTable.getKey(value) ?? 0x0
+			},
+		},
+		timelapseNumber: {
+			devicePropCode: DevicePropCode.TimelapseNumber,
+			dataType: DatatypeCode.Uint16,
+			decode: _.identity,
+			encode: _.identity,
+		},
+		timelapseInterval: {
+			devicePropCode: DevicePropCode.TimelapseInterval,
+			dataType: DatatypeCode.Uint32,
+			decode: _.identity,
+			encode: _.identity,
+		},
+		batteryLevel: {
+			devicePropCode: DevicePropCode.BatteryLevel,
+			dataType: DatatypeCode.Uint8,
+			decode: _.identity,
+			encode: _.identity,
 		},
 	}
 
@@ -269,23 +385,80 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	}
 
 	public async set<K extends PropNames>(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		name: K,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: PropType[K]
 	): Promise<SetPropResult<PropType[K]>> {
+		const scheme = this.propScheme[name]
+
+		if (!scheme) {
+			return {
+				status: 'unsupported',
+				value: null,
+			}
+		}
+
+		const encode = scheme.encode as (value: PropType[K]) => number
+		const propData = encode(value)
+
+		if (propData === null) {
+			return {
+				status: 'invalid',
+				value: await this.get(name),
+			}
+		}
+
+		let dataView: DataView
+		switch (scheme.dataType) {
+			case DatatypeCode.Uint8:
+				dataView = new DataView(new ArrayBuffer(1))
+				dataView.setUint8(0, propData)
+				break
+			case DatatypeCode.Int8:
+				dataView = new DataView(new ArrayBuffer(1))
+				dataView.setInt8(0, propData)
+				break
+			case DatatypeCode.Uint16:
+				dataView = new DataView(new ArrayBuffer(2))
+				dataView.setUint16(0, propData, true)
+				break
+			case DatatypeCode.Int16:
+				dataView = new DataView(new ArrayBuffer(2))
+				dataView.setInt16(0, propData, true)
+				break
+			case DatatypeCode.Uint32:
+				dataView = new DataView(new ArrayBuffer(4))
+				dataView.setUint32(0, propData, true)
+				break
+			case DatatypeCode.Int32:
+				dataView = new DataView(new ArrayBuffer(4))
+				dataView.setInt32(0, propData, true)
+				break
+			default: {
+				const label = DatatypeCode[scheme.dataType] ?? toHexString(16)
+				throw new Error(`PropDesc of datatype ${label} is not yet supported`)
+			}
+		}
+
+		const {resCode} = await this.device.sendData({
+			label: 'SetDevicePropValue',
+			opcode: OpCode.SetDevicePropValue,
+			parameters: [scheme.devicePropCode],
+			data: dataView.buffer,
+			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
+		})
+
 		return {
-			status: 'unsupported',
-			value: null,
+			status: resCode === ResCode.OK ? 'ok' : 'busy',
+			value: await this.get(name),
 		}
 	}
 
 	public async getDesc<K extends PropNames, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		const devicePropCode = this.propScheme[name]?.devicePropCode
+		const scheme = this.propScheme[name]
 
-		if (devicePropCode === undefined) {
+		if (!scheme) {
 			return {
 				writable: false,
 				value: null,
@@ -296,7 +469,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'GetDevicePropDesc',
 			opcode: OpCode.GetDevicePropDesc,
-			parameters: [devicePropCode],
+			parameters: [scheme.devicePropCode],
 			expectedResCodes: [ResCode.OK, ResCode.DevicePropNotSupported],
 		})
 
@@ -308,9 +481,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			}
 		}
 
-		const decodeFn = (this.propScheme[name]?.decode ?? _.identity) as (
-			data: number
-		) => T
+		const decode = scheme.decode as (data: number) => T
 
 		const dataView = new PTPDataView(data, 2)
 
@@ -329,16 +500,20 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			case DatatypeCode.Int16:
 				getValue = dataView.readInt16
 				break
+			case DatatypeCode.Uint32:
+				getValue = dataView.readUint32
+				break
 			default: {
 				const label = DatatypeCode[dataType] ?? toHexString(16)
 				throw new Error(`PropDesc of datatype ${label} is not yet supported`)
 			}
 		}
 
-		const value = decodeFn(getValue())
+		getValue() // Skip factoryDefault
+		const value = decode(getValue())
 
 		// Read supportedValues
-		const formFlag = getValue()
+		const formFlag = dataView.readUint8()
 
 		let supportedValues: T[]
 
@@ -349,9 +524,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				break
 			case 0x01: {
 				// Range
-				const min = decodeFn(getValue())
-				const max = decodeFn(getValue())
-				const step = decodeFn(getValue())
+				const min = decode(getValue())
+				const max = decode(getValue())
+				const step = decode(getValue())
 				if (
 					typeof min !== 'number' ||
 					typeof max !== 'number' ||
@@ -367,7 +542,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			case 0x02: {
 				// Enumeration
 				const length = dataView.readUint16()
-				supportedValues = _.times(length, getValue).map(decodeFn)
+				supportedValues = _.times(length, getValue).map(decode)
 				break
 			}
 			default:
@@ -481,4 +656,29 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	protected getObjectFormat(code: number) {
 		return ObjectFormatCode[code].toLowerCase()
 	}
+
+	protected static ExposureModeTable = new BiMap<number, ExposureMode>([
+		[0x1, 'M'],
+		[0x2, 'P'],
+		[0x3, 'A'],
+		[0x4, 'S'],
+		[0x5, 'creative'],
+		[0x6, 'action'],
+		[0x7, 'portrait'],
+	])
+
+	protected static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
+		[0x1, 'manual'],
+		[0x2, 'auto'],
+		[0x3, 'custom'],
+		[0x4, 'daylight'],
+		[0x5, 'fluorescent'],
+		[0x6, 'tungsten'],
+	])
+
+	protected static DriveModeTable = new BiMap<number, DriveMode>([
+		[0x1, 'normal'],
+		[0x2, 'burst'],
+		[0x3, 'timelapse'],
+	])
 }
