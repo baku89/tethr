@@ -186,29 +186,29 @@ export class TethrSigma extends Tethr {
 	public async getDesc<N extends PropNames, T extends PropType[N]>(
 		name: N
 	): Promise<PropDesc<T>> {
-		type ReturnType = PropDesc<T>
+		type ReturnType = Promise<PropDesc<T>>
 
 		switch (name) {
 			case 'batteryLevel':
-				return (await this.getBatteryLevelDesc()) as ReturnType
+				return this.getBatteryLevelDesc() as ReturnType
 			case 'focalLength':
-				return (await this.getFocalLengthDesc()) as ReturnType
+				return this.getFocalLengthDesc() as ReturnType
 			case 'exposureMode':
-				return (await this.getExposureModeDesc()) as ReturnType
+				return this.getExposureModeDesc() as ReturnType
 			case 'aperture':
-				return (await this.getApertureDesc()) as ReturnType
+				return this.getApertureDesc() as ReturnType
 			case 'shutterSpeed':
-				return (await this.getShutterSpeedDesc()) as ReturnType
+				return this.getShutterSpeedDesc() as ReturnType
 			case 'iso':
-				return (await this.getISODesc()) as ReturnType
+				return this.getISODesc() as ReturnType
 			case 'whiteBalance':
-				return (await this.getWhiteBalanceDesc()) as ReturnType
+				return this.getWhiteBalanceDesc() as ReturnType
 			case 'exposureComp':
-				return (await this.getExposureCompDesc()) as ReturnType
+				return this.getExposureCompDesc() as ReturnType
 			case 'colorTemperature':
-				return (await this.getColorTemperatureDesc()) as ReturnType
+				return this.getColorTemperatureDesc() as ReturnType
 			case 'colorMode':
-				return (await this.getColorModeDesc()) as ReturnType
+				return this.getColorModeDesc() as ReturnType
 		}
 
 		return {
