@@ -195,6 +195,10 @@ export interface SetPropResult<T extends BasePropType[keyof BasePropType]> {
 	value: T | null
 }
 
+export interface TakePictureOption {
+	download?: boolean
+}
+
 type TethrEventTypes = {
 	[Name in keyof BasePropType as `${Name}Changed`]: PropDesc<BasePropType[Name]>
 }
@@ -294,7 +298,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	}
 
 	public async set<K extends keyof BasePropType>(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		name: K,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: BasePropType[K]
 	): Promise<SetPropResult<BasePropType[K]>> {
 		return {
@@ -406,9 +412,10 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 	public runAutoFocus = async (): Promise<boolean> => false
 
-	public takePicture = async (option?: {
-		download?: boolean
-	}): Promise<null | TethrObject[]> => null
+	public takePicture = async (
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		option: TakePictureOption
+	): Promise<null | TethrObject[]> => null
 
 	public startLiveview = async (): Promise<void> => {
 		return

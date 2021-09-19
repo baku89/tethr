@@ -14,6 +14,7 @@ import {
 	ManualFocusDriveOption,
 	PropDesc,
 	SetPropResult,
+	TakePictureOption,
 	Tethr,
 	WhiteBalance,
 } from '../Tethr'
@@ -412,9 +413,10 @@ export class TethrPanasnoic extends Tethr {
 			supportedValues,
 		}
 	}
+
 	public takePicture = async ({
 		download = true,
-	}: {download?: boolean} = {}): Promise<null | TethrObject[]> => {
+	}: TakePictureOption = {}): Promise<null | TethrObject[]> => {
 		const quality = await this.get('imageQuality')
 		let restNumPhotos = quality?.includes('+') ? 2 : 1
 

@@ -1,6 +1,8 @@
 import _ from 'lodash'
 import sleep from 'sleep-promise'
 
+import {TethrObject} from '@/TethrObject'
+
 import {decodeIFD, IFDType} from '../../IFD'
 import {ResCode} from '../../PTPDatacode'
 import {PTPDataView} from '../../PTPDataView'
@@ -16,6 +18,7 @@ import {
 	SetPropResult,
 	SetPropResultStatus,
 	ShutterSpeed,
+	TakePictureOption,
 	Tethr,
 	WhiteBalance,
 } from '../Tethr'
@@ -560,13 +563,17 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	public takePicture = async () => {
+	public takePicture = async ({
+		download = true,
+	}: TakePictureOption = {}): Promise<null | TethrObject[]> => {
 		const captId = await this.executeSnapCommand(
 			SnapCaptureMode.NonAFCapture,
 			2
 		)
 
 		if (captId === null) return null
+
+		if (!download) return null
 
 		const pictInfo = await this.getPictFileInfo()
 
@@ -586,7 +593,7 @@ export class TethrSigma extends Tethr {
 		const jpegTethrObject = {
 			format: 'jpeg',
 			blob,
-		}
+		} as TethrObject
 
 		return [jpegTethrObject]
 	}
