@@ -353,7 +353,7 @@ export class TethrPanasnoic extends Tethr {
 
 		return {
 			status: succeed ? 'ok' : 'invalid',
-			value: (await this.get(name)) as PropType[K],
+			value: (await this.get(name)) as PropType[N],
 		}
 	}
 
