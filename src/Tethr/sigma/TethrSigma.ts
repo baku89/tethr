@@ -96,6 +96,19 @@ enum CaptStatus {
 	ngGeneral = 0x6005,
 }
 
+enum SnapCaptureMode {
+	GeneralCapture = 0x01,
+	NonAFCapture = 0x02,
+	AFDriveOnly = 0x03,
+	StartAF = 0x04,
+	StopAF = 0x05,
+	StartCapture = 0x06,
+	StopCapture = 0x07,
+	StartRecordingMovieWithAF = 0x10,
+	StartRecordingMovieWithoutAF = 0x20,
+	StopRecordingMovie = 0x30,
+}
+
 export class TethrSigma extends Tethr {
 	private _liveviewing = false
 
@@ -540,109 +553,46 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	public takePicture = async (): Promise<null | string> => {
-		const {imageDBTail: id} = await this.getCamCaptStatus()
+	public takePicture = async () => {
+		const captId = await this.executeSnapCommand(
+			SnapCaptureMode.NonAFCapture,
+			2
+		)
 
-		// Snap
-		const buffer = new ArrayBuffer(2)
-		const dataView = new DataView(buffer)
+		if (captId === null) return null
 
-		dataView.setUint8(0, 0x02)
-		dataView.setUint8(1, 0x02)
+		const pictInfo = await this.getPictFileInfo()
 
-		await this.device.sendData({
-			label: 'SigmaFP SnapCommand',
-			opcode: 0x901b,
-			data: this.encodeParameter(buffer),
+		// Get file buffer
+		const {data: pictFileData} = await this.device.receiveData({
+			label: 'SigmaFP GetBigPartialPictFile',
+			opcode: OpCodeSigma.GetBigPartialPictFile,
+			parameters: [pictInfo.fileAddress, 0x0, pictInfo.fileSize],
 		})
 
-		try {
-			let tries = 50
-			while (tries--) {
-				const {status} = await this.getCamCaptStatus(id)
+		// First 4 bytes seems to be buffer length so splice it
+		const jpegData = pictFileData.slice(4)
+		const blob = new Blob([jpegData], {type: 'image/jpeg'})
 
-				switch (status) {
-					case CaptStatus.ngAf:
-						throw new Error('AF failure')
-					case CaptStatus.ngBaffaFull:
-						throw new Error('Buffer full')
-					case CaptStatus.ngCwb:
-						throw new Error('Custom WB failure')
-					case CaptStatus.ngImageCreate:
-						throw new Error('Image generation failed')
-					case CaptStatus.ngGeneral:
-						throw new Error('Capture failed')
-				}
+		await this.clearImageDBSingle(captId)
 
-				if (status === CaptStatus.compImageCreate) break
-
-				await sleep(500)
-			}
-			if (tries === 0) throw new Error('Timeout')
-
-			const {data: pictInfoData} = await this.device.receiveData({
-				label: 'SigmaFP GetPictFileInfo2',
-				opcode: 0x902d,
-			})
-			const pictInfo = this.decodePictureFileInfoData2(pictInfoData)
-
-			// Get file
-			const {data: pictFileData} = await this.device.receiveData({
-				label: 'SigmaFP GetBigPartialPictFile',
-				opcode: OpCodeSigma.GetBigPartialPictFile,
-				parameters: [pictInfo.fileAddress, 0x0, pictInfo.fileSize],
-			})
-
-			// Generate Blob URL and return it
-			const blob = new Blob([pictFileData.slice(4)], {type: 'image/jpeg'})
-			const url = window.URL.createObjectURL(blob)
-			return url
-		} finally {
-			await this.device.sendData({
-				label: 'SigmaFP ClearImageDBSingle',
-				opcode: OpCodeSigma.ClearImageDBSingle,
-				parameters: [id],
-				data: new ArrayBuffer(8),
-			})
+		const jpegTethrObject = {
+			format: 'jpeg',
+			blob,
 		}
+
+		return [jpegTethrObject]
 	}
 
 	public runAutoFocus = async (): Promise<boolean> => {
-		const {imageDBTail: id} = await this.getCamCaptStatus()
+		const captId = await this.executeSnapCommand(SnapCaptureMode.StartAF)
 
-		// Snap
-		const buffer = new ArrayBuffer(2)
-		const dataView = new DataView(buffer)
-
-		dataView.setUint8(0, 0x04)
-		dataView.setUint8(1, 0x01)
-
-		await this.device.sendData({
-			label: 'SigmaFP SnapCommand',
-			opcode: 0x901b,
-			data: this.encodeParameter(buffer),
-		})
-
-		let tries = 50
-		while (tries--) {
-			const {status} = await this.getCamCaptStatus(id)
-
-			// Failure
-			if ((status & 0xf000) === 0x6000) return false
-			// Success
-			if (status === CaptStatus.okAf) break
-
-			await sleep(500)
+		if (captId !== null) {
+			await this.clearImageDBSingle(captId)
+			return true
+		} else {
+			return false
 		}
-
-		await this.device.sendData({
-			label: 'SigmaFP ClearImageDBSingle',
-			opcode: OpCodeSigma.ClearImageDBSingle,
-			parameters: [id],
-			data: new ArrayBuffer(8),
-		})
-
-		return true
 	}
 
 	public startLiveview = async (): Promise<void> => {
@@ -825,7 +775,55 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private decodePictureFileInfoData2(data: ArrayBuffer) {
+	/**
+	 *
+	 * @returns Capture ID if the command execution has succeed, otherwise null
+	 */
+	private async executeSnapCommand(
+		captureMode: number,
+		captureAmount = 1
+	): Promise<number | null> {
+		const {imageDBTail: captId} = await this.getCamCaptStatus()
+
+		const snapState = new Uint8Array([captureMode, captureAmount]).buffer
+
+		await this.device.sendData({
+			label: 'Sigma SnapCommand',
+			opcode: OpCodeSigma.SnapCommand,
+			data: this.encodeParameter(snapState),
+		})
+
+		for (let restTries = 50; restTries > 0; restTries--) {
+			const {status} = await this.getCamCaptStatus(captId)
+
+			const isFailure = (status & 0xf000) === 0x6000
+			if (isFailure) return null
+
+			const isSucceed = (status & 0xf000) === 0x8000
+			if (isSucceed) return captId
+
+			if (status === CaptStatus.compImageCreate) return captId
+
+			await sleep(500)
+		}
+
+		return null
+	}
+
+	private async clearImageDBSingle(captId: number) {
+		await this.device.sendData({
+			label: 'SigmaFP ClearImageDBSingle',
+			opcode: OpCodeSigma.ClearImageDBSingle,
+			parameters: [captId],
+			data: new ArrayBuffer(8),
+		})
+	}
+
+	private async getPictFileInfo() {
+		const {data} = await this.device.receiveData({
+			label: 'SigmaFP GetPictFileInfo2',
+			opcode: 0x902d,
+		})
 		const dataView = new PTPDataView(data)
 
 		dataView.skip(12)
