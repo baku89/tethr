@@ -771,9 +771,9 @@ export class TethrPanasnoic extends Tethr {
 
 	private static ImageQualityTable = new BiMap<number, string>([
 		[0, 'fine'],
-		[1, 'std'],
+		[1, 'standard'],
 		[2, 'raw'],
 		[3, 'raw + fine'],
-		[4, 'raw + std'],
+		[4, 'raw + standard'],
 	])
 }

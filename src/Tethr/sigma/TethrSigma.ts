@@ -635,13 +635,13 @@ export class TethrSigma extends Tethr {
 			case null:
 				imageQualityID = 0x00
 				break
-			case 'Fine':
+			case 'fine':
 				imageQualityID = 0x02
 				break
-			case 'Normal':
+			case 'standard':
 				imageQualityID = 0x04
 				break
-			case 'Basic':
+			case 'low':
 				imageQualityID = 0x08
 				break
 			default:
@@ -672,13 +672,13 @@ export class TethrSigma extends Tethr {
 			let jpegQuality: string | null = null
 			switch (imageQuality & 0x0f) {
 				case 0x02:
-					jpegQuality = 'Fine'
+					jpegQuality = 'fine'
 					break
 				case 0x04:
-					jpegQuality = 'Normal'
+					jpegQuality = 'standard'
 					break
 				case 0x08:
-					jpegQuality = 'Basic'
+					jpegQuality = 'low'
 					break
 			}
 
@@ -700,13 +700,13 @@ export class TethrSigma extends Tethr {
 			value: stringifyImageQuality(imageQuality, dngBitDepth),
 			supportedValues: [
 				// NOTE: Hard-coded so this might not work for some cases
-				'Basic',
-				'Normal',
-				'Fine',
-				'DNG 12bit + Fine',
-				'DNG 14bit + Fine',
-				'DNG 12bit',
-				'DNG 14bit',
+				'low',
+				'standard',
+				'fine',
+				'raw 12bit + fine',
+				'raw 14bit + fine',
+				'raw 12bit',
+				'raw 14bit',
 			],
 		}
 
