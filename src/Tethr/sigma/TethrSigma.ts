@@ -104,7 +104,7 @@ export class TethrSigma extends Tethr {
 
 		await this.device.receiveData({
 			label: 'SigmaFP ConfigApi',
-			code: OpCodeSigma.ConfigApi,
+			opcode: OpCodeSigma.ConfigApi,
 			parameters: [0x0],
 		})
 
@@ -552,7 +552,7 @@ export class TethrSigma extends Tethr {
 
 		await this.device.sendData({
 			label: 'SigmaFP SnapCommand',
-			code: 0x901b,
+			opcode: 0x901b,
 			data: this.encodeParameter(buffer),
 		})
 
@@ -582,14 +582,14 @@ export class TethrSigma extends Tethr {
 
 			const {data: pictInfoData} = await this.device.receiveData({
 				label: 'SigmaFP GetPictFileInfo2',
-				code: 0x902d,
+				opcode: 0x902d,
 			})
 			const pictInfo = this.decodePictureFileInfoData2(pictInfoData)
 
 			// Get file
 			const {data: pictFileData} = await this.device.receiveData({
 				label: 'SigmaFP GetBigPartialPictFile',
-				code: OpCodeSigma.GetBigPartialPictFile,
+				opcode: OpCodeSigma.GetBigPartialPictFile,
 				parameters: [pictInfo.fileAddress, 0x0, pictInfo.fileSize],
 			})
 
@@ -600,7 +600,7 @@ export class TethrSigma extends Tethr {
 		} finally {
 			await this.device.sendData({
 				label: 'SigmaFP ClearImageDBSingle',
-				code: OpCodeSigma.ClearImageDBSingle,
+				opcode: OpCodeSigma.ClearImageDBSingle,
 				parameters: [id],
 				data: new ArrayBuffer(8),
 			})
@@ -619,7 +619,7 @@ export class TethrSigma extends Tethr {
 
 		await this.device.sendData({
 			label: 'SigmaFP SnapCommand',
-			code: 0x901b,
+			opcode: 0x901b,
 			data: this.encodeParameter(buffer),
 		})
 
@@ -637,7 +637,7 @@ export class TethrSigma extends Tethr {
 
 		await this.device.sendData({
 			label: 'SigmaFP ClearImageDBSingle',
-			code: OpCodeSigma.ClearImageDBSingle,
+			opcode: OpCodeSigma.ClearImageDBSingle,
 			parameters: [id],
 			data: new ArrayBuffer(8),
 		})
@@ -654,14 +654,14 @@ export class TethrSigma extends Tethr {
 	}
 
 	public getLiveview = async (): Promise<null | string> => {
-		const {code, data} = await this.device.receiveData({
+		const {resCode, data} = await this.device.receiveData({
 			label: 'SigmaFP GetViewFrame',
-			code: OpCodeSigma.GetViewFrame,
+			opcode: OpCodeSigma.GetViewFrame,
 			parameters: [],
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 		})
 
-		if (code !== ResCode.OK) return null
+		if (resCode !== ResCode.OK) return null
 
 		// Might be quirky but somehow works
 		const jpegData = data.slice(10)
@@ -678,7 +678,7 @@ export class TethrSigma extends Tethr {
 	private async getCamDataGroup1() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup1',
-			code: OpCodeSigma.GetCamDataGroup1,
+			opcode: OpCodeSigma.GetCamDataGroup1,
 			parameters: [0x0],
 		})
 
@@ -707,7 +707,7 @@ export class TethrSigma extends Tethr {
 	private async getCamDataGroup2() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup2',
-			code: OpCodeSigma.GetCamDataGroup2,
+			opcode: OpCodeSigma.GetCamDataGroup2,
 			parameters: [0x0],
 		})
 
@@ -728,7 +728,7 @@ export class TethrSigma extends Tethr {
 	private async getCamDataGroup5() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup5',
-			code: OpCodeSigma.GetCamDataGroup5,
+			opcode: OpCodeSigma.GetCamDataGroup5,
 			parameters: [0x0],
 		})
 
@@ -748,7 +748,7 @@ export class TethrSigma extends Tethr {
 	private async getCamCanSetInfo5() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamCanSetInfo5',
-			code: OpCodeSigma.GetCamCanSetInfo5,
+			opcode: OpCodeSigma.GetCamCanSetInfo5,
 			parameters: [0x0],
 		})
 
@@ -766,7 +766,7 @@ export class TethrSigma extends Tethr {
 	private async getCamDataGroupFocus() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroupFocus',
-			code: OpCodeSigma.GetCamDataGroupFocus,
+			opcode: OpCodeSigma.GetCamDataGroupFocus,
 			parameters: [0x0],
 		})
 
@@ -785,7 +785,7 @@ export class TethrSigma extends Tethr {
 		})
 	}
 
-	private async setCamData(code: number, propNumber: number, value: number) {
+	private async setCamData(opcode: number, propNumber: number, value: number) {
 		const buffer = new ArrayBuffer(4)
 		const dataView = new DataView(buffer)
 
@@ -797,7 +797,7 @@ export class TethrSigma extends Tethr {
 		try {
 			await this.device.sendData({
 				label: 'SigmaFP SetCamDataGroup#',
-				code,
+				opcode,
 				data,
 			})
 		} catch (err) {
@@ -810,7 +810,7 @@ export class TethrSigma extends Tethr {
 	private async getCamCaptStatus(id = 0) {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamCaptStatus',
-			code: OpCodeSigma.GetCamCaptStatus,
+			opcode: OpCodeSigma.GetCamCaptStatus,
 			parameters: [id],
 		})
 

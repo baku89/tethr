@@ -287,7 +287,7 @@ export class TethrPanasnoic extends Tethr {
 
 		await this.device.sendCommand({
 			label: 'Panasonic OpenSession',
-			code: OpCodePanasonic.OpenSession,
+			opcode: OpCodePanasonic.OpenSession,
 			parameters: [0x00010001],
 		})
 
@@ -297,7 +297,7 @@ export class TethrPanasnoic extends Tethr {
 	public close = async (): Promise<void> => {
 		await this.device.sendCommand({
 			label: 'Panasonic CloseSession',
-			code: OpCodePanasonic.CloseSession,
+			opcode: OpCodePanasonic.CloseSession,
 			parameters: [0x00010001],
 		})
 
@@ -345,7 +345,7 @@ export class TethrPanasnoic extends Tethr {
 
 		const succeed = await this.device.sendData({
 			label: 'Panasonic SetDevicePropValue',
-			code: OpCodePanasonic.SetDevicePropValue,
+			opcode: OpCodePanasonic.SetDevicePropValue,
 			parameters: [setCode],
 			data,
 		})
@@ -379,7 +379,7 @@ export class TethrPanasnoic extends Tethr {
 
 		const {data} = await this.device.receiveData({
 			label: 'Panasonic GetDevicePropDesc',
-			code: OpCodePanasonic.GetDevicePropDesc,
+			opcode: OpCodePanasonic.GetDevicePropDesc,
 			parameters: [getCode],
 		})
 
@@ -398,7 +398,7 @@ export class TethrPanasnoic extends Tethr {
 				? dataView.readUint16Array
 				: dataView.readUint32Array
 
-		dataView.skip(4) // dpc
+		dataView.skip(4) // devicePropCode
 		const headerLength = dataView.readUint32()
 
 		dataView.goto(headerLength * 4 + 2 * 4)
@@ -421,7 +421,7 @@ export class TethrPanasnoic extends Tethr {
 
 		await this.device.sendCommand({
 			label: 'Panasonic InitiateCapture',
-			code: OpCodePanasonic.InitiateCapture,
+			opcode: OpCodePanasonic.InitiateCapture,
 			parameters: [0x3000011],
 		})
 
@@ -473,7 +473,7 @@ export class TethrPanasnoic extends Tethr {
 	public startLiveview = async (): Promise<void> => {
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
-			code: OpCodePanasonic.Liveview,
+			opcode: OpCodePanasonic.Liveview,
 			parameters: [0x0d000010],
 		})
 	}
@@ -481,14 +481,14 @@ export class TethrPanasnoic extends Tethr {
 	public stopLiveview = async (): Promise<void> => {
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
-			code: OpCodePanasonic.Liveview,
+			opcode: OpCodePanasonic.Liveview,
 			parameters: [0x0d000011],
 		})
 	}
 
 	public getLiveviewRecommendedSettings = async () => {
 		const {data} = await this.device.receiveData({
-			code: OpCodePanasonic.GetLiveviewSettings,
+			opcode: OpCodePanasonic.GetLiveviewSettings,
 			parameters: [DevicePropCodePanasonic.Liveview_RecomImg],
 		})
 
@@ -514,7 +514,7 @@ export class TethrPanasnoic extends Tethr {
 
 	public getLiveviewSetting = async () => {
 		const {data} = await this.device.receiveData({
-			code: OpCodePanasonic.GetLiveviewSettings,
+			opcode: OpCodePanasonic.GetLiveviewSettings,
 			parameters: [DevicePropCodePanasonic.Liveview_TransImg],
 		})
 
@@ -548,20 +548,20 @@ export class TethrPanasnoic extends Tethr {
 		dataView.setUint16(14, fps, true)
 
 		await this.device.sendData({
-			code: OpCodePanasonic.SetLiveviewSettings,
+			opcode: OpCodePanasonic.SetLiveviewSettings,
 			parameters: [DevicePropCodePanasonic.Liveview_TransImg],
 			data,
 		})
 	}
 
 	public getLiveview = async (): Promise<null | string> => {
-		const {code, data} = await this.device.receiveData({
+		const {resCode, data} = await this.device.receiveData({
 			label: 'Panasonic LiveviewImage',
-			code: OpCodePanasonic.LiveviewImage,
+			opcode: OpCodePanasonic.LiveviewImage,
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 		})
 
-		if (code !== ResCode.OK) return null
+		if (resCode !== ResCode.OK) return null
 
 		const dataView = new DataView(data)
 
@@ -649,7 +649,7 @@ export class TethrPanasnoic extends Tethr {
 
 		await this.device.sendData({
 			label: 'Panasonic ManualFocusDrive',
-			code: OpCodePanasonic.ManualFocusDrive,
+			opcode: OpCodePanasonic.ManualFocusDrive,
 			parameters: [propCode],
 			data,
 		})
@@ -658,7 +658,7 @@ export class TethrPanasnoic extends Tethr {
 	public runAutoFocus = async (): Promise<boolean> => {
 		await this.device.sendCommand({
 			label: 'Panasonic Ctrl Liveview',
-			code: OpCodePanasonic.CtrlLiveview,
+			opcode: OpCodePanasonic.CtrlLiveview,
 			parameters: [0x03000024],
 		})
 
@@ -666,11 +666,11 @@ export class TethrPanasnoic extends Tethr {
 	}
 
 	private onPropChanged = async (ev: PTPDeviceEvent) => {
-		const code = ev.parameters[0]
+		const devicdPropCode = ev.parameters[0]
 
 		let props: (keyof BasePropType)[]
 
-		switch (code) {
+		switch (devicdPropCode) {
 			case DevicePropCodePanasonic.CameraMode:
 				props = ['exposureMode', 'aperture', 'shutterSpeed', 'exposureComp']
 				break

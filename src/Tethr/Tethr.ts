@@ -180,7 +180,7 @@ const PropCode = new BiMap<keyof BasePropType, number>([
 ])
 
 interface PropSchemeEntry<PropType> {
-	code: number
+	devicePropCode: number
 	decode?: (data: number) => PropType
 	encode?: (value: PropType) => number
 }
@@ -205,13 +205,13 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 	protected propScheme: PropScheme = {
 		batteryLevel: {
-			code: DevicePropCode.BatteryLevel,
+			devicePropCode: DevicePropCode.BatteryLevel,
 		},
 		exposureComp: {
-			code: DevicePropCode.ExposureBiasCompensation,
+			devicePropCode: DevicePropCode.ExposureBiasCompensation,
 		},
 		exposureMode: {
-			code: DevicePropCode.ExposureProgramMode,
+			devicePropCode: DevicePropCode.ExposureProgramMode,
 		},
 	}
 
@@ -230,7 +230,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 		await this.device.sendCommand({
 			label: 'Open Session',
-			code: OpCode.OpenSession,
+			opcode: OpCode.OpenSession,
 			parameters: [0x1],
 			expectedResCodes: [ResCode.OK, ResCode.SessionAlreadyOpen],
 		})
@@ -247,7 +247,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 		await this.device.sendCommand({
 			label: 'Close Session',
-			code: OpCode.CloseSession,
+			opcode: OpCode.CloseSession,
 		})
 		await this.device.close()
 	}
@@ -259,7 +259,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	public getStorageInfo = async (): Promise<void> => {
 		const {data} = await this.device.receiveData({
 			label: 'Get Storage IDs',
-			code: OpCode.GetStorageIDs,
+			opcode: OpCode.GetStorageIDs,
 		})
 		const dataView = new PTPDataView(data)
 
@@ -270,7 +270,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			const {data} = await this.device.receiveData({
 				label: 'GetStorageInfo',
 				parameters: [id],
-				code: OpCode.GetStorageInfo,
+				opcode: OpCode.GetStorageInfo,
 			})
 
 			const storageInfo = new PTPDataView(data)
@@ -307,9 +307,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		const dpc = this.propScheme[name]?.code
+		const devicePropCode = this.propScheme[name]?.devicePropCode
 
-		if (dpc === undefined) {
+		if (devicePropCode === undefined) {
 			return {
 				writable: false,
 				value: null,
@@ -317,14 +317,14 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			}
 		}
 
-		const {code: rescode, data} = await this.device.receiveData({
+		const {resCode, data} = await this.device.receiveData({
 			label: 'GetDevicePropDesc',
-			code: OpCode.GetDevicePropDesc,
-			parameters: [dpc],
+			opcode: OpCode.GetDevicePropDesc,
+			parameters: [devicePropCode],
 			expectedResCodes: [ResCode.OK, ResCode.DevicePropNotSupported],
 		})
 
-		if (rescode === ResCode.DevicePropNotSupported) {
+		if (resCode === ResCode.DevicePropNotSupported) {
 			return {
 				writable: false,
 				value: null,
@@ -431,7 +431,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	protected getObjectInfo = async (id: number): Promise<TethrObjectInfo> => {
 		const {data} = await this.device.receiveData({
 			label: 'GetObjectInfo',
-			code: OpCode.GetObjectInfo,
+			opcode: OpCode.GetObjectInfo,
 			parameters: [id],
 		})
 
@@ -468,7 +468,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	protected getObject = async (id: number): Promise<ArrayBuffer> => {
 		const {data} = await this.device.receiveData({
 			label: 'GetObject',
-			code: OpCode.GetObject,
+			opcode: OpCode.GetObject,
 			parameters: [id],
 		})
 
@@ -480,7 +480,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	): Promise<DeviceInfo> {
 		const {data} = await device.receiveData({
 			label: 'GetDeviceInfo',
-			code: OpCode.GetDeviceInfo,
+			opcode: OpCode.GetDeviceInfo,
 		})
 
 		const dataView = new PTPDataView(data)

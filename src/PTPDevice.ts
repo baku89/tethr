@@ -13,7 +13,7 @@ enum PTPType {
 
 interface PTPSendOption {
 	label?: string
-	code: number
+	opcode: number
 	parameters?: number[]
 	expectedResCodes?: number[]
 }
@@ -23,7 +23,7 @@ type PTPSendDataOption = PTPSendOption & {
 }
 
 interface PTPResponse {
-	code: number
+	resCode: number
 	parameters: number[]
 }
 
@@ -32,7 +32,7 @@ type PTPDataResponse = PTPResponse & {
 }
 
 export interface PTPDeviceEvent {
-	code: number
+	eventCode: number
 	parameters: number[]
 }
 
@@ -133,7 +133,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	private sendCommandNow = async (
 		option: PTPSendOption
 	): Promise<PTPResponse> => {
-		const {code, label, parameters, expectedResCodes} = {
+		const {opcode, label, parameters, expectedResCodes} = {
 			label: '',
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
@@ -144,7 +144,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		try {
 			console.groupCollapsed(`Send Command [${label}]`)
 
-			await this.transferOutCommand(code, id, parameters)
+			await this.transferOutCommand(opcode, id, parameters)
 
 			const res = await this.waitBulkIn(id)
 
@@ -162,7 +162,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			}
 
 			return {
-				code: res.code,
+				resCode: res.code,
 				parameters: [...new Uint32Array(res.payload)],
 			}
 		} finally {
@@ -173,7 +173,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	private sendDataNow = async (
 		option: PTPSendDataOption
 	): Promise<PTPResponse> => {
-		const {code, data, label, parameters, expectedResCodes} = {
+		const {opcode, data, label, parameters, expectedResCodes} = {
 			label: '',
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
@@ -184,8 +184,8 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		try {
 			console.groupCollapsed(`Send Data [${label}]`)
 
-			await this.transferOutCommand(code, id, parameters)
-			await this.transferOutData(code, id, data)
+			await this.transferOutCommand(opcode, id, parameters)
+			await this.transferOutData(opcode, id, data)
 
 			const res = await this.waitBulkIn(id)
 
@@ -203,7 +203,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			}
 
 			return {
-				code: res.code,
+				resCode: res.code,
 				parameters: [...new Uint32Array(res.payload)],
 			}
 		} finally {
@@ -214,7 +214,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	private receiveDataNow = async (
 		option: PTPSendOption
 	): Promise<PTPDataResponse> => {
-		const {code, label, parameters, expectedResCodes} = {
+		const {opcode, label, parameters, expectedResCodes} = {
 			label: '',
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
@@ -225,14 +225,14 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		console.groupCollapsed(`Receive Data [${label}]`)
 
 		try {
-			await this.transferOutCommand(code, id, parameters)
+			await this.transferOutCommand(opcode, id, parameters)
 			const res1 = await this.waitBulkIn(id)
 
 			if (res1.type === PTPType.Response) {
 				if (expectedResCodes.includes(res1.code)) {
 					console.groupEnd()
 					return {
-						code: res1.code,
+						resCode: res1.code,
 						parameters: [],
 						data: new ArrayBuffer(0),
 					}
@@ -252,7 +252,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			}
 
 			return {
-				code: res2.code,
+				resCode: res2.code,
 				parameters: [...new Uint32Array(res2.payload)],
 				data: res1.payload,
 			}
@@ -270,7 +270,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	}
 
 	private transferOutCommand = async (
-		code: number,
+		opcode: number,
 		transactionId: number,
 		parameters: number[]
 	) => {
@@ -283,7 +283,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 		dataView.setUint32(0, length, true)
 		dataView.setUint16(4, PTPType.Command, true)
-		dataView.setUint16(6, code, true)
+		dataView.setUint16(6, opcode, true)
 		dataView.setUint32(8, transactionId, true)
 
 		parameters.forEach((param, index) => {
@@ -294,7 +294,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		console.log(
 			'transferOutBulk',
 			'type=Command',
-			'code=' + toHexString(code, 2),
+			'opcode=' + toHexString(opcode, 2),
 			'id=' + transactionId,
 			'params=' + parameters.map(v => toHexString(v, 4))
 		)
@@ -303,7 +303,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	}
 
 	private transferOutData = async (
-		code: number,
+		opcode: number,
 		transactionId: number,
 		data: ArrayBuffer
 	) => {
@@ -316,7 +316,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 		dataView.setUint32(0, length, true)
 		dataView.setUint16(4, PTPType.Data, true)
-		dataView.setUint16(6, code, true)
+		dataView.setUint16(6, opcode, true)
 		dataView.setUint32(8, transactionId, true)
 
 		const dataBytes = new Uint8Array(data)
@@ -326,7 +326,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		console.log(
 			'transferOutBulk',
 			'type=Data',
-			'code=' + toHexString(code, 2),
+			'opcode=' + toHexString(opcode, 2),
 			'id=' + transactionId,
 			'payload=' + toHexString(data)
 		)
