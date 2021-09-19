@@ -6,7 +6,7 @@ import {decodeIFD, IFDType} from '../../IFD'
 import {ResCode} from '../../PTPDatacode'
 import {PTPDataView} from '../../PTPDataView'
 import {TethrObject} from '../../TethrObject'
-import {isntNil} from '../../util'
+import {isntNil, toHexString} from '../../util'
 import {
 	Aperture,
 	BatteryLevel,
@@ -168,6 +168,8 @@ export class TethrSigma extends Tethr {
 			case 'aspectRatio':
 				succeed = await this.setAspectRatio(value as string)
 				break
+			case 'imageQuality':
+				succeed = await this.setImageQuality(value as string)
 			default:
 				status = 'unsupported'
 		}
@@ -613,6 +615,51 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
+	private setImageQuality = async (imageQuality: string): Promise<boolean> => {
+		let jpegQuality: null | string = null
+		let dngBitDepth: number | null = null
+
+		const hasDngMatch = imageQuality.match(/^DNG (12|14)bit(?: \+ ([a-z]+))?/i)
+
+		if (hasDngMatch) {
+			const [, dngBitDepthStr, jpegQualityStr] = hasDngMatch
+			jpegQuality = jpegQualityStr ?? null
+			dngBitDepth = parseInt(dngBitDepthStr)
+		} else {
+			jpegQuality = imageQuality
+		}
+
+		// Generate imageQuality value for setCamData
+		let imageQualityID
+		switch (jpegQuality) {
+			case null:
+				imageQualityID = 0x00
+				break
+			case 'Fine':
+				imageQualityID = 0x02
+				break
+			case 'Normal':
+				imageQualityID = 0x04
+				break
+			case 'Basic':
+				imageQualityID = 0x08
+				break
+			default:
+				return false
+		}
+		imageQualityID |= dngBitDepth === null ? 0x00 : 0x10
+
+		console.log({imageQualityID, dngBitDepth})
+
+		// Set camData
+		await this.setCamData(OpCodeSigma.SetCamDataGroup2, 15, imageQualityID)
+		if (dngBitDepth !== null) {
+			await this.setCamData(OpCodeSigma.SetCamDataGroup4, 9, dngBitDepth)
+		}
+
+		return true
+	}
+
 	private getImageQualityDesc = async (): Promise<PropDesc<string>> => {
 		type ImageQualityConfig = {
 			jpegQuality: string | null
@@ -625,13 +672,13 @@ export class TethrSigma extends Tethr {
 			let jpegQuality: string | null = null
 			switch (imageQuality & 0x0f) {
 				case 0x02:
-					jpegQuality = 'FINE'
+					jpegQuality = 'Fine'
 					break
 				case 0x04:
-					jpegQuality = 'NORMAL'
+					jpegQuality = 'Normal'
 					break
 				case 0x08:
-					jpegQuality = 'BASIC'
+					jpegQuality = 'Basic'
 					break
 			}
 
@@ -643,7 +690,7 @@ export class TethrSigma extends Tethr {
 			}
 		})()
 
-		const dngBit = await (async () => {
+		const dngBitDepth = await (async () => {
 			const {dngImageQuality} = await this.getCamDataGroup4()
 			return dngImageQuality + 'bit'
 		})()
@@ -655,13 +702,13 @@ export class TethrSigma extends Tethr {
 				let jpegQuality: string | null = null
 				switch (id >> 4) {
 					case 1:
-						jpegQuality = 'FINE'
+						jpegQuality = 'Fine'
 						break
 					case 2:
-						jpegQuality = 'NORMAL'
+						jpegQuality = 'Normal'
 						break
 					case 3:
-						jpegQuality = 'BASIC'
+						jpegQuality = 'Basic'
 						break
 				}
 
@@ -671,15 +718,17 @@ export class TethrSigma extends Tethr {
 			})
 		})()
 
-		const supportedDNGBits = await (async () => {
+		const supportedDNGBitDepths = await (async () => {
 			const {dngImageQuality} = await this.getCamCanSetInfo5()
-			return dngImageQuality.filter(bit => bit !== 0).map(v => v + 'bit')
+			return dngImageQuality
+				.filter(bitDepth => bitDepth !== 0)
+				.map(v => v + 'bit')
 		})()
 
 		const supportedValues = supportedImageQualities.flatMap(imageQuality => {
 			if (imageQuality.hasDNG) {
-				return supportedDNGBits.map(bit =>
-					stringifyImageQuality(imageQuality, bit)
+				return supportedDNGBitDepths.map(bitDepth =>
+					stringifyImageQuality(imageQuality, bitDepth)
 				)
 			} else {
 				return [stringifyImageQuality(imageQuality)]
@@ -688,16 +737,19 @@ export class TethrSigma extends Tethr {
 
 		return {
 			writable: supportedValues.length > 0,
-			value: stringifyImageQuality(imageQuality, dngBit),
+			value: stringifyImageQuality(imageQuality, dngBitDepth),
 			supportedValues: supportedValues,
 		}
 
-		function stringifyImageQuality(quality: ImageQualityConfig, dngBit = '') {
+		function stringifyImageQuality(
+			quality: ImageQualityConfig,
+			dngBitDepth = ''
+		) {
 			if (quality.hasDNG) {
 				if (quality.jpegQuality) {
-					return `DNG ${dngBit} + ${quality.jpegQuality}`
+					return `DNG ${dngBitDepth} + ${quality.jpegQuality}`
 				} else {
-					return `DNG ${dngBit}`
+					return `DNG ${dngBitDepth}`
 				}
 			} else {
 				if (quality.jpegQuality) {
@@ -880,8 +932,10 @@ export class TethrSigma extends Tethr {
 		const dataView = new PTPDataView(data)
 		dataView.skip(3) // OC + FieldPreset
 
+		console.log(toHexString(data))
+
 		return {
-			dcCropMode: dataView.skip(4).readUint8(),
+			dcCropMode: dataView.readUint8(),
 			LVMagnifyRatio: dataView.readUint8(),
 			isoExtension: dataView.readUint8(),
 			continuousShootingSpeed: dataView.readUint8(),
