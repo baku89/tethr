@@ -61,7 +61,7 @@ export type FlashMode =
 	| 'red eye fill'
 	| 'external sync'
 
-export type ExposureMode = 'P' | 'A' | 'S' | 'M'
+export type ExposureMode = 'P' | 'A' | 'S' | 'M' | string
 
 export type ExposureMeteringMode =
 	| 'average'

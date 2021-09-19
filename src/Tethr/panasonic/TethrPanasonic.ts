@@ -112,7 +112,7 @@ export class TethrPanasnoic extends Tethr {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
 			valueSize: 2,
 			decode(value: number) {
-				return (['P', 'A', 'S', 'M'] as ExposureMode[])[value] ?? null
+				return TethrPanasnoic.ExposureModeTable.get(value) ?? null
 			},
 		},
 		aperture: {
@@ -723,6 +723,19 @@ export class TethrPanasnoic extends Tethr {
 			ObjectFormatCode[code] ?? ObjectFormatCodePanasonic[code]
 		).toLowerCase()
 	}
+
+	private static ExposureModeTable = new BiMap<number, ExposureMode>([
+		[0, 'P'],
+		[1, 'A'],
+		[2, 'S'],
+		[3, 'M'],
+		[5, 'Video'],
+		[7, 'iA'],
+		[8, 'C1'],
+		[9, 'C2'],
+		[10, 'C3'],
+		[12, 'S&Q'],
+	])
 
 	private static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
 		[0x0002, 'auto'],
