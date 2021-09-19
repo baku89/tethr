@@ -5,7 +5,7 @@ export class TethrRicoh extends Tethr {
 
 	protected static ExposureModeTable = (() => {
 		const table = Tethr.ExposureModeTable
-		table.set(0x8003, 'C1')
+		table.set(0x8003, 'vendor iso-priority')
 		return table
 	})()
 }
