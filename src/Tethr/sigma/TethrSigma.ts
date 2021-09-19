@@ -1,3 +1,4 @@
+import {BiMap} from 'bim'
 import _ from 'lodash'
 import sleep from 'sleep-promise'
 
@@ -162,6 +163,9 @@ export class TethrSigma extends Tethr {
 			case 'colorTemperature':
 				succeed = await this.setColorTemperature(value as number)
 				break
+			case 'effectMode':
+				succeed = await this.setEffectMode(value as string)
+				break
 			default:
 				status = 'unsupported'
 		}
@@ -203,6 +207,8 @@ export class TethrSigma extends Tethr {
 				return (await this.getExposureCompDesc()) as ReturnType
 			case 'colorTemperature':
 				return (await this.getColorTemperatureDesc()) as ReturnType
+			case 'effectMode':
+				return (await this.getEffectModeDesc()) as ReturnType
 		}
 
 		return {
@@ -555,8 +561,27 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
+	private setEffectMode = async (effectMode: string): Promise<boolean> => {
+		const id = TethrSigma.ColorModeTable.getKey(effectMode)
+		if (id === undefined) return false
+		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
+	}
+
 	private getEffectModeDesc = async (): Promise<PropDesc<string>> => {
-		const {colorMode} = await this.GetCamDataGroup3()
+		const {colorMode} = await this.getCamDataGroup3()
+		const {colorMode: supportedColorModes} = await this.getCamCanSetInfo5()
+
+		const supportedValues = supportedColorModes.map(decodeColorMode)
+
+		return {
+			writable: supportedValues.length > 0,
+			value: decodeColorMode(colorMode),
+			supportedValues,
+		}
+
+		function decodeColorMode(id: number) {
+			return TethrSigma.ColorModeTable.get(id) ?? 'Unknown'
+		}
 	}
 
 	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
@@ -715,7 +740,7 @@ export class TethrSigma extends Tethr {
 			lensTeleFocalLength: dataView.readUint16(),
 			afAuxiliaryLight: dataView.readUint8(),
 			afBeep: dataView.readUint8(),
-			timerSound: dataView.skip(3).readUint8(),
+			timerSound: dataView.readUint8(),
 			destinationToSave: dataView.skip(1).readUint8(),
 		}
 	}
@@ -755,6 +780,7 @@ export class TethrSigma extends Tethr {
 			exposureComp: {tag: 217, type: IFDType.SignedShort},
 			whiteBalance: {tag: 301, type: IFDType.Byte},
 			colorTemerature: {tag: 302, type: IFDType.Short},
+			colorMode: {tag: 320, type: IFDType.Byte},
 		})
 	}
 
@@ -910,4 +936,23 @@ export class TethrSigma extends Tethr {
 
 		return encodedBuffer
 	}
+
+	private static ColorModeTable = new BiMap<number, string>([
+		[0x00, 'normal'],
+		[0x01, 'sepia'],
+		[0x02, 'bw'],
+		[0x03, 'standard'],
+		[0x04, 'vivid'],
+		[0x05, 'neutral'],
+		[0x06, 'portrait'],
+		[0x07, 'landscape'],
+		[0x08, 'fov classic blue'],
+		[0x09, 'sunset red'],
+		[0x0a, 'forest'],
+		[0x0b, 'cinema'],
+		[0x0c, 'fov classic yellow'],
+		[0x0d, 'teal and orange'],
+		[0x0e, 'off'],
+		[0x0f, 'powder blue'],
+	])
 }

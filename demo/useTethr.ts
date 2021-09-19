@@ -3,7 +3,7 @@ import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 import {connectCamera, Tethr} from '../src'
 import {listCameras} from '../src/connect-camera'
-import {PropDesc, PropNames, PropType} from '../src/Tethr/Tethr'
+import {PropNames, PropType} from '../src/Tethr/Tethr'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -28,27 +28,31 @@ export function useTethrProp<Name extends PropNames>(
 		supportedValues: [],
 	}) as TethrProp<PropType[Name]>
 
-	watch(camera, async cam => {
-		if (!cam) return
+	watch(
+		camera,
+		async cam => {
+			if (!cam) return
 
-		const desc = await cam.getDesc(name)
+			const desc = await cam.getDesc(name)
 
-		prop.writable = desc.writable
-		prop.value = desc.value
-		prop.supportedValues = desc.supportedValues
-
-		prop.update = async (value: any) => {
-			prop.updating = true
-			prop.value = (await cam.set(name, value)).value
-			prop.updating = false
-		}
-
-		cam.on(`${name}Changed`, (desc: PropDesc<PropType[Name]>) => {
-			prop.value = desc.value
 			prop.writable = desc.writable
+			prop.value = desc.value
 			prop.supportedValues = desc.supportedValues
-		})
-	})
+
+			prop.update = async (value: any) => {
+				prop.updating = true
+				prop.value = (await cam.set(name, value)).value
+				prop.updating = false
+			}
+
+			cam.on(`${name}Changed`, (desc: any) => {
+				prop.value = desc.value
+				prop.writable = desc.writable
+				prop.supportedValues = desc.supportedValues
+			})
+		},
+		{immediate: true}
+	)
 
 	return readonly(prop)
 }
