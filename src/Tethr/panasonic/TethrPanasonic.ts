@@ -1,11 +1,10 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
-import {PTPDataView} from '@/PTPDataView'
-import {PTPDeviceEvent} from '@/PTPDevice'
-import {TethrObject, TethrObjectInfo} from '@/TethrObject'
-
 import {ObjectFormatCode, ResCode} from '../../PTPDatacode'
+import {PTPDataView} from '../../PTPDataView'
+import {PTPDeviceEvent} from '../../PTPDevice'
+import {TethrObject, TethrObjectInfo} from '../../TethrObject'
 import {isntNil} from '../../util'
 import {
 	Aperture,

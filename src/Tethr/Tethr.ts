@@ -2,8 +2,6 @@ import {BiMap} from 'bim'
 import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
 
-import {TethrObject, TethrObjectInfo} from '@/TethrObject'
-
 import {
 	DatatypeCode,
 	DevicePropCode,
@@ -18,6 +16,7 @@ import {
 	PTPFilesystemType,
 	PTPStorageType,
 } from '../PTPEnum'
+import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil, toHexString} from '../util'
 
 export type Aperture = 'auto' | number
