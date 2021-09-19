@@ -9,12 +9,13 @@ import {PTPDataView} from '../../PTPDataView'
 import {isntNil} from '../../util'
 import {
 	Aperture,
-	BasePropType,
 	BatteryLevel,
 	convertShutterSpeedToTime,
 	ExposureMode,
 	ISO,
 	PropDesc,
+	PropNames,
+	PropType,
 	SetPropResult,
 	SetPropResultStatus,
 	ShutterSpeed,
@@ -128,14 +129,14 @@ export class TethrSigma extends Tethr {
 		await this.getCamDataGroup2()
 	}
 
-	public async set<K extends keyof BasePropType>(
+	public async set<K extends PropNames>(
 		name: K,
-		value: BasePropType[K]
-	): Promise<SetPropResult<BasePropType[K]>> {
+		value: PropType[K]
+	): Promise<SetPropResult<PropType[K]>> {
 		let succeed = false
 		let status: SetPropResultStatus | undefined
 
-		let mayAffectProps: (keyof BasePropType)[] = []
+		let mayAffectProps: PropNames[] = []
 
 		switch (name) {
 			case 'exposureMode':
@@ -178,28 +179,30 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
-		name: K
+	public async getDesc<N extends PropNames, T extends PropType[N]>(
+		name: N
 	): Promise<PropDesc<T>> {
+		type ReturnType = PropDesc<T>
+
 		switch (name) {
 			case 'batteryLevel':
-				return (await this.getBatteryLevelDesc()) as PropDesc<T>
+				return (await this.getBatteryLevelDesc()) as ReturnType
 			case 'focalLength':
-				return (await this.getFocalLengthDesc()) as PropDesc<T>
+				return (await this.getFocalLengthDesc()) as ReturnType
 			case 'exposureMode':
-				return (await this.getExposureModeDesc()) as PropDesc<T>
+				return (await this.getExposureModeDesc()) as ReturnType
 			case 'aperture':
-				return (await this.getApertureDesc()) as PropDesc<T>
+				return (await this.getApertureDesc()) as ReturnType
 			case 'shutterSpeed':
-				return (await this.getShutterSpeedDesc()) as PropDesc<T>
+				return (await this.getShutterSpeedDesc()) as ReturnType
 			case 'iso':
-				return (await this.getISODesc()) as PropDesc<T>
+				return (await this.getISODesc()) as ReturnType
 			case 'whiteBalance':
-				return (await this.getWhiteBalanceDesc()) as PropDesc<T>
+				return (await this.getWhiteBalanceDesc()) as ReturnType
 			case 'exposureComp':
-				return (await this.getExposureCompDesc()) as PropDesc<T>
+				return (await this.getExposureCompDesc()) as ReturnType
 			case 'colorTemperature':
-				return (await this.getColorTemperatureDesc()) as PropDesc<T>
+				return (await this.getColorTemperatureDesc()) as ReturnType
 		}
 
 		return {

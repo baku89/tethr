@@ -93,7 +93,7 @@ export interface DeviceInfo {
 	functionalMode: number
 	operationsSupported: number[]
 	eventsSupported: number[]
-	propsSupported: (keyof BasePropType)[]
+	propsSupported: PropNames[]
 	captureFormats: number[]
 	imageFormats: number[]
 	manufacturer: string
@@ -102,7 +102,7 @@ export interface DeviceInfo {
 	serialNumber: string
 }
 
-export interface BasePropType {
+export interface PropType {
 	batteryLevel: BatteryLevel
 	functionalMode: FunctionalMode
 	imageSize: [number, number]
@@ -144,7 +144,9 @@ export interface BasePropType {
 	iso: ISO // added
 }
 
-const PropCode = new BiMap<keyof BasePropType, number>([
+export type PropNames = keyof PropType
+
+const PropCode = new BiMap<PropNames, number>([
 	['batteryLevel', 0x5001],
 	['functionalMode', 0x5002],
 	['imageSize', 0x5003],
@@ -185,12 +187,12 @@ interface PropSchemeEntry<PropType> {
 }
 
 type PropScheme = {
-	[Name in keyof BasePropType]?: PropSchemeEntry<BasePropType[Name]>
+	[Name in PropNames]?: PropSchemeEntry<PropType[Name]>
 }
 
 export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid'
 
-export interface SetPropResult<T extends BasePropType[keyof BasePropType]> {
+export interface SetPropResult<T extends PropType[PropNames]> {
 	status: SetPropResultStatus
 	value: T | null
 }
@@ -200,7 +202,7 @@ export interface TakePictureOption {
 }
 
 type TethrEventTypes = {
-	[Name in keyof BasePropType as `${Name}Changed`]: PropDesc<BasePropType[Name]>
+	[Name in PropNames as `${Name}Changed`]: PropDesc<PropType[Name]>
 }
 
 export class Tethr extends EventEmitter<TethrEventTypes> {
@@ -291,25 +293,23 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 	}
 
-	public async get<K extends keyof BasePropType>(
-		name: K
-	): Promise<BasePropType[K] | null> {
+	public async get<K extends PropNames>(name: K): Promise<PropType[K] | null> {
 		return (await this.getDesc(name)).value
 	}
 
-	public async set<K extends keyof BasePropType>(
+	public async set<K extends PropNames>(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		name: K,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: BasePropType[K]
-	): Promise<SetPropResult<BasePropType[K]>> {
+		value: PropType[K]
+	): Promise<SetPropResult<PropType[K]>> {
 		return {
 			status: 'unsupported',
 			value: null,
 		}
 	}
 
-	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
+	public async getDesc<K extends PropNames, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
 		const devicePropCode = this.propScheme[name]?.devicePropCode

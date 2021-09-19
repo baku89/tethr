@@ -8,11 +8,12 @@ import {TethrObject, TethrObjectInfo} from '../../TethrObject'
 import {isntNil} from '../../util'
 import {
 	Aperture,
-	BasePropType,
 	ExposureMode,
 	ISO,
 	ManualFocusDriveOption,
 	PropDesc,
+	PropNames,
+	PropType,
 	SetPropResult,
 	TakePictureOption,
 	Tethr,
@@ -95,11 +96,11 @@ enum ObjectFormatCodePanasonic {
 }
 
 type PropScheme = {
-	[Name in keyof BasePropType]?: {
+	[Name in PropNames]?: {
 		getCode: number
 		setCode?: number
-		decode: (value: number) => BasePropType[Name] | null
-		encode?: (value: BasePropType[Name]) => number | null
+		decode: (value: number) => PropType[Name] | null
+		encode?: (value: PropType[Name]) => number | null
 		valueSize: 1 | 2 | 4
 	}
 }
@@ -304,17 +305,17 @@ export class TethrPanasnoic extends Tethr {
 		await super.open()
 	}
 
-	public async set<K extends keyof BasePropType>(
-		name: K,
-		value: BasePropType[K]
-	): Promise<SetPropResult<BasePropType[K]>> {
-		const scheme = this.propSchemePanasonic[name] as PropScheme[K] | undefined
+	public async set<N extends PropNames>(
+		name: N,
+		value: PropType[N]
+	): Promise<SetPropResult<PropType[N]>> {
+		const scheme = this.propSchemePanasonic[name] as PropScheme[N] | undefined
 
 		if (!scheme)
 			throw new Error(`Prop ${name} is not supported for this device`)
 
 		const setCode = scheme.setCode
-		const encode = scheme.encode as (value: BasePropType[K]) => number | null
+		const encode = scheme.encode as (value: PropType[N]) => number | null
 		const valueSize = scheme.valueSize
 
 		const desc = await this.getDesc(name)
@@ -322,7 +323,7 @@ export class TethrPanasnoic extends Tethr {
 		if (!(setCode && encode && desc.writable)) {
 			return {
 				status: 'unsupported',
-				value: (await this.get(name)) as BasePropType[K],
+				value: (await this.get(name)) as PropType[N],
 			}
 		}
 
@@ -333,7 +334,7 @@ export class TethrPanasnoic extends Tethr {
 		if (encodedValue === null) {
 			return {
 				status: 'unsupported',
-				value: (await this.get(name)) as BasePropType[K],
+				value: (await this.get(name)) as PropType[N],
 			}
 		}
 
@@ -352,11 +353,11 @@ export class TethrPanasnoic extends Tethr {
 
 		return {
 			status: succeed ? 'ok' : 'invalid',
-			value: (await this.get(name)) as BasePropType[K],
+			value: (await this.get(name)) as PropType[K],
 		}
 	}
 
-	public async getDesc<K extends keyof BasePropType, T extends BasePropType[K]>(
+	public async getDesc<K extends PropNames, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
 		// const superDesc = await super.getDesc(name)
@@ -674,7 +675,7 @@ export class TethrPanasnoic extends Tethr {
 	private onPropChanged = async (ev: PTPEvent) => {
 		const devicdPropCode = ev.parameters[0]
 
-		let props: (keyof BasePropType)[]
+		let props: PropNames[]
 
 		switch (devicdPropCode) {
 			case DevicePropCodePanasonic.CameraMode:
