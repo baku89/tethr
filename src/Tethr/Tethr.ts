@@ -5,6 +5,7 @@ import _ from 'lodash'
 import {
 	DatatypeCode,
 	DevicePropCode,
+	EventCode,
 	ObjectFormatCode,
 	OpCode,
 	ResCode,
@@ -574,10 +575,30 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 	public runAutoFocus = async (): Promise<boolean> => false
 
-	public takePicture = async (
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		option?: TakePictureOption
-	): Promise<null | TethrObject[]> => null
+	public takePicture = async ({
+		download = true,
+	}: TakePictureOption = {}): Promise<null | TethrObject[]> => {
+		await this.device.sendCommand({
+			label: 'InitiateCapture',
+			opcode: OpCode.InitiateCapture,
+			parameters: [0x0],
+		})
+
+		const objectAddedEvent = await this.device.waitEvent(EventCode.ObjectAdded)
+
+		if (!download) return null
+
+		const objectID = objectAddedEvent.parameters[0]
+		const objectInfo = await this.getObjectInfo(objectID)
+		const objectBuffer = await this.getObject(objectID)
+
+		const tethrObject: TethrObject = {
+			...objectInfo,
+			blob: new Blob([objectBuffer], {type: 'image/jpeg'}),
+		}
+
+		return [tethrObject]
+	}
 
 	public startLiveview = async (): Promise<void> => {
 		return
@@ -630,12 +651,14 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 	}
 
-	protected getObject = async (id: number): Promise<ArrayBuffer> => {
-		// TODO: Specify maxByteLength not to babble
+	protected getObject = async (objectID: number): Promise<ArrayBuffer> => {
+		const {byteLength} = await this.getObjectInfo(objectID)
+
 		const {data} = await this.device.receiveData({
 			label: 'GetObject',
 			opcode: OpCode.GetObject,
-			parameters: [id],
+			parameters: [objectID],
+			maxByteLength: byteLength + 1000,
 		})
 
 		return data
