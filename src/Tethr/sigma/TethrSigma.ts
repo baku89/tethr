@@ -166,6 +166,9 @@ export class TethrSigma extends Tethr {
 			case 'colorMode':
 				succeed = await this.setColorMode(value as string)
 				break
+			case 'aspectRatio':
+				succeed = await this.setAspectRatio(value as string)
+				break
 			default:
 				status = 'unsupported'
 		}
@@ -209,6 +212,8 @@ export class TethrSigma extends Tethr {
 				return this.getColorTemperatureDesc() as ReturnType
 			case 'colorMode':
 				return this.getColorModeDesc() as ReturnType
+			case 'aspectRatio':
+				return this.getAspectRatioDesc() as ReturnType
 		}
 
 		return {
@@ -584,6 +589,29 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
+	private setAspectRatio = async (aspectRatio: string): Promise<boolean> => {
+		const id = TethrSigma.AspectRatioTableIFD.getKey(aspectRatio)
+		if (id === undefined) return false
+		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
+	}
+
+	private getAspectRatioDesc = async (): Promise<PropDesc<string>> => {
+		const {aspectRatio} = await this.getCamDataGroup5()
+		const {aspectRatio: supportedAspectRatios} = await this.getCamCanSetInfo5()
+
+		const writable = supportedAspectRatios.length > 0
+
+		const aspectRatioIfdID = aspectRatio - TethrSigma.AspectRatioDataGroupOffset
+		const value = decodeAspectRatioIFD(aspectRatioIfdID)
+		const supportedValues = supportedAspectRatios.map(decodeAspectRatioIFD)
+
+		return {writable, value, supportedValues}
+
+		function decodeAspectRatioIFD(id: number) {
+			return TethrSigma.AspectRatioTableIFD.get(id) ?? 'Unknown'
+		}
+	}
+
 	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
 		const {batteryLevel} = await this.getCamDataGroup1()
 		const value = SigmaApexBatteryLevel.get(batteryLevel) ?? null
@@ -773,6 +801,7 @@ export class TethrSigma extends Tethr {
 		})
 
 		return decodeIFD(data, {
+			aspectRatio: {tag: 21, type: IFDType.Byte},
 			exposureMode: {tag: 200, type: IFDType.Byte},
 			fValue: {tag: 210, type: IFDType.SignedShort},
 			shutterSpeed: {tag: 212, type: IFDType.SignedShort},
@@ -955,4 +984,17 @@ export class TethrSigma extends Tethr {
 		[0x0e, 'off'],
 		[0x0f, 'powder blue'],
 	])
+
+	// NOTE: This table should fix
+	private static AspectRatioTableIFD = new BiMap<number, string>([
+		[1, '21:9'],
+		[2, '16:9'],
+		[3, '3:2'],
+		[4, 'a size'],
+		[5, '4:3'],
+		[6, '7:6'],
+		[7, '1:1'],
+	])
+
+	private static AspectRatioDataGroupOffset = 245
 }
