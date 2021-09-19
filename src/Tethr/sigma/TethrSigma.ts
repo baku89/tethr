@@ -582,6 +582,7 @@ export class TethrSigma extends Tethr {
 			label: 'SigmaFP GetBigPartialPictFile',
 			opcode: OpCodeSigma.GetBigPartialPictFile,
 			parameters: [pictInfo.fileAddress, 0x0, pictInfo.fileSize],
+			maxByteLength: pictInfo.fileSize + 1000,
 		})
 
 		// First 4 bytes seems to be buffer length so splice it
@@ -621,8 +622,8 @@ export class TethrSigma extends Tethr {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'SigmaFP GetViewFrame',
 			opcode: OpCodeSigma.GetViewFrame,
-			parameters: [],
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
+			maxByteLength: 1_000_000, // = 1MB
 		})
 
 		if (resCode !== ResCode.OK) return null

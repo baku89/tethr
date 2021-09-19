@@ -560,6 +560,7 @@ export class TethrPanasnoic extends Tethr {
 			label: 'Panasonic LiveviewImage',
 			opcode: OpCodePanasonic.LiveviewImage,
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
+			maxByteLength: 1_000_000, // = 1MB
 		})
 
 		if (resCode !== ResCode.OK) return null

@@ -472,6 +472,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	}
 
 	protected getObject = async (id: number): Promise<ArrayBuffer> => {
+		// TODO: Specify maxByteLength not to babble
 		const {data} = await this.device.receiveData({
 			label: 'GetObject',
 			opcode: OpCode.GetObject,
