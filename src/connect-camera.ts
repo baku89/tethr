@@ -1,7 +1,4 @@
-import {PTPDevice} from './PTPDevice'
 import {Tethr} from './Tethr'
-import {TethrPanasonic} from './Tethr/panasonic/TethrPanasonic'
-import {TethrSigma} from './Tethr/sigma/TethrSigma'
 
 interface TethrDeviceDescriptorPTPUSB {
 	type: 'ptp/usb'
@@ -50,36 +47,13 @@ window.listCameras = listCameras
 
 export async function connectCamera(
 	descriptor: TethrDeviceDescriptor
-): Promise<Tethr> {
+): Promise<Tethr | null> {
 	if (descriptor.type !== 'ptp/usb')
 		throw new Error(
 			`Tether interface ${descriptor.type} is not yet implemented`
 		)
 
-	const device = new PTPDevice(descriptor.device)
-	await device.open()
-
-	const info = await Tethr.getDeviceInfo(device)
-
-	let camera: Tethr | null = null
-
-	switch (info.vendorExtensionID) {
-		case 0x00000006: // Microsoft / Sigma
-			if (info.vendorExtensionDesc === 'SIGMA') {
-				camera = new TethrSigma(device)
-			}
-			break
-		case 0x0000001c: // Panasnoic
-			camera = new TethrPanasonic(device)
-			break
-	}
-
-	if (!camera) {
-		camera = new Tethr(device)
-	}
-
-	await camera.open()
-	return camera
+	return await Tethr.initWithUSBDevice(descriptor.device)
 }
 
 export {Tethr}
