@@ -1,7 +1,7 @@
 import {Tethr} from '..'
 
-export class TethrRicoh extends Tethr {
-	protected _class = TethrRicoh
+export class TethrRicohTheta extends Tethr {
+	protected _class = TethrRicohTheta
 
 	protected static ExposureModeTable = (() => {
 		const table = Tethr.ExposureModeTable

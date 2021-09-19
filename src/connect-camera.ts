@@ -1,7 +1,7 @@
 import {PTPDevice} from './PTPDevice'
 import {Tethr} from './Tethr'
 import {TethrPanasonic} from './Tethr/panasonic/TethrPanasonic'
-import {TethrRicoh} from './Tethr/ricoh/TethrRicoh'
+import {TethrRicohTheta} from './Tethr/ricoh/TethrRicohTheta'
 import {TethrSigma} from './Tethr/sigma/TethrSigma'
 import {DeviceInfo} from './Tethr/Tethr'
 
@@ -79,8 +79,8 @@ async function initTethrWithUSBDevice(usb: USBDevice): Promise<Tethr | null> {
 		case 0x00000006: // Microsoft / Sigma / Ricoh
 			if (info.vendorExtensionDesc === 'SIGMA') {
 				tethr = new TethrSigma(device)
-			} else if (info.manufacturer.match(/ricoh/i)) {
-				tethr = new TethrRicoh(device)
+			} else if (info.manufacturer.match(/theta/i)) {
+				tethr = new TethrRicohTheta(device)
 			}
 			break
 		case 0x0000001c: // Panasnoic
