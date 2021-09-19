@@ -13,6 +13,7 @@ import {
 	convertShutterSpeedToTime,
 	ExposureMode,
 	ISO,
+	LiveviewResult as LiveviewData,
 	PropDesc,
 	PropNames,
 	PropType,
@@ -796,7 +797,7 @@ export class TethrSigma extends Tethr {
 		this._liveviewing = false
 	}
 
-	public getLiveview = async (): Promise<null | string> => {
+	public getLiveview = async (): Promise<null | LiveviewData> => {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'SigmaFP GetViewFrame',
 			opcode: OpCodeSigma.GetViewFrame,
@@ -809,9 +810,9 @@ export class TethrSigma extends Tethr {
 		// Might be quirky but somehow works
 		const jpegData = data.slice(10)
 
-		const blob = new Blob([jpegData], {type: 'image/jpg'})
-		const url = window.URL.createObjectURL(blob)
-		return url
+		const image = new Blob([jpegData], {type: 'image/jpg'})
+
+		return {image}
 	}
 
 	public get liveviewing(): boolean {

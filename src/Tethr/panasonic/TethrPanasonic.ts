@@ -10,6 +10,7 @@ import {
 	Aperture,
 	ExposureMode,
 	ISO,
+	LiveviewResult as LiveviewData,
 	ManualFocusDriveOption,
 	PropDesc,
 	PropNames,
@@ -560,7 +561,7 @@ export class TethrPanasnoic extends Tethr {
 		})
 	}
 
-	public getLiveview = async (): Promise<null | string> => {
+	public getLiveview = async (): Promise<null | LiveviewData> => {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'Panasonic LiveviewImage',
 			opcode: OpCodePanasonic.LiveviewImage,
@@ -569,6 +570,8 @@ export class TethrPanasnoic extends Tethr {
 		})
 
 		if (resCode !== ResCode.OK) return null
+
+		let histogram!: Uint8Array | undefined
 
 		const dataView = new DataView(data)
 
@@ -595,23 +598,23 @@ export class TethrPanasnoic extends Tethr {
 				}*/
 				case 0x17000003: {
 					// Histogram
-					const valid = dataView.getUint32(offset + 4, true)
+					// const valid = dataView.getUint32(offset + 4, true)
 					const samples = dataView.getUint32(offset + 8, true)
-					const elems = dataView.getUint32(offset + 12, true)
-					const histogram = new Uint8Array(
+					// const elems = dataView.getUint32(offset + 12, true)
+					histogram = new Uint8Array(
 						data.slice(offset + 16, offset + 16 + samples)
 					)
 					break
 				}
 				case 0x17000004: {
 					// Posture?
-					const posture = dataView.getUint16(offset + 4, true)
+					// const posture = dataView.getUint16(offset + 4, true)
 					break
 				}
 				case 0x17000005: {
 					// Level gauge
-					const roll = dataView.getInt16(offset + 4, true) / 10
-					const pitch = dataView.getInt16(offset + 6, true) / 10
+					// const roll = dataView.getInt16(offset + 4, true) / 10
+					// const pitch = dataView.getInt16(offset + 6, true) / 10
 					break
 				}
 			}
@@ -623,9 +626,12 @@ export class TethrPanasnoic extends Tethr {
 
 		const jpegData = data.slice(jpegOffset)
 
-		const blob = new Blob([jpegData], {type: 'image/jpg'})
-		const url = window.URL.createObjectURL(blob)
-		return url
+		const image = new Blob([jpegData], {type: 'image/jpg'})
+
+		return {
+			image,
+			histogram,
+		}
 	}
 
 	public async manualFocusDrive(option: ManualFocusDriveOption) {

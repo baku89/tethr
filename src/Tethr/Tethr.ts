@@ -167,6 +167,11 @@ export interface TakePictureOption {
 	download?: boolean
 }
 
+export interface LiveviewResult {
+	image: Blob
+	histogram?: Uint8Array
+}
+
 type TethrEventTypes = {
 	[Name in PropNames as `${Name}Changed`]: PropDesc<PropType[Name]>
 }
@@ -391,10 +396,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		return
 	}
 
-	public getLiveview = async (): Promise<null | string> => {
-		console.info('Liveview is not supported for the current camera')
-		return null
-	}
+	public getLiveview = async (): Promise<null | LiveviewResult> => null
 
 	public get liveviewing(): boolean {
 		return false
