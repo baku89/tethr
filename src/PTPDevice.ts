@@ -11,15 +11,19 @@ enum PTPType {
 	Event = 0x4,
 }
 
-interface PTPSendOption {
+interface PTPSendCommandOption {
 	label?: string
 	opcode: number
 	parameters?: number[]
 	expectedResCodes?: number[]
 }
 
-type PTPSendDataOption = PTPSendOption & {
+type PTPSendDataOption = PTPSendCommandOption & {
 	data: ArrayBuffer
+}
+
+type PTPReceiveDataOption = PTPSendCommandOption & {
+	maxByteLength?: number
 }
 
 interface PTPResponse {
@@ -42,6 +46,8 @@ interface BulkInInfo {
 	transactionId: number
 	payload: ArrayBuffer
 }
+
+const PTP_COMMAND_BYTES_MAX = 12 + 4 * 3
 
 export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	private transactionId = 0x00000000
@@ -118,7 +124,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		return this._opened
 	}
 
-	public sendCommand = (option: PTPSendOption): Promise<PTPResponse> => {
+	public sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse> => {
 		return this.bulkInQueue.add(() => this.sendCommandNow(option))
 	}
 
@@ -126,12 +132,14 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		return this.bulkInQueue.add(() => this.sendDataNow(option))
 	}
 
-	public receiveData = (option: PTPSendOption): Promise<PTPDataResponse> => {
+	public receiveData = (
+		option: PTPReceiveDataOption
+	): Promise<PTPDataResponse> => {
 		return this.bulkInQueue.add(() => this.receiveDataNow(option))
 	}
 
 	private sendCommandNow = async (
-		option: PTPSendOption
+		option: PTPSendCommandOption
 	): Promise<PTPResponse> => {
 		const {opcode, label, parameters, expectedResCodes} = {
 			label: '',
@@ -146,7 +154,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 			await this.transferOutCommand(opcode, id, parameters)
 
-			const res = await this.waitBulkIn(id)
+			const res = await this.waitBulkIn(id, PTP_COMMAND_BYTES_MAX)
 
 			// Error checking
 			if (res.type !== PTPType.Response) {
@@ -187,7 +195,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			await this.transferOutCommand(opcode, id, parameters)
 			await this.transferOutData(opcode, id, data)
 
-			const res = await this.waitBulkIn(id)
+			const res = await this.waitBulkIn(id, PTP_COMMAND_BYTES_MAX)
 
 			// Error checking
 			if (res.type !== PTPType.Response) {
@@ -212,12 +220,13 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 	}
 
 	private receiveDataNow = async (
-		option: PTPSendOption
+		option: PTPReceiveDataOption
 	): Promise<PTPDataResponse> => {
-		const {opcode, label, parameters, expectedResCodes} = {
+		const {opcode, label, parameters, expectedResCodes, maxByteLength} = {
 			label: '',
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
+			maxByteLength: 10_000, // = 10KB. Looks enough for non-media data transfer
 			...option,
 		}
 		const id = this.generateTransactionId()
@@ -226,7 +235,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 
 		try {
 			await this.transferOutCommand(opcode, id, parameters)
-			const res1 = await this.waitBulkIn(id)
+			const res1 = await this.waitBulkIn(id, maxByteLength)
 
 			if (res1.type === PTPType.Response) {
 				if (expectedResCodes.includes(res1.code)) {
@@ -243,7 +252,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 				throw new Error(`Cannot receive data code=${toHexString(res1.code)}`)
 			}
 
-			const res2 = await this.waitBulkIn(id)
+			const res2 = await this.waitBulkIn(id, PTP_COMMAND_BYTES_MAX)
 
 			if (res2.type !== PTPType.Response) {
 				throw new Error(
@@ -334,10 +343,16 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 		return sent.status === 'ok'
 	}
 
-	private waitBulkIn = async (id: number): Promise<BulkInInfo> => {
+	private waitBulkIn = async (
+		expectedTransactionId: number,
+		maxByteLength: number
+	): Promise<BulkInInfo> => {
 		if (!this.device || !this.device.opened) throw new Error()
 
-		const {data, status} = await this.device.transferIn(this.bulkIn, 0x8000000)
+		const {data, status} = await this.device.transferIn(
+			this.bulkIn,
+			maxByteLength
+		)
 
 		// Error checking
 		if (status !== 'ok') throw new Error(`BulkIn returned status: ${status}`)
@@ -358,9 +373,10 @@ export class PTPDevice extends EventEmitter<Record<string, PTPDeviceEvent>> {
 			payload
 		)
 
-		if (id !== transactionId)
+		if (transactionId !== expectedTransactionId)
 			throw new Error(
-				`Transaction ID mismatch. Expected=${id}, got=${transactionId}`
+				`Transaction ID mismatch. Expected=${expectedTransactionId},` +
+					` got=${transactionId}`
 			)
 
 		return {
