@@ -171,6 +171,7 @@ export class TethrSigma extends Tethr {
 				break
 			case 'imageQuality':
 				succeed = await this.setImageQuality(value as string)
+				break
 			default:
 				status = 'unsupported'
 		}
