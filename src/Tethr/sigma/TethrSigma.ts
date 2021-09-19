@@ -773,6 +773,27 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
+	private async getCamDataGroup4() {
+		const {data} = await this.device.receiveData({
+			label: 'SigmaFP GetCamDataGroup4',
+			opcode: OpCodeSigma.GetCamDataGroup4,
+			parameters: [0x0],
+		})
+
+		const dataView = new PTPDataView(data)
+		dataView.skip(3) // OC + FieldPreset
+
+		return {
+			dcCropMode: dataView.skip(4).readUint8(),
+			LVMagnifyRatio: dataView.readUint8(),
+			isoExtension: dataView.readUint8(),
+			continuousShootingSpeed: dataView.readUint8(),
+			hdr: dataView.readUint8(),
+			dngImageQuality: dataView.readUint8(),
+			fillLight: dataView.readUint8(),
+		}
+	}
+
 	private async getCamDataGroup5() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup5',
