@@ -82,7 +82,6 @@ async function initTethrWithUSBDevice(usb: USBDevice): Promise<Tethr | null> {
 			if (info.vendorExtensionDesc === 'SIGMA') {
 				tethr = new TethrSigma(device)
 			} else if (info.manufacturer.match(/ricoh/i)) {
-				console.log('ricoh')
 				tethr = new TethrRicoh(device)
 			}
 			break
