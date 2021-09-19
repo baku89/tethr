@@ -17,7 +17,7 @@ import {
 	PTPStorageType,
 } from '../PTPEnum'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
-import {isntNil, toHexString} from '../util'
+import {toHexString} from '../util'
 
 export type Aperture = 'auto' | number
 
@@ -94,7 +94,7 @@ export interface DeviceInfo {
 	functionalMode: number
 	operationsSupported: number[]
 	eventsSupported: number[]
-	propsSupported: PropNames[]
+	propsSupported: number[]
 	captureFormats: number[]
 	imageFormats: number[]
 	manufacturer: string
@@ -493,7 +493,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 		const dataView = new PTPDataView(data)
 
-		const info: DeviceInfo = {
+		return {
 			standardVersion: dataView.readUint16(),
 			vendorExtensionID: dataView.readUint32(),
 			vendorExtensionVersion: dataView.readUint16(),
@@ -501,9 +501,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			functionalMode: dataView.readUint16(),
 			operationsSupported: dataView.readUint16Array(),
 			eventsSupported: dataView.readUint16Array(),
-			propsSupported: [...dataView.readUint16Array()]
-				.map(c => PropCode.getKey(c))
-				.filter(isntNil),
+			propsSupported: dataView.readUint16Array(),
 			captureFormats: dataView.readUint16Array(),
 			imageFormats: dataView.readUint16Array(),
 			manufacturer: dataView.readFixedUTF16String(),
@@ -511,8 +509,6 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			deviceVersion: dataView.readFixedUTF16String(),
 			serialNumber: dataView.readFixedUTF16String(),
 		}
-
-		return info
 	}
 
 	protected getObjectFormat(code: number) {
