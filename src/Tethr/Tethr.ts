@@ -192,137 +192,6 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	protected _class: typeof Tethr = Tethr
 	protected _opened = false
 
-	protected propScheme: PropScheme = {
-		exposureMode: {
-			devicePropCode: DevicePropCode.ExposureProgramMode,
-			dataType: DatatypeCode.Uint16,
-			decode(data) {
-				return (
-					Tethr.ExposureModeTable.get(data) ?? `vendor ${toHexString(data, 4)}`
-				)
-			},
-			encode(value) {
-				return (
-					Tethr.ExposureModeTable.getKey(value) ??
-					parseInt(value.split(' ')[1], 16)
-				)
-			},
-		},
-		exposureComp: {
-			devicePropCode: DevicePropCode.ExposureBiasCompensation,
-			dataType: DatatypeCode.Int16,
-			decode(mills) {
-				if (mills === 0) return '0'
-
-				const millsAbs = Math.abs(mills)
-
-				const sign = mills > 0 ? '+' : '-'
-				const integer = Math.floor(millsAbs / 1000)
-				const fracMills = millsAbs % 1000
-
-				let fraction = ''
-
-				switch (fracMills) {
-					case 300:
-						fraction = '1/3'
-						break
-					case 500:
-						fraction = '1/2'
-						break
-					case 700:
-						fraction = '2/3'
-						break
-				}
-
-				if (integer === 0) return `${sign}${fraction}`
-				if (fraction === '') return `${sign}${integer}`
-				return `${sign}${integer} ${fraction}`
-			},
-			encode(str) {
-				if (str === '0') return 0
-
-				const match = str.match(/^([+-]?)([0-9]+)?\s?(1\/2|1\/3|2\/3)?$/)
-
-				if (!match) return null
-
-				const [, signStr, integerStr, fractionStr] = match
-
-				const sign = signStr === '-' ? -1 : +1
-				const integer = parseInt(integerStr)
-				let fracMills = 0
-				switch (fractionStr) {
-					case '1/3':
-						fracMills = 300
-						break
-					case '1/2':
-						fracMills = 500
-						break
-					case '2/3':
-						fracMills = 700
-						break
-				}
-
-				return sign * (integer * 1000 + fracMills)
-			},
-		},
-		whiteBalance: {
-			devicePropCode: DevicePropCode.WhiteBalance,
-			dataType: DatatypeCode.Uint16,
-			decode(data) {
-				return Tethr.WhiteBalanceTable.get(data) ?? 'auto'
-			},
-			encode(value) {
-				return Tethr.WhiteBalanceTable.getKey(value) ?? 0x2 // = auto
-			},
-		},
-		iso: {
-			devicePropCode: DevicePropCode.ExposureIndex,
-			dataType: DatatypeCode.Uint16,
-			decode(data) {
-				if (data === 0xffff) return 'auto'
-				return data
-			},
-			encode(iso) {
-				if (iso === 'auto') return 0xffff
-				return iso
-			},
-		},
-		captureDelay: {
-			devicePropCode: DevicePropCode.CaptureDelay,
-			dataType: DatatypeCode.Uint32,
-			decode: _.identity,
-			encode: _.identity,
-		},
-		driveMode: {
-			devicePropCode: DevicePropCode.StillCaptureMode,
-			dataType: DatatypeCode.Uint16,
-			decode(data) {
-				return Tethr.DriveModeTable.get(data) ?? 'normal'
-			},
-			encode(value) {
-				return Tethr.DriveModeTable.getKey(value) ?? 0x0
-			},
-		},
-		timelapseNumber: {
-			devicePropCode: DevicePropCode.TimelapseNumber,
-			dataType: DatatypeCode.Uint16,
-			decode: _.identity,
-			encode: _.identity,
-		},
-		timelapseInterval: {
-			devicePropCode: DevicePropCode.TimelapseInterval,
-			dataType: DatatypeCode.Uint32,
-			decode: _.identity,
-			encode: _.identity,
-		},
-		batteryLevel: {
-			devicePropCode: DevicePropCode.BatteryLevel,
-			dataType: DatatypeCode.Uint8,
-			decode: _.identity,
-			encode: _.identity,
-		},
-	}
-
 	public constructor(protected device: PTPDevice) {
 		super()
 	}
@@ -361,7 +230,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	}
 
 	public getDeviceInfo = async (): Promise<DeviceInfo> => {
-		return await Tethr.getDeviceInfo(this.device)
+		return await this._class.getDeviceInfo(this.device)
 	}
 
 	public getStorageInfo = async (): Promise<void> => {
@@ -404,7 +273,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		name: K,
 		value: PropType[K]
 	): Promise<SetPropResult<PropType[K]>> {
-		const scheme = this.propScheme[name]
+		const scheme = this._class.PropScheme[name]
 
 		if (!scheme) {
 			return {
@@ -472,7 +341,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	public async getDesc<K extends PropNames, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		const scheme = this.propScheme[name]
+		const scheme = this._class.PropScheme[name]
 
 		if (!scheme) {
 			return {
@@ -625,11 +494,11 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		return {
 			id,
 			storageID: dataView.readUint32(),
-			format: this.getObjectFormat(dataView.readUint16()),
+			format: this._class.getObjectFormat(dataView.readUint16()),
 			protectionStatus: dataView.readUint16(),
 			byteLength: dataView.readUint32(),
 			thumb: {
-				format: this.getObjectFormat(dataView.readUint16()),
+				format: this._class.getObjectFormat(dataView.readUint16()),
 				compressedSize: dataView.readUint32(),
 				width: dataView.readUint32(),
 				height: dataView.readUint32(),
@@ -691,8 +560,139 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 	}
 
-	protected getObjectFormat(code: number) {
+	protected static getObjectFormat(code: number) {
 		return ObjectFormatCode[code].toLowerCase()
+	}
+
+	protected static PropScheme: PropScheme = {
+		exposureMode: {
+			devicePropCode: DevicePropCode.ExposureProgramMode,
+			dataType: DatatypeCode.Uint16,
+			decode: data => {
+				return (
+					this.ExposureModeTable.get(data) ?? `vendor ${toHexString(data, 4)}`
+				)
+			},
+			encode: value => {
+				return (
+					this.ExposureModeTable.getKey(value) ??
+					parseInt(value.replace('vendor ', ''), 16)
+				)
+			},
+		},
+		exposureComp: {
+			devicePropCode: DevicePropCode.ExposureBiasCompensation,
+			dataType: DatatypeCode.Int16,
+			decode(mills) {
+				if (mills === 0) return '0'
+
+				const millsAbs = Math.abs(mills)
+
+				const sign = mills > 0 ? '+' : '-'
+				const integer = Math.floor(millsAbs / 1000)
+				const fracMills = millsAbs % 1000
+
+				let fraction = ''
+
+				switch (fracMills) {
+					case 300:
+						fraction = '1/3'
+						break
+					case 500:
+						fraction = '1/2'
+						break
+					case 700:
+						fraction = '2/3'
+						break
+				}
+
+				if (integer === 0) return `${sign}${fraction}`
+				if (fraction === '') return `${sign}${integer}`
+				return `${sign}${integer} ${fraction}`
+			},
+			encode(str) {
+				if (str === '0') return 0
+
+				const match = str.match(/^([+-]?)([0-9]+)?\s?(1\/2|1\/3|2\/3)?$/)
+
+				if (!match) return null
+
+				const [, signStr, integerStr, fractionStr] = match
+
+				const sign = signStr === '-' ? -1 : +1
+				const integer = parseInt(integerStr)
+				let fracMills = 0
+				switch (fractionStr) {
+					case '1/3':
+						fracMills = 300
+						break
+					case '1/2':
+						fracMills = 500
+						break
+					case '2/3':
+						fracMills = 700
+						break
+				}
+
+				return sign * (integer * 1000 + fracMills)
+			},
+		},
+		whiteBalance: {
+			devicePropCode: DevicePropCode.WhiteBalance,
+			dataType: DatatypeCode.Uint16,
+			decode: data => {
+				return this.WhiteBalanceTable.get(data) ?? 'auto'
+			},
+			encode: value => {
+				return this.WhiteBalanceTable.getKey(value) ?? 0x2 // = auto
+			},
+		},
+		iso: {
+			devicePropCode: DevicePropCode.ExposureIndex,
+			dataType: DatatypeCode.Uint16,
+			decode: data => {
+				if (data === 0xffff) return 'auto'
+				return data
+			},
+			encode: iso => {
+				if (iso === 'auto') return 0xffff
+				return iso
+			},
+		},
+		captureDelay: {
+			devicePropCode: DevicePropCode.CaptureDelay,
+			dataType: DatatypeCode.Uint32,
+			decode: _.identity,
+			encode: _.identity,
+		},
+		driveMode: {
+			devicePropCode: DevicePropCode.StillCaptureMode,
+			dataType: DatatypeCode.Uint16,
+			decode: data => {
+				return this.DriveModeTable.get(data) ?? 'normal'
+			},
+			encode: value => {
+				return this.DriveModeTable.getKey(value) ?? 0x0
+			},
+		},
+		timelapseNumber: {
+			devicePropCode: DevicePropCode.TimelapseNumber,
+			dataType: DatatypeCode.Uint16,
+			decode: _.identity,
+			encode: _.identity,
+		},
+		timelapseInterval: {
+			devicePropCode: DevicePropCode.TimelapseInterval,
+			dataType: DatatypeCode.Uint32,
+			decode: _.identity,
+			encode: _.identity,
+		},
+		batteryLevel: {
+			devicePropCode: DevicePropCode.BatteryLevel,
+			dataType: DatatypeCode.Uint8,
+			decode: _.identity,
+			encode: _.identity,
+		},
 	}
 
 	protected static ExposureModeTable = new BiMap<number, ExposureMode>([
