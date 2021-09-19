@@ -115,6 +115,7 @@ enum SnapCaptureMode {
 }
 
 export class TethrSigma extends Tethr {
+	protected _class = TethrSigma
 	private _liveviewing = false
 
 	public open = async (): Promise<void> => {
@@ -572,12 +573,16 @@ export class TethrSigma extends Tethr {
 	}
 
 	private setColorMode = async (colorMode: string): Promise<boolean> => {
-		const id = TethrSigma.ColorModeTable.getKey(colorMode)
+		const id = this._class.ColorModeTable.getKey(colorMode)
 		if (id === undefined) return false
 		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
 	}
 
 	private getColorModeDesc = async (): Promise<PropDesc<string>> => {
+		const decodeColorMode = (id: number) => {
+			return this._class.ColorModeTable.get(id) ?? 'Unknown'
+		}
+
 		const {colorMode} = await this.getCamDataGroup3()
 		const {colorMode: supportedColorModes} = await this.getCamCanSetInfo5()
 
@@ -588,33 +593,30 @@ export class TethrSigma extends Tethr {
 			value: decodeColorMode(colorMode),
 			supportedValues,
 		}
-
-		function decodeColorMode(id: number) {
-			return TethrSigma.ColorModeTable.get(id) ?? 'Unknown'
-		}
 	}
 
 	private setAspectRatio = async (aspectRatio: string): Promise<boolean> => {
-		const id = TethrSigma.AspectRatioTableIFD.getKey(aspectRatio)
+		const id = this._class.AspectRatioTableIFD.getKey(aspectRatio)
 		if (id === undefined) return false
 		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
 	}
 
 	private getAspectRatioDesc = async (): Promise<PropDesc<string>> => {
+		const decodeAspectRatioIFD = (id: number) => {
+			return this._class.AspectRatioTableIFD.get(id) ?? 'Unknown'
+		}
+
 		const {aspectRatio} = await this.getCamDataGroup5()
 		const {aspectRatio: supportedAspectRatios} = await this.getCamCanSetInfo5()
 
 		const writable = supportedAspectRatios.length > 0
 
-		const aspectRatioIfdID = aspectRatio - TethrSigma.AspectRatioDataGroupOffset
+		const aspectRatioIfdID =
+			aspectRatio - this._class.AspectRatioDataGroupOffset
 		const value = decodeAspectRatioIFD(aspectRatioIfdID)
 		const supportedValues = supportedAspectRatios.map(decodeAspectRatioIFD)
 
 		return {writable, value, supportedValues}
-
-		function decodeAspectRatioIFD(id: number) {
-			return TethrSigma.AspectRatioTableIFD.get(id) ?? 'Unknown'
-		}
 	}
 
 	private setImageQuality = async (imageQuality: string): Promise<boolean> => {
@@ -987,7 +989,7 @@ export class TethrSigma extends Tethr {
 		dataView.setUint16(0, 1 << propNumber, true)
 		dataView.setUint16(2, value, true)
 
-		const data = TethrSigma.encodeParameter(buffer)
+		const data = this._class.encodeParameter(buffer)
 
 		try {
 			await this.device.sendData({
@@ -1035,7 +1037,7 @@ export class TethrSigma extends Tethr {
 		await this.device.sendData({
 			label: 'Sigma SnapCommand',
 			opcode: OpCodeSigma.SnapCommand,
-			data: TethrSigma.encodeParameter(snapState),
+			data: this._class.encodeParameter(snapState),
 		})
 
 		for (let restTries = 50; restTries > 0; restTries--) {
