@@ -163,8 +163,8 @@ type PropScheme = {
 	[Name in PropNames]?: {
 		devicePropCode: number
 		dataType: DatatypeCode
-		decode: (data: number) => PropType[Name] | null
-		encode: (value: PropType[Name]) => number | null
+		decode: (this: typeof Tethr, data: number) => PropType[Name] | null
+		encode: (this: typeof Tethr, value: PropType[Name]) => number | null
 	}
 }
 
@@ -282,7 +282,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			}
 		}
 
-		const encode = scheme.encode as (value: PropType[K]) => number
+		const encode = scheme.encode.bind(this._class) as (
+			value: PropType[K]
+		) => number
 		const propData = encode(value)
 
 		if (propData === null) {
@@ -366,7 +368,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			}
 		}
 
-		const decode = scheme.decode as (data: number) => T
+		const decode = scheme.decode.bind(this._class) as (data: number) => T
 
 		const dataView = new PTPDataView(data, 2)
 
@@ -568,12 +570,12 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		exposureMode: {
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			dataType: DatatypeCode.Uint16,
-			decode: data => {
+			decode: function (data) {
 				return (
 					this.ExposureModeTable.get(data) ?? `vendor ${toHexString(data, 4)}`
 				)
 			},
-			encode: value => {
+			encode: function (value) {
 				return (
 					this.ExposureModeTable.getKey(value) ??
 					parseInt(value.replace('vendor ', ''), 16)
@@ -583,7 +585,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		exposureComp: {
 			devicePropCode: DevicePropCode.ExposureBiasCompensation,
 			dataType: DatatypeCode.Int16,
-			decode(mills) {
+			decode: function (mills) {
 				if (mills === 0) return '0'
 
 				const millsAbs = Math.abs(mills)
@@ -610,7 +612,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				if (fraction === '') return `${sign}${integer}`
 				return `${sign}${integer} ${fraction}`
 			},
-			encode(str) {
+			encode: function (str) {
 				if (str === '0') return 0
 
 				const match = str.match(/^([+-]?)([0-9]+)?\s?(1\/2|1\/3|2\/3)?$/)
@@ -640,21 +642,21 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		whiteBalance: {
 			devicePropCode: DevicePropCode.WhiteBalance,
 			dataType: DatatypeCode.Uint16,
-			decode: data => {
+			decode: function (data) {
 				return this.WhiteBalanceTable.get(data) ?? 'auto'
 			},
-			encode: value => {
+			encode: function (value) {
 				return this.WhiteBalanceTable.getKey(value) ?? 0x2 // = auto
 			},
 		},
 		iso: {
 			devicePropCode: DevicePropCode.ExposureIndex,
 			dataType: DatatypeCode.Uint16,
-			decode: data => {
+			decode: function (data) {
 				if (data === 0xffff) return 'auto'
 				return data
 			},
-			encode: iso => {
+			encode: function (iso) {
 				if (iso === 'auto') return 0xffff
 				return iso
 			},
@@ -668,10 +670,10 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		driveMode: {
 			devicePropCode: DevicePropCode.StillCaptureMode,
 			dataType: DatatypeCode.Uint16,
-			decode: data => {
+			decode: function (data) {
 				return this.DriveModeTable.get(data) ?? 'normal'
 			},
-			encode: value => {
+			encode: function (value) {
 				return this.DriveModeTable.getKey(value) ?? 0x0
 			},
 		},
