@@ -36,6 +36,7 @@ export type WhiteBalance =
 	| 'tungsten'
 	| 'flash'
 	| `manual${'' | '2' | '3' | '4'}`
+	| `custom${'' | '2' | '3' | '4'}`
 
 export type ShutterSpeed = string
 
