@@ -13,7 +13,7 @@ import {
 	convertShutterSpeedToTime,
 	ExposureMode,
 	ISO,
-	LiveviewResult as LiveviewData,
+	LiveviewResult,
 	PropDesc,
 	PropNames,
 	PropType,
@@ -24,18 +24,6 @@ import {
 	Tethr,
 	WhiteBalance,
 } from '../Tethr'
-import {
-	SigmaApexApertureHalf,
-	SigmaApexApertureOneThird,
-	SigmaApexBatteryLevel,
-	SigmaApexCompensationOneThird,
-	SigmaApexExposureMode,
-	SigmaApexISO,
-	SigmaApexShutterSpeedHalf,
-	SigmaApexShutterSpeedOneThird,
-	SigmaApexWhiteBalance,
-	SigmaApexWhiteBalanceIFD,
-} from './SigmaApexTable'
 
 enum OpCodeSigma {
 	GetCamConfig = 0x9010,
@@ -251,8 +239,8 @@ export class TethrSigma extends Tethr {
 		const {aperture} = await this.getCamDataGroup1()
 		if (aperture === 0x0) return 'auto'
 		return (
-			SigmaApexApertureOneThird.get(aperture) ??
-			SigmaApexApertureHalf.get(aperture) ??
+			TethrSigma.ApertureOneThirdTable.get(aperture) ??
+			TethrSigma.ApertureHalfTable.get(aperture) ??
 			null
 		)
 	}
@@ -260,7 +248,7 @@ export class TethrSigma extends Tethr {
 	private setAperture = async (aperture: Aperture): Promise<boolean> => {
 		if (aperture === 'auto') return false
 
-		const byte = SigmaApexApertureOneThird.getKey(aperture)
+		const byte = TethrSigma.ApertureOneThirdTable.getKey(aperture)
 		if (!byte) return false
 
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
@@ -283,8 +271,8 @@ export class TethrSigma extends Tethr {
 
 		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
 		const table = isStepOneThird
-			? SigmaApexApertureOneThird
-			: SigmaApexApertureHalf
+			? TethrSigma.ApertureOneThirdTable
+			: TethrSigma.ApertureHalfTable
 
 		const apertures = Array.from(table.values())
 
@@ -309,8 +297,8 @@ export class TethrSigma extends Tethr {
 		const {shutterSpeed} = await this.getCamDataGroup1()
 		if (shutterSpeed === 0x0) return 'auto'
 		return (
-			SigmaApexShutterSpeedOneThird.get(shutterSpeed) ??
-			SigmaApexShutterSpeedHalf.get(shutterSpeed) ??
+			TethrSigma.ShutterSpeedOneThirdTable.get(shutterSpeed) ??
+			TethrSigma.ShutterSpeedHalfTable.get(shutterSpeed) ??
 			null
 		)
 	}
@@ -331,8 +319,8 @@ export class TethrSigma extends Tethr {
 
 		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
 		const table = isStepOneThird
-			? SigmaApexShutterSpeedOneThird
-			: SigmaApexShutterSpeedHalf
+			? TethrSigma.ShutterSpeedOneThirdTable
+			: TethrSigma.ShutterSpeedHalfTable
 
 		const shutterSpeeds = Array.from(table.entries()).filter(
 			e => e[1] !== 'sync' && e[1] !== 'bulb'
@@ -365,7 +353,7 @@ export class TethrSigma extends Tethr {
 	}
 
 	private setShutterSpeed = async (ss: ShutterSpeed): Promise<boolean> => {
-		const byte = SigmaApexShutterSpeedOneThird.getKey(ss)
+		const byte = TethrSigma.ShutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return false
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
@@ -376,7 +364,7 @@ export class TethrSigma extends Tethr {
 		if (isoAuto === 0x01) {
 			return 'auto'
 		} else {
-			return SigmaApexISO.get(isoSpeed) ?? null
+			return TethrSigma.ISOTable.get(isoSpeed) ?? null
 		}
 	}
 
@@ -385,7 +373,7 @@ export class TethrSigma extends Tethr {
 			return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
 		}
 
-		const byte = SigmaApexISO.getKey(iso)
+		const byte = TethrSigma.ISOTable.getKey(iso)
 		if (!byte) return false
 
 		return (
@@ -403,7 +391,7 @@ export class TethrSigma extends Tethr {
 		const isoMin = Math.round(3.125 * 2 ** svMin)
 		const isoMax = Math.round(3.125 * 2 ** svMax)
 
-		const isos = [...SigmaApexISO.values()]
+		const isos = [...TethrSigma.ISOTable.values()]
 		const supportedValues = isos.filter(a => isoMin <= a && a <= isoMax)
 
 		supportedValues.unshift('auto')
@@ -417,11 +405,11 @@ export class TethrSigma extends Tethr {
 
 	private getWhiteBalance = async () => {
 		const {whiteBalance} = await this.getCamDataGroup2()
-		return SigmaApexWhiteBalance.get(whiteBalance) ?? null
+		return TethrSigma.WhiteBalanceTable.get(whiteBalance) ?? null
 	}
 
 	private setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
-		const byte = SigmaApexWhiteBalance.getKey(wb)
+		const byte = TethrSigma.WhiteBalanceTable.getKey(wb)
 		if (!byte) return false
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, byte)
 	}
@@ -431,7 +419,7 @@ export class TethrSigma extends Tethr {
 		const value = await this.getWhiteBalance()
 
 		const supportedValues = whiteBalance
-			.map(v => SigmaApexWhiteBalanceIFD.get(v))
+			.map(v => TethrSigma.WhiteBalanceTableIFD.get(v))
 			.filter(isntNil)
 
 		return {
@@ -479,13 +467,13 @@ export class TethrSigma extends Tethr {
 
 	private getExposureMode = async () => {
 		const {exposureMode} = await this.getCamDataGroup2()
-		return SigmaApexExposureMode.get(exposureMode) ?? null
+		return TethrSigma.ExposureModeTable.get(exposureMode) ?? null
 	}
 
 	private setExposureMode = async (
 		exposureMode: ExposureMode
 	): Promise<boolean> => {
-		const byte = SigmaApexExposureMode.getKey(exposureMode)
+		const byte = TethrSigma.ExposureModeTable.getKey(exposureMode)
 		if (!byte) return false
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, byte)
@@ -496,7 +484,7 @@ export class TethrSigma extends Tethr {
 		const value = await this.getExposureMode()
 
 		const supportedValues = exposureMode
-			.map(n => SigmaApexExposureMode.get(n))
+			.map(n => TethrSigma.ExposureModeTable.get(n))
 			.filter(isntNil)
 
 		return {
@@ -508,11 +496,11 @@ export class TethrSigma extends Tethr {
 
 	private getExposureComp = async () => {
 		const {exposureComp} = await this.getCamDataGroup1()
-		return SigmaApexCompensationOneThird.get(exposureComp) ?? null
+		return TethrSigma.CompensationOneThirdTable.get(exposureComp) ?? null
 	}
 
 	private setExposureComp = async (value: string): Promise<boolean> => {
-		const bits = SigmaApexCompensationOneThird.getKey(value)
+		const bits = TethrSigma.CompensationOneThirdTable.getKey(value)
 		if (bits === undefined) return false
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, bits)
 	}
@@ -531,7 +519,7 @@ export class TethrSigma extends Tethr {
 
 		const [min, max] = exposureComp
 
-		const allValues = [...SigmaApexCompensationOneThird.values()]
+		const allValues = [...TethrSigma.CompensationOneThirdTable.values()]
 		const supportedValues = allValues
 			.map(v => [v, decodeExposureComp(v)] as [string, number])
 			.sort((a, b) => a[1] - b[1])
@@ -653,8 +641,6 @@ export class TethrSigma extends Tethr {
 		}
 		imageQualityID |= dngBitDepth === null ? 0x00 : 0x10
 
-		console.log({imageQualityID, dngBitDepth})
-
 		// Set camData
 		await this.setCamData(OpCodeSigma.SetCamDataGroup2, 15, imageQualityID)
 		if (dngBitDepth !== null) {
@@ -736,7 +722,7 @@ export class TethrSigma extends Tethr {
 
 	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
 		const {batteryLevel} = await this.getCamDataGroup1()
-		const value = SigmaApexBatteryLevel.get(batteryLevel) ?? null
+		const value = TethrSigma.BatteryLevelTable.get(batteryLevel) ?? null
 
 		return {
 			writable: false,
@@ -800,7 +786,7 @@ export class TethrSigma extends Tethr {
 		this._liveviewing = false
 	}
 
-	public getLiveview = async (): Promise<null | LiveviewData> => {
+	public getLiveview = async (): Promise<null | LiveviewResult> => {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'SigmaFP GetViewFrame',
 			opcode: OpCodeSigma.GetViewFrame,
@@ -1144,4 +1130,327 @@ export class TethrSigma extends Tethr {
 	])
 
 	private static AspectRatioDataGroupOffset = 245
+
+	private static ISOTable = new BiMap<number, ISO>([
+		[0b00000000, 6],
+		[0b00000011, 8],
+		[0b00000101, 10],
+		[0b00001000, 12],
+		[0b00001011, 16],
+		[0b00001101, 20],
+		[0b00010000, 25],
+		[0b00010011, 32],
+		[0b00010101, 40],
+		[0b00011000, 50],
+		[0b00011011, 64],
+		[0b00011101, 80],
+		[0b00100000, 100],
+		[0b00100011, 125],
+		[0b00100101, 160],
+		[0b00101000, 200],
+		[0b00101011, 250],
+		[0b00101101, 320],
+		[0b00110000, 400],
+		[0b00110011, 500],
+		[0b00110101, 640],
+		[0b00111000, 800],
+		[0b00111011, 1000],
+		[0b00111101, 1250],
+		[0b01000000, 1600],
+		[0b01000011, 2000],
+		[0b01000101, 2500],
+		[0b01001000, 3200],
+		[0b01001011, 4000],
+		[0b01001101, 5000],
+		[0b01010000, 6400],
+		[0b01010011, 8000],
+		[0b01010101, 10000],
+		[0b01011000, 12800],
+		[0b01011011, 16000],
+		[0b01011101, 20000],
+		[0b01100000, 25600],
+		[0b01100011, 32000],
+		[0b01100101, 40000],
+		[0b01101000, 51200],
+		[0b01101011, 64000],
+		[0b01101101, 80000],
+		[0b01110000, 102400],
+	])
+
+	private static CompensationOneThirdTable = new BiMap<number, string>([
+		[0b00000000, '0'],
+		[0b00000011, '+1/3'],
+		[0b00000101, '+2/3'],
+		[0b00001000, '+1'],
+		[0b00001011, '+1 1/3'],
+		[0b00001110, '+1 2/3'],
+		[0b00010000, '+2'],
+		[0b00010011, '+2 1/3'],
+		[0b00010101, '+2 2/3'],
+		[0b00011000, '+3'],
+		[0b00011011, '+3 1/3'],
+		[0b00011101, '+3 2/3'],
+		[0b00100000, '+4'],
+		[0b00100011, '+4 1/3'],
+		[0b00100101, '+4 2/3'],
+		[0b00101000, '+5'],
+		[0b00101011, '+5 1/3'],
+		[0b00101101, '+5 2/3'],
+		[0b00110000, '+6'],
+		[0b00110011, '+6 1/3'],
+		[0b11001101, '-6 1/3'],
+		[0b11010000, '-6'],
+		[0b11010011, '-5 2/3'],
+		[0b11010101, '-5 1/3'],
+		[0b11011000, '-5'],
+		[0b11011011, '-4 2/3'],
+		[0b11011101, '-4 1/3'],
+		[0b11100000, '-4'],
+		[0b11100011, '-3 2/3'],
+		[0b11100101, '-3 1/3'],
+		[0b11101000, '-3'],
+		[0b11101011, '-2 2/3'],
+		[0b11101101, '-2 1/3'],
+		[0b11110000, '-2'],
+		[0b11110011, '-1 2/3'],
+		[0b11110101, '-1 1/3'],
+		[0b11111000, '-1'],
+		[0b11111011, '-2/3'],
+		[0b11111101, '-1/3'],
+	])
+
+	private static ShutterSpeedOneThirdTable = new BiMap<number, string>([
+		[0b00001000, 'bulb'],
+		[0b00010000, '30'],
+		[0b00010011, '25'],
+		[0b00010101, '20'],
+		[0b00011000, '15'],
+		[0b00011011, '13'],
+		[0b00011101, '10'],
+		[0b00100000, '8'],
+		[0b00100011, '6'],
+		[0b00100101, '5'],
+		[0b00101000, '4'],
+		[0b00101011, '3.2'],
+		[0b00101101, '2.5'],
+		[0b00110000, '2'],
+		[0b00110011, '1.6'],
+		[0b00110101, '1.3'],
+		[0b00111000, '1'],
+		[0b00111011, '0.8'],
+		[0b00111101, '0.6'],
+		[0b01000000, '0.5'],
+		[0b01000011, '0.4'],
+		[0b01000101, '0.3'],
+		[0b01001000, '1/4'],
+		[0b01001011, '1/5'],
+		[0b01001101, '1/6'],
+		[0b01010000, '1/8'],
+		[0b01010011, '1/10'],
+		[0b01010101, '1/13'],
+		[0b01011000, '1/15'],
+		[0b01011011, '1/20'],
+		[0b01011101, '1/25'],
+		[0b01100000, '1/30'],
+		[0b01100011, '1/40'],
+		[0b01100101, '1/50'],
+		[0b01101000, '1/60'],
+		[0b01101011, '1/80'],
+		[0b01101101, '1/100'],
+		[0b01110000, '1/125'],
+		[0b01110011, '1/160'],
+		[0b01110100, '1/180'],
+		[0b01110101, '1/200'],
+		[0b01111000, '1/250'],
+		[0b01111011, '1/320'],
+		[0b01111100, '1/350'],
+		[0b01111101, '1/400'],
+		[0b10000000, '1/500'],
+		[0b10000011, '1/640'],
+		[0b10000100, '1/750'],
+		[0b10000101, '1/800'],
+		[0b10001000, '1/1000'],
+		[0b10001011, '1/1250'],
+		[0b10001100, '1/1500'],
+		[0b10001101, '1/1600'],
+		[0b10010000, '1/2000'],
+		[0b10010011, '1/2500'],
+		[0b10010100, '1/3000'],
+		[0b10010101, '1/3200'],
+		[0b10011000, '1/4000'],
+		[0b10011011, '1/5000'],
+		[0b10011100, '1/6000'],
+		[0b10011101, '1/6000'],
+		[0b10100000, '1/8000'],
+		[0b10100010, 'sync'],
+		[0b10100011, '1/10000'],
+		[0b10100101, '1/12800'],
+		[0b10101000, '1/16000'],
+		[0b10101011, '1/20000'],
+		[0b10101101, '1/25600'],
+		[0b10110000, '1/32000'],
+	])
+
+	private static ShutterSpeedHalfTable = new BiMap<number, string>([
+		[0b00001000, 'bulb'],
+		[0b00010001, '30'],
+		[0b00010100, '20'],
+		[0b00011000, '15'],
+		[0b00011100, '10'],
+		[0b00100000, '8'],
+		[0b00100100, '6'],
+		[0b00101000, '4'],
+		[0b00101100, '3'],
+		[0b00110000, '2'],
+		[0b00110100, '1.5'],
+		[0b00111000, '1'],
+		[0b00111100, '0.7'],
+		[0b01000000, '1/2'],
+		[0b01000100, '1/3'],
+		[0b01001000, '1/4'],
+		[0b01001100, '1/6'],
+		[0b01010000, '1/8'],
+		[0b01010100, '1/10'],
+		[0b01011000, '1/15'],
+		[0b01011100, '1/20'],
+		[0b01100000, '1/30'],
+		[0b01100100, '1/45'],
+		[0b01101000, '1/60'],
+		[0b01101100, '1/90'],
+		[0b01110000, '1/125'],
+		[0b01111000, '1/250'],
+		[0b10000000, '1/500'],
+		[0b10001000, '1/1000'],
+		[0b10010000, '1/2000'],
+		[0b10011000, '1/4000'],
+		[0b10100000, '1/8000'],
+		[0b10100010, 'sync'],
+		[0b10101000, '1/16000'],
+		[0b10110000, '1/32000'],
+	])
+
+	private static ApertureOneThirdTable = new BiMap<number, number>([
+		[0b00001000, 1.0],
+		[0b00001011, 1.1],
+		[0b00001101, 1.2],
+		[0b00010000, 1.4],
+		[0b00010011, 1.6],
+		[0b00010101, 1.8],
+		[0b00011000, 2.0],
+		[0b00011011, 2.2],
+		[0b00011101, 2.5],
+		[0b00100000, 2.8],
+		[0b00100011, 3.2],
+		[0b00100101, 3.5],
+		[0b00101000, 4.0],
+		[0b00101011, 4.5],
+		[0b00101101, 5.0],
+		[0b00110000, 5.6],
+		[0b00110011, 6.3],
+		[0b00110101, 7.1],
+		[0b00111000, 8.0],
+		[0b00111011, 9.0],
+		[0b00111101, 10],
+		[0b01000000, 11],
+		[0b01000011, 13],
+		[0b01000101, 14],
+		[0b01001000, 16],
+		[0b01001011, 18],
+		[0b01001101, 20],
+		[0b01010000, 22],
+		[0b01010011, 25],
+		[0b01010101, 29],
+		[0b01011000, 32],
+		[0b01011011, 36],
+		[0b01011101, 40],
+		[0b01100000, 45],
+		[0b01100011, 51],
+		[0b01100101, 57],
+		[0b01101000, 64],
+		[0b01101011, 72],
+		[0b01101101, 81],
+		[0b01110000, 91],
+	])
+
+	private static ApertureHalfTable = new BiMap<number, number>([
+		[0b00001000, 1.0],
+		[0b00001100, 1.2],
+		[0b00010000, 1.4],
+		[0b00010100, 1.8],
+		[0b00011000, 2.0],
+		[0b00011100, 2.5],
+		[0b00100000, 2.8],
+		[0b00100100, 3.5],
+		[0b00101000, 4.0],
+		[0b00101100, 4.5],
+		[0b00110000, 5.6],
+		[0b00110100, 6.7],
+		[0b00111000, 8.0],
+		[0b00111100, 9.5],
+		[0b01000000, 11],
+		[0b01000100, 13],
+		[0b01001000, 16],
+		[0b01001100, 19],
+		[0b01010000, 22],
+		[0b01010100, 27],
+		[0b01011000, 32],
+		[0b01011100, 38],
+		[0b01100000, 45],
+		[0b01100100, 54],
+		[0b01101000, 64],
+		[0b01101100, 76],
+		[0b01110000, 91],
+	])
+
+	protected static ExposureModeTable = new BiMap<number, ExposureMode>([
+		[0x1, 'P'],
+		[0x2, 'A'],
+		[0x3, 'S'],
+		[0x4, 'M'],
+	])
+
+	private static BatteryLevelTable = new Map<number, null | BatteryLevel>([
+		[0x00, null],
+		[0x01, 1],
+		[0x02, 2 / 3],
+		[0x03, 1 / 3],
+		[0x04, 'low'],
+		[0x05, 0],
+		[0x06, null],
+		[0x07, 0],
+		[0x08, 'ac'],
+		[0x09, null],
+		[0x0a, 4 / 5],
+		[0x0b, 3 / 5],
+		[0x0c, null],
+	])
+
+	private static WhiteBalanceTableTable = new BiMap<number, WhiteBalance>([
+		[0x01, 'auto'],
+		[0x02, 'daylight'], // Sunlight
+		[0x03, 'shade'],
+		[0x04, 'cloud'], // Overcast
+		[0x05, 'incandescent'],
+		[0x06, 'fluorescent'],
+		[0x07, 'flash'],
+		[0x08, 'custom'], // Custom 1
+		// [0x09, null], // CustomCapture 1
+		[0x0a, 'custom2'], // Custom 2
+		// [0x0b, null], // CustomCapture 2
+		[0x0c, 'custom3'], // Custom 3
+		// // [0x0d, null], // CustomCapture 3
+		[0x0e, 'manual'], // Custom Temperature
+		[0x0f, 'auto ambience'], // Auto (Light Source Priority)
+	])
+
+	private static WhiteBalanceTableIFD = new Map<number, WhiteBalance>([
+		[0x1, 'auto'],
+		[0x2, 'auto ambience'],
+		[0x3, 'daylight'],
+		[0x4, 'shade'],
+		[0x5, 'tungsten'],
+		[0x6, 'fluorescent'],
+		[0x7, 'flash'],
+		[0x8, 'manual'],
+	])
 }
