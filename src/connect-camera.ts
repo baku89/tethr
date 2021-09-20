@@ -79,7 +79,7 @@ async function initTethrWithUSBDevice(usb: USBDevice): Promise<Tethr | null> {
 		case 0x00000006: // Microsoft / Sigma / Ricoh
 			if (info.vendorExtensionDesc === 'SIGMA') {
 				tethr = new TethrSigma(device)
-			} else if (info.manufacturer.match(/theta/i)) {
+			} else if (info.model.match(/theta/i)) {
 				tethr = new TethrRicohTheta(device)
 			}
 			break
