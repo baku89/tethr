@@ -71,4 +71,20 @@ export class TethrRicohTheta extends Tethr {
 		table.set(0x8003, 'vendor iso-priority')
 		return table
 	})()
+
+	protected static WhiteBalanceTable = (() => {
+		const table = new BiMap(Tethr.WhiteBalanceTable.entries())
+		table.set(0x8001, 'shade')
+		table.set(0x0004, 'daylight')
+		table.set(0x0006, 'incandescent')
+		table.set(0x8002, 'cloud')
+		table.set(0x8020, 'vendor incandescent 2')
+		table.set(0x8003, 'vendor fluorescent daylight')
+		table.set(0x8004, 'vendor fluorescent natural white')
+		table.set(0x8005, 'vendor fluorescent white')
+		table.set(0x8006, 'tungsten')
+		table.set(0x8007, 'manual')
+		table.set(0x8008, 'underwater')
+		return table
+	})()
 }

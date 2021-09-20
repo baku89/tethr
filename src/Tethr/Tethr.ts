@@ -36,6 +36,7 @@ export type WhiteBalance =
 	| 'fluorescent'
 	| 'tungsten'
 	| 'flash'
+	| 'underwater'
 	| `manual${'' | 2 | 3 | 4}`
 	| `custom${'' | 2 | 3 | 4}`
 	| `vendor ${string}`
