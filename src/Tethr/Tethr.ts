@@ -447,7 +447,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 
 		return {
-			writable,
+			writable: writable && supportedValues.length > 1,
 			value,
 			supportedValues,
 		}
