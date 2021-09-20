@@ -147,17 +147,11 @@ export class TethrPanasonic extends Tethr {
 				}
 			},
 			encode: (value: string) => {
-				if (value === 'bulb') {
-					return 0xffffffff
-				}
-				if (value === 'auto') {
-					return 0x0ffffffe
-				}
+				if (value === 'bulb') return 0xffffffff
+				if (value === 'auto') return 0x0ffffffe
 
-				const fractionMatch = value.match(/^1\/([0-9]+)$/)
-
-				if (fractionMatch) {
-					const denominator = parseInt(fractionMatch[1])
+				if (value.startsWith('1/')) {
+					const denominator = parseInt(value.replace(/^1\//, ''))
 					return denominator * 1000
 				}
 
