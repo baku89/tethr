@@ -121,10 +121,10 @@ export interface DeviceInfo {
 export interface PropType {
 	batteryLevel: BatteryLevel
 	functionalMode: FunctionalMode
-	imageSize: [number, number]
+	//imageSize: [number, number]
 	compressionSetting: number
 
-	imageResolution: string // Added e.g. L, M, S...
+	imageResolution: string // Added e.g. L, M, S, 1024x768...
 	imageQuality: string // Added e.g. JPEG, JPEG+RAW...
 	aspectRatio: string // Added e.g. 16:9, 3:2...
 
@@ -165,10 +165,23 @@ export type PropNames = keyof PropType
 export type PropScheme = {
 	[Name in PropNames]?: {
 		devicePropCode: number
-		dataType: DatatypeCode
-		decode: (this: typeof Tethr, data: number) => PropType[Name] | null
-		encode: (this: typeof Tethr, value: PropType[Name]) => number | null
-	}
+	} & (
+		| {
+				dataType: DatatypeCode.Uint64
+				decode: (this: typeof Tethr, data: bigint) => PropType[Name] | null
+				encode: (this: typeof Tethr, value: PropType[Name]) => bigint | null
+		  }
+		| {
+				dataType: DatatypeCode.String
+				decode: (this: typeof Tethr, data: string) => PropType[Name] | null
+				encode: (this: typeof Tethr, value: PropType[Name]) => string | null
+		  }
+		| {
+				dataType: DatatypeCode
+				decode: (this: typeof Tethr, data: number) => PropType[Name] | null
+				encode: (this: typeof Tethr, value: PropType[Name]) => number | null
+		  }
+	)
 }
 
 export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
@@ -332,6 +345,10 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				dataView = new DataView(new ArrayBuffer(8))
 				dataView.setBigUint64(0, BigInt(propData), true)
 				break
+			case DatatypeCode.String:
+				dataView = new DataView(new ArrayBuffer(propData))
+				dataView.setBigUint64(0, BigInt(propData), true)
+				break
 			default: {
 				const label = DatatypeCode[scheme.dataType] ?? toHexString(16)
 				throw new Error(`PropDesc of datatype ${label} is not yet supported`)
@@ -404,6 +421,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				break
 			case DatatypeCode.Uint64:
 				getValue = dataView.readUint64
+				break
+			case DatatypeCode.String:
+				getValue = dataView.readFixedUTF16String
 				break
 			default: {
 				const label = DatatypeCode[dataType] ?? toHexString(16)
@@ -712,6 +732,12 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			encode: function (value) {
 				return this.DriveModeTable.getKey(value) ?? 0x0
 			},
+		},
+		imageResolution: {
+			devicePropCode: DevicePropCode.ImageSize,
+			dataType: DatatypeCode.String,
+			decode: _.identity,
+			encode: _.identity,
 		},
 		timelapseNumber: {
 			devicePropCode: DevicePropCode.TimelapseNumber,

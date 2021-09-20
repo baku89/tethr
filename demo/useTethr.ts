@@ -157,6 +157,7 @@ export function useTethr() {
 			captureDelay: useTethrProp(camera, 'captureDelay'),
 			timelapseNumber: useTethrProp(camera, 'timelapseNumber'),
 			timelapseInterval: useTethrProp(camera, 'timelapseInterval'),
+			focalLength: useTethrProp(camera, 'focalLength'),
 			batteryLevel: useTethrProp(camera, 'batteryLevel'),
 		},
 

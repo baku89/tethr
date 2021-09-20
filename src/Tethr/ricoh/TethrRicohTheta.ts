@@ -51,7 +51,7 @@ export class TethrRicohTheta extends Tethr {
 					}
 
 					return (BigInt(denominator) << BigInt(32)) | BigInt(fraction)
-				} as any,
+				},
 				decode: function (num: bigint) {
 					const denominator = Number(num >> BigInt(32))
 					const fraction = Number(num & BigInt(0xffffffff))
@@ -61,7 +61,7 @@ export class TethrRicohTheta extends Tethr {
 					}
 
 					return fraction + '/' + denominator
-				} as any,
+				},
 			},
 			colorTemperature: {
 				devicePropCode: DevicePropCodeRicohTheta.ColorTemperature,
