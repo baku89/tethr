@@ -2,6 +2,7 @@ import {BiMap} from 'bim'
 import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
 
+import {DriveMode, ExposureMode, PropType, WhiteBalance} from '../props'
 import {
 	DatatypeCode,
 	DevicePropCode,
@@ -20,78 +21,10 @@ import {
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
 
-export type Aperture = 'auto' | number
-
-export type ISO = 'auto' | number
-
-export type WhiteBalance =
-	| 'auto'
-	| 'auto cool'
-	| 'auto warm'
-	| 'auto ambience'
-	| 'daylight'
-	| 'shade'
-	| 'cloud'
-	| 'incandescent'
-	| 'fluorescent'
-	| 'tungsten'
-	| 'flash'
-	| 'underwater'
-	| `manual${'' | 2 | 3 | 4}`
-	| `custom${'' | 2 | 3 | 4}`
-	| `vendor ${string}`
-
-export type ShutterSpeed = string
-
 export function convertShutterSpeedToTime(ss: string) {
 	if (ss === 'bulk' || ss === 'sync') return Infinity
 	if (ss.startsWith('1/')) return 1 / parseInt(ss.slice(2))
 	return parseFloat(ss)
-}
-
-export type ExposureComp = string
-
-export type BatteryLevel = 'ac' | 'low' | number
-
-export type FunctionalMode = 'standard' | 'sleep'
-
-export type FocusMode = 'af' | 'mf'
-
-export type FlashMode =
-	| 'auto'
-	| 'off'
-	| 'fill'
-	| 'red eye auto'
-	| 'red eye fill'
-	| 'external sync'
-
-export type ExposureMode =
-	| 'P'
-	| 'A'
-	| 'S'
-	| 'M'
-	| 'creative'
-	| 'action'
-	| 'portrait'
-	| 'video'
-	| `C${1 | 2 | 3}`
-	| `vendor ${string}`
-
-export type ExposureMeteringMode =
-	| 'average'
-	| 'center-weighted-average'
-	| 'multi-spot'
-	| 'center-spot'
-
-export type DriveMode = 'normal' | 'burst' | 'timelapse'
-
-export type FocusMeteringMode = 'center-spot' | 'multi-spot'
-
-export type FocalLength = number | 'spherical'
-
-export type ManualFocusDriveOption = {
-	direction: 'near' | 'far'
-	speed: 1 | 2 | 3
 }
 
 export type PropDesc<T> = {
@@ -118,52 +51,8 @@ export interface DeviceInfo {
 	serialNumber: string
 }
 
-export interface PropType {
-	batteryLevel: BatteryLevel
-	functionalMode: FunctionalMode
-	//imageSize: [number, number]
-	compressionSetting: number
-
-	imageResolution: string // Added e.g. L, M, S, 1024x768...
-	imageQuality: string // Added e.g. JPEG, JPEG+RAW...
-	aspectRatio: string // Added e.g. 16:9, 3:2...
-
-	whiteBalance: WhiteBalance
-	rgbGain: [number, number, number]
-	colorTemperature: number // Added
-	aperture: number // fNumber
-	focalLength: FocalLength
-	focusDistance: number
-	focusMode: FocusMode
-	exposureMeteringMode: ExposureMeteringMode
-	flashMode: FlashMode
-	// exposureTime: number
-	shutterSpeed: ShutterSpeed
-	exposureMode: ExposureMode // exposureProgramMode
-	// exposureIndex: 0x500f
-	exposureComp: ExposureComp // exposureBiasCompensation
-	dateTime: Date
-	captureDelay: number
-	driveMode: DriveMode // stillCaptureMode
-	contrast: number
-	sharpness: number
-	digitalZoom: number
-	colorMode: string
-	burstNumber: number
-	burstInterval: number
-	timelapseNumber: number
-	timelapseInterval: number
-	focusMeteringMode: FocusMeteringMode
-	uploadURL: string
-	artist: string
-	copyrightInfo: string
-	iso: ISO // added
-}
-
-export type PropNames = keyof PropType
-
 export type PropScheme = {
-	[Name in PropNames]?: {
+	[Name in keyof PropType]?: {
 		devicePropCode: number
 	} & (
 		| {
@@ -186,7 +75,7 @@ export type PropScheme = {
 
 export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
 
-export interface SetPropResult<T extends PropType[PropNames]> {
+export interface SetPropResult<T extends PropType[keyof PropType]> {
 	status: SetPropResultStatus
 	value: T | null
 }
@@ -201,7 +90,7 @@ export interface LiveviewResult {
 }
 
 type TethrEventTypes = {
-	[Name in PropNames as `${Name}Changed`]: PropDesc<PropType[Name]>
+	[Name in keyof PropType as `${Name}Changed`]: PropDesc<PropType[Name]>
 }
 
 export class Tethr extends EventEmitter<TethrEventTypes> {
@@ -286,11 +175,13 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 	}
 
-	public async get<K extends PropNames>(name: K): Promise<PropType[K] | null> {
+	public async get<K extends keyof PropType>(
+		name: K
+	): Promise<PropType[K] | null> {
 		return (await this.getDesc(name)).value
 	}
 
-	public async set<K extends PropNames>(
+	public async set<K extends keyof PropType>(
 		name: K,
 		value: PropType[K]
 	): Promise<SetPropResult<PropType[K]>> {
@@ -369,7 +260,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 	}
 
-	public async getDesc<K extends PropNames, T extends PropType[K]>(
+	public async getDesc<K extends keyof PropType, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
 		const scheme = this._class.PropScheme[name]
@@ -609,7 +500,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 	protected static getPropNameFromCode(
 		devicePropCode: number
-	): PropNames | null {
+	): keyof PropType | null {
 		return this.DevicePropTable.get(devicePropCode) ?? null
 	}
 
@@ -759,7 +650,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		},
 	}
 
-	protected static DevicePropTable = new BiMap<number, PropNames>([
+	protected static DevicePropTable = new BiMap<number, keyof PropType>([
 		[0x5001, 'batteryLevel'],
 		[0x5005, 'whiteBalance'],
 		[0x5007, 'aperture'],

@@ -1,14 +1,4 @@
-import {PTPDevice} from './PTPDevice'
-import {Tethr} from './Tethr'
-import {TethrPanasonic} from './Tethr/panasonic/TethrPanasonic'
-import {TethrRicohTheta} from './Tethr/ricoh/TethrRicohTheta'
-import {TethrSigma} from './Tethr/sigma/TethrSigma'
-import {DeviceInfo} from './Tethr/Tethr'
-
-interface TethrDeviceDescriptorPTPUSB {
-	type: 'ptp/usb'
-	device: USBDevice
-}
+import {initTethrWithUSBDevice, Tethr} from './Tethr'
 
 interface TethrDeviceDescriptorWebcam {
 	type: 'webcam'
@@ -59,42 +49,6 @@ export async function connectCamera(
 		)
 
 	return await initTethrWithUSBDevice(descriptor.device)
-}
-
-async function initTethrWithUSBDevice(usb: USBDevice): Promise<Tethr | null> {
-	const device = new PTPDevice(usb)
-	await device.open()
-
-	let info: DeviceInfo
-
-	try {
-		info = await Tethr.getDeviceInfo(device)
-	} catch {
-		return null
-	}
-
-	let tethr: Tethr | null = null
-
-	switch (info.vendorExtensionID) {
-		case 0x00000006: // Microsoft / Sigma / Ricoh
-			if (info.vendorExtensionDesc === 'SIGMA') {
-				tethr = new TethrSigma(device)
-			} else if (info.model.match(/theta/i)) {
-				tethr = new TethrRicohTheta(device)
-			}
-			break
-		case 0x0000001c: // Panasnoic
-			tethr = new TethrPanasonic(device)
-			break
-	}
-
-	if (!tethr) {
-		tethr = new Tethr(device)
-	}
-
-	await tethr.open()
-
-	return tethr
 }
 
 export {Tethr}
