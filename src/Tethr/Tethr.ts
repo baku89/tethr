@@ -159,7 +159,7 @@ export interface PropType {
 
 export type PropNames = keyof PropType
 
-type PropScheme = {
+export type PropScheme = {
 	[Name in PropNames]?: {
 		devicePropCode: number
 		dataType: DatatypeCode
