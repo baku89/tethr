@@ -652,10 +652,15 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			devicePropCode: DevicePropCode.WhiteBalance,
 			dataType: DatatypeCode.Uint16,
 			decode: function (data) {
-				return this.WhiteBalanceTable.get(data) ?? 'auto'
+				return (
+					this.WhiteBalanceTable.get(data) ?? `vendor ${toHexString(data, 4)}`
+				)
 			},
 			encode: function (value) {
-				return this.WhiteBalanceTable.getKey(value) ?? 0x2 // = auto
+				return (
+					this.WhiteBalanceTable.getKey(value) ??
+					parseInt(value.replace(/^vendor /, ''), 16)
+				)
 			},
 		},
 		iso: {
