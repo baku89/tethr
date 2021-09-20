@@ -151,7 +151,7 @@ export function useTethr() {
 			whiteBalance: useTethrProp(camera, 'whiteBalance'),
 			colorTemperature: useTethrProp(camera, 'colorTemperature'),
 			colorMode: useTethrProp(camera, 'colorMode'),
-			imageResolution: useTethrProp(camera, 'imageResolution'),
+			imageSize: useTethrProp(camera, 'imageSize'),
 			aspectRatio: useTethrProp(camera, 'aspectRatio'),
 			imageQuality: useTethrProp(camera, 'imageQuality'),
 			captureDelay: useTethrProp(camera, 'captureDelay'),

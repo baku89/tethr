@@ -708,7 +708,7 @@ export class TethrPanasonic extends Tethr {
 				props = ['colorMode']
 				break
 			case DevicePropCodePanasonic.ImageMode:
-				props = ['imageResolution', 'aspectRatio', 'imageQuality']
+				props = ['imageSize', 'aspectRatio', 'imageQuality']
 				break
 			default:
 				return

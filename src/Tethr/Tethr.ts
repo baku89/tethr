@@ -624,7 +624,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				return this.DriveModeTable.getKey(value) ?? 0x0
 			},
 		},
-		imageResolution: {
+		imageSize: {
 			devicePropCode: DevicePropCode.ImageSize,
 			dataType: DatatypeCode.String,
 			decode: _.identity,
