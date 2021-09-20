@@ -320,6 +320,10 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				dataView = new DataView(new ArrayBuffer(4))
 				dataView.setInt32(0, propData, true)
 				break
+			case DatatypeCode.Uint64:
+				dataView = new DataView(new ArrayBuffer(8))
+				dataView.setBigUint64(0, BigInt(propData), true)
+				break
 			default: {
 				const label = DatatypeCode[scheme.dataType] ?? toHexString(16)
 				throw new Error(`PropDesc of datatype ${label} is not yet supported`)
@@ -389,6 +393,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				break
 			case DatatypeCode.Uint32:
 				getValue = dataView.readUint32
+				break
+			case DatatypeCode.Uint64:
+				getValue = dataView.readUint64
 				break
 			default: {
 				const label = DatatypeCode[dataType] ?? toHexString(16)

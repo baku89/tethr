@@ -1,5 +1,4 @@
 import {BiMap} from 'bim'
-import _ from 'lodash'
 
 import {PTPDevice} from '@/PTPDevice'
 
@@ -22,9 +21,32 @@ export class TethrRicohTheta extends Tethr {
 			...Tethr.PropScheme,
 			shutterSpeed: {
 				devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
-				dataType: DatatypeCode.String,
-				encode: _.identity,
-				decode: _.identity,
+				dataType: DatatypeCode.Uint64,
+				encode: function (str: string) {
+					let fraction, denominator: number
+
+					if (str.endsWith('"')) {
+						const secs = parseFloat(str.slice(0, -1))
+						denominator = secs % 1 > 0 ? 10 : 1
+						fraction = Math.round(secs * denominator)
+					} else {
+						const [fractionStr, denominatorStr] = str.split('/')
+						fraction = parseInt(fractionStr)
+						denominator = parseInt(denominatorStr)
+					}
+
+					return (BigInt(denominator) << BigInt(32)) | BigInt(fraction)
+				} as any,
+				decode: function (num: bigint) {
+					const denominator = Number(num >> BigInt(32))
+					const fraction = Number(num & BigInt(0xffffffff))
+
+					if (denominator === 1 || denominator === 10) {
+						return fraction / denominator + '"'
+					}
+
+					return fraction + '/' + denominator
+				} as any,
 			},
 		}
 
