@@ -10,7 +10,7 @@ import {isntNil, toHexString} from '../../util'
 import {
 	Aperture,
 	BatteryLevel,
-	convertShutterSpeedToTime,
+	computeShutterSpeedSeconds,
 	ExposureMode,
 	ISO,
 	LiveviewResult,
@@ -330,10 +330,10 @@ export class TethrSigma extends Tethr {
 		const ssMaxRaw = 1 / 2 ** tvMax
 
 		const ssMinEntry = _.minBy(shutterSpeeds, e =>
-			Math.abs(convertShutterSpeedToTime(e[1]) - ssMinRaw)
+			Math.abs(computeShutterSpeedSeconds(e[1]) - ssMinRaw)
 		)
 		const ssMaxEntry = _.minBy(shutterSpeeds, e =>
-			Math.abs(convertShutterSpeedToTime(e[1]) - ssMaxRaw)
+			Math.abs(computeShutterSpeedSeconds(e[1]) - ssMaxRaw)
 		)
 
 		if (!ssMinEntry || !ssMaxEntry) throw new Error()

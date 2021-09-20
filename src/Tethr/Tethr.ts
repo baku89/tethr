@@ -21,9 +21,16 @@ import {
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
 
-export function convertShutterSpeedToTime(ss: string) {
-	if (ss === 'bulk' || ss === 'sync') return Infinity
-	if (ss.startsWith('1/')) return 1 / parseInt(ss.slice(2))
+export function computeShutterSpeedSeconds(ss: string) {
+	if (ss === 'bulk' || ss === 'sync') {
+		return Infinity
+	}
+
+	if (ss.includes('/')) {
+		const [fraction, denominator] = ss.split('/')
+		return parseInt(fraction) / parseInt(denominator)
+	}
+
 	return parseFloat(ss)
 }
 
