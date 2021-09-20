@@ -11,7 +11,7 @@ import {
 	ResCode,
 } from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
-import {PTPDevice} from '../PTPDevice'
+import {PTPDevice, PTPEvent} from '../PTPDevice'
 import {
 	PTPAccessCapability,
 	PTPFilesystemType,
@@ -216,6 +216,11 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		})
 
 		this._opened = true
+
+		this.device.onEventCode(
+			EventCode.DevicePropChanged,
+			this.onDevicePropChanged
+		)
 
 		window.addEventListener('beforeunload', async () => {
 			await this.close()
@@ -572,6 +577,22 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 	}
 
+	protected onDevicePropChanged = async (event: PTPEvent) => {
+		const devicePropCode = event.parameters[0]
+		const name = this._class.getPropNameFromCode(devicePropCode)
+
+		if (!name) return
+
+		const desc = await this.getDesc(name)
+		this.emit(`${name}Changed`, desc)
+	}
+
+	protected static getPropNameFromCode(
+		devicePropCode: number
+	): PropNames | null {
+		return this.DevicePropTable.get(devicePropCode) ?? null
+	}
+
 	protected static getObjectFormat(code: number) {
 		return ObjectFormatCode[code].toLowerCase()
 	}
@@ -711,6 +732,23 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			encode: _.identity,
 		},
 	}
+
+	protected static DevicePropTable = new BiMap<number, PropNames>([
+		[0x5001, 'batteryLevel'],
+		[0x5005, 'whiteBalance'],
+		[0x5007, 'aperture'],
+		[0x5008, 'focalLength'],
+		[0x5009, 'focusDistance'],
+		[0x500d, 'shutterSpeed'],
+		[0x500e, 'exposureMode'],
+		[0x500f, 'iso'],
+		[0x5010, 'exposureComp'],
+		[0x5012, 'captureDelay'],
+		[0x5013, 'driveMode'],
+		[0x5017, 'colorMode'],
+		[0x501a, 'timelapseNumber'],
+		[0x501b, 'timelapseInterval'],
+	])
 
 	protected static ExposureModeTable = new BiMap<number, ExposureMode>([
 		[0x1, 'M'],
