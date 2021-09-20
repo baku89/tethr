@@ -86,6 +86,8 @@ export type DriveMode = 'normal' | 'burst' | 'timelapse'
 
 export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
+export type FocalLength = number | 'spherical'
+
 export type ManualFocusDriveOption = {
 	direction: 'near' | 'far'
 	speed: 1 | 2 | 3
@@ -129,7 +131,7 @@ export interface PropType {
 	rgbGain: [number, number, number]
 	colorTemperature: number // Added
 	aperture: number // fNumber
-	focalLength: number
+	focalLength: FocalLength
 	focusDistance: number
 	focusMode: FocusMode
 	exposureMeteringMode: ExposureMeteringMode

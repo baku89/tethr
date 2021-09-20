@@ -3,7 +3,7 @@ import {BiMap} from 'bim'
 import {PTPDevice} from '@/PTPDevice'
 
 import {DatatypeCode} from '../../PTPDatacode'
-import {PropScheme, Tethr} from '../Tethr'
+import {PropDesc, PropNames, PropScheme, PropType, Tethr} from '../Tethr'
 
 enum DevicePropCodeRicohTheta {
 	ShutterSpeed = 0xd00f,
@@ -14,6 +14,19 @@ export class TethrRicohTheta extends Tethr {
 		super(device)
 
 		this._class = TethrRicohTheta
+	}
+
+	public async getDesc<K extends PropNames, T extends PropType[K]>(
+		name: K
+	): Promise<PropDesc<T>> {
+		if (name === 'focalLength') {
+			return {
+				writable: false,
+				value: 'spherical' as T,
+				supportedValues: [],
+			}
+		}
+		return super.getDesc(name)
 	}
 
 	protected static PropScheme = (() => {
