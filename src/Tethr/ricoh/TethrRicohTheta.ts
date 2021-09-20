@@ -1,4 +1,5 @@
 import {BiMap} from 'bim'
+import _ from 'lodash'
 
 import {PTPDevice} from '@/PTPDevice'
 
@@ -7,6 +8,7 @@ import {PropDesc, PropNames, PropScheme, PropType, Tethr} from '../Tethr'
 
 enum DevicePropCodeRicohTheta {
 	ShutterSpeed = 0xd00f,
+	ColorTemperature = 0xd813,
 }
 
 export class TethrRicohTheta extends Tethr {
@@ -60,6 +62,12 @@ export class TethrRicohTheta extends Tethr {
 
 					return fraction + '/' + denominator
 				} as any,
+			},
+			colorTemperature: {
+				devicePropCode: DevicePropCodeRicohTheta.ColorTemperature,
+				dataType: DatatypeCode.Uint16,
+				decode: _.identity,
+				encode: _.identity,
 			},
 		}
 
