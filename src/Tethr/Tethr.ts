@@ -182,6 +182,16 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 	}
 
+	public async listProps(): Promise<string[]> {
+		const {propsSupported} = await this.getDeviceInfo()
+
+		return propsSupported.map(getPropNameByCode)
+
+		function getPropNameByCode(code: number) {
+			return DevicePropCode[code] ?? toHexString(code, 4)
+		}
+	}
+
 	public async get<K extends keyof PropType>(
 		name: K
 	): Promise<PropType[K] | null> {
