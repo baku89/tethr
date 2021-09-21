@@ -99,6 +99,20 @@ export class PTPDataView extends DataView {
 		return str
 	}
 
+	public readUTF16StringNT = (): string => {
+		this.skip(2)
+
+		let str = ''
+		while (this.currentReadOffset < this.byteLength) {
+			const charCode = this.readUint16()
+			if (charCode === 0x0000) break
+
+			str += String.fromCharCode(charCode)
+		}
+
+		return str
+	}
+
 	public readDate = (): Date => {
 		const timestamp = this.readFixedUTF16String()
 		return parseTimestamp(timestamp, 'YYYYMMDDThhmmss')

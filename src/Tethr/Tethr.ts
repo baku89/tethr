@@ -331,7 +331,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				getValue = dataView.readUint64
 				break
 			case DatatypeCode.String:
-				getValue = dataView.readFixedUTF16String
+				getValue = dataView.readUTF16StringNT
 				break
 			default: {
 				const label = DatatypeCode[dataType] ?? toHexString(16)
