@@ -1,24 +1,25 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
+import {
+	Aperture,
+	ExposureMode,
+	ISO,
+	ManualFocusDriveOption,
+	PropType,
+	WhiteBalance,
+} from '../../props'
 import {ObjectFormatCode, ResCode} from '../../PTPDatacode'
 import {PTPDataView} from '../../PTPDataView'
 import {PTPEvent} from '../../PTPDevice'
 import {TethrObject, TethrObjectInfo} from '../../TethrObject'
 import {isntNil} from '../../util'
 import {
-	Aperture,
-	ExposureMode,
-	ISO,
 	LiveviewResult as LiveviewData,
-	ManualFocusDriveOption,
 	PropDesc,
-	PropNames,
-	PropType,
 	SetPropResult,
 	TakePictureOption,
 	Tethr,
-	WhiteBalance,
 } from '../Tethr'
 
 enum OpCodePanasonic {
@@ -97,7 +98,7 @@ enum ObjectFormatCodePanasonic {
 }
 
 type PropScheme = {
-	[Name in PropNames]?: {
+	[Name in keyof PropType]?: {
 		getCode: number
 		setCode?: number
 		decode: (value: number) => PropType[Name] | null
@@ -302,7 +303,7 @@ export class TethrPanasonic extends Tethr {
 		await super.open()
 	}
 
-	public async set<N extends PropNames>(
+	public async set<N extends keyof PropType>(
 		name: N,
 		value: PropType[N]
 	): Promise<SetPropResult<PropType[N]>> {
@@ -354,7 +355,7 @@ export class TethrPanasonic extends Tethr {
 		}
 	}
 
-	public async getDesc<K extends PropNames, T extends PropType[K]>(
+	public async getDesc<K extends keyof PropType, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
 		// const superDesc = await super.getDesc(name)
@@ -677,7 +678,7 @@ export class TethrPanasonic extends Tethr {
 	private onPropChanged = async (ev: PTPEvent) => {
 		const devicdPropCode = ev.parameters[0]
 
-		let props: PropNames[]
+		let props: (keyof PropType)[]
 
 		switch (devicdPropCode) {
 			case DevicePropCodePanasonic.CameraMode:
