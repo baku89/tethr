@@ -19,10 +19,6 @@ export type WhiteBalance =
 	| `custom${'' | 2 | 3 | 4}`
 	| `vendor ${string}`
 
-export type ShutterSpeed = string
-
-export type ExposureComp = string
-
 export type BatteryLevel = 'ac' | 'low' | number
 
 export type FunctionalMode = 'standard' | 'sleep'
@@ -85,10 +81,10 @@ export interface PropType {
 	exposureMeteringMode: ExposureMeteringMode
 	flashMode: FlashMode
 	// exposureTime: number
-	shutterSpeed: ShutterSpeed
+	shutterSpeed: string
 	exposureMode: ExposureMode // exposureProgramMode
 	// exposureIndex: 0x500f
-	exposureComp: ExposureComp // exposureBiasCompensation
+	exposureComp: string // exposureBiasCompensation
 	dateTime: Date
 	captureDelay: number
 	driveMode: DriveMode // stillCaptureMode

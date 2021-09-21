@@ -9,7 +9,6 @@ import {
 	ExposureMode,
 	ISO,
 	PropType,
-	ShutterSpeed,
 	WhiteBalance,
 } from '../../props'
 import {ResCode} from '../../PTPDatacode'
@@ -138,7 +137,7 @@ export class TethrSigma extends Tethr {
 				succeed = await this.setAperture(value as Aperture)
 				break
 			case 'shutterSpeed':
-				succeed = await this.setShutterSpeed(value as ShutterSpeed)
+				succeed = await this.setShutterSpeed(value as string)
 				break
 			case 'iso':
 				succeed = await this.setISO(value as ISO)
@@ -353,7 +352,7 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setShutterSpeed = async (ss: ShutterSpeed): Promise<boolean> => {
+	private setShutterSpeed = async (ss: string): Promise<boolean> => {
 		const byte = TethrSigma.ShutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return false
 
