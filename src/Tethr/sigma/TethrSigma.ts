@@ -3,26 +3,27 @@ import _ from 'lodash'
 import sleep from 'sleep-promise'
 
 import {decodeIFD, IFDType} from '../../IFD'
+import {
+	Aperture,
+	BatteryLevel,
+	ExposureMode,
+	ISO,
+	PropType,
+	ShutterSpeed,
+	WhiteBalance,
+} from '../../props'
 import {ResCode} from '../../PTPDatacode'
 import {PTPDataView} from '../../PTPDataView'
 import {TethrObject} from '../../TethrObject'
 import {isntNil, toHexString} from '../../util'
 import {
-	Aperture,
-	BatteryLevel,
 	computeShutterSpeedSeconds,
-	ExposureMode,
-	ISO,
 	LiveviewResult,
 	PropDesc,
-	PropNames,
-	PropType,
 	SetPropResult,
 	SetPropResultStatus,
-	ShutterSpeed,
 	TakePictureOption,
 	Tethr,
-	WhiteBalance,
 } from '../Tethr'
 
 enum OpCodeSigma {
@@ -119,14 +120,14 @@ export class TethrSigma extends Tethr {
 		await this.getCamDataGroup2()
 	}
 
-	public async set<K extends PropNames>(
+	public async set<K extends keyof PropType>(
 		name: K,
 		value: PropType[K]
 	): Promise<SetPropResult<PropType[K]>> {
 		let succeed = false
 		let status: SetPropResultStatus | undefined
 
-		let mayAffectProps: PropNames[] = []
+		let mayAffectProps: (keyof PropType)[] = []
 
 		switch (name) {
 			case 'exposureMode':
@@ -178,7 +179,7 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	public async getDesc<N extends PropNames, T extends PropType[N]>(
+	public async getDesc<N extends keyof PropType, T extends PropType[N]>(
 		name: N
 	): Promise<PropDesc<T>> {
 		type ReturnType = Promise<PropDesc<T>>
