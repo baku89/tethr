@@ -75,6 +75,7 @@ export function useTethr() {
 				const cams = await listCameras()
 				if (cams.length === 0) throw new Error('No cameras')
 				const cam = await connectCamera(cams[0])
+				if (!cam) return
 				if (!cam.open) {
 					await cam.open()
 				}
@@ -82,7 +83,11 @@ export function useTethr() {
 				connected.value = true
 			}
 
-			deviceInfo.value = JSON.stringify(await camera.value.getDeviceInfo())
+			deviceInfo.value = JSON.stringify(
+				await camera.value.getDeviceInfo(),
+				undefined,
+				' '
+			)
 			;(window as any).cam = camera.value
 		}
 	}
