@@ -367,7 +367,7 @@ export class TethrPanasonic extends Tethr {
 			return {
 				writable: false,
 				value: null,
-				supportedValues: [],
+				options: [],
 			}
 		}
 
@@ -403,12 +403,12 @@ export class TethrPanasonic extends Tethr {
 
 		const value = decode(getValue())
 
-		const supportedValues = [...getArray()].map(decode).filter(isntNil)
+		const options = [...getArray()].map(decode).filter(isntNil)
 
 		return {
-			writable: supportedValues.length > 0,
+			writable: options.length > 0,
 			value,
-			supportedValues,
+			options,
 		}
 	}
 

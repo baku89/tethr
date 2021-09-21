@@ -25,7 +25,7 @@ export class TethrRicohTheta extends Tethr {
 			return {
 				writable: false,
 				value: 'spherical' as T,
-				supportedValues: [],
+				options: [],
 			}
 		}
 		return super.getDesc(name)

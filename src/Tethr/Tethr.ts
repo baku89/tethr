@@ -38,7 +38,7 @@ export type PropDesc<T> = {
 	value: T | null
 	defaultValue?: T
 	writable: boolean
-	supportedValues: T[]
+	options: T[]
 }
 
 export interface DeviceInfo {
@@ -276,7 +276,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			return {
 				writable: false,
 				value: null,
-				supportedValues: [],
+				options: [],
 			}
 		}
 
@@ -291,7 +291,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			return {
 				writable: false,
 				value: null,
-				supportedValues: [],
+				options: [],
 			}
 		}
 
@@ -332,15 +332,15 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		getValue() // Skip factoryDefault
 		const value = decode(getValue())
 
-		// Read supportedValues
+		// Read options
 		const formFlag = dataView.readUint8()
 
-		let supportedValues: T[]
+		let options: T[]
 
 		switch (formFlag) {
 			case 0x00:
 				// None
-				supportedValues = []
+				options = []
 				break
 			case 0x01: {
 				// Range
@@ -356,13 +356,13 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 						`Cannot enumerate supported values of device prop ${name}`
 					)
 				}
-				supportedValues = _.range(min, max, step) as T[]
+				options = _.range(min, max, step) as T[]
 				break
 			}
 			case 0x02: {
 				// Enumeration
 				const length = dataView.readUint16()
-				supportedValues = _.times(length, getValue).map(decode)
+				options = _.times(length, getValue).map(decode)
 				break
 			}
 			default:
@@ -370,9 +370,9 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		}
 
 		return {
-			writable: writable && supportedValues.length > 1,
+			writable: writable && options.length > 1,
 			value,
-			supportedValues,
+			options,
 		}
 	}
 

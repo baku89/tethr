@@ -5,7 +5,7 @@
 			<template v-if="prop.writable">
 				<select :value="valueIndex" @change="update" :disabled="prop.updating">
 					<option
-						v-for="(v, i) in prop.supportedValues"
+						v-for="(v, i) in prop.options"
 						:key="i"
 						:label="v"
 						:value="i"
@@ -35,16 +35,16 @@ export default defineComponent({
 	setup(props) {
 		const valueIndex = computed(() => {
 			const {prop} = props
-			if (prop.supportedValues) {
-				return prop.supportedValues.indexOf(prop.value)
+			if (prop.options) {
+				return prop.options.indexOf(prop.value)
 			}
 			return 0
 		})
 
 		function update(e: InputEvent) {
-			if (!props.prop.supportedValues) return
+			if (!props.prop.options) return
 			const index = parseInt((e.target as HTMLSelectElement).value)
-			const value = props.prop.supportedValues[index]
+			const value = props.prop.options[index]
 			props.prop.update(value)
 		}
 

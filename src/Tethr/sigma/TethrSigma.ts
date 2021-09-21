@@ -213,7 +213,7 @@ export class TethrSigma extends Tethr {
 		return {
 			writable: false,
 			value: null,
-			supportedValues: [],
+			options: [],
 		}
 	}
 
@@ -224,7 +224,7 @@ export class TethrSigma extends Tethr {
 		return {
 			writable: false,
 			value,
-			supportedValues: [],
+			options: [],
 		}
 
 		function decodeFocalLength(byte: number) {
@@ -263,7 +263,7 @@ export class TethrSigma extends Tethr {
 			return {
 				writable: false,
 				value,
-				supportedValues: [],
+				options: [],
 			}
 		}
 
@@ -284,12 +284,12 @@ export class TethrSigma extends Tethr {
 
 		if (!fMin || !fMax) throw new Error()
 
-		const supportedValues = apertures.filter(a => fMin <= a && a <= fMax)
+		const options = apertures.filter(a => fMin <= a && a <= fMax)
 
 		return {
 			writable: true,
 			value,
-			supportedValues,
+			options,
 		}
 	}
 
@@ -311,7 +311,7 @@ export class TethrSigma extends Tethr {
 			return {
 				writable: false,
 				value,
-				supportedValues: [],
+				options: [],
 			}
 		}
 
@@ -341,14 +341,14 @@ export class TethrSigma extends Tethr {
 		const ssMinIndex = ssMinEntry[0]
 		const ssMaxIndex = ssMaxEntry[0]
 
-		const supportedValues = shutterSpeeds
+		const options = shutterSpeeds
 			.filter(e => ssMinIndex <= e[0] && e[0] <= ssMaxIndex)
 			.map(e => e[1])
 
 		return {
-			writable: supportedValues.length > 0,
+			writable: options.length > 0,
 			value,
-			supportedValues,
+			options,
 		}
 	}
 
@@ -392,14 +392,14 @@ export class TethrSigma extends Tethr {
 		const isoMax = Math.round(3.125 * 2 ** svMax)
 
 		const isos = [...TethrSigma.ISOTable.values()]
-		const supportedValues = isos.filter(a => isoMin <= a && a <= isoMax)
+		const options = isos.filter(a => isoMin <= a && a <= isoMax)
 
-		supportedValues.unshift('auto')
+		options.unshift('auto')
 
 		return {
 			writable: true,
 			value,
-			supportedValues,
+			options,
 		}
 	}
 
@@ -418,14 +418,14 @@ export class TethrSigma extends Tethr {
 		const {whiteBalance} = await this.getCamCanSetInfo5()
 		const value = await this.getWhiteBalance()
 
-		const supportedValues = whiteBalance
+		const options = whiteBalance
 			.map(v => TethrSigma.WhiteBalanceTableIFD.get(v))
 			.filter(isntNil)
 
 		return {
-			writable: supportedValues.length > 0,
+			writable: options.length > 0,
 			value,
-			supportedValues,
+			options,
 		}
 	}
 
@@ -461,7 +461,7 @@ export class TethrSigma extends Tethr {
 		return {
 			writable: true,
 			value,
-			supportedValues: _.range(min, max, step),
+			options: _.range(min, max, step),
 		}
 	}
 
@@ -483,14 +483,14 @@ export class TethrSigma extends Tethr {
 		const {exposureMode} = await this.getCamCanSetInfo5()
 		const value = await this.getExposureMode()
 
-		const supportedValues = exposureMode
+		const options = exposureMode
 			.map(n => TethrSigma.ExposureModeTable.get(n))
 			.filter(isntNil)
 
 		return {
-			writable: supportedValues.length > 0,
+			writable: options.length > 0,
 			value,
-			supportedValues,
+			options,
 		}
 	}
 
@@ -513,14 +513,14 @@ export class TethrSigma extends Tethr {
 			return {
 				writable: false,
 				value,
-				supportedValues: [],
+				options: [],
 			}
 		}
 
 		const [min, max] = exposureComp
 
 		const allValues = [...TethrSigma.CompensationOneThirdTable.values()]
-		const supportedValues = allValues
+		const options = allValues
 			.map(v => [v, decodeExposureComp(v)] as [string, number])
 			.sort((a, b) => a[1] - b[1])
 			.filter(([, n]) => min - 1e-4 <= n && n <= max + 1e-4)
@@ -529,7 +529,7 @@ export class TethrSigma extends Tethr {
 		return {
 			writable: exposureComp.length > 0,
 			value,
-			supportedValues,
+			options,
 		}
 
 		function decodeExposureComp(v: string) {
@@ -572,14 +572,12 @@ export class TethrSigma extends Tethr {
 		}
 
 		const {colorMode} = await this.getCamDataGroup3()
-		const {colorMode: supportedColorModes} = await this.getCamCanSetInfo5()
-
-		const supportedValues = supportedColorModes.map(decodeColorMode)
+		const {colorMode: colorModeOptions} = await this.getCamCanSetInfo5()
 
 		return {
-			writable: supportedValues.length > 0,
+			writable: colorModeOptions.length > 0,
 			value: decodeColorMode(colorMode),
-			supportedValues,
+			options: colorModeOptions.map(decodeColorMode),
 		}
 	}
 
@@ -595,16 +593,16 @@ export class TethrSigma extends Tethr {
 		}
 
 		const {aspectRatio} = await this.getCamDataGroup5()
-		const {aspectRatio: supportedAspectRatios} = await this.getCamCanSetInfo5()
-
-		const writable = supportedAspectRatios.length > 0
+		const {aspectRatio: aspectRatioOptions} = await this.getCamCanSetInfo5()
 
 		const aspectRatioIfdID =
 			aspectRatio - this._class.AspectRatioDataGroupOffset
-		const value = decodeAspectRatioIFD(aspectRatioIfdID)
-		const supportedValues = supportedAspectRatios.map(decodeAspectRatioIFD)
 
-		return {writable, value, supportedValues}
+		return {
+			writable: aspectRatioOptions.length > 0,
+			value: decodeAspectRatioIFD(aspectRatioIfdID),
+			options: aspectRatioOptions.map(decodeAspectRatioIFD),
+		}
 	}
 
 	private setImageQuality = async (imageQuality: string): Promise<boolean> => {
@@ -688,7 +686,7 @@ export class TethrSigma extends Tethr {
 		return {
 			writable: true,
 			value: stringifyImageQuality(imageQuality, dngBitDepth),
-			supportedValues: [
+			options: [
 				// NOTE: Hard-coded so this might not work for some cases
 				'low',
 				'standard',
@@ -727,7 +725,7 @@ export class TethrSigma extends Tethr {
 		return {
 			writable: false,
 			value,
-			supportedValues: [],
+			options: [],
 		}
 	}
 

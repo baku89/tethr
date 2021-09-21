@@ -13,7 +13,7 @@ export interface TethrProp<T extends PropType[PropNames]> {
 	value: T | null
 	updating: boolean
 	update: (value: T) => void
-	supportedValues: T[]
+	options: T[]
 }
 
 export function useTethrProp<Name extends PropNames>(
@@ -25,7 +25,7 @@ export function useTethrProp<Name extends PropNames>(
 		value: null,
 		updating: false,
 		update: () => null,
-		supportedValues: [],
+		options: [],
 	}) as TethrProp<PropType[Name]>
 
 	watch(
@@ -37,7 +37,7 @@ export function useTethrProp<Name extends PropNames>(
 
 			prop.writable = desc.writable
 			prop.value = desc.value
-			prop.supportedValues = desc.supportedValues
+			prop.options = desc.options
 
 			prop.update = async (value: any) => {
 				prop.updating = true
@@ -48,7 +48,7 @@ export function useTethrProp<Name extends PropNames>(
 			cam.on(`${name}Changed`, (desc: any) => {
 				prop.value = desc.value
 				prop.writable = desc.writable
-				prop.supportedValues = desc.supportedValues
+				prop.options = desc.options
 			})
 		},
 		{immediate: true}
