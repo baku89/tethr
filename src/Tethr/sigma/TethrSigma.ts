@@ -115,6 +115,21 @@ export class TethrSigma extends Tethr {
 		})
 	}
 
+	public async listProps(): Promise<string[]> {
+		return [
+			'exposureMode',
+			'aperture',
+			'shuterSpeed',
+			'iso',
+			'exposureComp',
+			'whiteBalance',
+			'colorTemperature',
+			'colorMode',
+			'aspectRatio',
+			'imageQuality',
+		]
+	}
+
 	public async set<K extends keyof PropType>(
 		name: K,
 		value: PropType[K]
