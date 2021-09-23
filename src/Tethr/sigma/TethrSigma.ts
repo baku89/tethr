@@ -1407,17 +1407,17 @@ export class TethrSigma extends Tethr {
 
 	private batteryLevelTable = new Map<number, null | BatteryLevel>([
 		[0x00, null],
-		[0x01, 1],
-		[0x02, 2 / 3],
-		[0x03, 1 / 3],
+		[0x01, 100],
+		[0x02, 66],
+		[0x03, 33],
 		[0x04, 'low'],
 		[0x05, 0],
 		[0x06, null],
 		[0x07, 0],
 		[0x08, 'ac'],
 		[0x09, null],
-		[0x0a, 4 / 5],
-		[0x0b, 3 / 5],
+		[0x0a, 80],
+		[0x0b, 60],
 		[0x0c, null],
 	])
 
