@@ -2,7 +2,7 @@ import {BiMap} from 'bim'
 import _ from 'lodash'
 import sleep from 'sleep-promise'
 
-import {decodeIFD, IFDType} from '../../IFD'
+import {decodeIFD, IFDType} from '../IFD'
 import {
 	Aperture,
 	BatteryLevel,
@@ -11,11 +11,11 @@ import {
 	ISO,
 	PropType,
 	WhiteBalance,
-} from '../../props'
-import {ResCode} from '../../PTPDatacode'
-import {PTPDataView} from '../../PTPDataView'
-import {TethrObject} from '../../TethrObject'
-import {isntNil, toHexString} from '../../util'
+} from '../props'
+import {ResCode} from '../PTPDatacode'
+import {PTPDataView} from '../PTPDataView'
+import {TethrObject} from '../TethrObject'
+import {isntNil, toHexString} from '../util'
 import {
 	LiveviewResult,
 	PropDesc,
@@ -23,7 +23,7 @@ import {
 	SetPropResultStatus,
 	TakePictureOption,
 	Tethr,
-} from '../Tethr'
+} from './Tethr'
 
 enum OpCodeSigma {
 	GetCamConfig = 0x9010,

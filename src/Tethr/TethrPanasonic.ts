@@ -8,19 +8,19 @@ import {
 	PropType,
 	RunManualFocusOption,
 	WhiteBalance,
-} from '../../props'
-import {ObjectFormatCode, ResCode} from '../../PTPDatacode'
-import {PTPDataView} from '../../PTPDataView'
-import {PTPEvent} from '../../PTPDevice'
-import {TethrObject, TethrObjectInfo} from '../../TethrObject'
-import {isntNil} from '../../util'
+} from '../props'
+import {ObjectFormatCode, ResCode} from '../PTPDatacode'
+import {PTPDataView} from '../PTPDataView'
+import {PTPEvent} from '../PTPDevice'
+import {TethrObject, TethrObjectInfo} from '../TethrObject'
+import {isntNil} from '../util'
 import {
 	LiveviewResult as LiveviewData,
 	PropDesc,
 	SetPropResult,
 	TakePictureOption,
 	Tethr,
-} from '../Tethr'
+} from './Tethr'
 
 enum OpCodePanasonic {
 	OpenSession = 0x9102,

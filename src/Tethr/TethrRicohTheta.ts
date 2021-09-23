@@ -1,9 +1,9 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
-import {PropType} from '../../props'
-import {DatatypeCode} from '../../PTPDatacode'
-import {PropDesc, PropScheme, Tethr} from '../Tethr'
+import {PropType} from '../props'
+import {DatatypeCode} from '../PTPDatacode'
+import {PropDesc, PropScheme, Tethr} from './Tethr'
 
 enum DevicePropCodeRicohTheta {
 	ShutterSpeed = 0xd00f,

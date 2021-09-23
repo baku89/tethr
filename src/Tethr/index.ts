@@ -1,8 +1,8 @@
 import {PTPDevice} from '../PTPDevice'
-import {TethrPanasonic} from './panasonic/TethrPanasonic'
-import {TethrRicohTheta} from './ricoh/TethrRicohTheta'
-import {TethrSigma} from './sigma/TethrSigma'
 import {DeviceInfo, Tethr} from './Tethr'
+import {TethrPanasonic} from './TethrPanasonic'
+import {TethrRicohTheta} from './TethrRicohTheta'
+import {TethrSigma} from './TethrSigma'
 
 export interface TethrDeviceDescriptorPTPUSB {
 	type: 'ptp/usb'
