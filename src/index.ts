@@ -1,4 +1,4 @@
-import {connectCamera} from './connect-camera'
+import {autoDetect} from './autoDetect'
 import {Tethr} from './Tethr'
 
-export {Tethr, connectCamera}
+export {Tethr, autoDetect}

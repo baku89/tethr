@@ -71,25 +71,20 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 		// Configurate
 		let {configuration} = this.device
 		if (!configuration) {
-			await this.device.selectConfiguration(1)
+			const num = this.device.configurations[0].configurationValue
+			await this.device.selectConfiguration(num)
 			configuration = this.device.configuration
 		}
+
 		if (!configuration) throw new Error('Cannot configure PTPDevice')
 
 		// Claim interface
-		try {
-			await this.device.claimInterface(0)
-		} catch (err) {
-			if (navigator.userAgent.match(/mac/i)) {
-				console.error(
-					'On macOS, you need to shut down other applications accessing the camera or run "killall -9 PTPCamera" in Terminal'
-				)
-			}
-			throw err
-		}
+		const usbInterface = configuration.interfaces[0]
+		const interfaceNum = usbInterface.interfaceNumber
+		await this.device.claimInterface(interfaceNum)
 
 		// Determine endpoints number
-		const endpoints = configuration.interfaces[0].alternates[0].endpoints
+		const endpoints = usbInterface.alternates[0].endpoints
 
 		const endpointOut = endpoints.find(
 			e => e.type === 'bulk' && e.direction === 'out'

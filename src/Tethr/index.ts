@@ -13,11 +13,10 @@ export async function initTethrWithUSBDevice(
 	usb: USBDevice
 ): Promise<Tethr | null> {
 	const device = new PTPDevice(usb)
-	await device.open()
-
 	let info: DeviceInfo
 
 	try {
+		await device.open()
 		info = await Tethr.getDeviceInfo(device)
 	} catch {
 		return null
@@ -41,8 +40,6 @@ export async function initTethrWithUSBDevice(
 	if (!tethr) {
 		tethr = new Tethr(device)
 	}
-
-	await tethr.open()
 
 	return tethr
 }

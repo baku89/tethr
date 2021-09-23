@@ -1,14 +1,13 @@
 import {saveAs} from 'file-saver'
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
-import {connectCamera, Tethr} from '../src'
-import {listCameras} from '../src/connect-camera'
-import {PropNames, PropType} from '../src/Tethr/Tethr'
+import {autoDetect, Tethr} from '../src'
+import {PropType} from '../src/props'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 
-export interface TethrProp<T extends PropType[PropNames]> {
+export interface TethrProp<T extends PropType[keyof PropType]> {
 	writable: boolean
 	value: T | null
 	updating: boolean
@@ -16,7 +15,7 @@ export interface TethrProp<T extends PropType[PropNames]> {
 	options: T[]
 }
 
-export function useTethrProp<Name extends PropNames>(
+export function useTethrProp<Name extends keyof PropType>(
 	camera: Ref<Tethr | null>,
 	name: Name
 ) {
@@ -72,13 +71,13 @@ export function useTethr() {
 			await camera.value.close()
 		} else {
 			if (!camera.value) {
-				const cams = await listCameras()
+				const cams = await autoDetect()
 				if (cams.length === 0) throw new Error('No cameras')
-				const cam = await connectCamera(cams[0])
-				if (!cam) return
-				if (!cam.open) {
-					await cam.open()
-				}
+				if (cams.length > 1) throw new Error('Multiple cameras')
+
+				const cam = cams[0]
+				await cam.open()
+
 				camera.value = cam
 				connected.value = true
 			}
