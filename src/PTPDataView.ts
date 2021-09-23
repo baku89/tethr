@@ -65,7 +65,7 @@ export class PTPDataView extends DataView {
 		return this.getBigUint64(off, true)
 	}
 
-	public readByteString = (): string => {
+	public readAsciiString = (): string => {
 		const start = this.currentReadOffset
 		let end = start
 

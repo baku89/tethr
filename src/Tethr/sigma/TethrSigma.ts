@@ -1147,13 +1147,13 @@ export class TethrSigma extends Tethr {
 		return {
 			fileAddress: dataView.readUint32(),
 			fileSize: dataView.readUint32(),
-			fileExt: dataView.skip(8).readByteString(),
+			fileExt: dataView.skip(8).readAsciiString(),
 			resolution: {
 				width: dataView.readUint16(),
 				height: dataView.readUint16(),
 			},
-			folderName: dataView.readByteString(),
-			fileName: dataView.readByteString(),
+			folderName: dataView.readAsciiString(),
+			fileName: dataView.readAsciiString(),
 		}
 	}
 
