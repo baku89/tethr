@@ -14,7 +14,7 @@ type DetectTethrOption = {
 }
 
 export async function detectTethr({
-	order = ['webcam'],
+	order = ['ptp/usb', 'webcam'],
 	strategy = 'first',
 }: DetectTethrOption = {}) {
 	const tethrs: Tethr[] = []
