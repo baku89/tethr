@@ -63,6 +63,8 @@ export type RunManualFocusOption = {
 }
 
 export type PropType = {
+	model: string
+
 	batteryLevel: BatteryLevel
 	functionalMode: FunctionalMode
 	compressionSetting: number

@@ -116,6 +116,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	public listProps = async (): Promise<(keyof PropType)[]> => {
 		return [
+			...(await super.listProps()),
 			'exposureMode',
 			'aperture',
 			'shutterSpeed',

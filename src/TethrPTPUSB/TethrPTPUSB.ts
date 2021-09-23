@@ -136,7 +136,10 @@ export class TethrPTPUSB extends Tethr {
 	public async listProps() {
 		const {propsSupported} = await this.getDeviceInfo()
 
-		return propsSupported.map(getPropNameByCode) as (keyof PropType)[]
+		const deviceInfos = ['model']
+		const deviceProps = propsSupported.map(getPropNameByCode)
+
+		return [...deviceInfos, ...deviceProps] as (keyof PropType)[]
 
 		function getPropNameByCode(code: number) {
 			return DevicePropCode[code] ?? toHexString(code, 4)

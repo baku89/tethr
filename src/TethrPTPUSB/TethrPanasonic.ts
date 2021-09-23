@@ -298,6 +298,22 @@ export class TethrPanasonic extends TethrPTPUSB {
 		await super.open()
 	}
 
+	public async listProps(): Promise<(keyof PropType)[]> {
+		return [
+			...(await super.listProps()),
+			'exposureMode',
+			'aperture',
+			'shutterSpeed',
+			'iso',
+			'exposureComp',
+			'whiteBalance',
+			'colorTemperature',
+			'colorMode',
+			'imageAspect',
+			'imageQuality',
+		]
+	}
+
 	public async set<N extends keyof PropType>(
 		name: N,
 		value: PropType[N]
