@@ -856,21 +856,46 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	public async getLiveview(): Promise<null | LiveviewResult> {
-		const {resCode, data} = await this.device.receiveData({
-			label: 'SigmaFP GetViewFrame',
-			opcode: OpCodeSigma.GetViewFrame,
-			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
-			maxByteLength: 1_000_000, // = 1MB
-		})
+		const canvas = document.createElement('canvas')
+		const ctx = canvas.getContext('2d')
+		if (!ctx) return null
 
-		if (resCode !== ResCode.OK) return null
+		const updateFrame = async () => {
+			if (!this._liveviewing) return
 
-		// Might be quirky but somehow works
-		const jpegData = data.slice(10)
+			try {
+				const {resCode, data} = await this.device.receiveData({
+					label: 'SigmaFP GetViewFrame',
+					opcode: OpCodeSigma.GetViewFrame,
+					expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
+					maxByteLength: 1_000_000, // = 1MB
+				})
+				if (resCode !== ResCode.OK) return null
 
-		const image = new Blob([jpegData], {type: 'image/jpg'})
+				// Might be quirky but somehow works
+				const jpegData = data.slice(10)
 
-		return {image}
+				const image = new Blob([jpegData], {type: 'image/jpg'})
+				const imageBitmap = await createImageBitmap(image)
+
+				const sizeChanged =
+					canvas.width !== imageBitmap.width ||
+					canvas.height !== imageBitmap.height
+
+				if (sizeChanged) {
+					canvas.width = imageBitmap.width
+					canvas.height = imageBitmap.height
+				}
+
+				ctx.drawImage(imageBitmap, 0, 0)
+			} finally {
+				requestAnimationFrame(updateFrame)
+			}
+		}
+		updateFrame()
+
+		const stream = canvas.captureStream(60)
+		return stream
 	}
 
 	public get liveviewing(): boolean {
