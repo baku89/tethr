@@ -135,48 +135,45 @@ export class TethrSigma extends Tethr {
 		name: K,
 		value: PropType[K]
 	): Promise<SetPropResult<PropType[K]>> {
-		let succeed = false
-		let status: SetPropResultStatus | undefined
+		let status: SetPropResultStatus
 
 		switch (name) {
 			case 'exposureMode':
-				succeed = await this.setExposureMode(value as ExposureMode)
+				status = await this.setExposureMode(value as ExposureMode)
 				break
 			case 'aperture':
-				succeed = await this.setAperture(value as Aperture)
+				status = await this.setAperture(value as Aperture)
 				break
 			case 'shutterSpeed':
-				succeed = await this.setShutterSpeed(value as string)
+				status = await this.setShutterSpeed(value as string)
 				break
 			case 'iso':
-				succeed = await this.setISO(value as ISO)
+				status = await this.setISO(value as ISO)
 				break
 			case 'exposureComp':
-				succeed = await this.setExposureComp(value as string)
+				status = await this.setExposureComp(value as string)
 				break
 			case 'whiteBalance':
-				succeed = await this.setWhiteBalance(value as WhiteBalance)
+				status = await this.setWhiteBalance(value as WhiteBalance)
 				break
 			case 'colorTemperature':
-				succeed = await this.setColorTemperature(value as number)
+				status = await this.setColorTemperature(value as number)
 				break
 			case 'colorMode':
-				succeed = await this.setColorMode(value as string)
+				status = await this.setColorMode(value as string)
 				break
 			case 'aspectRatio':
-				succeed = await this.setAspectRatio(value as string)
+				status = await this.setAspectRatio(value as string)
 				break
 			case 'imageSize':
-				succeed = await this.setImageSize(value as string)
+				status = await this.setImageSize(value as string)
 				break
 			case 'imageQuality':
-				succeed = await this.setImageQuality(value as string)
+				status = await this.setImageQuality(value as string)
 				break
 			default:
 				status = 'unsupported'
 		}
-
-		const postValue = await this.get(name)
 
 		for (const prop of (await this.listProps()) as (keyof PropType)[]) {
 			const desc = await this.getDesc(prop)
@@ -184,8 +181,8 @@ export class TethrSigma extends Tethr {
 		}
 
 		return {
-			status: status ?? (succeed ? 'ok' : 'invalid'),
-			value: postValue,
+			status,
+			value: await this.get(name),
 		}
 	}
 
@@ -258,11 +255,13 @@ export class TethrSigma extends Tethr {
 		)
 	}
 
-	private setAperture = async (aperture: Aperture): Promise<boolean> => {
-		if (aperture === 'auto') return false
+	private setAperture = async (
+		aperture: Aperture
+	): Promise<SetPropResultStatus> => {
+		if (aperture === 'auto') return 'invalid'
 
 		const byte = this.apertureOneThirdTable.getKey(aperture)
-		if (!byte) return false
+		if (!byte) return 'invalid'
 
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
@@ -365,9 +364,11 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setShutterSpeed = async (ss: string): Promise<boolean> => {
+	private setShutterSpeed = async (
+		ss: string
+	): Promise<SetPropResultStatus> => {
 		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
-		if (!byte) return false
+		if (!byte) return 'invalid'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
 	}
@@ -381,18 +382,30 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setISO = async (iso: ISO): Promise<boolean> => {
+	private setISO = async (iso: ISO): Promise<SetPropResultStatus> => {
 		if (iso === 'auto') {
 			return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
 		}
 
-		const byte = this.isoTable.getKey(iso)
-		if (!byte) return false
+		const id = this.isoTable.getKey(iso)
+		if (!id) return 'invalid'
 
-		return (
-			(await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x0)) &&
-			(await this.setCamData(OpCodeSigma.SetCamDataGroup1, 4, byte))
+		const setISOAutoResult = await this.setCamData(
+			OpCodeSigma.SetCamDataGroup1,
+			3,
+			0x0
 		)
+		const setISOValueResult = await this.setCamData(
+			OpCodeSigma.SetCamDataGroup1,
+			4,
+			id
+		)
+
+		if (setISOAutoResult === 'ok' && setISOValueResult === 'ok') {
+			return 'ok'
+		} else {
+			return 'invalid'
+		}
 	}
 
 	private getISODesc = async (): Promise<PropDesc<ISO>> => {
@@ -421,10 +434,12 @@ export class TethrSigma extends Tethr {
 		return this.whiteBalanceTable.get(whiteBalance) ?? null
 	}
 
-	private setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
-		const byte = this.whiteBalanceTable.getKey(wb)
-		if (!byte) return false
-		return await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, byte)
+	private setWhiteBalance = async (
+		wb: WhiteBalance
+	): Promise<SetPropResultStatus> => {
+		const id = this.whiteBalanceTable.getKey(wb)
+		if (!id) return 'invalid'
+		return await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, id)
 	}
 
 	private getWhiteBalanceDesc = async (): Promise<PropDesc<WhiteBalance>> => {
@@ -485,11 +500,11 @@ export class TethrSigma extends Tethr {
 
 	private setExposureMode = async (
 		exposureMode: ExposureMode
-	): Promise<boolean> => {
-		const byte = this.exposureModeTable.getKey(exposureMode)
-		if (!byte) return false
+	): Promise<SetPropResultStatus> => {
+		const id = this.exposureModeTable.getKey(exposureMode)
+		if (!id) return 'invalid'
 
-		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, byte)
+		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, id)
 	}
 
 	private getExposureModeDesc = async (): Promise<PropDesc<ExposureMode>> => {
@@ -512,10 +527,13 @@ export class TethrSigma extends Tethr {
 		return this.compensationOneThirdTable.get(exposureComp) ?? null
 	}
 
-	private setExposureComp = async (value: string): Promise<boolean> => {
-		const bits = this.compensationOneThirdTable.getKey(value)
-		if (bits === undefined) return false
-		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, bits)
+	private setExposureComp = async (
+		value: string
+	): Promise<SetPropResultStatus> => {
+		const id = this.compensationOneThirdTable.getKey(value)
+		if (id === undefined) return 'invalid'
+
+		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, id)
 	}
 
 	private getExposureCompDesc = async (): Promise<PropDesc<string>> => {
@@ -573,9 +591,12 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setColorMode = async (colorMode: string): Promise<boolean> => {
+	private setColorMode = async (
+		colorMode: string
+	): Promise<SetPropResultStatus> => {
 		const id = this.colorModeTable.getKey(colorMode)
-		if (id === undefined) return false
+		if (id === undefined) return 'invalid'
+
 		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
 	}
 
@@ -594,9 +615,12 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setAspectRatio = async (aspectRatio: string): Promise<boolean> => {
+	private setAspectRatio = async (
+		aspectRatio: string
+	): Promise<SetPropResultStatus> => {
 		const id = this.aspectRatioTableIFD.getKey(aspectRatio)
-		if (id === undefined) return false
+		if (id === undefined) return 'invalid'
+
 		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
 	}
 
@@ -617,9 +641,12 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setImageSize = async (imageSize: string): Promise<boolean> => {
+	private setImageSize = async (
+		imageSize: string
+	): Promise<SetPropResultStatus> => {
 		const id = this.imageSizeTable.getKey(imageSize)
-		if (id === undefined) return false
+		if (id === undefined) return 'invalid'
+
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 14, id)
 	}
 
@@ -643,7 +670,9 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setImageQuality = async (imageQuality: string): Promise<boolean> => {
+	private setImageQuality = async (
+		imageQuality: string
+	): Promise<SetPropResultStatus> => {
 		let jpegQuality: null | string = null
 		let dngBitDepth: number | null = null
 
@@ -673,17 +702,31 @@ export class TethrSigma extends Tethr {
 				imageQualityID = 0x08
 				break
 			default:
-				return false
+				return 'invalid'
 		}
 		imageQualityID |= dngBitDepth === null ? 0x00 : 0x10
 
 		// Set camData
-		await this.setCamData(OpCodeSigma.SetCamDataGroup2, 15, imageQualityID)
+		const setImageQualityResult = await this.setCamData(
+			OpCodeSigma.SetCamDataGroup2,
+			15,
+			imageQualityID
+		)
+
+		let setDngBitDepthResult: SetPropResultStatus = 'ok'
 		if (dngBitDepth !== null) {
-			await this.setCamData(OpCodeSigma.SetCamDataGroup4, 9, dngBitDepth)
+			setDngBitDepthResult = await this.setCamData(
+				OpCodeSigma.SetCamDataGroup4,
+				9,
+				dngBitDepth
+			)
 		}
 
-		return true
+		if (setImageQualityResult === 'ok' && setDngBitDepthResult === 'ok') {
+			return 'ok'
+		} else {
+			return 'invalid'
+		}
 	}
 
 	private getImageQualityDesc = async (): Promise<PropDesc<string>> => {
@@ -1004,7 +1047,11 @@ export class TethrSigma extends Tethr {
 		})
 	}
 
-	private async setCamData(opcode: number, propNumber: number, value: number) {
+	private async setCamData(
+		opcode: number,
+		propNumber: number,
+		value: number
+	): Promise<SetPropResultStatus> {
 		const buffer = new ArrayBuffer(4)
 		const dataView = new DataView(buffer)
 
@@ -1020,10 +1067,10 @@ export class TethrSigma extends Tethr {
 				data,
 			})
 		} catch (err) {
-			return false
+			return 'invalid'
 		}
 
-		return true
+		return 'ok'
 	}
 
 	private async getCamCaptStatus(id = 0) {
