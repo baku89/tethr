@@ -21,19 +21,6 @@ import {
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
 
-export function computeShutterSpeedSeconds(ss: string) {
-	if (ss === 'bulk' || ss === 'sync') {
-		return Infinity
-	}
-
-	if (ss.includes('/')) {
-		const [fraction, denominator] = ss.split('/')
-		return parseInt(fraction) / parseInt(denominator)
-	}
-
-	return parseFloat(ss)
-}
-
 export type PropDesc<T> = {
 	value: T | null
 	defaultValue?: T

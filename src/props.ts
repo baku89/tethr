@@ -102,3 +102,17 @@ export interface PropType {
 	copyrightInfo: string
 	iso: ISO // added
 }
+
+// Utility functions
+export function computeShutterSpeedSeconds(ss: string) {
+	if (ss === 'bulk' || ss === 'sync') {
+		return Infinity
+	}
+
+	if (ss.includes('/')) {
+		const [fraction, denominator] = ss.split('/')
+		return parseInt(fraction) / parseInt(denominator)
+	}
+
+	return parseFloat(ss)
+}

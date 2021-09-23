@@ -6,6 +6,7 @@ import {decodeIFD, IFDType} from '../../IFD'
 import {
 	Aperture,
 	BatteryLevel,
+	computeShutterSpeedSeconds,
 	ExposureMode,
 	ISO,
 	PropType,
@@ -16,7 +17,6 @@ import {PTPDataView} from '../../PTPDataView'
 import {TethrObject} from '../../TethrObject'
 import {isntNil, toHexString} from '../../util'
 import {
-	computeShutterSpeedSeconds,
 	LiveviewResult,
 	PropDesc,
 	SetPropResult,
