@@ -51,7 +51,12 @@ interface BulkInInfo {
 
 const PTP_COMMAND_BYTES_MAX = 12 + 4 * 3
 
-export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
+interface EventTypes {
+	[name: `ptpevent:${string}`]: PTPEvent
+	disconnect: void
+}
+
+export class PTPDevice extends EventEmitter<EventTypes> {
 	private transactionId = 0x00000000
 
 	private bulkOut = 0x0
@@ -103,9 +108,8 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 		this.bulkIn = endpointIn.endpointNumber
 		this.interruptIn = endpointEvent.endpointNumber
 
-		console.log(`PTPDevice = ${this.device.productName}`, this.device)
-
 		this.listenInterruptIn()
+		this.listenDisconnect()
 
 		this._opened = true
 	}
@@ -123,12 +127,12 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 
 	public onEventCode(eventCode: number, callback: PTPEventCallback) {
 		const eventName = toHexString(eventCode, 2)
-		this.on(eventName, callback)
+		this.on(`ptpevent:${eventName}`, callback)
 	}
 
 	public offEventCode(eventCode: number, callback?: PTPEventCallback) {
 		const eventName = toHexString(eventCode, 2)
-		this.off(eventName, callback)
+		this.off(`ptpevent:${eventName}`, callback)
 	}
 
 	public sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse> => {
@@ -281,7 +285,7 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 		const eventName = toHexString(code, 2)
 
 		return new Promise(resolve => {
-			this.once(eventName, resolve)
+			this.once(`ptpevent:${eventName}`, resolve)
 		})
 	}
 
@@ -426,10 +430,26 @@ export class PTPDevice extends EventEmitter<Record<string, PTPEvent>> {
 				'parameters=' + [...parameters].map(v => toHexString(v, 4))
 			)
 
-			this.emit(eventName, {code, parameters})
+			this.emit(`ptpevent:${eventName}`, {code, parameters})
+		} catch (err) {
+			if (
+				err instanceof DOMException &&
+				err.message === 'The transfer was cancelled.'
+			) {
+				return
+			}
+			throw err
 		} finally {
 			setTimeout(this.listenInterruptIn, 0)
 		}
+	}
+
+	private listenDisconnect() {
+		navigator.usb.addEventListener('disconnect', ev => {
+			if (ev.device === this.device) {
+				this.emit('disconnect')
+			}
+		})
 	}
 
 	private generateTransactionId = (): number => {

@@ -89,11 +89,13 @@ export interface LiveviewResult {
 	histogram?: Uint8Array
 }
 
-type TethrEventTypes = {
+type EventTypes = {
 	[Name in keyof PropType as `${Name}Changed`]: PropDesc<PropType[Name]>
+} & {
+	disconnect: void
 }
 
-export class Tethr extends EventEmitter<TethrEventTypes> {
+export class Tethr extends EventEmitter<EventTypes> {
 	protected _class = Tethr
 	protected _opened = false
 
@@ -117,16 +119,17 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			expectedResCodes: [ResCode.OK, ResCode.SessionAlreadyOpen],
 		})
 
-		this._opened = true
-
 		this.device.onEventCode(
 			EventCode.DevicePropChanged,
 			this.onDevicePropChanged
 		)
+		this.device.on('disconnect', () => this.emit('disconnect'))
 
 		window.addEventListener('beforeunload', async () => {
 			await this.close()
 		})
+
+		this._opened = true
 	}
 
 	public close = async (): Promise<void> => {
