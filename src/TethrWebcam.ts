@@ -93,6 +93,6 @@ export class TethrWebcam extends Tethr {
 	}
 
 	public async getLiveview(): Promise<null | LiveviewResult> {
-		return null
+		return this.media
 	}
 }

@@ -69,7 +69,7 @@ export function useTethr() {
 		if (!cam) deviceInfo.value = ''
 	})
 
-	const liveviewURL = ref(TransparentPng)
+	const liveviewMediaStream = ref<null | MediaStream>(null)
 	const lastPictureURL = ref(TransparentPng)
 
 	async function toggleCameraConnection() {
@@ -135,23 +135,9 @@ export function useTethr() {
 
 		if (liveviewing.value) {
 			await camera.value.startLiveview()
-			updateLiveview()
+			liveviewMediaStream.value = await camera.value.getLiveview()
 		} else {
 			await camera.value.stopLiveview()
-		}
-
-		async function updateLiveview() {
-			if (!liveviewing.value || !camera.value) return
-
-			try {
-				const liveview = await camera.value.getLiveview()
-				if (liveview) {
-					URL.revokeObjectURL(liveviewURL.value)
-					liveviewURL.value = URL.createObjectURL(liveview.image)
-				}
-			} finally {
-				requestAnimationFrame(updateLiveview)
-			}
 		}
 	}
 
@@ -180,7 +166,7 @@ export function useTethr() {
 			batteryLevel: useTethrProp(camera, 'batteryLevel'),
 		},
 
-		liveviewURL,
+		liveviewMediaStream,
 		liveviewing: readonly(liveviewing),
 		lastPictureURL,
 		runAutoFocus,

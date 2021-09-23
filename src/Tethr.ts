@@ -30,10 +30,7 @@ export interface TakePictureOption {
 	download?: boolean
 }
 
-export interface LiveviewResult {
-	image: Blob
-	histogram?: Uint8Array
-}
+export type LiveviewResult = MediaStream
 
 export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	public abstract open(): Promise<void>

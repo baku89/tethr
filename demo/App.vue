@@ -12,7 +12,12 @@
 
 			<br />
 
-			<img class="view lv" id="liveview" :src="liveviewURL" />
+			<video
+				class="view lv"
+				id="liveview"
+				:srcObject.prop="liveviewMediaStream"
+				autoplay
+			/>
 
 			<img class="view picture" id="imageViewer" :src="lastPictureURL" />
 		</main>
@@ -34,7 +39,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, ref, watch} from 'vue'
 import {useTethr} from './useTethr'
 import TethrProp from './TethrProp.vue'
 
