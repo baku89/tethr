@@ -1,16 +1,17 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
+import {PropDesc} from '../ITethr'
 import {PropType} from '../props'
 import {DatatypeCode} from '../PTPDatacode'
-import {PropDesc, PropScheme, Tethr} from './Tethr'
+import {PropScheme, TethrPTPUSB} from './TethrPTPUSB'
 
 enum DevicePropCodeRicohTheta {
 	ShutterSpeed = 0xd00f,
 	ColorTemperature = 0xd813,
 }
 
-export class TethrRicohTheta extends Tethr {
+export class TethrRicohTheta extends TethrPTPUSB {
 	public async getDesc<K extends keyof PropType, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {

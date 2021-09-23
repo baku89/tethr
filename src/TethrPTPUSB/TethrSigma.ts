@@ -3,6 +3,7 @@ import _ from 'lodash'
 import sleep from 'sleep-promise'
 
 import {decodeIFD, IFDType} from '../IFD'
+import {PropDesc, SetPropResult, SetPropResultStatus} from '../ITethr'
 import {
 	Aperture,
 	BatteryLevel,
@@ -16,14 +17,8 @@ import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {TethrObject} from '../TethrObject'
 import {isntNil, toHexString} from '../util'
-import {
-	LiveviewResult,
-	PropDesc,
-	SetPropResult,
-	SetPropResultStatus,
-	TakePictureOption,
-	Tethr,
-} from './Tethr'
+import {TethrPTPUSB} from '.'
+import {LiveviewResult, TakePictureOption} from './TethrPTPUSB'
 
 enum OpCodeSigma {
 	GetCamConfig = 0x9010,
@@ -102,7 +97,7 @@ enum SnapCaptureMode {
 	StopRecordingMovie = 0x30,
 }
 
-export class TethrSigma extends Tethr {
+export class TethrSigma extends TethrPTPUSB {
 	private _liveviewing = false
 
 	public open = async (): Promise<void> => {
@@ -115,11 +110,11 @@ export class TethrSigma extends Tethr {
 		})
 	}
 
-	public async listProps(): Promise<string[]> {
+	public async listProps(): Promise<(keyof PropType)[]> {
 		return [
 			'exposureMode',
 			'aperture',
-			'shuterSpeed',
+			'shutterSpeed',
 			'iso',
 			'exposureComp',
 			'whiteBalance',

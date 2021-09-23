@@ -62,7 +62,7 @@ export type RunManualFocusOption = {
 	speed: 1 | 2 | 3
 }
 
-export interface PropType {
+export type PropType = {
 	batteryLevel: BatteryLevel
 	functionalMode: FunctionalMode
 	compressionSetting: number
@@ -101,6 +101,8 @@ export interface PropType {
 	artist: string
 	copyrightInfo: string
 	iso: ISO // added
+
+	[v: `0x${string}`]: any
 }
 
 // Utility functions

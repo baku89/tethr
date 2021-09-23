@@ -2,6 +2,8 @@ import {BiMap} from 'bim'
 import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
 
+import {ITethr, ITethrEventTypes, PropDesc, SetPropResult} from '@/ITethr'
+
 import {
 	DriveMode,
 	ExposureMode,
@@ -26,13 +28,6 @@ import {
 } from '../PTPEnum'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
-
-export type PropDesc<T> = {
-	value: T | null
-	defaultValue?: T
-	writable: boolean
-	options: T[]
-}
 
 export interface DeviceInfo {
 	standardVersion: number
@@ -73,13 +68,6 @@ export type PropScheme = {
 	)
 }
 
-export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
-
-export interface SetPropResult<T extends PropType[keyof PropType]> {
-	status: SetPropResultStatus
-	value: T | null
-}
-
 export interface TakePictureOption {
 	download?: boolean
 }
@@ -89,14 +77,10 @@ export interface LiveviewResult {
 	histogram?: Uint8Array
 }
 
-type EventTypes = {
-	[Name in keyof PropType as `${Name}Changed`]: PropDesc<PropType[Name]>
-} & {
-	disconnect: void
-}
-
-export class Tethr extends EventEmitter<EventTypes> {
-	protected _class = Tethr
+export class TethrPTPUSB
+	extends EventEmitter<ITethrEventTypes>
+	implements ITethr
+{
 	protected _opened = false
 
 	public constructor(protected device: PTPDevice) {
@@ -143,7 +127,7 @@ export class Tethr extends EventEmitter<EventTypes> {
 	}
 
 	public getDeviceInfo = async (): Promise<DeviceInfo> => {
-		return await Tethr.getDeviceInfo(this.device)
+		return await TethrPTPUSB.getDeviceInfo(this.device)
 	}
 
 	public getStorageInfo = async (): Promise<void> => {
@@ -178,19 +162,17 @@ export class Tethr extends EventEmitter<EventTypes> {
 		}
 	}
 
-	public async listProps(): Promise<string[]> {
+	public async listProps() {
 		const {propsSupported} = await this.getDeviceInfo()
 
-		return propsSupported.map(getPropNameByCode)
+		return propsSupported.map(getPropNameByCode) as (keyof PropType)[]
 
 		function getPropNameByCode(code: number) {
 			return DevicePropCode[code] ?? toHexString(code, 4)
 		}
 	}
 
-	public async get<K extends keyof PropType>(
-		name: K
-	): Promise<PropType[K] | null> {
+	public async get<K extends keyof PropType>(name: K) {
 		return (await this.getDesc(name)).value
 	}
 

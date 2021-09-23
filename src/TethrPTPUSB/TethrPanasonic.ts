@@ -1,6 +1,7 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
+import {PropDesc, SetPropResult} from '../ITethr'
 import {
 	Aperture,
 	ExposureMode,
@@ -16,11 +17,9 @@ import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil} from '../util'
 import {
 	LiveviewResult as LiveviewData,
-	PropDesc,
-	SetPropResult,
 	TakePictureOption,
-	Tethr,
-} from './Tethr'
+	TethrPTPUSB,
+} from './TethrPTPUSB'
 
 enum OpCodePanasonic {
 	OpenSession = 0x9102,
@@ -107,7 +106,7 @@ type PropScheme = {
 	}
 }
 
-export class TethrPanasonic extends Tethr {
+export class TethrPanasonic extends TethrPTPUSB {
 	private propSchemePanasonic: PropScheme = {
 		exposureMode: {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,

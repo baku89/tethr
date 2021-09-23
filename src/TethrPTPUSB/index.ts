@@ -1,28 +1,23 @@
 import {PTPDevice} from '../PTPDevice'
-import {DeviceInfo, Tethr} from './Tethr'
 import {TethrPanasonic} from './TethrPanasonic'
+import {DeviceInfo, TethrPTPUSB} from './TethrPTPUSB'
 import {TethrRicohTheta} from './TethrRicohTheta'
 import {TethrSigma} from './TethrSigma'
 
-export interface TethrDeviceDescriptorPTPUSB {
-	type: 'ptp/usb'
-	device: USBDevice
-}
-
-export async function initTethrWithUSBDevice(
+export async function initTethrUSBPTP(
 	usb: USBDevice
-): Promise<Tethr | null> {
+): Promise<TethrPTPUSB | null> {
 	const device = new PTPDevice(usb)
 	let info: DeviceInfo
 
 	try {
 		await device.open()
-		info = await Tethr.getDeviceInfo(device)
+		info = await TethrPTPUSB.getDeviceInfo(device)
 	} catch {
 		return null
 	}
 
-	let tethr: Tethr | null = null
+	let tethr: TethrPTPUSB | null = null
 
 	switch (info.vendorExtensionID) {
 		case 0x00000006: // Microsoft / Sigma / Ricoh
@@ -38,10 +33,10 @@ export async function initTethrWithUSBDevice(
 	}
 
 	if (!tethr) {
-		tethr = new Tethr(device)
+		tethr = new TethrPTPUSB(device)
 	}
 
 	return tethr
 }
 
-export {Tethr}
+export {TethrPTPUSB}
