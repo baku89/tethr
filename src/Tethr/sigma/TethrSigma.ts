@@ -113,9 +113,6 @@ export class TethrSigma extends Tethr {
 			opcode: OpCodeSigma.ConfigApi,
 			parameters: [0x0],
 		})
-
-		await this.getCamDataGroup1()
-		await this.getCamDataGroup2()
 	}
 
 	public async set<K extends keyof PropType>(
