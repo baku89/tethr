@@ -15,7 +15,6 @@ import {
 import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {
-	LiveviewResult,
 	PropDesc,
 	SetPropResult,
 	SetPropResultStatus,
@@ -847,18 +846,12 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async startLiveview(): Promise<void> {
-		this._liveviewing = true
-	}
-
-	public async stopLiveview(): Promise<void> {
-		this._liveviewing = false
-	}
-
-	public async getLiveview(): Promise<null | LiveviewResult> {
+	public async startLiveview(): Promise<null | MediaStream> {
 		const canvas = document.createElement('canvas')
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return null
+
+		this._liveviewing = true
 
 		const updateFrame = async () => {
 			if (!this._liveviewing) return
@@ -896,6 +889,10 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const stream = canvas.captureStream(60)
 		return stream
+	}
+
+	public async stopLiveview(): Promise<void> {
+		this._liveviewing = false
 	}
 
 	public get liveviewing(): boolean {

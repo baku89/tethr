@@ -25,13 +25,7 @@ import {
 	PTPFilesystemType,
 	PTPStorageType,
 } from '../PTPEnum'
-import {
-	LiveviewResult,
-	PropDesc,
-	SetPropResult,
-	TakePictureOption,
-	Tethr,
-} from '../Tethr'
+import {PropDesc, SetPropResult, TakePictureOption, Tethr} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
 
@@ -373,16 +367,12 @@ export class TethrPTPUSB extends Tethr {
 		return [tethrObject]
 	}
 
-	public async startLiveview(): Promise<void> {
-		return
+	public async startLiveview(): Promise<null | MediaStream> {
+		return null
 	}
 
 	public async stopLiveview(): Promise<void> {
 		return
-	}
-
-	public async getLiveview(): Promise<null | LiveviewResult> {
-		return null
 	}
 
 	public get liveviewing(): boolean {
@@ -402,8 +392,8 @@ export class TethrPTPUSB extends Tethr {
 			id,
 			storageID: dataView.readUint32(),
 			format: this.getObjectFormat(dataView.readUint16()),
-			protectionStatus: dataView.readUint16(),
-			byteLength: dataView.readUint32(),
+			// protectionStatus: dataView.readUint16(),
+			byteLength: dataView.skip(2).readUint32(),
 			thumb: {
 				format: this.getObjectFormat(dataView.readUint16()),
 				compressedSize: dataView.readUint32(),
@@ -415,14 +405,14 @@ export class TethrPTPUSB extends Tethr {
 				height: dataView.readUint32(),
 				bitDepth: dataView.readUint32(),
 			},
-			parent: dataView.readUint32(),
+			// parent: dataView.readUint32(),
 			// associationType: dataView.readUint16(),
 			// associationDesc: dataView.readUint32(),
-			sequenceNumber: dataView.skip(2 + 4).readUint32(),
+			sequenceNumber: dataView.skip(4 + 2 + 4).readUint32(),
 			filename: dataView.readFixedUTF16String(),
 			captureDate: dataView.readDate(),
 			modificationDate: dataView.readDate(),
-			keywords: dataView.readFixedUTF16String(),
+			// keywords: dataView.readFixedUTF16String(),
 		}
 	}
 

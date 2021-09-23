@@ -12,12 +12,7 @@ import {
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPEvent} from '../PTPDevice'
-import {
-	LiveviewResult,
-	PropDesc,
-	SetPropResult,
-	TakePictureOption,
-} from '../Tethr'
+import {PropDesc, SetPropResult, TakePictureOption} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil} from '../util'
 import {TethrPTPUSB} from './TethrPTPUSB'
@@ -108,6 +103,8 @@ type PropScheme = {
 }
 
 export class TethrPanasonic extends TethrPTPUSB {
+	private _liveviewing = false
+
 	private propSchemePanasonic: PropScheme = {
 		exposureMode: {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
@@ -472,12 +469,46 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return objects
 	}
 
-	public async startLiveview(): Promise<void> {
+	public async startLiveview(): Promise<null | MediaStream> {
+		const canvas = document.createElement('canvas')
+		const ctx = canvas.getContext('2d')
+		if (!ctx) return null
+
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
 			opcode: OpCodePanasonic.Liveview,
 			parameters: [0x0d000010],
 		})
+
+		this._liveviewing = true
+
+		const updateFrame = async () => {
+			if (!this._liveviewing) return
+			try {
+				const image = await this.getLiveview()
+
+				if (!image) return
+
+				const imageBitmap = await createImageBitmap(image)
+
+				const sizeChanged =
+					canvas.width !== imageBitmap.width ||
+					canvas.height !== imageBitmap.height
+
+				if (sizeChanged) {
+					canvas.width = imageBitmap.width
+					canvas.height = imageBitmap.height
+				}
+
+				ctx.drawImage(imageBitmap, 0, 0)
+			} finally {
+				requestAnimationFrame(updateFrame)
+			}
+		}
+		updateFrame()
+
+		const stream = canvas.captureStream(60)
+		return stream
 	}
 
 	public async stopLiveview(): Promise<void> {
@@ -486,6 +517,8 @@ export class TethrPanasonic extends TethrPTPUSB {
 			opcode: OpCodePanasonic.Liveview,
 			parameters: [0x0d000011],
 		})
+
+		this._liveviewing = false
 	}
 
 	public async getLiveviewRecommendedSettings() {
@@ -556,7 +589,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public async getLiveview(): Promise<null | LiveviewResult> {
+	private async getLiveview(): Promise<null | Blob> {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'Panasonic LiveviewImage',
 			opcode: OpCodePanasonic.LiveviewImage,
@@ -622,11 +655,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		const jpegData = data.slice(jpegOffset)
 
 		const image = new Blob([jpegData], {type: 'image/jpg'})
-
-		return {
-			image,
-			histogram,
-		}
+		return image
 	}
 
 	public async runManualFocus(option: RunManualFocusOption) {

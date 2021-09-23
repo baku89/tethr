@@ -134,8 +134,7 @@ export function useTethr() {
 		if (!camera.value) return
 
 		if (liveviewing.value) {
-			await camera.value.startLiveview()
-			liveviewMediaStream.value = await camera.value.getLiveview()
+			liveviewMediaStream.value = await camera.value.startLiveview()
 		} else {
 			await camera.value.stopLiveview()
 			liveviewMediaStream.value = null

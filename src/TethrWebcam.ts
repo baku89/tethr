@@ -1,12 +1,6 @@
 import {DeviceInfo} from './DeviceInfo'
 import {PropType} from './props'
-import {
-	LiveviewResult,
-	PropDesc,
-	SetPropResult,
-	TakePictureOption,
-	Tethr,
-} from './Tethr'
+import {PropDesc, SetPropResult, TakePictureOption, Tethr} from './Tethr'
 import {TethrObject} from './TethrObject'
 
 export function initTethrWebcam(media: MediaStream) {
@@ -73,26 +67,41 @@ export class TethrWebcam extends Tethr {
 	public async runAutoFocus(): Promise<boolean> {
 		return false
 	}
-	public async takePicture(
-		options?: TakePictureOption
-	): Promise<null | TethrObject[]> {
+	public async takePicture({download = true}: TakePictureOption = {}): Promise<
+		null | TethrObject[]
+	> {
+		if (!download) return null
+
 		const blob = await this.imageCapture.takePhoto()
 
-		const tethrObject = {
+		const now = new Date()
+
+		const tethrObject: TethrObject = {
+			id: 0,
+			storageID: 0,
+			format: 'jpeg',
+			byteLength: blob.size,
+			// protectionStatus: 0,
+			image: {
+				width: 0,
+				height: 0,
+				bitDepth: 8,
+			},
+			filename: 'capture.jpeg',
+			sequenceNumber: 0,
+			captureDate: now,
+			modificationDate: now,
 			blob,
-		} as any
+		}
 
 		return [tethrObject]
 	}
 
-	public async startLiveview(): Promise<void> {
-		return
-	}
-	public async stopLiveview(): Promise<void> {
-		return
+	public async startLiveview(): Promise<null | MediaStream> {
+		return this.media
 	}
 
-	public async getLiveview(): Promise<null | LiveviewResult> {
-		return this.media
+	public async stopLiveview(): Promise<void> {
+		return
 	}
 }

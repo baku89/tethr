@@ -30,8 +30,6 @@ export interface TakePictureOption {
 	download?: boolean
 }
 
-export type LiveviewResult = MediaStream
-
 export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	public abstract open(): Promise<void>
 	public abstract close(): Promise<void>
@@ -56,7 +54,6 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	public abstract takePicture(
 		options?: TakePictureOption
 	): Promise<null | TethrObject[]>
-	public abstract startLiveview(): Promise<void>
+	public abstract startLiveview(): Promise<null | MediaStream>
 	public abstract stopLiveview(): Promise<void>
-	public abstract getLiveview(): Promise<null | LiveviewResult>
 }
