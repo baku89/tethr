@@ -103,7 +103,6 @@ enum SnapCaptureMode {
 }
 
 export class TethrSigma extends Tethr {
-	protected _class = TethrSigma
 	private _liveviewing = false
 
 	public open = async (): Promise<void> => {
@@ -239,8 +238,8 @@ export class TethrSigma extends Tethr {
 		const {aperture} = await this.getCamDataGroup1()
 		if (aperture === 0x0) return 'auto'
 		return (
-			TethrSigma.ApertureOneThirdTable.get(aperture) ??
-			TethrSigma.ApertureHalfTable.get(aperture) ??
+			this.apertureOneThirdTable.get(aperture) ??
+			this.apertureHalfTable.get(aperture) ??
 			null
 		)
 	}
@@ -248,7 +247,7 @@ export class TethrSigma extends Tethr {
 	private setAperture = async (aperture: Aperture): Promise<boolean> => {
 		if (aperture === 'auto') return false
 
-		const byte = TethrSigma.ApertureOneThirdTable.getKey(aperture)
+		const byte = this.apertureOneThirdTable.getKey(aperture)
 		if (!byte) return false
 
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
@@ -271,8 +270,8 @@ export class TethrSigma extends Tethr {
 
 		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
 		const table = isStepOneThird
-			? TethrSigma.ApertureOneThirdTable
-			: TethrSigma.ApertureHalfTable
+			? this.apertureOneThirdTable
+			: this.apertureHalfTable
 
 		const apertures = Array.from(table.values())
 
@@ -297,8 +296,8 @@ export class TethrSigma extends Tethr {
 		const {shutterSpeed} = await this.getCamDataGroup1()
 		if (shutterSpeed === 0x0) return 'auto'
 		return (
-			TethrSigma.ShutterSpeedOneThirdTable.get(shutterSpeed) ??
-			TethrSigma.ShutterSpeedHalfTable.get(shutterSpeed) ??
+			this.shutterSpeedOneThirdTable.get(shutterSpeed) ??
+			this.shutterSpeedHalfTable.get(shutterSpeed) ??
 			null
 		)
 	}
@@ -319,8 +318,8 @@ export class TethrSigma extends Tethr {
 
 		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
 		const table = isStepOneThird
-			? TethrSigma.ShutterSpeedOneThirdTable
-			: TethrSigma.ShutterSpeedHalfTable
+			? this.shutterSpeedOneThirdTable
+			: this.shutterSpeedHalfTable
 
 		const shutterSpeeds = Array.from(table.entries()).filter(
 			e => e[1] !== 'sync' && e[1] !== 'bulb'
@@ -353,7 +352,7 @@ export class TethrSigma extends Tethr {
 	}
 
 	private setShutterSpeed = async (ss: string): Promise<boolean> => {
-		const byte = TethrSigma.ShutterSpeedOneThirdTable.getKey(ss)
+		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return false
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
@@ -364,7 +363,7 @@ export class TethrSigma extends Tethr {
 		if (isoAuto === 0x01) {
 			return 'auto'
 		} else {
-			return TethrSigma.ISOTable.get(isoSpeed) ?? null
+			return this.isoTable.get(isoSpeed) ?? null
 		}
 	}
 
@@ -373,7 +372,7 @@ export class TethrSigma extends Tethr {
 			return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
 		}
 
-		const byte = TethrSigma.ISOTable.getKey(iso)
+		const byte = this.isoTable.getKey(iso)
 		if (!byte) return false
 
 		return (
@@ -391,7 +390,7 @@ export class TethrSigma extends Tethr {
 		const isoMin = Math.round(3.125 * 2 ** svMin)
 		const isoMax = Math.round(3.125 * 2 ** svMax)
 
-		const isos = [...TethrSigma.ISOTable.values()]
+		const isos = [...this.isoTable.values()]
 		const options = isos.filter(a => isoMin <= a && a <= isoMax)
 
 		options.unshift('auto')
@@ -405,11 +404,11 @@ export class TethrSigma extends Tethr {
 
 	private getWhiteBalance = async () => {
 		const {whiteBalance} = await this.getCamDataGroup2()
-		return TethrSigma.WhiteBalanceTable.get(whiteBalance) ?? null
+		return this.whiteBalanceTable.get(whiteBalance) ?? null
 	}
 
 	private setWhiteBalance = async (wb: WhiteBalance): Promise<boolean> => {
-		const byte = TethrSigma.WhiteBalanceTable.getKey(wb)
+		const byte = this.whiteBalanceTable.getKey(wb)
 		if (!byte) return false
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, byte)
 	}
@@ -419,7 +418,7 @@ export class TethrSigma extends Tethr {
 		const value = await this.getWhiteBalance()
 
 		const options = whiteBalance
-			.map(v => TethrSigma.WhiteBalanceTableIFD.get(v))
+			.map(v => this.whiteBalanceTableIFD.get(v))
 			.filter(isntNil)
 
 		return {
@@ -467,13 +466,13 @@ export class TethrSigma extends Tethr {
 
 	private getExposureMode = async () => {
 		const {exposureMode} = await this.getCamDataGroup2()
-		return TethrSigma.ExposureModeTable.get(exposureMode) ?? null
+		return this.exposureModeTable.get(exposureMode) ?? null
 	}
 
 	private setExposureMode = async (
 		exposureMode: ExposureMode
 	): Promise<boolean> => {
-		const byte = TethrSigma.ExposureModeTable.getKey(exposureMode)
+		const byte = this.exposureModeTable.getKey(exposureMode)
 		if (!byte) return false
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, byte)
@@ -484,7 +483,7 @@ export class TethrSigma extends Tethr {
 		const value = await this.getExposureMode()
 
 		const options = exposureMode
-			.map(n => TethrSigma.ExposureModeTable.get(n))
+			.map(n => this.exposureModeTable.get(n))
 			.filter(isntNil)
 
 		return {
@@ -496,11 +495,11 @@ export class TethrSigma extends Tethr {
 
 	private getExposureComp = async () => {
 		const {exposureComp} = await this.getCamDataGroup1()
-		return TethrSigma.CompensationOneThirdTable.get(exposureComp) ?? null
+		return this.compensationOneThirdTable.get(exposureComp) ?? null
 	}
 
 	private setExposureComp = async (value: string): Promise<boolean> => {
-		const bits = TethrSigma.CompensationOneThirdTable.getKey(value)
+		const bits = this.compensationOneThirdTable.getKey(value)
 		if (bits === undefined) return false
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, bits)
 	}
@@ -519,7 +518,7 @@ export class TethrSigma extends Tethr {
 
 		const [min, max] = exposureComp
 
-		const allValues = [...TethrSigma.CompensationOneThirdTable.values()]
+		const allValues = [...this.compensationOneThirdTable.values()]
 		const options = allValues
 			.map(v => [v, decodeExposureComp(v)] as [string, number])
 			.sort((a, b) => a[1] - b[1])
@@ -561,14 +560,14 @@ export class TethrSigma extends Tethr {
 	}
 
 	private setColorMode = async (colorMode: string): Promise<boolean> => {
-		const id = this._class.ColorModeTable.getKey(colorMode)
+		const id = this.colorModeTable.getKey(colorMode)
 		if (id === undefined) return false
 		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
 	}
 
 	private getColorModeDesc = async (): Promise<PropDesc<string>> => {
 		const decodeColorMode = (id: number) => {
-			return this._class.ColorModeTable.get(id) ?? 'Unknown'
+			return this.colorModeTable.get(id) ?? 'Unknown'
 		}
 
 		const {colorMode} = await this.getCamDataGroup3()
@@ -582,21 +581,20 @@ export class TethrSigma extends Tethr {
 	}
 
 	private setAspectRatio = async (aspectRatio: string): Promise<boolean> => {
-		const id = this._class.AspectRatioTableIFD.getKey(aspectRatio)
+		const id = this.aspectRatioTableIFD.getKey(aspectRatio)
 		if (id === undefined) return false
 		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
 	}
 
 	private getAspectRatioDesc = async (): Promise<PropDesc<string>> => {
 		const decodeAspectRatioIFD = (id: number) => {
-			return this._class.AspectRatioTableIFD.get(id) ?? 'Unknown'
+			return this.aspectRatioTableIFD.get(id) ?? 'Unknown'
 		}
 
 		const {aspectRatio} = await this.getCamDataGroup5()
 		const {aspectRatio: aspectRatioOptions} = await this.getCamCanSetInfo5()
 
-		const aspectRatioIfdID =
-			aspectRatio - this._class.AspectRatioDataGroupOffset
+		const aspectRatioIfdID = aspectRatio - this.aspectRatioDataGroupOffset
 
 		return {
 			writable: aspectRatioOptions.length > 0,
@@ -720,7 +718,7 @@ export class TethrSigma extends Tethr {
 
 	private getBatteryLevelDesc = async (): Promise<PropDesc<BatteryLevel>> => {
 		const {batteryLevel} = await this.getCamDataGroup1()
-		const value = TethrSigma.BatteryLevelTable.get(batteryLevel) ?? null
+		const value = this.batteryLevelTable.get(batteryLevel) ?? null
 
 		return {
 			writable: false,
@@ -973,7 +971,7 @@ export class TethrSigma extends Tethr {
 		dataView.setUint16(0, 1 << propNumber, true)
 		dataView.setUint16(2, value, true)
 
-		const data = this._class.encodeParameter(buffer)
+		const data = this.encodeParameter(buffer)
 
 		try {
 			await this.device.sendData({
@@ -1021,7 +1019,7 @@ export class TethrSigma extends Tethr {
 		await this.device.sendData({
 			label: 'Sigma SnapCommand',
 			opcode: OpCodeSigma.SnapCommand,
-			data: this._class.encodeParameter(snapState),
+			data: this.encodeParameter(snapState),
 		})
 
 		for (let restTries = 50; restTries > 0; restTries--) {
@@ -1072,7 +1070,7 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private static encodeParameter(buffer: ArrayBuffer) {
+	private encodeParameter(buffer: ArrayBuffer) {
 		const bytes = new Uint8Array(buffer)
 
 		const size = buffer.byteLength
@@ -1097,7 +1095,7 @@ export class TethrSigma extends Tethr {
 		return encodedBuffer
 	}
 
-	private static ColorModeTable = new BiMap<number, string>([
+	private colorModeTable = new BiMap<number, string>([
 		[0x00, 'normal'],
 		[0x01, 'sepia'],
 		[0x02, 'bw'],
@@ -1117,7 +1115,7 @@ export class TethrSigma extends Tethr {
 	])
 
 	// NOTE: This table should fix
-	private static AspectRatioTableIFD = new BiMap<number, string>([
+	private aspectRatioTableIFD = new BiMap<number, string>([
 		[1, '21:9'],
 		[2, '16:9'],
 		[3, '3:2'],
@@ -1127,9 +1125,9 @@ export class TethrSigma extends Tethr {
 		[7, '1:1'],
 	])
 
-	private static AspectRatioDataGroupOffset = 245
+	private aspectRatioDataGroupOffset = 245
 
-	private static ISOTable = new BiMap<number, ISO>([
+	private isoTable = new BiMap<number, ISO>([
 		[0b00000000, 6],
 		[0b00000011, 8],
 		[0b00000101, 10],
@@ -1175,7 +1173,7 @@ export class TethrSigma extends Tethr {
 		[0b01110000, 102400],
 	])
 
-	private static CompensationOneThirdTable = new BiMap<number, string>([
+	private compensationOneThirdTable = new BiMap<number, string>([
 		[0b00000000, '0'],
 		[0b00000011, '+1/3'],
 		[0b00000101, '+2/3'],
@@ -1217,7 +1215,7 @@ export class TethrSigma extends Tethr {
 		[0b11111101, '-1/3'],
 	])
 
-	private static ShutterSpeedOneThirdTable = new BiMap<number, string>([
+	private shutterSpeedOneThirdTable = new BiMap<number, string>([
 		[0b00001000, 'bulb'],
 		[0b00010000, '30'],
 		[0b00010011, '25'],
@@ -1289,7 +1287,7 @@ export class TethrSigma extends Tethr {
 		[0b10110000, '1/32000'],
 	])
 
-	private static ShutterSpeedHalfTable = new BiMap<number, string>([
+	private shutterSpeedHalfTable = new BiMap<number, string>([
 		[0b00001000, 'bulb'],
 		[0b00010001, '30'],
 		[0b00010100, '20'],
@@ -1327,7 +1325,7 @@ export class TethrSigma extends Tethr {
 		[0b10110000, '1/32000'],
 	])
 
-	private static ApertureOneThirdTable = new BiMap<number, number>([
+	private apertureOneThirdTable = new BiMap<number, number>([
 		[0b00001000, 1.0],
 		[0b00001011, 1.1],
 		[0b00001101, 1.2],
@@ -1370,7 +1368,7 @@ export class TethrSigma extends Tethr {
 		[0b01110000, 91],
 	])
 
-	private static ApertureHalfTable = new BiMap<number, number>([
+	private apertureHalfTable = new BiMap<number, number>([
 		[0b00001000, 1.0],
 		[0b00001100, 1.2],
 		[0b00010000, 1.4],
@@ -1400,14 +1398,14 @@ export class TethrSigma extends Tethr {
 		[0b01110000, 91],
 	])
 
-	protected static ExposureModeTable = new BiMap<number, ExposureMode>([
+	protected exposureModeTable = new BiMap<number, ExposureMode>([
 		[0x1, 'P'],
 		[0x2, 'A'],
 		[0x3, 'S'],
 		[0x4, 'M'],
 	])
 
-	private static BatteryLevelTable = new Map<number, null | BatteryLevel>([
+	private batteryLevelTable = new Map<number, null | BatteryLevel>([
 		[0x00, null],
 		[0x01, 1],
 		[0x02, 2 / 3],
@@ -1423,7 +1421,7 @@ export class TethrSigma extends Tethr {
 		[0x0c, null],
 	])
 
-	private static WhiteBalanceTableTable = new BiMap<number, WhiteBalance>([
+	private whiteBalanceTableTable = new BiMap<number, WhiteBalance>([
 		[0x01, 'auto'],
 		[0x02, 'daylight'], // Sunlight
 		[0x03, 'shade'],
@@ -1441,7 +1439,7 @@ export class TethrSigma extends Tethr {
 		[0x0f, 'auto ambience'], // Auto (Light Source Priority)
 	])
 
-	private static WhiteBalanceTableIFD = new Map<number, WhiteBalance>([
+	private whiteBalanceTableIFD = new Map<number, WhiteBalance>([
 		[0x1, 'auto'],
 		[0x2, 'auto ambience'],
 		[0x3, 'daylight'],

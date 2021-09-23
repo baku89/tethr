@@ -1,10 +1,9 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
-import {PTPDevice} from '@/PTPDevice'
-
+import {PropType} from '../../props'
 import {DatatypeCode} from '../../PTPDatacode'
-import {PropDesc, PropNames, PropScheme, PropType, Tethr} from '../Tethr'
+import {PropDesc, PropScheme, Tethr} from '../Tethr'
 
 enum DevicePropCodeRicohTheta {
 	ShutterSpeed = 0xd00f,
@@ -12,13 +11,7 @@ enum DevicePropCodeRicohTheta {
 }
 
 export class TethrRicohTheta extends Tethr {
-	public constructor(device: PTPDevice) {
-		super(device)
-
-		this._class = TethrRicohTheta
-	}
-
-	public async getDesc<K extends PropNames, T extends PropType[K]>(
+	public async getDesc<K extends keyof PropType, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
 		if (name === 'focalLength') {
@@ -31,9 +24,9 @@ export class TethrRicohTheta extends Tethr {
 		return super.getDesc(name)
 	}
 
-	protected static PropScheme = (() => {
+	protected propScheme = (() => {
 		const propScheme: PropScheme = {
-			...Tethr.PropScheme,
+			...super.propScheme,
 			shutterSpeed: {
 				devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
 				dataType: DatatypeCode.Uint64,
@@ -74,14 +67,14 @@ export class TethrRicohTheta extends Tethr {
 		return propScheme
 	})()
 
-	protected static ExposureModeTable = (() => {
-		const table = new BiMap(Tethr.ExposureModeTable.entries())
+	protected exposureModeTable = (() => {
+		const table = new BiMap(super.exposureModeTable.entries())
 		table.set(0x8003, 'vendor iso-priority')
 		return table
 	})()
 
-	protected static WhiteBalanceTable = (() => {
-		const table = new BiMap(Tethr.WhiteBalanceTable.entries())
+	protected WhiteBalanceTable = (() => {
+		const table = new BiMap(super.whiteBalanceTable.entries())
 		table.set(0x8001, 'shade')
 		table.set(0x0004, 'daylight')
 		table.set(0x0006, 'incandescent')

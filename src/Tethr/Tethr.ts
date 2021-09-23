@@ -51,18 +51,18 @@ export type PropScheme = {
 	} & (
 		| {
 				dataType: DatatypeCode.Uint64
-				decode: (this: typeof Tethr, data: bigint) => PropType[Name] | null
-				encode: (this: typeof Tethr, value: PropType[Name]) => bigint | null
+				decode: (data: bigint) => PropType[Name] | null
+				encode: (value: PropType[Name]) => bigint | null
 		  }
 		| {
 				dataType: DatatypeCode.String
-				decode: (this: typeof Tethr, data: string) => PropType[Name] | null
-				encode: (this: typeof Tethr, value: PropType[Name]) => string | null
+				decode: (data: string) => PropType[Name] | null
+				encode: (value: PropType[Name]) => string | null
 		  }
 		| {
 				dataType: DatatypeCode
-				decode: (this: typeof Tethr, data: number) => PropType[Name] | null
-				encode: (this: typeof Tethr, value: PropType[Name]) => number | null
+				decode: (data: number) => PropType[Name] | null
+				encode: (value: PropType[Name]) => number | null
 		  }
 	)
 }
@@ -134,7 +134,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	}
 
 	public getDeviceInfo = async (): Promise<DeviceInfo> => {
-		return await this._class.getDeviceInfo(this.device)
+		return await Tethr.getDeviceInfo(this.device)
 	}
 
 	public getStorageInfo = async (): Promise<void> => {
@@ -189,7 +189,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		name: K,
 		value: PropType[K]
 	): Promise<SetPropResult<PropType[K]>> {
-		const scheme = this._class.PropScheme[name]
+		const scheme = this.propScheme[name]
 
 		if (!scheme) {
 			return {
@@ -198,9 +198,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			}
 		}
 
-		const encode = scheme.encode.bind(this._class) as (
-			value: PropType[K]
-		) => number
+		const encode = scheme.encode as (value: PropType[K]) => number
 		const propData = encode(value)
 
 		if (propData === null) {
@@ -267,7 +265,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	public async getDesc<K extends keyof PropType, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		const scheme = this._class.PropScheme[name]
+		const scheme = this.propScheme[name]
 
 		if (!scheme) {
 			return {
@@ -292,7 +290,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			}
 		}
 
-		const decode = scheme.decode.bind(this._class) as (data: number) => T
+		const decode = scheme.decode as (data: number) => T
 
 		const dataView = new PTPDataView(data, 2)
 
@@ -426,11 +424,11 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		return {
 			id,
 			storageID: dataView.readUint32(),
-			format: this._class.getObjectFormat(dataView.readUint16()),
+			format: this.getObjectFormat(dataView.readUint16()),
 			protectionStatus: dataView.readUint16(),
 			byteLength: dataView.readUint32(),
 			thumb: {
-				format: this._class.getObjectFormat(dataView.readUint16()),
+				format: this.getObjectFormat(dataView.readUint16()),
 				compressedSize: dataView.readUint32(),
 				width: dataView.readUint32(),
 				height: dataView.readUint32(),
@@ -464,9 +462,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		return data
 	}
 
-	public static getDeviceInfo = async function (
-		device: PTPDevice
-	): Promise<DeviceInfo> {
+	public static async getDeviceInfo(device: PTPDevice): Promise<DeviceInfo> {
 		const {data} = await device.receiveData({
 			label: 'GetDeviceInfo',
 			opcode: OpCode.GetDeviceInfo,
@@ -494,7 +490,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 
 	protected onDevicePropChanged = async (event: PTPEvent) => {
 		const devicePropCode = event.parameters[0]
-		const name = this._class.getPropNameFromCode(devicePropCode)
+		const name = this.getPropNameFromCode(devicePropCode)
 
 		if (!name) return
 
@@ -502,28 +498,26 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		this.emit(`${name}Changed`, desc)
 	}
 
-	protected static getPropNameFromCode(
-		devicePropCode: number
-	): keyof PropType | null {
-		return this.DevicePropTable.get(devicePropCode) ?? null
+	protected getPropNameFromCode(devicePropCode: number): keyof PropType | null {
+		return this.devicePropTable.get(devicePropCode) ?? null
 	}
 
-	protected static getObjectFormat(code: number) {
+	protected getObjectFormat(code: number) {
 		return ObjectFormatCode[code].toLowerCase()
 	}
 
-	protected static PropScheme: PropScheme = {
+	protected propScheme: PropScheme = {
 		exposureMode: {
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			dataType: DatatypeCode.Uint16,
-			decode: function (data) {
+			decode: data => {
 				return (
-					this.ExposureModeTable.get(data) ?? `vendor ${toHexString(data, 4)}`
+					this.exposureModeTable.get(data) ?? `vendor ${toHexString(data, 4)}`
 				)
 			},
-			encode: function (value) {
+			encode: value => {
 				return (
-					this.ExposureModeTable.getKey(value) ??
+					this.exposureModeTable.getKey(value) ??
 					parseInt(value.replace('vendor ', ''), 16)
 				)
 			},
@@ -531,7 +525,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		exposureComp: {
 			devicePropCode: DevicePropCode.ExposureBiasCompensation,
 			dataType: DatatypeCode.Int16,
-			decode: function (mills) {
+			decode: mills => {
 				if (mills === 0) return '0'
 
 				const millsAbs = Math.abs(mills)
@@ -558,7 +552,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 				if (fraction === '') return `${sign}${integer}`
 				return `${sign}${integer} ${fraction}`
 			},
-			encode: function (str) {
+			encode: str => {
 				if (str === '0') return 0
 
 				const match = str.match(/^([+-]?)([0-9]+)?\s?(1\/2|1\/3|2\/3)?$/)
@@ -588,14 +582,14 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		whiteBalance: {
 			devicePropCode: DevicePropCode.WhiteBalance,
 			dataType: DatatypeCode.Uint16,
-			decode: function (data) {
+			decode: data => {
 				return (
-					this.WhiteBalanceTable.get(data) ?? `vendor ${toHexString(data, 4)}`
+					this.whiteBalanceTable.get(data) ?? `vendor ${toHexString(data, 4)}`
 				)
 			},
-			encode: function (value) {
+			encode: value => {
 				return (
-					this.WhiteBalanceTable.getKey(value) ??
+					this.whiteBalanceTable.getKey(value) ??
 					parseInt(value.replace(/^vendor /, ''), 16)
 				)
 			},
@@ -603,11 +597,11 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		iso: {
 			devicePropCode: DevicePropCode.ExposureIndex,
 			dataType: DatatypeCode.Uint16,
-			decode: function (data) {
+			decode: data => {
 				if (data === 0xffff) return 'auto'
 				return data
 			},
-			encode: function (iso) {
+			encode: iso => {
 				if (iso === 'auto') return 0xffff
 				return iso
 			},
@@ -621,11 +615,11 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		driveMode: {
 			devicePropCode: DevicePropCode.StillCaptureMode,
 			dataType: DatatypeCode.Uint16,
-			decode: function (data) {
-				return this.DriveModeTable.get(data) ?? 'normal'
+			decode: data => {
+				return this.driveModeTable.get(data) ?? 'normal'
 			},
-			encode: function (value) {
-				return this.DriveModeTable.getKey(value) ?? 0x0
+			encode: value => {
+				return this.driveModeTable.getKey(value) ?? 0x0
 			},
 		},
 		imageSize: {
@@ -654,7 +648,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		},
 	}
 
-	protected static DevicePropTable = new BiMap<number, keyof PropType>([
+	protected devicePropTable = new BiMap<number, keyof PropType>([
 		[0x5001, 'batteryLevel'],
 		[0x5005, 'whiteBalance'],
 		[0x5007, 'aperture'],
@@ -671,7 +665,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		[0x501b, 'timelapseInterval'],
 	])
 
-	protected static ExposureModeTable = new BiMap<number, ExposureMode>([
+	protected exposureModeTable = new BiMap<number, ExposureMode>([
 		[0x1, 'M'],
 		[0x2, 'P'],
 		[0x3, 'A'],
@@ -681,7 +675,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		[0x7, 'portrait'],
 	])
 
-	protected static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
+	protected whiteBalanceTable = new BiMap<number, WhiteBalance>([
 		[0x1, 'manual'],
 		[0x2, 'auto'],
 		[0x3, 'custom'],
@@ -690,7 +684,7 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 		[0x6, 'tungsten'],
 	])
 
-	protected static DriveModeTable = new BiMap<number, DriveMode>([
+	protected driveModeTable = new BiMap<number, DriveMode>([
 		[0x1, 'normal'],
 		[0x2, 'burst'],
 		[0x3, 'timelapse'],

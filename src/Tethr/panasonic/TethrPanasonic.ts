@@ -108,14 +108,12 @@ type PropScheme = {
 }
 
 export class TethrPanasonic extends Tethr {
-	protected _class = TethrPanasonic
-
 	private propSchemePanasonic: PropScheme = {
 		exposureMode: {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
 			valueSize: 2,
 			decode: (value: number) => {
-				return this._class.ExposureModeTable.get(value) ?? null
+				return this.exposureModeTable.get(value) ?? null
 			},
 		},
 		aperture: {
@@ -232,10 +230,10 @@ export class TethrPanasonic extends Tethr {
 			getCode: DevicePropCodePanasonic.WhiteBalance,
 			setCode: DevicePropCodePanasonic.WhiteBalance_Param,
 			decode: (value: number) => {
-				return this._class.WhiteBalanceTable.get(value) ?? null
+				return this.whiteBalanceTable.get(value) ?? null
 			},
 			encode: (value: WhiteBalance) => {
-				return this._class.WhiteBalanceTable.getKey(value) ?? null
+				return this.whiteBalanceTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -250,10 +248,10 @@ export class TethrPanasonic extends Tethr {
 			getCode: DevicePropCodePanasonic.PhotoStyle,
 			setCode: DevicePropCodePanasonic.PhotoStyle_Param,
 			decode: (value: number) => {
-				return this._class.ColorModeTable.get(value) ?? null
+				return this.colorModeTable.get(value) ?? null
 			},
 			encode: (value: string) => {
-				return this._class.ColorModeTable.getKey(value) ?? null
+				return this.colorModeTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -261,10 +259,10 @@ export class TethrPanasonic extends Tethr {
 			getCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
 			setCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
 			decode: (value: number) => {
-				return this._class.AspectRatioTable.get(value) ?? null
+				return this.aspectRatioTable.get(value) ?? null
 			},
 			encode: (value: string) => {
-				return this._class.AspectRatioTable.getKey(value) ?? null
+				return this.aspectRatioTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -272,10 +270,10 @@ export class TethrPanasonic extends Tethr {
 			getCode: DevicePropCodePanasonic.ImageMode_Quality,
 			setCode: DevicePropCodePanasonic.ImageMode_Quality,
 			decode: (value: number) => {
-				return this._class.ImageQualityTable.get(value) ?? null
+				return this.imageQualityTable.get(value) ?? null
 			},
 			encode: (value: string) => {
-				return this._class.ImageQualityTable.getKey(value) ?? null
+				return this.imageQualityTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -721,7 +719,7 @@ export class TethrPanasonic extends Tethr {
 		).toLowerCase()
 	}
 
-	protected static ExposureModeTable = new BiMap<number, ExposureMode>([
+	protected exposureModeTable = new BiMap<number, ExposureMode>([
 		[0, 'P'],
 		[1, 'A'],
 		[2, 'S'],
@@ -734,7 +732,7 @@ export class TethrPanasonic extends Tethr {
 		[12, 'vendor S&Q'],
 	])
 
-	protected static WhiteBalanceTable = new BiMap<number, WhiteBalance>([
+	protected whiteBalanceTable = new BiMap<number, WhiteBalance>([
 		[0x0002, 'auto'],
 		[0x0004, 'daylight'],
 		[0x8008, 'cloud'],
@@ -756,7 +754,7 @@ export class TethrPanasonic extends Tethr {
 		[0x8015, 'auto warm'],
 	])
 
-	protected static ColorModeTable = new BiMap<number, string>([
+	protected colorModeTable = new BiMap<number, string>([
 		[0, 'Standard'],
 		[1, 'Vivid'],
 		[2, 'Natural'],
@@ -776,7 +774,7 @@ export class TethrPanasonic extends Tethr {
 		[22, 'MY PHOTOSTYLE 4'],
 	])
 
-	protected static AspectRatioTable = new BiMap<number, string>([
+	protected aspectRatioTable = new BiMap<number, string>([
 		[1, '4:3'],
 		[2, '3:2'],
 		[3, '16:9'],
@@ -785,7 +783,7 @@ export class TethrPanasonic extends Tethr {
 		[11, '2:1'],
 	])
 
-	protected static ImageQualityTable = new BiMap<number, string>([
+	protected imageQualityTable = new BiMap<number, string>([
 		[0, 'fine'],
 		[1, 'standard'],
 		[2, 'raw'],
