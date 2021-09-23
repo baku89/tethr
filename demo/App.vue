@@ -2,7 +2,7 @@
 	<div class="app">
 		<main>
 			<button @click="toggleCameraConnection">
-				{{ connected ? 'Disconnect' : 'Connect' }}
+				{{ camera ? 'Disconnect' : 'Connect' }}
 			</button>
 			<button @click="runAutoFocus">AF-S</button>
 			<button @click="takePicture">Take Picture</button>

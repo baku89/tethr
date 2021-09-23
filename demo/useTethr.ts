@@ -30,7 +30,12 @@ export function useTethrProp<Name extends keyof PropType>(
 	watch(
 		camera,
 		async cam => {
-			if (!cam) return
+			if (!cam) {
+				prop.writable = false
+				prop.value = null
+				prop.options = []
+				return
+			}
 
 			const desc = await cam.getDesc(name)
 
@@ -59,9 +64,10 @@ export function useTethrProp<Name extends keyof PropType>(
 export function useTethr() {
 	const camera = shallowRef<Tethr | null>(null)
 
-	const connected = ref(false)
-
 	const deviceInfo = ref('')
+	watch(camera, cam => {
+		if (!cam) deviceInfo.value = ''
+	})
 
 	const liveviewURL = ref(TransparentPng)
 	const lastPictureURL = ref(TransparentPng)
@@ -69,26 +75,31 @@ export function useTethr() {
 	async function toggleCameraConnection() {
 		if (camera.value && camera.value.opened) {
 			await camera.value.close()
-		} else {
-			if (!camera.value) {
-				const cams = await autoDetect()
-				if (cams.length === 0) throw new Error('No cameras')
-				if (cams.length > 1) throw new Error('Multiple cameras')
-
-				const cam = cams[0]
-				await cam.open()
-
-				camera.value = cam
-				connected.value = true
-			}
-
-			deviceInfo.value = JSON.stringify(
-				await camera.value.getDeviceInfo(),
-				undefined,
-				' '
-			)
-			;(window as any).cam = camera.value
+			camera.value = null
+			return
 		}
+
+		if (!camera.value) {
+			const cams = await autoDetect()
+			if (cams.length === 0) throw new Error('No cameras')
+			if (cams.length > 1) throw new Error('Multiple cameras')
+
+			const cam = cams[0]
+			await cam.open()
+
+			camera.value = cam
+
+			cam.on('disconnect', () => {
+				camera.value = null
+			})
+		}
+
+		deviceInfo.value = JSON.stringify(
+			await camera.value.getDeviceInfo(),
+			undefined,
+			' '
+		)
+		;(window as any).cam = camera.value
 	}
 
 	async function runAutoFocus() {
@@ -112,6 +123,9 @@ export function useTethr() {
 	}
 
 	const liveviewing = ref(false)
+	watch(camera, cam => {
+		if (!cam) liveviewing.value = false
+	})
 
 	async function toggleLiveview() {
 		liveviewing.value = !liveviewing.value
@@ -141,7 +155,7 @@ export function useTethr() {
 	}
 
 	return {
-		connected,
+		camera,
 		deviceInfo,
 
 		// DPC
