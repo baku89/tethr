@@ -220,11 +220,7 @@ export class TethrSigma extends TethrPTPUSB {
 				return this.getImageQualityDesc() as ReturnType
 		}
 
-		return {
-			writable: false,
-			value: null,
-			options: [],
-		}
+		return super.getDesc(name)
 	}
 
 	private async getFocalLengthDesc(): Promise<PropDesc<number>> {

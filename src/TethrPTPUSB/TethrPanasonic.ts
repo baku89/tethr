@@ -369,18 +369,10 @@ export class TethrPanasonic extends TethrPTPUSB {
 	public async getDesc<K extends keyof PropType, T extends PropType[K]>(
 		name: K
 	): Promise<PropDesc<T>> {
-		// const superDesc = await super.getDesc(name)
-		// if (superDesc.value !== null) return superDesc as PropDesc<T>
-
 		const scheme = this.propSchemePanasonic[name]
 
 		if (!scheme) {
-			// console.warn(`Prop ${name} is not supported`)
-			return {
-				writable: false,
-				value: null,
-				options: [],
-			}
+			return await super.getDesc(name)
 		}
 
 		const getCode = scheme.getCode
