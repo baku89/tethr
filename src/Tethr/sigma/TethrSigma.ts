@@ -126,6 +126,7 @@ export class TethrSigma extends Tethr {
 			'colorTemperature',
 			'colorMode',
 			'aspectRatio',
+			'imageSize',
 			'imageQuality',
 		]
 	}
@@ -168,6 +169,9 @@ export class TethrSigma extends Tethr {
 				break
 			case 'aspectRatio':
 				succeed = await this.setAspectRatio(value as string)
+				break
+			case 'imageSize':
+				succeed = await this.setImageSize(value as string)
 				break
 			case 'imageQuality':
 				succeed = await this.setImageQuality(value as string)
@@ -217,6 +221,8 @@ export class TethrSigma extends Tethr {
 				return this.getColorModeDesc() as ReturnType
 			case 'aspectRatio':
 				return this.getAspectRatioDesc() as ReturnType
+			case 'imageSize':
+				return this.getImageSizeDesc() as ReturnType
 			case 'imageQuality':
 				return this.getImageQualityDesc() as ReturnType
 		}
@@ -612,6 +618,32 @@ export class TethrSigma extends Tethr {
 			writable: aspectRatioOptions.length > 0,
 			value: decodeAspectRatioIFD(aspectRatioIfdID),
 			options: aspectRatioOptions.map(decodeAspectRatioIFD),
+		}
+	}
+
+	private setImageSize = async (imageSize: string): Promise<boolean> => {
+		const id = this.imageSizeTable.getKey(imageSize)
+		if (id === undefined) return false
+		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 14, id)
+	}
+
+	private getImageSizeDesc = async (): Promise<PropDesc<string>> => {
+		const {resolution} = await this.getCamDataGroup2()
+
+		const value = this.imageSizeTable.get(resolution)
+
+		if (!value) {
+			return {
+				writable: false,
+				value: null,
+				options: [],
+			}
+		}
+
+		return {
+			writable: true,
+			value,
+			options: ['low', 'medium', 'high'],
 		}
 	}
 
@@ -1460,5 +1492,11 @@ export class TethrSigma extends Tethr {
 		[0x6, 'fluorescent'],
 		[0x7, 'flash'],
 		[0x8, 'manual'],
+	])
+
+	private imageSizeTable = new BiMap<number, string>([
+		[0x1, 'high'],
+		[0x3, 'medium'],
+		[0x4, 'low'],
 	])
 }
