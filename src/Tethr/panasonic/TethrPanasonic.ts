@@ -87,7 +87,7 @@ enum DevicePropCodePanasonic {
 	ImageMode = 0x20000a0,
 	ImageMode_Param = 0x20000a1,
 	ImageMode_Quality = 0x20000a2,
-	ImageMode_AspectRatio = 0x20000a3,
+	ImageMode_ImageAspect = 0x20000a3,
 
 	Liveview_TransImg = 0xd800011,
 	Liveview_RecomImg = 0xd800012,
@@ -255,14 +255,14 @@ export class TethrPanasonic extends Tethr {
 			},
 			valueSize: 2,
 		},
-		aspectRatio: {
-			getCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
-			setCode: DevicePropCodePanasonic.ImageMode_AspectRatio,
+		imageAspect: {
+			getCode: DevicePropCodePanasonic.ImageMode_ImageAspect,
+			setCode: DevicePropCodePanasonic.ImageMode_ImageAspect,
 			decode: (value: number) => {
-				return this.aspectRatioTable.get(value) ?? null
+				return this.imageAspectTable.get(value) ?? null
 			},
 			encode: (value: string) => {
-				return this.aspectRatioTable.getKey(value) ?? null
+				return this.imageAspectTable.getKey(value) ?? null
 			},
 			valueSize: 2,
 		},
@@ -701,7 +701,7 @@ export class TethrPanasonic extends Tethr {
 				props = ['colorMode']
 				break
 			case DevicePropCodePanasonic.ImageMode:
-				props = ['imageSize', 'aspectRatio', 'imageQuality']
+				props = ['imageSize', 'imageAspect', 'imageQuality']
 				break
 			default:
 				return
@@ -774,7 +774,7 @@ export class TethrPanasonic extends Tethr {
 		[22, 'MY PHOTOSTYLE 4'],
 	])
 
-	protected aspectRatioTable = new BiMap<number, string>([
+	protected imageAspectTable = new BiMap<number, string>([
 		[1, '4:3'],
 		[2, '3:2'],
 		[3, '16:9'],

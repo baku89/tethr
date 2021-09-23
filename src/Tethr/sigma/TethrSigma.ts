@@ -125,7 +125,7 @@ export class TethrSigma extends Tethr {
 			'whiteBalance',
 			'colorTemperature',
 			'colorMode',
-			'aspectRatio',
+			'imageAspect',
 			'imageSize',
 			'imageQuality',
 		]
@@ -162,8 +162,8 @@ export class TethrSigma extends Tethr {
 			case 'colorMode':
 				status = await this.setColorMode(value as string)
 				break
-			case 'aspectRatio':
-				status = await this.setAspectRatio(value as string)
+			case 'imageAspect':
+				status = await this.setImageAspect(value as string)
 				break
 			case 'imageSize':
 				status = await this.setImageSize(value as string)
@@ -212,8 +212,8 @@ export class TethrSigma extends Tethr {
 				return this.getColorTemperatureDesc() as ReturnType
 			case 'colorMode':
 				return this.getColorModeDesc() as ReturnType
-			case 'aspectRatio':
-				return this.getAspectRatioDesc() as ReturnType
+			case 'imageAspect':
+				return this.getImageAspectDesc() as ReturnType
 			case 'imageSize':
 				return this.getImageSizeDesc() as ReturnType
 			case 'imageQuality':
@@ -615,29 +615,29 @@ export class TethrSigma extends Tethr {
 		}
 	}
 
-	private setAspectRatio = async (
-		aspectRatio: string
+	private setImageAspect = async (
+		imageAspect: string
 	): Promise<SetPropResultStatus> => {
-		const id = this.aspectRatioTableIFD.getKey(aspectRatio)
+		const id = this.imageAspectTableIFD.getKey(imageAspect)
 		if (id === undefined) return 'invalid'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
 	}
 
-	private getAspectRatioDesc = async (): Promise<PropDesc<string>> => {
-		const decodeAspectRatioIFD = (id: number) => {
-			return this.aspectRatioTableIFD.get(id) ?? 'Unknown'
+	private getImageAspectDesc = async (): Promise<PropDesc<string>> => {
+		const decodeImageAspectIFD = (id: number) => {
+			return this.imageAspectTableIFD.get(id) ?? 'Unknown'
 		}
 
-		const {aspectRatio} = await this.getCamDataGroup5()
-		const {aspectRatio: aspectRatioOptions} = await this.getCamCanSetInfo5()
+		const {imageAspect} = await this.getCamDataGroup5()
+		const {imageAspect: imageAspectOptions} = await this.getCamCanSetInfo5()
 
-		const aspectRatioIfdID = aspectRatio - this.aspectRatioDataGroupOffset
+		const imageAspectIfdID = imageAspect - this.imageAspectDataGroupOffset
 
 		return {
-			writable: aspectRatioOptions.length > 0,
-			value: decodeAspectRatioIFD(aspectRatioIfdID),
-			options: aspectRatioOptions.map(decodeAspectRatioIFD),
+			writable: imageAspectOptions.length > 0,
+			value: decodeImageAspectIFD(imageAspectIfdID),
+			options: imageAspectOptions.map(decodeImageAspectIFD),
 		}
 	}
 
@@ -999,7 +999,7 @@ export class TethrSigma extends Tethr {
 			intervalTimerSecond_Remain: dataView.readUint16(),
 			intervalTimerFrame_Remain: dataView.readUint8(),
 			colorTemperature: dataView.readUint16(),
-			aspectRatio: dataView.skip(2).readUint8(),
+			imageAspect: dataView.skip(2).readUint8(),
 		}
 	}
 
@@ -1013,7 +1013,7 @@ export class TethrSigma extends Tethr {
 		return decodeIFD(data, {
 			imageQuality: {tag: 11, type: IFDType.Byte},
 			dngImageQuality: {tag: 12, type: IFDType.Byte},
-			aspectRatio: {tag: 21, type: IFDType.Byte},
+			imageAspect: {tag: 21, type: IFDType.Byte},
 			exposureMode: {tag: 200, type: IFDType.Byte},
 			fValue: {tag: 210, type: IFDType.SignedShort},
 			shutterSpeed: {tag: 212, type: IFDType.SignedShort},
@@ -1202,7 +1202,7 @@ export class TethrSigma extends Tethr {
 	])
 
 	// NOTE: This table should fix
-	private aspectRatioTableIFD = new BiMap<number, string>([
+	private imageAspectTableIFD = new BiMap<number, string>([
 		[1, '21:9'],
 		[2, '16:9'],
 		[3, '3:2'],
@@ -1212,7 +1212,7 @@ export class TethrSigma extends Tethr {
 		[7, '1:1'],
 	])
 
-	private aspectRatioDataGroupOffset = 245
+	private imageAspectDataGroupOffset = 245
 
 	private isoTable = new BiMap<number, ISO>([
 		[0b00000000, 6],
