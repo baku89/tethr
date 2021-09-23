@@ -138,6 +138,7 @@ export function useTethr() {
 			liveviewMediaStream.value = await camera.value.getLiveview()
 		} else {
 			await camera.value.stopLiveview()
+			liveviewMediaStream.value = null
 		}
 	}
 
