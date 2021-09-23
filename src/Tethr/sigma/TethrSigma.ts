@@ -138,12 +138,9 @@ export class TethrSigma extends Tethr {
 		let succeed = false
 		let status: SetPropResultStatus | undefined
 
-		let mayAffectProps: (keyof PropType)[] = []
-
 		switch (name) {
 			case 'exposureMode':
 				succeed = await this.setExposureMode(value as ExposureMode)
-				mayAffectProps = ['aperture', 'shutterSpeed', 'exposureComp']
 				break
 			case 'aperture':
 				succeed = await this.setAperture(value as Aperture)
@@ -159,7 +156,6 @@ export class TethrSigma extends Tethr {
 				break
 			case 'whiteBalance':
 				succeed = await this.setWhiteBalance(value as WhiteBalance)
-				mayAffectProps = ['colorTemperature']
 				break
 			case 'colorTemperature':
 				succeed = await this.setColorTemperature(value as number)
@@ -182,7 +178,7 @@ export class TethrSigma extends Tethr {
 
 		const postValue = await this.get(name)
 
-		for (const prop of mayAffectProps) {
+		for (const prop of (await this.listProps()) as (keyof PropType)[]) {
 			const desc = await this.getDesc(prop)
 			this.emit(`${prop}Changed`, desc)
 		}
