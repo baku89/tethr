@@ -5,8 +5,8 @@ import {
 	Aperture,
 	ExposureMode,
 	ISO,
-	ManualFocusDriveOption,
 	PropType,
+	RunManualFocusOption,
 	WhiteBalance,
 } from '../../props'
 import {ObjectFormatCode, ResCode} from '../../PTPDatacode'
@@ -629,7 +629,7 @@ export class TethrPanasonic extends Tethr {
 		}
 	}
 
-	public async manualFocusDrive(option: ManualFocusDriveOption) {
+	public async runManualFocus(option: RunManualFocusOption) {
 		const {direction, speed} = option
 
 		let mode = 0

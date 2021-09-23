@@ -57,7 +57,7 @@ export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
 export type FocalLength = number | 'spherical'
 
-export type ManualFocusDriveOption = {
+export type RunManualFocusOption = {
 	direction: 'near' | 'far'
 	speed: 1 | 2 | 3
 }

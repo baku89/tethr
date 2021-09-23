@@ -2,7 +2,13 @@ import {BiMap} from 'bim'
 import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
 
-import {DriveMode, ExposureMode, PropType, WhiteBalance} from '../props'
+import {
+	DriveMode,
+	ExposureMode,
+	PropType,
+	RunManualFocusOption,
+	WhiteBalance,
+} from '../props'
 import {
 	DatatypeCode,
 	DevicePropCode,
@@ -371,6 +377,11 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 	}
 
 	public runAutoFocus = async (): Promise<boolean> => false
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	public runManualFocus(option: RunManualFocusOption): void {
+		null
+	}
 
 	public takePicture = async ({
 		download = true,
