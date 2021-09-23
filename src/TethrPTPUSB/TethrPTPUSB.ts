@@ -1,8 +1,5 @@
 import {BiMap} from 'bim'
-import {EventEmitter} from 'eventemitter3'
 import _ from 'lodash'
-
-import {ITethr, ITethrEventTypes, PropDesc, SetPropResult} from '@/ITethr'
 
 import {
 	DriveMode,
@@ -26,6 +23,13 @@ import {
 	PTPFilesystemType,
 	PTPStorageType,
 } from '../PTPEnum'
+import {
+	LiveviewResult,
+	PropDesc,
+	SetPropResult,
+	TakePictureOption,
+	Tethr,
+} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
 
@@ -68,19 +72,7 @@ export type PropScheme = {
 	)
 }
 
-export interface TakePictureOption {
-	download?: boolean
-}
-
-export interface LiveviewResult {
-	image: Blob
-	histogram?: Uint8Array
-}
-
-export class TethrPTPUSB
-	extends EventEmitter<ITethrEventTypes>
-	implements ITethr
-{
+export class TethrPTPUSB extends Tethr {
 	protected _opened = false
 
 	public constructor(protected device: PTPDevice) {
@@ -116,7 +108,7 @@ export class TethrPTPUSB
 		this._opened = true
 	}
 
-	public close = async (): Promise<void> => {
+	public async close(): Promise<void> {
 		this._opened = false
 
 		await this.device.sendCommand({
@@ -173,7 +165,8 @@ export class TethrPTPUSB
 	}
 
 	public async get<K extends keyof PropType>(name: K) {
-		return (await this.getDesc(name)).value
+		const desc = await this.getDesc(name)
+		return desc.value
 	}
 
 	public async set<K extends keyof PropType>(
@@ -361,16 +354,18 @@ export class TethrPTPUSB
 		}
 	}
 
-	public runAutoFocus = async (): Promise<boolean> => false
+	public async runAutoFocus(): Promise<boolean> {
+		return false
+	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public runManualFocus(option: RunManualFocusOption): void {
 		null
 	}
 
-	public takePicture = async ({
-		download = true,
-	}: TakePictureOption = {}): Promise<null | TethrObject[]> => {
+	public async takePicture({download = true}: TakePictureOption = {}): Promise<
+		null | TethrObject[]
+	> {
 		await this.device.sendCommand({
 			label: 'InitiateCapture',
 			opcode: OpCode.InitiateCapture,
@@ -393,21 +388,23 @@ export class TethrPTPUSB
 		return [tethrObject]
 	}
 
-	public startLiveview = async (): Promise<void> => {
+	public async startLiveview(): Promise<void> {
 		return
 	}
 
-	public stopLiveview = async (): Promise<void> => {
+	public async stopLiveview(): Promise<void> {
 		return
 	}
 
-	public getLiveview = async (): Promise<null | LiveviewResult> => null
+	public async getLiveview(): Promise<null | LiveviewResult> {
+		return null
+	}
 
 	public get liveviewing(): boolean {
 		return false
 	}
 
-	protected getObjectInfo = async (id: number): Promise<TethrObjectInfo> => {
+	protected async getObjectInfo(id: number): Promise<TethrObjectInfo> {
 		const {data} = await this.device.receiveData({
 			label: 'GetObjectInfo',
 			opcode: OpCode.GetObjectInfo,
@@ -444,7 +441,7 @@ export class TethrPTPUSB
 		}
 	}
 
-	protected getObject = async (objectID: number): Promise<ArrayBuffer> => {
+	protected async getObject(objectID: number): Promise<ArrayBuffer> {
 		const {byteLength} = await this.getObjectInfo(objectID)
 
 		const {data} = await this.device.receiveData({

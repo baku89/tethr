@@ -1,9 +1,9 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
-import {PropDesc} from '../ITethr'
 import {PropType} from '../props'
 import {DatatypeCode} from '../PTPDatacode'
+import {PropDesc} from '../Tethr'
 import {PropScheme, TethrPTPUSB} from './TethrPTPUSB'
 
 enum DevicePropCodeRicohTheta {

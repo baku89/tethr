@@ -1,3 +1,4 @@
-import {autoDetect} from './autoDetect'
+import {detectTethr} from './detectTethr'
+import {Tethr} from './Tethr'
 
-export {autoDetect}
+export {detectTethr, Tethr}

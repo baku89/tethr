@@ -1,7 +1,7 @@
 import {saveAs} from 'file-saver'
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
-import {autoDetect, Tethr} from '../src'
+import {detectTethr, Tethr} from '../src'
 import {PropType} from '../src/props'
 
 const TransparentPng =
@@ -80,11 +80,12 @@ export function useTethr() {
 		}
 
 		if (!camera.value) {
-			const cams = await autoDetect()
+			const cams = await detectTethr()
 			if (cams.length === 0) throw new Error('No cameras')
 			if (cams.length > 1) throw new Error('Multiple cameras')
 
 			const cam = cams[0]
+			console.log(cam.open)
 			await cam.open()
 
 			camera.value = cam

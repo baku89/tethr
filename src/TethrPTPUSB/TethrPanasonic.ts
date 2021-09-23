@@ -1,7 +1,6 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
-import {PropDesc, SetPropResult} from '../ITethr'
 import {
 	Aperture,
 	ExposureMode,
@@ -13,13 +12,15 @@ import {
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPEvent} from '../PTPDevice'
+import {
+	LiveviewResult,
+	PropDesc,
+	SetPropResult,
+	TakePictureOption,
+} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil} from '../util'
-import {
-	LiveviewResult as LiveviewData,
-	TakePictureOption,
-	TethrPTPUSB,
-} from './TethrPTPUSB'
+import {TethrPTPUSB} from './TethrPTPUSB'
 
 enum OpCodePanasonic {
 	OpenSession = 0x9102,
@@ -278,7 +279,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		},
 	}
 
-	public open = async (): Promise<void> => {
+	public async open(): Promise<void> {
 		await super.open()
 
 		await this.device.sendCommand({
@@ -290,7 +291,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		this.device.onEventCode(EventCodePanasonic.PropChanged, this.onPropChanged)
 	}
 
-	public close = async (): Promise<void> => {
+	public async close(): Promise<void> {
 		await this.device.sendCommand({
 			label: 'Panasonic CloseSession',
 			opcode: OpCodePanasonic.CloseSession,
@@ -410,9 +411,9 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	public takePicture = async ({
-		download = true,
-	}: TakePictureOption = {}): Promise<null | TethrObject[]> => {
+	public async takePicture({download = true}: TakePictureOption = {}): Promise<
+		null | TethrObject[]
+	> {
 		const quality = await this.get('imageQuality')
 		let restNumPhotos = quality?.includes('+') ? 2 : 1
 
@@ -471,7 +472,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return objects
 	}
 
-	public startLiveview = async (): Promise<void> => {
+	public async startLiveview(): Promise<void> {
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
 			opcode: OpCodePanasonic.Liveview,
@@ -479,7 +480,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public stopLiveview = async (): Promise<void> => {
+	public async stopLiveview(): Promise<void> {
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
 			opcode: OpCodePanasonic.Liveview,
@@ -487,7 +488,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getLiveviewRecommendedSettings = async () => {
+	public async getLiveviewRecommendedSettings() {
 		const {data} = await this.device.receiveData({
 			opcode: OpCodePanasonic.GetLiveviewSettings,
 			parameters: [DevicePropCodePanasonic.Liveview_RecomImg],
@@ -513,7 +514,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return settings
 	}
 
-	public getLiveviewSetting = async () => {
+	public async getLiveviewSetting() {
 		const {data} = await this.device.receiveData({
 			opcode: OpCodePanasonic.GetLiveviewSettings,
 			parameters: [DevicePropCodePanasonic.Liveview_TransImg],
@@ -521,8 +522,8 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		const dataView = new PTPDataView(data)
 
-		const receivedPropCode = dataView.readUint32()
-		const dataSize = dataView.readUint32()
+		/*const receivedPropCode =*/ dataView.readUint32()
+		/*const dataSize =*/ dataView.readUint32()
 
 		return {
 			height: dataView.readUint16(),
@@ -532,12 +533,12 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	public setLiveviewSetting = async (
+	public async setLiveviewSetting(
 		width: number,
 		height: number,
 		frameSize: number,
 		fps: number
-	): Promise<void> => {
+	): Promise<void> {
 		const data = new ArrayBuffer(16)
 		const dataView = new DataView(data)
 
@@ -555,7 +556,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getLiveview = async (): Promise<null | LiveviewData> => {
+	public async getLiveview(): Promise<null | LiveviewResult> {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'Panasonic LiveviewImage',
 			opcode: OpCodePanasonic.LiveviewImage,
@@ -662,7 +663,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public runAutoFocus = async (): Promise<boolean> => {
+	public async runAutoFocus(): Promise<boolean> {
 		await this.device.sendCommand({
 			label: 'Panasonic Ctrl Liveview',
 			opcode: OpCodePanasonic.CtrlLiveview,
