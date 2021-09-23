@@ -1,5 +1,6 @@
 import {Tethr} from './Tethr'
 import {initTethrUSBPTP} from './TethrPTPUSB'
+import {initTethrWebcam} from './TethrWebcam'
 import {isntNil} from './util'
 
 const usb = navigator.usb
@@ -13,7 +14,7 @@ type DetectTethrOption = {
 }
 
 export async function detectTethr({
-	order = ['ptp/usb', 'webcam'],
+	order = ['webcam'],
 	strategy = 'first',
 }: DetectTethrOption = {}) {
 	const tethrs: Tethr[] = []
@@ -24,6 +25,10 @@ export async function detectTethr({
 		switch (detectType) {
 			case 'ptp/usb':
 				tethrs.push(...(await detectTethrPTPUSB()))
+				break
+			case 'webcam':
+				tethrs.push(...(await detectTethrWebcam()))
+				break
 		}
 	}
 
@@ -40,8 +45,6 @@ export async function detectTethr({
 			await Promise.all(pairedDevices.map(initTethrUSBPTP))
 		).filter(isntNil)
 
-		console.log(tethrs)
-
 		if (strategy === 'first' && tethrs.length > 0) return tethrs
 		if (strategy === 'paired') return tethrs
 
@@ -51,5 +54,16 @@ export async function detectTethr({
 		if (tethr) tethrs.push(tethr)
 
 		return tethrs
+	}
+
+	async function detectTethrWebcam() {
+		if (!navigator.mediaDevices?.getUserMedia) {
+			return []
+		}
+
+		const media = await navigator.mediaDevices.getUserMedia({video: true})
+		const tethr = initTethrWebcam(media)
+
+		return [tethr]
 	}
 }

@@ -1,8 +1,8 @@
 import EventEmitter from 'eventemitter3'
 
+import {DeviceInfo} from './DeviceInfo'
 import {PropType} from './props'
 import {TethrObject} from './TethrObject'
-import {DeviceInfo} from './TethrPTPUSB/TethrPTPUSB'
 
 type PropName = keyof PropType
 

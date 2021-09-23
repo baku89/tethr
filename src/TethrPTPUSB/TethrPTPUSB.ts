@@ -1,6 +1,8 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
+import {DeviceInfo} from '@/DeviceInfo'
+
 import {
 	DriveMode,
 	ExposureMode,
@@ -32,23 +34,6 @@ import {
 } from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
-
-export interface DeviceInfo {
-	standardVersion: number
-	vendorExtensionID: number
-	vendorExtensionVersion: number
-	vendorExtensionDesc: string
-	functionalMode: number
-	operationsSupported: number[]
-	eventsSupported: number[]
-	propsSupported: number[]
-	captureFormats: number[]
-	imageFormats: number[]
-	manufacturer: string
-	model: string
-	deviceVersion: string
-	serialNumber: string
-}
 
 export type PropScheme = {
 	[Name in keyof PropType]?: {
