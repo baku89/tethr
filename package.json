@@ -15,6 +15,7 @@
 		"@types/file-saver": "^2.0.3",
 		"@types/lodash": "^4.14.172",
 		"@types/promise-queue": "^2.2.0",
+		"@types/w3c-image-capture": "^1.0.5",
 		"@types/w3c-web-usb": "^1.0.5",
 		"@typescript-eslint/eslint-plugin": "^4.28.2",
 		"@typescript-eslint/parser": "^4.28.2",

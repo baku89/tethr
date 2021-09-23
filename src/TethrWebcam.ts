@@ -15,9 +15,13 @@ export function initTethrWebcam(media: MediaStream) {
 
 export class TethrWebcam extends Tethr {
 	private _opened = false
+	private imageCapture!: ImageCapture
 
 	public constructor(private media: MediaStream) {
 		super()
+
+		const videoTrack = this.media.getVideoTracks()[0]
+		this.imageCapture = new ImageCapture(videoTrack)
 	}
 
 	public async open() {
@@ -72,7 +76,13 @@ export class TethrWebcam extends Tethr {
 	public async takePicture(
 		options?: TakePictureOption
 	): Promise<null | TethrObject[]> {
-		return null
+		const blob = await this.imageCapture.takePhoto()
+
+		const tethrObject = {
+			blob,
+		} as any
+
+		return [tethrObject]
 	}
 
 	public async startLiveview(): Promise<void> {
