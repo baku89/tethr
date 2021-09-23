@@ -290,14 +290,13 @@ export class Tethr extends EventEmitter<TethrEventTypes> {
 			}
 		}
 
-		const decode = scheme.decode as (data: number) => T
+		const decode = scheme.decode as (data: number) => any
 
 		const dataView = new PTPDataView(data, 2)
-
 		const dataType = dataView.readUint16()
 		const writable = dataView.readUint8() === 0x01 // Get/Set
 
-		let getValue: () => number
+		let getValue: () => any
 
 		switch (dataType) {
 			case DatatypeCode.Uint8:
