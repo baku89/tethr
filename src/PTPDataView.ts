@@ -196,6 +196,20 @@ export class PTPDataView {
 		this.currentByteLength = Math.max(this.currentByteOffset)
 	}
 
+	public writeBigUint64(value: bigint) {
+		this.resizeBuffer(this.currentByteOffset + 8)
+		this.dataView.setBigUint64(this.currentByteOffset, value, true)
+		this.currentByteOffset += 8
+		this.currentByteLength = Math.max(this.currentByteOffset)
+	}
+
+	public writeBigInt64(value: bigint) {
+		this.resizeBuffer(this.currentByteOffset + 8)
+		this.dataView.setBigInt64(this.currentByteOffset, value, true)
+		this.currentByteOffset += 8
+		this.currentByteLength = Math.max(this.currentByteOffset)
+	}
+
 	public toBuffer() {
 		return this.buffer.slice(0, this.currentByteLength)
 	}
