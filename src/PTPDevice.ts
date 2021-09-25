@@ -86,11 +86,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		// Claim interface (Ignore error)
 		const usbInterface = configuration.interfaces[0]
 		const interfaceNum = usbInterface.interfaceNumber
-		try {
-			await this.device.claimInterface(interfaceNum)
-		} catch {
-			null
-		}
+		await this.device.claimInterface(interfaceNum)
 
 		// Determine endpoints number
 		const endpoints = usbInterface.alternates[0].endpoints
