@@ -2,6 +2,7 @@ import {BiMap} from 'bim'
 import _ from 'lodash'
 import sleep from 'sleep-promise'
 
+import {ActionName} from '../actions'
 import {decodeIFD, IFDType} from '../IFD'
 import {
 	Aperture,
@@ -114,7 +115,7 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 	}
 
-	public listProps = async (): Promise<(keyof PropType)[]> => {
+	public async listProps(): Promise<(keyof PropType)[]> {
 		return [
 			...(await super.listProps()),
 			'exposureMode',
@@ -128,6 +129,16 @@ export class TethrSigma extends TethrPTPUSB {
 			'imageAspect',
 			'imageSize',
 			'imageQuality',
+		]
+	}
+
+	public async listActions(): Promise<ActionName[]> {
+		return [
+			...(await super.listActions()),
+			'takePicture',
+			'runAutoFocus',
+			'startLiveview',
+			'stopLiveview',
 		]
 	}
 

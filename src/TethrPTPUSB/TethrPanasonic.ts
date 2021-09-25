@@ -1,6 +1,7 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
+import {ActionName} from '../actions'
 import {
 	Aperture,
 	ExposureMode,
@@ -311,6 +312,17 @@ export class TethrPanasonic extends TethrPTPUSB {
 			'colorMode',
 			'imageAspect',
 			'imageQuality',
+		]
+	}
+
+	public async listActions(): Promise<ActionName[]> {
+		return [
+			...(await super.listActions()),
+			'takePicture',
+			'startLiveview',
+			'stopLiveview',
+			'runAutoFocus',
+			'runManualFocus',
 		]
 	}
 

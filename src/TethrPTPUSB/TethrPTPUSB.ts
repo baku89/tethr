@@ -1,8 +1,8 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
-import {DeviceInfo} from '@/DeviceInfo'
-
+import {ActionName} from '../actions'
+import {DeviceInfo} from '../DeviceInfo'
 import {
 	DriveMode,
 	ExposureMode,
@@ -146,7 +146,7 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
-	public async listActions() {
+	public async listActions(): Promise<ActionName[]> {
 		return []
 	}
 
