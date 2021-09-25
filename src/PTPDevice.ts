@@ -2,6 +2,7 @@ import EventEmitter from 'eventemitter3'
 import PromiseQueue from 'promise-queue'
 
 import {ResCode} from './PTPDatacode'
+import {PTPDataView} from './PTPDataView'
 import {toHexString} from './util'
 
 enum PTPType {
@@ -298,19 +299,16 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		const length = 12 + parameters.length * 4
 
-		const buffer = new ArrayBuffer(length)
-		const dataView = new DataView(buffer)
+		const dataView = new PTPDataView()
 
-		dataView.setUint32(0, length, true)
-		dataView.setUint16(4, PTPType.Command, true)
-		dataView.setUint16(6, opcode, true)
-		dataView.setUint32(8, transactionId, true)
+		dataView.writeUint32(length)
+		dataView.writeUint16(PTPType.Command)
+		dataView.writeUint16(opcode)
+		dataView.writeUint32(transactionId)
 
-		parameters.forEach((param, index) => {
-			dataView.setUint32(12 + index * 4, param, true)
-		})
+		parameters.forEach(param => dataView.writeUint32(param))
 
-		const sent = await this.usb.transferOut(this.bulkOut, buffer)
+		const sent = await this.usb.transferOut(this.bulkOut, dataView.toBuffer())
 		console.log(
 			'transferOutBulk',
 			'type=Command',
@@ -329,20 +327,17 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	) => {
 		if (!this.usb) return false
 
-		const length = 12 + data.byteLength
+		const dataView = new PTPDataView()
 
-		const buffer = new ArrayBuffer(length)
-		const dataView = new DataView(buffer)
-
-		dataView.setUint32(0, length, true)
-		dataView.setUint16(4, PTPType.Data, true)
-		dataView.setUint16(6, opcode, true)
-		dataView.setUint32(8, transactionId, true)
+		dataView.writeUint32(length)
+		dataView.writeUint16(PTPType.Data)
+		dataView.writeUint16(opcode)
+		dataView.writeUint32(transactionId)
 
 		const dataBytes = new Uint8Array(data)
-		dataBytes.forEach((byte, offset) => dataView.setUint8(12 + offset, byte))
+		dataBytes.forEach(byte => dataView.writeUint8(byte))
 
-		const sent = await this.usb.transferOut(this.bulkOut, buffer)
+		const sent = await this.usb.transferOut(this.bulkOut, dataView.toBuffer())
 		console.log(
 			'transferOutBulk',
 			'type=Data',

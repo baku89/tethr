@@ -353,8 +353,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			}
 		}
 
-		const data = new ArrayBuffer(4 + 4 + valueSize)
-		const dataView = new DataView(data)
+		const dataView = new PTPDataView()
 		const encodedValue = await encode(value)
 
 		if (encodedValue === null) {
@@ -364,17 +363,17 @@ export class TethrPanasonic extends TethrPTPUSB {
 			}
 		}
 
-		dataView.setUint32(0, setCode, true)
-		dataView.setUint32(4, valueSize, true)
-		if (valueSize === 1) dataView.setUint8(8, encodedValue)
-		if (valueSize === 2) dataView.setUint16(8, encodedValue, true)
-		if (valueSize === 4) dataView.setUint32(8, encodedValue, true)
+		dataView.writeUint32(setCode)
+		dataView.writeUint32(valueSize)
+		if (valueSize === 1) dataView.writeUint8(encodedValue)
+		if (valueSize === 2) dataView.writeUint16(encodedValue)
+		if (valueSize === 4) dataView.writeUint32(encodedValue)
 
 		const succeed = await this.device.sendData({
 			label: 'Panasonic SetDevicePropValue',
 			opcode: OpCodePanasonic.SetDevicePropValue,
 			parameters: [setCode],
-			data,
+			data: dataView.toBuffer(),
 		})
 
 		return {
@@ -597,20 +596,19 @@ export class TethrPanasonic extends TethrPTPUSB {
 		frameSize: number,
 		fps: number
 	): Promise<void> {
-		const data = new ArrayBuffer(16)
-		const dataView = new DataView(data)
+		const dataView = new PTPDataView()
 
-		dataView.setUint32(0, DevicePropCodePanasonic.Liveview_TransImg, true)
-		dataView.setUint32(4, 8, true)
-		dataView.setUint16(8, height, true)
-		dataView.setUint16(10, width, true)
-		dataView.setUint16(12, frameSize, true)
-		dataView.setUint16(14, fps, true)
+		dataView.writeUint32(DevicePropCodePanasonic.Liveview_TransImg)
+		dataView.writeUint32(8)
+		dataView.writeUint16(height)
+		dataView.writeUint16(width)
+		dataView.writeUint16(frameSize)
+		dataView.writeUint16(fps)
 
 		await this.device.sendData({
 			opcode: OpCodePanasonic.SetLiveviewSettings,
 			parameters: [DevicePropCodePanasonic.Liveview_TransImg],
-			data,
+			data: dataView.toBuffer(),
 		})
 	}
 
@@ -702,18 +700,17 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		const devicePropCode = 0x03010011
 
-		const data = new ArrayBuffer(10)
-		const dataView = new DataView(data)
+		const dataView = new PTPDataView()
 
-		dataView.setUint32(0, devicePropCode, true)
-		dataView.setUint32(4, 2, true)
-		dataView.setUint16(8, mode, true)
+		dataView.writeUint32(devicePropCode)
+		dataView.writeUint32(2)
+		dataView.writeUint16(mode)
 
 		await this.device.sendData({
 			label: 'Panasonic ManualFocusDrive',
 			opcode: OpCodePanasonic.ManualFocusDrive,
 			parameters: [devicePropCode],
-			data,
+			data: dataView.toBuffer(),
 		})
 
 		return true

@@ -178,39 +178,31 @@ export class TethrPTPUSB extends Tethr {
 			}
 		}
 
-		let dataView: DataView
+		const dataView = new PTPDataView()
 		switch (scheme.dataType) {
 			case DatatypeCode.Uint8:
-				dataView = new DataView(new ArrayBuffer(1))
-				dataView.setUint8(0, devicePropData)
+				dataView.writeUint8(devicePropData)
 				break
 			case DatatypeCode.Int8:
-				dataView = new DataView(new ArrayBuffer(1))
-				dataView.setInt8(0, devicePropData)
+				dataView.writeInt8(devicePropData)
 				break
 			case DatatypeCode.Uint16:
-				dataView = new DataView(new ArrayBuffer(2))
-				dataView.setUint16(0, devicePropData, true)
+				dataView.writeUint16(devicePropData)
 				break
 			case DatatypeCode.Int16:
-				dataView = new DataView(new ArrayBuffer(2))
-				dataView.setInt16(0, devicePropData, true)
+				dataView.writeInt16(devicePropData)
 				break
 			case DatatypeCode.Uint32:
-				dataView = new DataView(new ArrayBuffer(4))
-				dataView.setUint32(0, devicePropData, true)
+				dataView.writeUint32(devicePropData)
 				break
 			case DatatypeCode.Int32:
-				dataView = new DataView(new ArrayBuffer(4))
-				dataView.setInt32(0, devicePropData, true)
+				dataView.writeInt32(devicePropData)
 				break
 			case DatatypeCode.Uint64:
-				dataView = new DataView(new ArrayBuffer(8))
-				dataView.setBigUint64(0, BigInt(devicePropData), true)
+				dataView.writeBigUint64(BigInt(devicePropData))
 				break
 			case DatatypeCode.String:
-				dataView = new DataView(new ArrayBuffer(devicePropData))
-				dataView.setBigUint64(0, BigInt(devicePropData), true)
+				dataView.writeBigUint64(BigInt(devicePropData))
 				break
 			default: {
 				const label = DatatypeCode[scheme.dataType] ?? toHexString(16)
@@ -224,7 +216,7 @@ export class TethrPTPUSB extends Tethr {
 			label: 'SetDevicePropValue',
 			opcode: OpCode.SetDevicePropValue,
 			parameters: [scheme.devicePropCode],
-			data: dataView.buffer,
+			data: dataView.toBuffer(),
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 		})
 
@@ -264,7 +256,7 @@ export class TethrPTPUSB extends Tethr {
 
 		const decode = scheme.decode as (data: number) => any
 
-		const dataView = new PTPDataView(data, 2)
+		const dataView = new PTPDataView(data.slice(2))
 		const dataType = dataView.readUint16()
 		const writable = dataView.readUint8() === 0x01 // Get/Set
 

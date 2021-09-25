@@ -1078,13 +1078,12 @@ export class TethrSigma extends TethrPTPUSB {
 		devicePropIndex: number,
 		value: number
 	): Promise<OperationResultStatus> {
-		const buffer = new ArrayBuffer(4)
-		const dataView = new DataView(buffer)
+		const dataView = new PTPDataView()
 
-		dataView.setUint16(0, 1 << devicePropIndex, true)
-		dataView.setUint16(2, value, true)
+		dataView.writeUint16(1 << devicePropIndex)
+		dataView.writeUint16(value)
 
-		const data = this.encodeParameter(buffer)
+		const data = this.encodeParameter(dataView.toBuffer())
 
 		try {
 			await this.device.sendData({
