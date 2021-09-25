@@ -1,5 +1,4 @@
 import {ConfigType} from './configs'
-import {DeviceInfo} from './DeviceInfo'
 import {
 	ConfigDesc,
 	SetConfigResult as SetConfigResult,
@@ -70,9 +69,6 @@ export class TethrWebcam extends Tethr {
 	}
 
 	// Actions
-	public async getDeviceInfo(): Promise<DeviceInfo> {
-		return {} as any
-	}
 
 	public async runAutoFocus() {
 		return false

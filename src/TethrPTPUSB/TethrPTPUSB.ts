@@ -99,10 +99,6 @@ export class TethrPTPUSB extends Tethr {
 		await this.device.close()
 	}
 
-	public getDeviceInfo = async (): Promise<DeviceInfo> => {
-		return await TethrPTPUSB.getDeviceInfo(this.device)
-	}
-
 	public getStorageInfo = async (): Promise<void> => {
 		const {data} = await this.device.receiveData({
 			label: 'Get Storage IDs',
@@ -389,6 +385,10 @@ export class TethrPTPUSB extends Tethr {
 
 	public get liveviewing(): boolean {
 		return false
+	}
+
+	protected getDeviceInfo = async (): Promise<DeviceInfo> => {
+		return await TethrPTPUSB.getDeviceInfo(this.device)
 	}
 
 	protected async getObjectInfo(id: number): Promise<TethrObjectInfo> {
