@@ -300,7 +300,7 @@ export class TethrPTPUSB extends Tethr {
 		// Read options
 		const formFlag = dataView.readUint8()
 
-		let options: T[]
+		let options: ConfigType[Name][]
 
 		switch (formFlag) {
 			case 0x00:
@@ -317,11 +317,9 @@ export class TethrPTPUSB extends Tethr {
 					typeof max !== 'number' ||
 					typeof step !== 'number'
 				) {
-					throw new Error(
-						`Cannot enumerate supported values of device config ${name}`
-					)
+					throw new Error(`Cannot enumerate supported values of device config`)
 				}
-				options = _.range(min, max, step) as T[]
+				options = _.range(min, max, step) as ConfigType[Name][]
 				break
 			}
 			case 0x02: {
