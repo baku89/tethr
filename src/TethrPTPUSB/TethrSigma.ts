@@ -17,8 +17,8 @@ import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {
 	ConfigDesc,
+	ResultStatus,
 	SetConfigResult,
-	SetConfigResultStatus,
 	TakePictureOption,
 } from '../Tethr'
 import {TethrObject} from '../TethrObject'
@@ -146,7 +146,7 @@ export class TethrSigma extends TethrPTPUSB {
 		name: K,
 		value: ConfigType[K]
 	): Promise<SetConfigResult<ConfigType[K]>> {
-		let status: SetConfigResultStatus
+		let status: ResultStatus
 
 		switch (name) {
 			case 'exposureMode':
@@ -262,9 +262,7 @@ export class TethrSigma extends TethrPTPUSB {
 		)
 	}
 
-	private async setAperture(
-		aperture: Aperture
-	): Promise<SetConfigResultStatus> {
+	private async setAperture(aperture: Aperture): Promise<ResultStatus> {
 		if (aperture === 'auto') return 'invalid'
 
 		const byte = this.apertureOneThirdTable.getKey(aperture)
@@ -371,7 +369,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setShutterSpeed(ss: string): Promise<SetConfigResultStatus> {
+	private async setShutterSpeed(ss: string): Promise<ResultStatus> {
 		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return 'invalid'
 
@@ -387,7 +385,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setISO(iso: ISO): Promise<SetConfigResultStatus> {
+	private async setISO(iso: ISO): Promise<ResultStatus> {
 		if (iso === 'auto') {
 			return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
 		}
@@ -439,9 +437,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.whiteBalanceTable.get(whiteBalance) ?? null
 	}
 
-	private async setWhiteBalance(
-		wb: WhiteBalance
-	): Promise<SetConfigResultStatus> {
+	private async setWhiteBalance(wb: WhiteBalance): Promise<ResultStatus> {
 		const id = this.whiteBalanceTable.getKey(wb)
 		if (!id) return 'invalid'
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, id)
@@ -505,7 +501,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	private async setExposureMode(
 		exposureMode: ExposureMode
-	): Promise<SetConfigResultStatus> {
+	): Promise<ResultStatus> {
 		const id = this.exposureModeTable.getKey(exposureMode)
 		if (!id) return 'invalid'
 
@@ -532,7 +528,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.compensationOneThirdTable.get(exposureComp) ?? null
 	}
 
-	private async setExposureComp(value: string): Promise<SetConfigResultStatus> {
+	private async setExposureComp(value: string): Promise<ResultStatus> {
 		const id = this.compensationOneThirdTable.getKey(value)
 		if (id === undefined) return 'invalid'
 
@@ -594,9 +590,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setColorMode(
-		colorMode: string
-	): Promise<SetConfigResultStatus> {
+	private async setColorMode(colorMode: string): Promise<ResultStatus> {
 		const id = this.colorModeTable.getKey(colorMode)
 		if (id === undefined) return 'invalid'
 
@@ -618,9 +612,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setImageAspect(
-		imageAspect: string
-	): Promise<SetConfigResultStatus> {
+	private async setImageAspect(imageAspect: string): Promise<ResultStatus> {
 		const id = this.imageAspectTableIFD.getKey(imageAspect)
 		if (id === undefined) return 'invalid'
 
@@ -644,9 +636,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setImageSize(
-		imageSize: string
-	): Promise<SetConfigResultStatus> {
+	private async setImageSize(imageSize: string): Promise<ResultStatus> {
 		const id = this.imageSizeTable.getKey(imageSize)
 		if (id === undefined) return 'invalid'
 
@@ -673,9 +663,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setImageQuality(
-		imageQuality: string
-	): Promise<SetConfigResultStatus> {
+	private async setImageQuality(imageQuality: string): Promise<ResultStatus> {
 		let jpegQuality: null | string = null
 		let dngBitDepth: number | null = null
 
@@ -716,7 +704,7 @@ export class TethrSigma extends TethrPTPUSB {
 			imageQualityID
 		)
 
-		let setDngBitDepthResult: SetConfigResultStatus = 'ok'
+		let setDngBitDepthResult: ResultStatus = 'ok'
 		if (dngBitDepth !== null) {
 			setDngBitDepthResult = await this.setCamData(
 				OpCodeSigma.SetCamDataGroup4,
@@ -1077,7 +1065,7 @@ export class TethrSigma extends TethrPTPUSB {
 		opcode: number,
 		devicePropIndex: number,
 		value: number
-	): Promise<SetConfigResultStatus> {
+	): Promise<ResultStatus> {
 		const buffer = new ArrayBuffer(4)
 		const dataView = new DataView(buffer)
 

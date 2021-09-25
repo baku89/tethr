@@ -13,10 +13,10 @@ export type ITethrEventTypes = {
 	disconnect: void
 }
 
-export type SetConfigResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
+export type OperationResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
 
 export interface SetConfigResult<T extends ConfigType[keyof ConfigType]> {
-	status: SetConfigResultStatus
+	status: OperationResultStatus
 	value: T | null
 }
 
