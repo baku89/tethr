@@ -729,7 +729,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return true
 	}
 
-	private onDevicePropChanged = async (ev: PTPEvent) => {
+	protected onDevicePropChanged = async (ev: PTPEvent) => {
 		const devicdPropCode = ev.parameters[0]
 
 		let configs: (keyof ConfigType)[]
