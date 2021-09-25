@@ -62,7 +62,7 @@ export type RunManualFocusOption = {
 	speed: 1 | 2 | 3
 }
 
-export type PropType = {
+export type ConfigType = {
 	model: string
 
 	batteryLevel: BatteryLevel

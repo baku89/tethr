@@ -1,11 +1,15 @@
 <template>
-	<template v-if="prop.value !== null">
+	<template v-if="config.value !== null">
 		<dt>{{ label }}</dt>
 		<dd style="font-family: monospace">
-			<template v-if="prop.writable">
-				<select :value="valueIndex" @change="update" :disabled="prop.updating">
+			<template v-if="config.writable">
+				<select
+					:value="valueIndex"
+					@change="update"
+					:disabled="config.updating"
+				>
 					<option
-						v-for="(v, i) in prop.options"
+						v-for="(v, i) in config.options"
 						:key="i"
 						:label="v"
 						:value="i"
@@ -15,37 +19,37 @@
 					</option>
 				</select>
 			</template>
-			<input v-else :value="prop.value" disabled />
+			<input v-else :value="config.value" disabled />
 		</dd>
 	</template>
 </template>
 
 <script lang="ts">
 import {computed, defineComponent, PropType} from 'vue'
-import {TethrProp} from './useTethr'
+import {TethrConfig} from './useTethr'
 
 export default defineComponent({
 	props: {
 		label: String,
-		prop: {
-			type: Object as PropType<TethrProp<any>>,
+		config: {
+			type: Object as PropType<TethrConfig<any>>,
 			required: true,
 		},
 	},
 	setup(props) {
 		const valueIndex = computed(() => {
-			const {prop} = props
-			if (prop.options) {
-				return prop.options.indexOf(prop.value)
+			const {config} = props
+			if (config.options) {
+				return config.options.indexOf(config.value)
 			}
 			return 0
 		})
 
 		function update(e: InputEvent) {
-			if (!props.prop.options) return
+			if (!props.config.options) return
 			const index = parseInt((e.target as HTMLSelectElement).value)
-			const value = props.prop.options[index]
-			props.prop.update(value)
+			const value = props.config.options[index]
+			props.config.update(value)
 		}
 
 		return {

@@ -4,16 +4,16 @@ import _ from 'lodash'
 import {ActionName} from '../actions'
 import {
 	Aperture,
+	ConfigType,
 	ExposureMode,
 	ISO,
-	PropType,
 	RunManualFocusOption,
 	WhiteBalance,
-} from '../props'
+} from '../configs'
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPEvent} from '../PTPDevice'
-import {PropDesc, SetPropResult, TakePictureOption} from '../Tethr'
+import {ConfigDesc, SetConfigResult, TakePictureOption} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil} from '../util'
 import {TethrPTPUSB} from './TethrPTPUSB'
@@ -34,7 +34,7 @@ enum OpCodePanasonic {
 }
 
 enum EventCodePanasonic {
-	PropChanged = 0xc102,
+	DevicePropChanged = 0xc102,
 	ObjectAdded = 0xc108,
 }
 
@@ -93,12 +93,12 @@ enum ObjectFormatCodePanasonic {
 	Raw = 0x3800,
 }
 
-type PropScheme = {
-	[Name in keyof PropType]?: {
+type DevicePropScheme = {
+	[Name in keyof ConfigType]?: {
 		getCode: number
 		setCode?: number
-		decode: (value: number) => PropType[Name] | null
-		encode?: (value: PropType[Name]) => number | null
+		decode: (value: number) => ConfigType[Name] | null
+		encode?: (value: ConfigType[Name]) => number | null
 		valueSize: 1 | 2 | 4
 	}
 }
@@ -106,7 +106,7 @@ type PropScheme = {
 export class TethrPanasonic extends TethrPTPUSB {
 	private _liveviewing = false
 
-	private propSchemePanasonic: PropScheme = {
+	private devicePropSchemePanasonic: DevicePropScheme = {
 		exposureMode: {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
 			valueSize: 2,
@@ -286,7 +286,10 @@ export class TethrPanasonic extends TethrPTPUSB {
 			parameters: [0x00010001],
 		})
 
-		this.device.onEventCode(EventCodePanasonic.PropChanged, this.onPropChanged)
+		this.device.onEventCode(
+			EventCodePanasonic.DevicePropChanged,
+			this.onDevicePropChanged
+		)
 	}
 
 	public async close(): Promise<void> {
@@ -299,9 +302,9 @@ export class TethrPanasonic extends TethrPTPUSB {
 		await super.open()
 	}
 
-	public async listProps(): Promise<(keyof PropType)[]> {
+	public async listConfigs(): Promise<(keyof ConfigType)[]> {
 		return [
-			...(await super.listProps()),
+			...(await super.listConfigs()),
 			'exposureMode',
 			'aperture',
 			'shutterSpeed',
@@ -326,17 +329,19 @@ export class TethrPanasonic extends TethrPTPUSB {
 		]
 	}
 
-	public async set<N extends keyof PropType>(
+	public async set<N extends keyof ConfigType>(
 		name: N,
-		value: PropType[N]
-	): Promise<SetPropResult<PropType[N]>> {
-		const scheme = this.propSchemePanasonic[name] as PropScheme[N] | undefined
+		value: ConfigType[N]
+	): Promise<SetConfigResult<ConfigType[N]>> {
+		const scheme = this.devicePropSchemePanasonic[name] as
+			| DevicePropScheme[N]
+			| undefined
 
 		if (!scheme)
 			throw new Error(`Prop ${name} is not supported for this device`)
 
 		const setCode = scheme.setCode
-		const encode = scheme.encode as (value: PropType[N]) => number | null
+		const encode = scheme.encode as (value: ConfigType[N]) => number | null
 		const valueSize = scheme.valueSize
 
 		const desc = await this.getDesc(name)
@@ -344,7 +349,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		if (!(setCode && encode && desc.writable)) {
 			return {
 				status: 'unsupported',
-				value: (await this.get(name)) as PropType[N],
+				value: (await this.get(name)) as ConfigType[N],
 			}
 		}
 
@@ -355,7 +360,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		if (encodedValue === null) {
 			return {
 				status: 'unsupported',
-				value: (await this.get(name)) as PropType[N],
+				value: (await this.get(name)) as ConfigType[N],
 			}
 		}
 
@@ -374,14 +379,14 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		return {
 			status: succeed ? 'ok' : 'invalid',
-			value: (await this.get(name)) as PropType[N],
+			value: (await this.get(name)) as ConfigType[N],
 		}
 	}
 
-	public async getDesc<K extends keyof PropType, T extends PropType[K]>(
+	public async getDesc<K extends keyof ConfigType, T extends ConfigType[K]>(
 		name: K
-	): Promise<PropDesc<T>> {
-		const scheme = this.propSchemePanasonic[name]
+	): Promise<ConfigDesc<T>> {
+		const scheme = this.devicePropSchemePanasonic[name]
 
 		if (!scheme) {
 			return await super.getDesc(name)
@@ -695,19 +700,19 @@ export class TethrPanasonic extends TethrPTPUSB {
 			throw new Error('This speed is not supported')
 		}
 
-		const propCode = 0x03010011
+		const devicePropCode = 0x03010011
 
 		const data = new ArrayBuffer(10)
 		const dataView = new DataView(data)
 
-		dataView.setUint32(0, propCode, true)
+		dataView.setUint32(0, devicePropCode, true)
 		dataView.setUint32(4, 2, true)
 		dataView.setUint16(8, mode, true)
 
 		await this.device.sendData({
 			label: 'Panasonic ManualFocusDrive',
 			opcode: OpCodePanasonic.ManualFocusDrive,
-			parameters: [propCode],
+			parameters: [devicePropCode],
 			data,
 		})
 
@@ -724,43 +729,43 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return true
 	}
 
-	private onPropChanged = async (ev: PTPEvent) => {
+	private onDevicePropChanged = async (ev: PTPEvent) => {
 		const devicdPropCode = ev.parameters[0]
 
-		let props: (keyof PropType)[]
+		let configs: (keyof ConfigType)[]
 
 		switch (devicdPropCode) {
 			case DevicePropCodePanasonic.CameraMode:
-				props = ['exposureMode', 'aperture', 'shutterSpeed', 'exposureComp']
+				configs = ['exposureMode', 'aperture', 'shutterSpeed', 'exposureComp']
 				break
 			case DevicePropCodePanasonic.Aperture:
-				props = ['aperture']
+				configs = ['aperture']
 				break
 			case DevicePropCodePanasonic.ShutterSpeed:
-				props = ['shutterSpeed']
+				configs = ['shutterSpeed']
 				break
 			case DevicePropCodePanasonic.ISO:
-				props = ['iso']
+				configs = ['iso']
 				break
 			case DevicePropCodePanasonic.Exposure:
-				props = ['exposureComp']
+				configs = ['exposureComp']
 				break
 			case DevicePropCodePanasonic.WhiteBalance:
-				props = ['whiteBalance', 'colorTemperature']
+				configs = ['whiteBalance', 'colorTemperature']
 				break
 			case DevicePropCodePanasonic.PhotoStyle:
-				props = ['colorMode']
+				configs = ['colorMode']
 				break
 			case DevicePropCodePanasonic.ImageMode:
-				props = ['imageSize', 'imageAspect', 'imageQuality']
+				configs = ['imageSize', 'imageAspect', 'imageQuality']
 				break
 			default:
 				return
 		}
 
-		for (const prop of props) {
-			const desc = await this.getDesc(prop)
-			this.emit(`${prop}Changed`, desc)
+		for (const config of configs) {
+			const desc = await this.getDesc(config)
+			this.emit(`${config}Changed`, desc)
 		}
 	}
 

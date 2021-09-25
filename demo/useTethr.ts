@@ -2,12 +2,12 @@ import {saveAs} from 'file-saver'
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 import {detectTethr, Tethr} from '../src'
-import {PropType} from '../src/props'
+import {ConfigType} from '../src/configs'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 
-export interface TethrProp<T extends PropType[keyof PropType]> {
+export interface TethrConfig<T extends ConfigType[keyof ConfigType]> {
 	writable: boolean
 	value: T | null
 	updating: boolean
@@ -15,50 +15,50 @@ export interface TethrProp<T extends PropType[keyof PropType]> {
 	options: T[]
 }
 
-export function useTethrProp<Name extends keyof PropType>(
+export function useTethrConfig<Name extends keyof ConfigType>(
 	camera: Ref<Tethr | null>,
 	name: Name
 ) {
-	const prop = reactive({
+	const config = reactive({
 		writable: false,
 		value: null,
 		updating: false,
 		update: () => null,
 		options: [],
-	}) as TethrProp<PropType[Name]>
+	}) as TethrConfig<ConfigType[Name]>
 
 	watch(
 		camera,
 		async cam => {
 			if (!cam) {
-				prop.writable = false
-				prop.value = null
-				prop.options = []
+				config.writable = false
+				config.value = null
+				config.options = []
 				return
 			}
 
 			const desc = await cam.getDesc(name)
 
-			prop.writable = desc.writable
-			prop.value = desc.value
-			prop.options = desc.options
+			config.writable = desc.writable
+			config.value = desc.value
+			config.options = desc.options
 
-			prop.update = async (value: any) => {
-				prop.updating = true
-				prop.value = (await cam.set(name, value)).value
-				prop.updating = false
+			config.update = async (value: any) => {
+				config.updating = true
+				config.value = (await cam.set(name, value)).value
+				config.updating = false
 			}
 
 			cam.on(`${name}Changed`, (desc: any) => {
-				prop.value = desc.value
-				prop.writable = desc.writable
-				prop.options = desc.options
+				config.value = desc.value
+				config.writable = desc.writable
+				config.options = desc.options
 			})
 		},
 		{immediate: true}
 	)
 
-	return readonly(prop)
+	return readonly(config)
 }
 
 export function useTethr() {
@@ -145,24 +145,24 @@ export function useTethr() {
 		deviceInfo,
 
 		// DPC
-		deviceProps: {
-			exposureMode: useTethrProp(camera, 'exposureMode'),
-			driveMode: useTethrProp(camera, 'driveMode'),
-			aperture: useTethrProp(camera, 'aperture'),
-			shutterSpeed: useTethrProp(camera, 'shutterSpeed'),
-			iso: useTethrProp(camera, 'iso'),
-			exposureComp: useTethrProp(camera, 'exposureComp'),
-			whiteBalance: useTethrProp(camera, 'whiteBalance'),
-			colorTemperature: useTethrProp(camera, 'colorTemperature'),
-			colorMode: useTethrProp(camera, 'colorMode'),
-			imageSize: useTethrProp(camera, 'imageSize'),
-			imageAspect: useTethrProp(camera, 'imageAspect'),
-			imageQuality: useTethrProp(camera, 'imageQuality'),
-			captureDelay: useTethrProp(camera, 'captureDelay'),
-			timelapseNumber: useTethrProp(camera, 'timelapseNumber'),
-			timelapseInterval: useTethrProp(camera, 'timelapseInterval'),
-			focalLength: useTethrProp(camera, 'focalLength'),
-			batteryLevel: useTethrProp(camera, 'batteryLevel'),
+		configs: {
+			exposureMode: useTethrConfig(camera, 'exposureMode'),
+			driveMode: useTethrConfig(camera, 'driveMode'),
+			aperture: useTethrConfig(camera, 'aperture'),
+			shutterSpeed: useTethrConfig(camera, 'shutterSpeed'),
+			iso: useTethrConfig(camera, 'iso'),
+			exposureComp: useTethrConfig(camera, 'exposureComp'),
+			whiteBalance: useTethrConfig(camera, 'whiteBalance'),
+			colorTemperature: useTethrConfig(camera, 'colorTemperature'),
+			colorMode: useTethrConfig(camera, 'colorMode'),
+			imageSize: useTethrConfig(camera, 'imageSize'),
+			imageAspect: useTethrConfig(camera, 'imageAspect'),
+			imageQuality: useTethrConfig(camera, 'imageQuality'),
+			captureDelay: useTethrConfig(camera, 'captureDelay'),
+			timelapseNumber: useTethrConfig(camera, 'timelapseNumber'),
+			timelapseInterval: useTethrConfig(camera, 'timelapseInterval'),
+			focalLength: useTethrConfig(camera, 'focalLength'),
+			batteryLevel: useTethrConfig(camera, 'batteryLevel'),
 		},
 
 		liveviewMediaStream,

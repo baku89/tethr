@@ -11,7 +11,7 @@ await cam.get('model') // 'Lumix S5'
 await cam.getModel()
 
 // Returns supported configs/actions
-await cam.listProps() // e.g. ['shutterSpeed', 'aperture', 'iso', ...]
+await cam.listConfigs() // e.g. ['shutterSpeed', 'aperture', 'iso', ...]
 await cam.listActions() // e.g. ['takePicture', 'doAutoFocus', 'toggleLiveView' ...]
 
 await cam.set('shutterSpeed', '1/1000')

@@ -6,7 +6,7 @@ export interface DeviceInfo {
 	functionalMode: number
 	operationsSupported: number[]
 	eventsSupported: number[]
-	propsSupported: number[]
+	devicePropsSupported: number[]
 	captureFormats: number[]
 	imageFormats: number[]
 	manufacturer: string

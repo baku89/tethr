@@ -3,22 +3,22 @@ import _ from 'lodash'
 import sleep from 'sleep-promise'
 
 import {ActionName} from '../actions'
-import {decodeIFD, IFDType} from '../IFD'
 import {
 	Aperture,
 	BatteryLevel,
 	computeShutterSpeedSeconds,
+	ConfigType,
 	ExposureMode,
 	ISO,
-	PropType,
 	WhiteBalance,
-} from '../props'
+} from '../configs'
+import {decodeIFD, IFDType} from '../IFD'
 import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {
-	PropDesc,
-	SetPropResult,
-	SetPropResultStatus,
+	ConfigDesc,
+	SetConfigResult,
+	SetConfigResultStatus,
 	TakePictureOption,
 } from '../Tethr'
 import {TethrObject} from '../TethrObject'
@@ -115,9 +115,9 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 	}
 
-	public async listProps(): Promise<(keyof PropType)[]> {
+	public async listConfigs(): Promise<(keyof ConfigType)[]> {
 		return [
-			...(await super.listProps()),
+			...(await super.listConfigs()),
 			'exposureMode',
 			'aperture',
 			'shutterSpeed',
@@ -142,11 +142,11 @@ export class TethrSigma extends TethrPTPUSB {
 		]
 	}
 
-	public async set<K extends keyof PropType>(
+	public async set<K extends keyof ConfigType>(
 		name: K,
-		value: PropType[K]
-	): Promise<SetPropResult<PropType[K]>> {
-		let status: SetPropResultStatus
+		value: ConfigType[K]
+	): Promise<SetConfigResult<ConfigType[K]>> {
+		let status: SetConfigResultStatus
 
 		switch (name) {
 			case 'exposureMode':
@@ -186,9 +186,9 @@ export class TethrSigma extends TethrPTPUSB {
 				status = 'unsupported'
 		}
 
-		for (const prop of (await this.listProps()) as (keyof PropType)[]) {
-			const desc = await this.getDesc(prop)
-			this.emit(`${prop}Changed`, desc)
+		for (const config of (await this.listConfigs()) as (keyof ConfigType)[]) {
+			const desc = await this.getDesc(config)
+			this.emit(`${config}Changed`, desc)
 		}
 
 		return {
@@ -197,10 +197,10 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getDesc<N extends keyof PropType, T extends PropType[N]>(
+	public async getDesc<N extends keyof ConfigType, T extends ConfigType[N]>(
 		name: N
-	): Promise<PropDesc<T>> {
-		type ReturnType = Promise<PropDesc<T>>
+	): Promise<ConfigDesc<T>> {
+		type ReturnType = Promise<ConfigDesc<T>>
 
 		switch (name) {
 			case 'batteryLevel':
@@ -234,7 +234,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return super.getDesc(name)
 	}
 
-	private async getFocalLengthDesc(): Promise<PropDesc<number>> {
+	private async getFocalLengthDesc(): Promise<ConfigDesc<number>> {
 		const data = (await this.getCamDataGroup1()).currentLensFocalLength
 		const value = decodeFocalLength(data)
 
@@ -262,7 +262,9 @@ export class TethrSigma extends TethrPTPUSB {
 		)
 	}
 
-	private async setAperture(aperture: Aperture): Promise<SetPropResultStatus> {
+	private async setAperture(
+		aperture: Aperture
+	): Promise<SetConfigResultStatus> {
 		if (aperture === 'auto') return 'invalid'
 
 		const byte = this.apertureOneThirdTable.getKey(aperture)
@@ -271,7 +273,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
 
-	private getApertureDesc = async (): Promise<PropDesc<Aperture>> => {
+	private getApertureDesc = async (): Promise<ConfigDesc<Aperture>> => {
 		const fValue = (await this.getCamCanSetInfo5()).fValue
 		const value = await this.getAperture()
 
@@ -320,7 +322,7 @@ export class TethrSigma extends TethrPTPUSB {
 		)
 	}
 
-	private async getShutterSpeedDesc(): Promise<PropDesc<string>> {
+	private async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
 		const range = (await this.getCamCanSetInfo5()).shutterSpeed
 		const value = await this.getShutterSpeed()
 
@@ -369,7 +371,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setShutterSpeed(ss: string): Promise<SetPropResultStatus> {
+	private async setShutterSpeed(ss: string): Promise<SetConfigResultStatus> {
 		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return 'invalid'
 
@@ -385,7 +387,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setISO(iso: ISO): Promise<SetPropResultStatus> {
+	private async setISO(iso: ISO): Promise<SetConfigResultStatus> {
 		if (iso === 'auto') {
 			return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
 		}
@@ -411,7 +413,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async getISODesc(): Promise<PropDesc<ISO>> {
+	private async getISODesc(): Promise<ConfigDesc<ISO>> {
 		const {isoManual} = await this.getCamCanSetInfo5()
 		const value = await this.getISO()
 
@@ -439,13 +441,13 @@ export class TethrSigma extends TethrPTPUSB {
 
 	private async setWhiteBalance(
 		wb: WhiteBalance
-	): Promise<SetPropResultStatus> {
+	): Promise<SetConfigResultStatus> {
 		const id = this.whiteBalanceTable.getKey(wb)
 		if (!id) return 'invalid'
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, id)
 	}
 
-	private async getWhiteBalanceDesc(): Promise<PropDesc<WhiteBalance>> {
+	private async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
 		const {whiteBalance} = await this.getCamCanSetInfo5()
 		const value = await this.getWhiteBalance()
 
@@ -503,14 +505,14 @@ export class TethrSigma extends TethrPTPUSB {
 
 	private async setExposureMode(
 		exposureMode: ExposureMode
-	): Promise<SetPropResultStatus> {
+	): Promise<SetConfigResultStatus> {
 		const id = this.exposureModeTable.getKey(exposureMode)
 		if (!id) return 'invalid'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, id)
 	}
 
-	private async getExposureModeDesc(): Promise<PropDesc<ExposureMode>> {
+	private async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
 		const {exposureMode} = await this.getCamCanSetInfo5()
 		const value = await this.getExposureMode()
 
@@ -530,14 +532,14 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.compensationOneThirdTable.get(exposureComp) ?? null
 	}
 
-	private async setExposureComp(value: string): Promise<SetPropResultStatus> {
+	private async setExposureComp(value: string): Promise<SetConfigResultStatus> {
 		const id = this.compensationOneThirdTable.getKey(value)
 		if (id === undefined) return 'invalid'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, id)
 	}
 
-	private async getExposureCompDesc(): Promise<PropDesc<string>> {
+	private async getExposureCompDesc(): Promise<ConfigDesc<string>> {
 		const {exposureComp} = await this.getCamCanSetInfo5()
 		const value = await this.getExposureComp()
 
@@ -592,14 +594,16 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setColorMode(colorMode: string): Promise<SetPropResultStatus> {
+	private async setColorMode(
+		colorMode: string
+	): Promise<SetConfigResultStatus> {
 		const id = this.colorModeTable.getKey(colorMode)
 		if (id === undefined) return 'invalid'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
 	}
 
-	private async getColorModeDesc(): Promise<PropDesc<string>> {
+	private async getColorModeDesc(): Promise<ConfigDesc<string>> {
 		const decodeColorMode = (id: number) => {
 			return this.colorModeTable.get(id) ?? 'Unknown'
 		}
@@ -616,14 +620,14 @@ export class TethrSigma extends TethrPTPUSB {
 
 	private async setImageAspect(
 		imageAspect: string
-	): Promise<SetPropResultStatus> {
+	): Promise<SetConfigResultStatus> {
 		const id = this.imageAspectTableIFD.getKey(imageAspect)
 		if (id === undefined) return 'invalid'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
 	}
 
-	private async getImageAspectDesc(): Promise<PropDesc<string>> {
+	private async getImageAspectDesc(): Promise<ConfigDesc<string>> {
 		const decodeImageAspectIFD = (id: number) => {
 			return this.imageAspectTableIFD.get(id) ?? 'Unknown'
 		}
@@ -640,14 +644,16 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async setImageSize(imageSize: string): Promise<SetPropResultStatus> {
+	private async setImageSize(
+		imageSize: string
+	): Promise<SetConfigResultStatus> {
 		const id = this.imageSizeTable.getKey(imageSize)
 		if (id === undefined) return 'invalid'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 14, id)
 	}
 
-	private async getImageSizeDesc(): Promise<PropDesc<string>> {
+	private async getImageSizeDesc(): Promise<ConfigDesc<string>> {
 		const {resolution} = await this.getCamDataGroup2()
 
 		const value = this.imageSizeTable.get(resolution)
@@ -669,7 +675,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	private async setImageQuality(
 		imageQuality: string
-	): Promise<SetPropResultStatus> {
+	): Promise<SetConfigResultStatus> {
 		let jpegQuality: null | string = null
 		let dngBitDepth: number | null = null
 
@@ -710,7 +716,7 @@ export class TethrSigma extends TethrPTPUSB {
 			imageQualityID
 		)
 
-		let setDngBitDepthResult: SetPropResultStatus = 'ok'
+		let setDngBitDepthResult: SetConfigResultStatus = 'ok'
 		if (dngBitDepth !== null) {
 			setDngBitDepthResult = await this.setCamData(
 				OpCodeSigma.SetCamDataGroup4,
@@ -726,7 +732,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async getImageQualityDesc(): Promise<PropDesc<string>> {
+	private async getImageQualityDesc(): Promise<ConfigDesc<string>> {
 		type ImageQualityConfig = {
 			jpegQuality: string | null
 			hasDNG: boolean
@@ -796,7 +802,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	private async getBatteryLevelDesc(): Promise<PropDesc<BatteryLevel>> {
+	private async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
 		const {batteryLevel} = await this.getCamDataGroup1()
 		const value = this.batteryLevelTable.get(batteryLevel) ?? null
 
@@ -1069,13 +1075,13 @@ export class TethrSigma extends TethrPTPUSB {
 
 	private async setCamData(
 		opcode: number,
-		propNumber: number,
+		devicePropIndex: number,
 		value: number
-	): Promise<SetPropResultStatus> {
+	): Promise<SetConfigResultStatus> {
 		const buffer = new ArrayBuffer(4)
 		const dataView = new DataView(buffer)
 
-		dataView.setUint16(0, 1 << propNumber, true)
+		dataView.setUint16(0, 1 << devicePropIndex, true)
 		dataView.setUint16(2, value, true)
 
 		const data = this.encodeParameter(buffer)

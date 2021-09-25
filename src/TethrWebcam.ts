@@ -1,6 +1,11 @@
+import {ConfigType} from './configs'
 import {DeviceInfo} from './DeviceInfo'
-import {PropType} from './props'
-import {PropDesc, SetPropResult, TakePictureOption, Tethr} from './Tethr'
+import {
+	ConfigDesc,
+	SetConfigResult as SetConfigResult,
+	TakePictureOption,
+	Tethr,
+} from './Tethr'
 import {TethrObject} from './TethrObject'
 
 export function initTethrWebcam(media: MediaStream) {
@@ -30,7 +35,7 @@ export class TethrWebcam extends Tethr {
 		return this._opened
 	}
 
-	public async listProps() {
+	public async listConfigs() {
 		return []
 	}
 
@@ -38,20 +43,22 @@ export class TethrWebcam extends Tethr {
 		return []
 	}
 
-	public async get<N extends keyof PropType>(): Promise<PropType[N] | null> {
+	public async get<N extends keyof ConfigType>(): Promise<
+		ConfigType[N] | null
+	> {
 		return null
 	}
 
-	public async set<N extends keyof PropType>(): Promise<
-		SetPropResult<PropType[N]>
+	public async set<N extends keyof ConfigType>(): Promise<
+		SetConfigResult<ConfigType[N]>
 	> {
 		return {
 			status: 'unsupported',
 			value: null,
 		}
 	}
-	public async getDesc<N extends keyof PropType>(): Promise<
-		PropDesc<PropType[N]>
+	public async getDesc<N extends keyof ConfigType>(): Promise<
+		ConfigDesc<ConfigType[N]>
 	> {
 		return {
 			writable: false,

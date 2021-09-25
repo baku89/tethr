@@ -2,14 +2,14 @@ import {BiMap} from 'bim'
 import _ from 'lodash'
 
 import {ActionName} from '../actions'
-import {DeviceInfo} from '../DeviceInfo'
 import {
+	ConfigType,
 	DriveMode,
 	ExposureMode,
-	PropType,
 	RunManualFocusOption,
 	WhiteBalance,
-} from '../props'
+} from '../configs'
+import {DeviceInfo} from '../DeviceInfo'
 import {
 	DatatypeCode,
 	DevicePropCode,
@@ -25,28 +25,28 @@ import {
 	PTPFilesystemType,
 	PTPStorageType,
 } from '../PTPEnum'
-import {PropDesc, SetPropResult, TakePictureOption, Tethr} from '../Tethr'
+import {ConfigDesc, SetConfigResult, TakePictureOption, Tethr} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
 
-export type PropScheme = {
-	[Name in keyof PropType]?: {
+export type DevicePropScheme = {
+	[Name in keyof ConfigType]?: {
 		devicePropCode: number
 	} & (
 		| {
 				dataType: DatatypeCode.Uint64
-				decode: (data: bigint) => PropType[Name] | null
-				encode: (value: PropType[Name]) => bigint | null
+				decode: (data: bigint) => ConfigType[Name] | null
+				encode: (value: ConfigType[Name]) => bigint | null
 		  }
 		| {
 				dataType: DatatypeCode.String
-				decode: (data: string) => PropType[Name] | null
-				encode: (value: PropType[Name]) => string | null
+				decode: (data: string) => ConfigType[Name] | null
+				encode: (value: ConfigType[Name]) => string | null
 		  }
 		| {
 				dataType: DatatypeCode
-				decode: (data: number) => PropType[Name] | null
-				encode: (value: PropType[Name]) => number | null
+				decode: (data: number) => ConfigType[Name] | null
+				encode: (value: ConfigType[Name]) => number | null
 		  }
 	)
 }
@@ -133,15 +133,15 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
-	public async listProps() {
-		const {propsSupported} = await this.getDeviceInfo()
+	public async listConfigs() {
+		const {devicePropsSupported} = await this.getDeviceInfo()
 
 		const deviceInfos = ['model']
-		const deviceProps = propsSupported.map(getPropNameByCode)
+		const deviceProps = devicePropsSupported.map(getConfigNameByDevicePropCode)
 
-		return [...deviceInfos, ...deviceProps] as (keyof PropType)[]
+		return [...deviceInfos, ...deviceProps] as (keyof ConfigType)[]
 
-		function getPropNameByCode(code: number) {
+		function getConfigNameByDevicePropCode(code: number) {
 			return DevicePropCode[code] ?? toHexString(code, 4)
 		}
 	}
@@ -150,16 +150,16 @@ export class TethrPTPUSB extends Tethr {
 		return []
 	}
 
-	public async get<K extends keyof PropType>(name: K) {
+	public async get<K extends keyof ConfigType>(name: K) {
 		const desc = await this.getDesc(name)
 		return desc.value
 	}
 
-	public async set<K extends keyof PropType>(
+	public async set<K extends keyof ConfigType>(
 		name: K,
-		value: PropType[K]
-	): Promise<SetPropResult<PropType[K]>> {
-		const scheme = this.propScheme[name]
+		value: ConfigType[K]
+	): Promise<SetConfigResult<ConfigType[K]>> {
+		const scheme = this.devicePropScheme[name]
 
 		if (!scheme) {
 			return {
@@ -168,10 +168,10 @@ export class TethrPTPUSB extends Tethr {
 			}
 		}
 
-		const encode = scheme.encode as (value: PropType[K]) => number
-		const propData = encode(value)
+		const encode = scheme.encode as (value: ConfigType[K]) => number
+		const devicePropData = encode(value)
 
-		if (propData === null) {
+		if (devicePropData === null) {
 			return {
 				status: 'invalid',
 				value: await this.get(name),
@@ -182,39 +182,41 @@ export class TethrPTPUSB extends Tethr {
 		switch (scheme.dataType) {
 			case DatatypeCode.Uint8:
 				dataView = new DataView(new ArrayBuffer(1))
-				dataView.setUint8(0, propData)
+				dataView.setUint8(0, devicePropData)
 				break
 			case DatatypeCode.Int8:
 				dataView = new DataView(new ArrayBuffer(1))
-				dataView.setInt8(0, propData)
+				dataView.setInt8(0, devicePropData)
 				break
 			case DatatypeCode.Uint16:
 				dataView = new DataView(new ArrayBuffer(2))
-				dataView.setUint16(0, propData, true)
+				dataView.setUint16(0, devicePropData, true)
 				break
 			case DatatypeCode.Int16:
 				dataView = new DataView(new ArrayBuffer(2))
-				dataView.setInt16(0, propData, true)
+				dataView.setInt16(0, devicePropData, true)
 				break
 			case DatatypeCode.Uint32:
 				dataView = new DataView(new ArrayBuffer(4))
-				dataView.setUint32(0, propData, true)
+				dataView.setUint32(0, devicePropData, true)
 				break
 			case DatatypeCode.Int32:
 				dataView = new DataView(new ArrayBuffer(4))
-				dataView.setInt32(0, propData, true)
+				dataView.setInt32(0, devicePropData, true)
 				break
 			case DatatypeCode.Uint64:
 				dataView = new DataView(new ArrayBuffer(8))
-				dataView.setBigUint64(0, BigInt(propData), true)
+				dataView.setBigUint64(0, BigInt(devicePropData), true)
 				break
 			case DatatypeCode.String:
-				dataView = new DataView(new ArrayBuffer(propData))
-				dataView.setBigUint64(0, BigInt(propData), true)
+				dataView = new DataView(new ArrayBuffer(devicePropData))
+				dataView.setBigUint64(0, BigInt(devicePropData), true)
 				break
 			default: {
 				const label = DatatypeCode[scheme.dataType] ?? toHexString(16)
-				throw new Error(`PropDesc of datatype ${label} is not yet supported`)
+				throw new Error(
+					`DevicePropDesc of datatype ${label} is not yet supported`
+				)
 			}
 		}
 
@@ -232,10 +234,10 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
-	public async getDesc<K extends keyof PropType, T extends PropType[K]>(
+	public async getDesc<K extends keyof ConfigType, T extends ConfigType[K]>(
 		name: K
-	): Promise<PropDesc<T>> {
-		const scheme = this.propScheme[name]
+	): Promise<ConfigDesc<T>> {
+		const scheme = this.devicePropScheme[name]
 
 		if (!scheme) {
 			return {
@@ -317,7 +319,7 @@ export class TethrPTPUSB extends Tethr {
 					typeof step !== 'number'
 				) {
 					throw new Error(
-						`Cannot enumerate supported values of device prop ${name}`
+						`Cannot enumerate supported values of device config ${name}`
 					)
 				}
 				options = _.range(min, max, step) as T[]
@@ -452,7 +454,7 @@ export class TethrPTPUSB extends Tethr {
 			functionalMode: dataView.readUint16(),
 			operationsSupported: dataView.readUint16Array(),
 			eventsSupported: dataView.readUint16Array(),
-			propsSupported: dataView.readUint16Array(),
+			devicePropsSupported: dataView.readUint16Array(),
 			captureFormats: dataView.readUint16Array(),
 			imageFormats: dataView.readUint16Array(),
 			manufacturer: dataView.readFixedUTF16String(),
@@ -464,7 +466,7 @@ export class TethrPTPUSB extends Tethr {
 
 	protected onDevicePropChanged = async (event: PTPEvent) => {
 		const devicePropCode = event.parameters[0]
-		const name = this.getPropNameFromCode(devicePropCode)
+		const name = this.getConfigNameFromCode(devicePropCode)
 
 		if (!name) return
 
@@ -472,7 +474,9 @@ export class TethrPTPUSB extends Tethr {
 		this.emit(`${name}Changed`, desc)
 	}
 
-	protected getPropNameFromCode(devicePropCode: number): keyof PropType | null {
+	protected getConfigNameFromCode(
+		devicePropCode: number
+	): keyof ConfigType | null {
 		return this.devicePropTable.get(devicePropCode) ?? null
 	}
 
@@ -480,7 +484,7 @@ export class TethrPTPUSB extends Tethr {
 		return ObjectFormatCode[code].toLowerCase()
 	}
 
-	protected propScheme: PropScheme = {
+	protected devicePropScheme: DevicePropScheme = {
 		exposureMode: {
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			dataType: DatatypeCode.Uint16,
@@ -622,7 +626,7 @@ export class TethrPTPUSB extends Tethr {
 		},
 	}
 
-	protected devicePropTable = new BiMap<number, keyof PropType>([
+	protected devicePropTable = new BiMap<number, keyof ConfigType>([
 		[0x5001, 'batteryLevel'],
 		[0x5005, 'whiteBalance'],
 		[0x5007, 'aperture'],

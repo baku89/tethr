@@ -1,10 +1,10 @@
 import {BiMap} from 'bim'
 import _ from 'lodash'
 
-import {PropType} from '../props'
+import {ConfigType} from '../configs'
 import {DatatypeCode} from '../PTPDatacode'
-import {PropDesc} from '../Tethr'
-import {PropScheme, TethrPTPUSB} from './TethrPTPUSB'
+import {ConfigDesc} from '../Tethr'
+import {DevicePropScheme, TethrPTPUSB} from './TethrPTPUSB'
 
 enum DevicePropCodeRicohTheta {
 	ShutterSpeed = 0xd00f,
@@ -12,9 +12,9 @@ enum DevicePropCodeRicohTheta {
 }
 
 export class TethrRicohTheta extends TethrPTPUSB {
-	public async getDesc<K extends keyof PropType, T extends PropType[K]>(
+	public async getDesc<K extends keyof ConfigType, T extends ConfigType[K]>(
 		name: K
-	): Promise<PropDesc<T>> {
+	): Promise<ConfigDesc<T>> {
 		if (name === 'focalLength') {
 			return {
 				writable: false,
@@ -25,9 +25,9 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		return super.getDesc(name)
 	}
 
-	protected propScheme = (() => {
-		const propScheme: PropScheme = {
-			...super.propScheme,
+	protected devicePropScheme = (() => {
+		const devicePropScheme: DevicePropScheme = {
+			...super.devicePropScheme,
 			shutterSpeed: {
 				devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
 				dataType: DatatypeCode.Uint64,
@@ -65,7 +65,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 			},
 		}
 
-		return propScheme
+		return devicePropScheme
 	})()
 
 	protected exposureModeTable = (() => {

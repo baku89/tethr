@@ -1,26 +1,26 @@
 import EventEmitter from 'eventemitter3'
 
 import {ActionName} from './actions'
+import {ConfigType, RunManualFocusOption} from './configs'
 import {DeviceInfo} from './DeviceInfo'
-import {PropType, RunManualFocusOption} from './props'
 import {TethrObject} from './TethrObject'
 
-type PropName = keyof PropType
+type ConfigName = keyof ConfigType
 
 export type ITethrEventTypes = {
-	[Name in keyof PropType as `${Name}Changed`]: PropDesc<PropType[Name]>
+	[Name in keyof ConfigType as `${Name}Changed`]: ConfigDesc<ConfigType[Name]>
 } & {
 	disconnect: void
 }
 
-export type SetPropResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
+export type SetConfigResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
 
-export interface SetPropResult<T extends PropType[keyof PropType]> {
-	status: SetPropResultStatus
+export interface SetConfigResult<T extends ConfigType[keyof ConfigType]> {
+	status: SetConfigResultStatus
 	value: T | null
 }
 
-export type PropDesc<T> = {
+export type ConfigDesc<T> = {
 	value: T | null
 	defaultValue?: T
 	writable: boolean
@@ -37,17 +37,19 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 
 	public abstract get opened(): boolean
 
-	public abstract listProps(): Promise<PropName[]>
+	public abstract listConfigs(): Promise<ConfigName[]>
 	public abstract listActions(): Promise<ActionName[]>
 
-	public abstract get<N extends PropName>(name: N): Promise<PropType[N] | null>
-	public abstract set<N extends PropName>(
-		name: N,
-		value: PropType[N]
-	): Promise<SetPropResult<PropType[N]>>
-	public abstract getDesc<N extends PropName>(
+	public abstract get<N extends ConfigName>(
 		name: N
-	): Promise<PropDesc<PropType[N]>>
+	): Promise<ConfigType[N] | null>
+	public abstract set<N extends ConfigName>(
+		name: N,
+		value: ConfigType[N]
+	): Promise<SetConfigResult<ConfigType[N]>>
+	public abstract getDesc<N extends ConfigName>(
+		name: N
+	): Promise<ConfigDesc<ConfigType[N]>>
 
 	// Actions
 	public abstract getDeviceInfo(): Promise<DeviceInfo>

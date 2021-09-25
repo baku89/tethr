@@ -25,10 +25,10 @@
 		<aside>
 			<h1>Tethr</h1>
 
-			<h2>Device Props</h2>
+			<h2>Device Configs</h2>
 			<dl>
-				<template v-for="(dp, name) in deviceProps" :key="name">
-					<TethrProp :label="name" :prop="dp" />
+				<template v-for="(config, name) in configs" :key="name">
+					<TethrConfig :label="name" :config="config" />
 				</template>
 			</dl>
 
@@ -41,11 +41,11 @@
 <script lang="ts">
 import {defineComponent, ref, watch} from 'vue'
 import {useTethr} from './useTethr'
-import TethrProp from './TethrProp.vue'
+import TethrConfig from './TethrConfig.vue'
 
 export default defineComponent({
 	components: {
-		TethrProp,
+		TethrConfig,
 	},
 	setup() {
 		return useTethr()
