@@ -31,15 +31,12 @@
 					<TethrConfig :label="name" :config="config" />
 				</template>
 			</dl>
-
-			<h2>Device Info</h2>
-			<pre>{{ deviceInfo }}</pre>
 		</aside>
 	</div>
 </template>
 
 <script lang="ts">
-import {defineComponent, ref, watch} from 'vue'
+import {defineComponent} from 'vue'
 import {useTethr} from './useTethr'
 import TethrConfig from './TethrConfig.vue'
 

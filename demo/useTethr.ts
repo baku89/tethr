@@ -64,11 +64,6 @@ export function useTethrConfig<Name extends keyof ConfigType>(
 export function useTethr() {
 	const camera = shallowRef<Tethr | null>(null)
 
-	const deviceInfo = ref('')
-	watch(camera, cam => {
-		if (!cam) deviceInfo.value = ''
-	})
-
 	const liveviewMediaStream = ref<null | MediaStream>(null)
 	const lastPictureURL = ref(TransparentPng)
 
@@ -94,11 +89,6 @@ export function useTethr() {
 			})
 		}
 
-		deviceInfo.value = JSON.stringify(
-			await camera.value.getDeviceInfo(),
-			undefined,
-			' '
-		)
 		;(window as any).cam = camera.value
 	}
 
@@ -142,7 +132,6 @@ export function useTethr() {
 
 	return {
 		camera,
-		deviceInfo,
 
 		// DPC
 		configs: {
