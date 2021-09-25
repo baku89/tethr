@@ -698,6 +698,8 @@ export class TethrPanasonic extends TethrPTPUSB {
 			parameters: [propCode],
 			data,
 		})
+
+		return true
 	}
 
 	public async runAutoFocus(): Promise<boolean> {
