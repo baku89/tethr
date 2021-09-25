@@ -341,8 +341,8 @@ export class TethrPTPUSB extends Tethr {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	public runManualFocus(option: RunManualFocusOption): void {
-		null
+	public async runManualFocus(option: RunManualFocusOption) {
+		return false
 	}
 
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<

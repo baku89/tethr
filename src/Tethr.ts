@@ -1,7 +1,7 @@
 import EventEmitter from 'eventemitter3'
 
 import {DeviceInfo} from './DeviceInfo'
-import {PropType} from './props'
+import {PropType, RunManualFocusOption} from './props'
 import {TethrObject} from './TethrObject'
 
 type PropName = keyof PropType
@@ -51,6 +51,7 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	// Actions
 	public abstract getDeviceInfo(): Promise<DeviceInfo>
 	public abstract runAutoFocus(): Promise<boolean>
+	public abstract runManualFocus(option: RunManualFocusOption): Promise<boolean>
 	public abstract takePicture(
 		options?: TakePictureOption
 	): Promise<null | TethrObject[]>

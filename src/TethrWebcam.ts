@@ -34,24 +34,21 @@ export class TethrWebcam extends Tethr {
 		return []
 	}
 
-	public async get<N extends keyof PropType>(
-		name: N
-	): Promise<PropType[N] | null> {
+	public async get<N extends keyof PropType>(): Promise<PropType[N] | null> {
 		return null
 	}
 
-	public async set<N extends keyof PropType>(
-		name: N,
-		value: PropType[N]
-	): Promise<SetPropResult<PropType[N]>> {
+	public async set<N extends keyof PropType>(): Promise<
+		SetPropResult<PropType[N]>
+	> {
 		return {
 			status: 'unsupported',
 			value: null,
 		}
 	}
-	public async getDesc<N extends keyof PropType>(
-		name: N
-	): Promise<PropDesc<PropType[N]>> {
+	public async getDesc<N extends keyof PropType>(): Promise<
+		PropDesc<PropType[N]>
+	> {
 		return {
 			writable: false,
 			value: null,
@@ -64,9 +61,14 @@ export class TethrWebcam extends Tethr {
 		return {} as any
 	}
 
-	public async runAutoFocus(): Promise<boolean> {
+	public async runAutoFocus() {
 		return false
 	}
+
+	public async runManualFocus() {
+		return false
+	}
+
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
 		null | TethrObject[]
 	> {
