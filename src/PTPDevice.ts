@@ -329,6 +329,8 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		const dataView = new PTPDataView()
 
+		const length = 12 + data.byteLength
+
 		dataView.writeUint32(length)
 		dataView.writeUint16(PTPType.Data)
 		dataView.writeUint16(opcode)
