@@ -85,7 +85,6 @@ export function useTethr() {
 			if (cams.length > 1) throw new Error('Multiple cameras')
 
 			const cam = cams[0]
-			console.log(cam.open)
 			await cam.open()
 
 			camera.value = cam
