@@ -1,5 +1,6 @@
 import EventEmitter from 'eventemitter3'
 
+import {ActionName} from './actions'
 import {DeviceInfo} from './DeviceInfo'
 import {PropType, RunManualFocusOption} from './props'
 import {TethrObject} from './TethrObject'
@@ -37,7 +38,7 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	public abstract get opened(): boolean
 
 	public abstract listProps(): Promise<PropName[]>
-	// listActions: () => Promise<string[]>
+	public abstract listActions(): Promise<ActionName[]>
 
 	public abstract get<N extends PropName>(name: N): Promise<PropType[N] | null>
 	public abstract set<N extends PropName>(

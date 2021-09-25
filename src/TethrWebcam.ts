@@ -30,7 +30,11 @@ export class TethrWebcam extends Tethr {
 		return this._opened
 	}
 
-	public async listProps(): Promise<(keyof PropType)[]> {
+	public async listProps() {
+		return []
+	}
+
+	public async listActions() {
 		return []
 	}
 

@@ -146,6 +146,10 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
+	public async listActions() {
+		return []
+	}
+
 	public async get<K extends keyof PropType>(name: K) {
 		const desc = await this.getDesc(name)
 		return desc.value
