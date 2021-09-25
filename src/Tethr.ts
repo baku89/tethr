@@ -40,9 +40,11 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	public abstract listConfigs(): Promise<ConfigName[]>
 	public abstract listActions(): Promise<ActionName[]>
 
-	public abstract get<N extends ConfigName>(
+	public async get<N extends ConfigName>(
 		name: N
-	): Promise<ConfigType[N] | null>
+	): Promise<ConfigType[N] | null> {
+		return (await this.getDesc(name)).value
+	}
 	public abstract set<N extends ConfigName>(
 		name: N,
 		value: ConfigType[N]

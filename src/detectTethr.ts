@@ -41,7 +41,13 @@ export async function detectTethr({
 	async function requestTethrPTPUSB() {
 		if (!usb) return []
 
-		const usbDevice = await usb.requestDevice({filters: []})
+		let usbDevice: USBDevice
+		try {
+			usbDevice = await usb.requestDevice({filters: []})
+		} catch {
+			return []
+		}
+
 		const tethr = await initTethrUSBPTP(usbDevice)
 
 		if (!tethr) return []

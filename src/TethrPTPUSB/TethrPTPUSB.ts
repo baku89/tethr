@@ -29,26 +29,28 @@ import {ConfigDesc, SetConfigResult, TakePictureOption, Tethr} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
 
+type DevicePropSchemeEntry<Name extends keyof ConfigType> = {
+	devicePropCode: number
+} & (
+	| {
+			dataType: DatatypeCode.Uint64
+			decode: (data: bigint) => ConfigType[Name] | null
+			encode: (value: ConfigType[Name]) => bigint | null
+	  }
+	| {
+			dataType: DatatypeCode.String
+			decode: (data: string) => ConfigType[Name] | null
+			encode: (value: ConfigType[Name]) => string | null
+	  }
+	| {
+			dataType: DatatypeCode
+			decode: (data: number) => ConfigType[Name] | null
+			encode: (value: ConfigType[Name]) => number | null
+	  }
+)
+
 export type DevicePropScheme = {
-	[Name in keyof ConfigType]?: {
-		devicePropCode: number
-	} & (
-		| {
-				dataType: DatatypeCode.Uint64
-				decode: (data: bigint) => ConfigType[Name] | null
-				encode: (value: ConfigType[Name]) => bigint | null
-		  }
-		| {
-				dataType: DatatypeCode.String
-				decode: (data: string) => ConfigType[Name] | null
-				encode: (value: ConfigType[Name]) => string | null
-		  }
-		| {
-				dataType: DatatypeCode
-				decode: (data: number) => ConfigType[Name] | null
-				encode: (value: ConfigType[Name]) => number | null
-		  }
-	)
+	[Name in keyof ConfigType]?: DevicePropSchemeEntry<Name>
 }
 
 export class TethrPTPUSB extends Tethr {
@@ -150,11 +152,6 @@ export class TethrPTPUSB extends Tethr {
 		return []
 	}
 
-	public async get<K extends keyof ConfigType>(name: K) {
-		const desc = await this.getDesc(name)
-		return desc.value
-	}
-
 	public async set<K extends keyof ConfigType>(
 		name: K,
 		value: ConfigType[K]
@@ -230,15 +227,29 @@ export class TethrPTPUSB extends Tethr {
 		name: K
 	): Promise<ConfigDesc<T>> {
 		const scheme = this.devicePropScheme[name]
+		if (scheme) {
+			return await this.getDevicePropDesc(scheme)
+		}
 
-		if (!scheme) {
+		if (name === 'model') {
+			const value = (await this.getDeviceInfo()).model
 			return {
 				writable: false,
-				value: null,
+				value: value as T,
 				options: [],
 			}
 		}
 
+		return {
+			writable: false,
+			value: null,
+			options: [],
+		}
+	}
+
+	private async getDevicePropDesc<Name extends keyof ConfigType>(
+		scheme: DevicePropSchemeEntry<Name>
+	) {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'GetDevicePropDesc',
 			opcode: OpCode.GetDevicePropDesc,
@@ -260,26 +271,26 @@ export class TethrPTPUSB extends Tethr {
 		const dataType = dataView.readUint16()
 		const writable = dataView.readUint8() === 0x01 // Get/Set
 
-		let getValue: () => any
+		let readValue: () => any
 
 		switch (dataType) {
 			case DatatypeCode.Uint8:
-				getValue = dataView.readUint8
+				readValue = dataView.readUint8
 				break
 			case DatatypeCode.Uint16:
-				getValue = dataView.readUint16
+				readValue = dataView.readUint16
 				break
 			case DatatypeCode.Int16:
-				getValue = dataView.readInt16
+				readValue = dataView.readInt16
 				break
 			case DatatypeCode.Uint32:
-				getValue = dataView.readUint32
+				readValue = dataView.readUint32
 				break
 			case DatatypeCode.Uint64:
-				getValue = dataView.readUint64
+				readValue = dataView.readUint64
 				break
 			case DatatypeCode.String:
-				getValue = dataView.readUTF16StringNT
+				readValue = dataView.readUTF16StringNT
 				break
 			default: {
 				const label = DatatypeCode[dataType] ?? toHexString(16)
@@ -287,8 +298,8 @@ export class TethrPTPUSB extends Tethr {
 			}
 		}
 
-		getValue() // Skip factoryDefault
-		const value = decode(getValue())
+		readValue() // Skip factoryDefault
+		const value = decode(readValue())
 
 		// Read options
 		const formFlag = dataView.readUint8()
@@ -302,9 +313,9 @@ export class TethrPTPUSB extends Tethr {
 				break
 			case 0x01: {
 				// Range
-				const min = decode(getValue())
-				const max = decode(getValue())
-				const step = decode(getValue())
+				const min = decode(readValue())
+				const max = decode(readValue())
+				const step = decode(readValue())
 				if (
 					typeof min !== 'number' ||
 					typeof max !== 'number' ||
@@ -320,7 +331,7 @@ export class TethrPTPUSB extends Tethr {
 			case 0x02: {
 				// Enumeration
 				const length = dataView.readUint16()
-				options = _.times(length, getValue).map(decode)
+				options = _.times(length, readValue).map(decode)
 				break
 			}
 			default:
