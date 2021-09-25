@@ -1,6 +1,7 @@
+import {DeviceInfo} from '../DeviceInfo'
 import {PTPDevice} from '../PTPDevice'
 import {TethrPanasonic} from './TethrPanasonic'
-import {DeviceInfo, TethrPTPUSB} from './TethrPTPUSB'
+import {TethrPTPUSB} from './TethrPTPUSB'
 import {TethrRicohTheta} from './TethrRicohTheta'
 import {TethrSigma} from './TethrSigma'
 
@@ -13,7 +14,7 @@ export async function initTethrUSBPTP(
 	try {
 		await device.open()
 		info = await TethrPTPUSB.getDeviceInfo(device)
-	} catch {
+	} catch (err) {
 		return null
 	}
 
