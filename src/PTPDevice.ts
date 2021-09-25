@@ -40,7 +40,7 @@ export interface PTPEvent {
 	parameters: number[]
 }
 
-export type PTPEventCallback = (event: PTPEvent) => void
+type PTPEventCallback = (event: PTPEvent) => void
 
 interface BulkInInfo {
 	type: PTPType
