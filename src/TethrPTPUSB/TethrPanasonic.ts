@@ -13,7 +13,7 @@ import {
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPEvent} from '../PTPDevice'
-import {ConfigDesc, SetConfigResult, TakePictureOption} from '../Tethr'
+import {ConfigDesc, OperationResult, TakePictureOption} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil} from '../util'
 import {TethrPTPUSB} from './TethrPTPUSB'
@@ -332,7 +332,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 	public async set<N extends keyof ConfigType>(
 		name: N,
 		value: ConfigType[N]
-	): Promise<SetConfigResult<ConfigType[N]>> {
+	): Promise<OperationResult<void>> {
 		const scheme = this.devicePropSchemePanasonic[name] as
 			| DevicePropScheme[N]
 			| undefined
@@ -349,7 +349,6 @@ export class TethrPanasonic extends TethrPTPUSB {
 		if (!(setCode && encode && desc.writable)) {
 			return {
 				status: 'unsupported',
-				value: (await this.get(name)) as ConfigType[N],
 			}
 		}
 
@@ -358,8 +357,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		if (encodedValue === null) {
 			return {
-				status: 'unsupported',
-				value: (await this.get(name)) as ConfigType[N],
+				status: 'invalid',
 			}
 		}
 
@@ -378,7 +376,6 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		return {
 			status: succeed ? 'ok' : 'invalid',
-			value: (await this.get(name)) as ConfigType[N],
 		}
 	}
 

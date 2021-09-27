@@ -17,8 +17,8 @@ import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {
 	ConfigDesc,
+	OperationResult,
 	OperationResultStatus,
-	SetConfigResult,
 	TakePictureOption,
 } from '../Tethr'
 import {TethrObject} from '../TethrObject'
@@ -146,7 +146,7 @@ export class TethrSigma extends TethrPTPUSB {
 	public async set<K extends keyof ConfigType>(
 		name: K,
 		value: ConfigType[K]
-	): Promise<SetConfigResult<ConfigType[K]>> {
+	): Promise<OperationResult<void>> {
 		let status: OperationResultStatus
 
 		switch (name) {
@@ -197,7 +197,6 @@ export class TethrSigma extends TethrPTPUSB {
 
 		return {
 			status,
-			value: await this.get(name),
 		}
 	}
 

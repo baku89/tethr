@@ -14,10 +14,12 @@ export type ITethrEventTypes = {
 
 export type OperationResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
 
-export interface SetConfigResult<T extends ConfigType[keyof ConfigType]> {
-	status: OperationResultStatus
-	value: T | null
-}
+export type OperationResult<T> = T extends void
+	? {status: OperationResultStatus}
+	: {
+			status: OperationResultStatus
+			value: T
+	  }
 
 export type ConfigDesc<T> = {
 	value: T | null
@@ -47,7 +49,7 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	public abstract set<N extends ConfigName>(
 		name: N,
 		value: ConfigType[N]
-	): Promise<SetConfigResult<ConfigType[N]>>
+	): Promise<OperationResult<void>>
 	public abstract getDesc<N extends ConfigName>(
 		name: N
 	): Promise<ConfigDesc<ConfigType[N]>>

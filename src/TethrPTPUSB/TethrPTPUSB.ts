@@ -25,7 +25,7 @@ import {
 	PTPFilesystemType,
 	PTPStorageType,
 } from '../PTPEnum'
-import {ConfigDesc, SetConfigResult, TakePictureOption, Tethr} from '../Tethr'
+import {ConfigDesc, OperationResult, TakePictureOption, Tethr} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
 
@@ -151,20 +151,18 @@ export class TethrPTPUSB extends Tethr {
 	public async set<K extends keyof ConfigType>(
 		name: K,
 		value: ConfigType[K]
-	): Promise<SetConfigResult<ConfigType[K]>> {
+	): Promise<OperationResult<void>> {
 		const scheme = this.devicePropScheme[name]
 
 		if (!scheme) {
 			return {
 				status: 'unsupported',
-				value: null,
 			}
 		}
 
 		if (!(await this.isDevicePropSupported(scheme.devicePropCode))) {
 			return {
 				status: 'unsupported',
-				value: null,
 			}
 		}
 
@@ -174,7 +172,6 @@ export class TethrPTPUSB extends Tethr {
 		if (devicePropData === null) {
 			return {
 				status: 'invalid',
-				value: await this.get(name),
 			}
 		}
 
@@ -222,7 +219,6 @@ export class TethrPTPUSB extends Tethr {
 
 		return {
 			status: resCode === ResCode.OK ? 'ok' : 'busy',
-			value: await this.get(name),
 		}
 	}
 

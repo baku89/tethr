@@ -1,10 +1,5 @@
 import {ConfigType} from './configs'
-import {
-	ConfigDesc,
-	SetConfigResult as SetConfigResult,
-	TakePictureOption,
-	Tethr,
-} from './Tethr'
+import {ConfigDesc, OperationResult, TakePictureOption, Tethr} from './Tethr'
 import {TethrObject} from './TethrObject'
 
 export function initTethrWebcam(media: MediaStream) {
@@ -42,12 +37,9 @@ export class TethrWebcam extends Tethr {
 		return []
 	}
 
-	public async set<N extends keyof ConfigType>(): Promise<
-		SetConfigResult<ConfigType[N]>
-	> {
+	public async set(): Promise<OperationResult<void>> {
 		return {
 			status: 'unsupported',
-			value: null,
 		}
 	}
 	public async getDesc<N extends keyof ConfigType>(
