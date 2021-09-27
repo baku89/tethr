@@ -161,6 +161,13 @@ export class TethrPTPUSB extends Tethr {
 			}
 		}
 
+		if (!(await this.isDevicePropSupported(scheme.devicePropCode))) {
+			return {
+				status: 'unsupported',
+				value: null,
+			}
+		}
+
 		const encode = scheme.encode as (value: ConfigType[K]) => number
 		const devicePropData = encode(value)
 
@@ -246,20 +253,20 @@ export class TethrPTPUSB extends Tethr {
 	private async getDevicePropDesc<Name extends keyof ConfigType>(
 		scheme: DevicePropSchemeEntry<Name>
 	) {
-		const {resCode, data} = await this.device.receiveData({
-			label: 'GetDevicePropDesc',
-			opcode: OpCode.GetDevicePropDesc,
-			parameters: [scheme.devicePropCode],
-			expectedResCodes: [ResCode.OK, ResCode.DevicePropNotSupported],
-		})
-
-		if (resCode === ResCode.DevicePropNotSupported) {
+		// Check if the deviceProps is supported
+		if (!(await this.isDevicePropSupported(scheme.devicePropCode))) {
 			return {
 				writable: false,
 				value: null,
 				options: [],
 			}
 		}
+
+		const {data} = await this.device.receiveData({
+			label: 'GetDevicePropDesc',
+			opcode: OpCode.GetDevicePropDesc,
+			parameters: [scheme.devicePropCode],
+		})
 
 		const decode = scheme.decode as (data: number) => any
 
@@ -337,6 +344,11 @@ export class TethrPTPUSB extends Tethr {
 			value,
 			options,
 		}
+	}
+
+	private async isDevicePropSupported(code: number): Promise<boolean> {
+		const {devicePropsSupported} = await this.getDeviceInfo()
+		return devicePropsSupported.includes(code)
 	}
 
 	public async runAutoFocus(): Promise<boolean> {
