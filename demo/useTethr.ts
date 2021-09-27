@@ -1,6 +1,8 @@
 import {saveAs} from 'file-saver'
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
+import {ConfigDesc} from '@/Tethr'
+
 import {detectTethr, Tethr} from '../src'
 import {ConfigType} from '../src/configs'
 
@@ -49,7 +51,7 @@ export function useTethrConfig<Name extends keyof ConfigType>(
 				config.updating = false
 			}
 
-			cam.on(`${name}Changed`, (desc: any) => {
+			cam.on(`${name}Changed` as any, (desc: ConfigDesc<ConfigType[Name]>) => {
 				config.value = desc.value
 				config.writable = desc.writable
 				config.options = desc.options
