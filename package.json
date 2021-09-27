@@ -3,14 +3,15 @@
 	"author": "Baku Hashimoto <mail@baku89.com> (https://baku89.com)",
 	"version": "0.0.0",
 	"description": "Tethers USB-connected cameras, webcam, and smartphone camera from browser",
-	"main": "build/index.js",
-	"types": "build/index.d.ts",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"scripts": {
-		"dev": "parcel demo/index.html --no-cache",
+		"dev": "parcel demo/index.html --no-cache --public-url . --dist-dir public",
 		"lint": "eslint --fix --ext .ts --ignore-path .gitignore .",
 		"format": "prettier --write src demo",
 		"fix": "npm run format && npm run lint",
-		"build": "tsc --project tsconfig.prod.json --outDir build",
+		"build": "tsc --project tsconfig.prod.json --outDir dist",
+		"deploy:demo": "gh-pages -d public",
 		"prepare": "npm run build"
 	},
 	"files": [
