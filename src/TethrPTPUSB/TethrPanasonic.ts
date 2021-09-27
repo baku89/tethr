@@ -13,7 +13,12 @@ import {
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPEvent} from '../PTPDevice'
-import {ConfigDesc, OperationResult, TakePictureOption} from '../Tethr'
+import {
+	ConfigDesc,
+	OperationResult,
+	OperationResultStatus,
+	TakePictureOption,
+} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil} from '../util'
 import {TethrPTPUSB} from './TethrPTPUSB'
@@ -93,7 +98,7 @@ enum ObjectFormatCodePanasonic {
 	Raw = 0x3800,
 }
 
-type DevicePropScheme = {
+type DevicePropSchemePanasonic = {
 	[Name in keyof ConfigType]?: {
 		getCode: number
 		setCode?: number
@@ -103,10 +108,17 @@ type DevicePropScheme = {
 	}
 }
 
+interface LiveviewSetting {
+	width: number
+	height: number
+	frameSize: number
+	fps: number
+}
+
 export class TethrPanasonic extends TethrPTPUSB {
 	private _liveviewing = false
 
-	private devicePropSchemePanasonic: DevicePropScheme = {
+	private devicePropSchemePanasonic: DevicePropSchemePanasonic = {
 		exposureMode: {
 			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
 			valueSize: 2,
@@ -333,13 +345,24 @@ export class TethrPanasonic extends TethrPTPUSB {
 		name: N,
 		value: ConfigType[N]
 	): Promise<OperationResult<void>> {
-		const scheme = this.devicePropSchemePanasonic[name] as
-			| DevicePropScheme[N]
-			| undefined
+		const scheme = this.devicePropSchemePanasonic[name] ?? null
 
-		if (!scheme)
-			throw new Error(`Prop ${name} is not supported for this device`)
+		if (scheme) {
+			return this.setDevicePropPanasonic(name, scheme, value)
+		}
 
+		if (name === 'liveviewSize') {
+			this.setLiveviewSize(value)
+		}
+
+		return super.set(name, value)
+	}
+
+	private async setDevicePropPanasonic<N extends keyof ConfigType>(
+		name: N,
+		scheme: NonNullable<DevicePropSchemePanasonic[N]>,
+		value: ConfigType[N]
+	): Promise<OperationResult<void>> {
 		const setCode = scheme.setCode
 		const encode = scheme.encode as (value: ConfigType[N]) => number | null
 		const valueSize = scheme.valueSize
@@ -379,17 +402,27 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	public async getDesc<K extends keyof ConfigType, T extends ConfigType[K]>(
-		name: K
-	): Promise<ConfigDesc<T>> {
-		const scheme = this.devicePropSchemePanasonic[name]
+	public getDesc<N extends keyof ConfigType>(
+		name: N
+	): Promise<ConfigDesc<ConfigType[N]>> {
+		const scheme = this.devicePropSchemePanasonic[name] ?? null
 
-		if (!scheme) {
-			return super.getDesc(name)
+		if (scheme) {
+			return this.getDevicePropDescPanasonic(scheme)
 		}
 
+		if (name === 'liveviewSize') {
+			return this.getLiveviewSizeDesc() as Promise<ConfigDesc<ConfigType[N]>>
+		}
+
+		return super.getDesc(name)
+	}
+
+	private async getDevicePropDescPanasonic<N extends keyof ConfigType>(
+		scheme: NonNullable<DevicePropSchemePanasonic[N]>
+	): Promise<ConfigDesc<ConfigType[N]>> {
 		const getCode = scheme.getCode
-		const decode = scheme.decode as (data: number) => T
+		const decode = scheme.decode as (data: number) => ConfigType[N]
 		const valueSize = scheme.valueSize
 
 		const {data} = await this.device.receiveData({
@@ -546,7 +579,43 @@ export class TethrPanasonic extends TethrPTPUSB {
 		this._liveviewing = false
 	}
 
-	public async getLiveviewRecommendedSettings() {
+	private async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
+		const setting = await this.getLiveviewSetting()
+		const settingOptions = await this.getLiveviewRecommendedSettings()
+
+		const value = getSizeStringFromSetting(setting)
+		const options = settingOptions.map(getSizeStringFromSetting)
+
+		return {
+			writable: options.length > 0,
+			value,
+			options,
+		}
+
+		function getSizeStringFromSetting(setting: LiveviewSetting) {
+			return `${setting.width}x${setting.height}`
+		}
+	}
+
+	private async setLiveviewSize(
+		value: string
+	): Promise<OperationResultStatus<void>> {
+		const [width, height] = value.split('x').map(parseInt)
+
+		const settings = await this.getLiveviewRecommendedSettings()
+
+		const setting = settings.find(s => s.width === width && s.height === height)
+
+		if (!setting) {
+			return {status: 'invalid'}
+		}
+
+		await this.setLiveviewSetting(setting)
+
+		return {status: 'ok'}
+	}
+
+	private async getLiveviewRecommendedSettings(): Promise<LiveviewSetting[]> {
 		const {data} = await this.device.receiveData({
 			opcode: OpCodePanasonic.GetLiveviewSettings,
 			parameters: [DevicePropCodePanasonic.Liveview_RecomImg],
@@ -572,7 +641,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return settings
 	}
 
-	public async getLiveviewSetting() {
+	private async getLiveviewSetting(): Promise<LiveviewSetting> {
 		const {data} = await this.device.receiveData({
 			opcode: OpCodePanasonic.GetLiveviewSettings,
 			parameters: [DevicePropCodePanasonic.Liveview_TransImg],
@@ -591,20 +660,15 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	public async setLiveviewSetting(
-		width: number,
-		height: number,
-		frameSize: number,
-		fps: number
-	): Promise<void> {
+	private async setLiveviewSetting(setting: LiveviewSetting): Promise<void> {
 		const dataView = new PTPDataView()
 
 		dataView.writeUint32(DevicePropCodePanasonic.Liveview_TransImg)
 		dataView.writeUint32(8)
-		dataView.writeUint16(height)
-		dataView.writeUint16(width)
-		dataView.writeUint16(frameSize)
-		dataView.writeUint16(fps)
+		dataView.writeUint16(setting.height)
+		dataView.writeUint16(setting.width)
+		dataView.writeUint16(setting.frameSize)
+		dataView.writeUint16(setting.fps)
 
 		await this.device.sendData({
 			opcode: OpCodePanasonic.SetLiveviewSettings,

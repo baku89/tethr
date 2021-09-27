@@ -104,6 +104,7 @@ export type ConfigType = {
 	copyrightInfo: string
 	iso: ISO // added
 	liveviewMagnifyRatio: number // added
+	liveviewSize: string // added
 
 	[v: `0x${string}`]: any
 }
