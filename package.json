@@ -5,8 +5,13 @@
 		"dev": "parcel demo/index.html --no-cache",
 		"lint": "eslint --fix --ext .ts --ignore-path .gitignore .",
 		"format": "prettier --write src demo",
-		"fix": "yarn run format && yarn run lint"
+		"fix": "npm run format && npm run lint",
+		"build": "tsc --project tsconfig.prod.json --outDir build",
+		"prepare": "npm run build"
 	},
+	"files": [
+		"build"
+	],
 	"license": "MIT",
 	"devDependencies": {
 		"@parcel/transformer-stylus": "2.0.0-rc.0",

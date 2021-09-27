@@ -1,0 +1,7 @@
+{
+	"extends": "./tsconfig",
+	"compilerOptions": {
+		"declaration": true
+	},
+	"include": ["src/index.ts"]
+}
