@@ -129,6 +129,7 @@ export class TethrSigma extends TethrPTPUSB {
 			'imageAspect',
 			'imageSize',
 			'imageQuality',
+			'liveviewMagnifyRatio',
 		]
 	}
 
@@ -182,6 +183,9 @@ export class TethrSigma extends TethrPTPUSB {
 			case 'imageQuality':
 				status = await this.setImageQuality(value as string)
 				break
+			case 'liveviewMagnifyRatio':
+				status = await this.setLiveviewMagnifyLevelRatio(value as number)
+				break
 			default:
 				status = 'unsupported'
 		}
@@ -195,6 +199,12 @@ export class TethrSigma extends TethrPTPUSB {
 			status,
 			value: await this.get(name),
 		}
+	}
+
+	public async get<N extends keyof ConfigType>(
+		name: N
+	): Promise<ConfigType[N] | null> {
+		return (await this.getDesc(name)).value
 	}
 
 	public async getDesc<N extends keyof ConfigType, T extends ConfigType[N]>(
@@ -229,6 +239,8 @@ export class TethrSigma extends TethrPTPUSB {
 				return this.getImageSizeDesc() as ReturnType
 			case 'imageQuality':
 				return this.getImageQualityDesc() as ReturnType
+			case 'liveviewMagnifyRatio':
+				return this.getLiveviewMagnifyLevelRatioDesc() as ReturnType
 		}
 
 		return super.getDesc(name)
@@ -802,6 +814,30 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	private async setLiveviewMagnifyLevelRatio(
+		value: number
+	): Promise<OperationResultStatus> {
+		const id = this.liveviewMagnifyRatioTable.getKey(value)
+		if (!id) return 'invalid'
+
+		return this.setCamData(OpCodeSigma.SetCamDataGroup4, 5, id)
+	}
+
+	private async getLiveviewMagnifyLevelRatioDesc(): Promise<
+		ConfigDesc<number>
+	> {
+		const {lvMagnifyRatio} = await this.getCamDataGroup4()
+		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
+
+		const {lvMagnifyRatio: options} = await this.getCamCanSetInfo5()
+
+		return {
+			writable: options.length > 0,
+			value,
+			options,
+		}
+	}
+
 	private async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
 		const {batteryLevel} = await this.getCamDataGroup1()
 		const value = this.batteryLevelTable.get(batteryLevel) ?? null
@@ -1000,7 +1036,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		return {
 			dcCropMode: dataView.readUint8(),
-			LVMagnifyRatio: dataView.readUint8(),
+			lvMagnifyRatio: dataView.readUint8(),
 			isoExtension: dataView.readUint8(),
 			continuousShootingSpeed: dataView.readUint8(),
 			hdr: dataView.readUint8(),
@@ -1048,6 +1084,7 @@ export class TethrSigma extends TethrPTPUSB {
 			whiteBalance: {tag: 301, type: IFDType.Byte},
 			colorTemerature: {tag: 302, type: IFDType.Short},
 			colorMode: {tag: 320, type: IFDType.Byte},
+			lvMagnifyRatio: {tag: 701, type: IFDType.Byte},
 		})
 	}
 
@@ -1515,6 +1552,12 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x2, 'A'],
 		[0x3, 'S'],
 		[0x4, 'M'],
+	])
+
+	protected liveviewMagnifyRatioTable = new BiMap<number, number>([
+		[0x1, 1],
+		[0x2, 4],
+		[0x3, 8],
 	])
 
 	private batteryLevelTable = new Map<number, null | BatteryLevel>([

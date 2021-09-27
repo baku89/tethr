@@ -152,6 +152,7 @@ export function useTethr() {
 			timelapseNumber: useTethrConfig(camera, 'timelapseNumber'),
 			timelapseInterval: useTethrConfig(camera, 'timelapseInterval'),
 			focalLength: useTethrConfig(camera, 'focalLength'),
+			liveviewMagnifyRatio: useTethrConfig(camera, 'liveviewMagnifyRatio'),
 			batteryLevel: useTethrConfig(camera, 'batteryLevel'),
 		},
 
