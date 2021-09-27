@@ -13,12 +13,7 @@ import {
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPEvent} from '../PTPDevice'
-import {
-	ConfigDesc,
-	OperationResult,
-	OperationResultStatus,
-	TakePictureOption,
-} from '../Tethr'
+import {ConfigDesc, OperationResult, TakePictureOption} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil} from '../util'
 import {TethrPTPUSB} from './TethrPTPUSB'
@@ -597,9 +592,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	private async setLiveviewSize(
-		value: string
-	): Promise<OperationResultStatus<void>> {
+	private async setLiveviewSize(value: string): Promise<OperationResult<void>> {
 		const [width, height] = value.split('x').map(parseInt)
 
 		const settings = await this.getLiveviewRecommendedSettings()
