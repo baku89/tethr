@@ -354,7 +354,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 
 		const dataView = new PTPDataView()
-		const encodedValue = await encode(value)
+		const encodedValue = encode(value)
 
 		if (encodedValue === null) {
 			return {
@@ -388,7 +388,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		const scheme = this.devicePropSchemePanasonic[name]
 
 		if (!scheme) {
-			return await super.getDesc(name)
+			return super.getDesc(name)
 		}
 
 		const getCode = scheme.getCode
@@ -403,18 +403,22 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		const dataView = new PTPDataView(data)
 
-		const getValue =
-			valueSize === 1
-				? dataView.readUint8
-				: valueSize === 2
-				? dataView.readUint16
-				: dataView.readUint32
-		const getArray =
-			valueSize === 1
-				? dataView.readUint8Array
-				: valueSize === 2
-				? dataView.readUint16Array
-				: dataView.readUint32Array
+		let getValue: () => number
+		let getArray: () => number[]
+		switch (valueSize) {
+			case 1:
+				getValue = dataView.readUint8
+				getArray = dataView.readUint8Array
+				break
+			case 2:
+				getValue = dataView.readUint16
+				getArray = dataView.readUint16Array
+				break
+			case 4:
+				getValue = dataView.readUint32
+				getArray = dataView.readUint32Array
+				break
+		}
 
 		dataView.skip(4) // devicePropCode
 		const headerLength = dataView.readUint32()
@@ -553,11 +557,11 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		const dataView = new PTPDataView(data)
 
-		const receivedPropCode = dataView.readUint32()
-		const dataSize = dataView.readUint32()
+		/*const receivedPropCode =*/ dataView.readUint32()
+		/*const dataSize =*/ dataView.readUint32()
 
 		const settingsNum = dataView.readUint16()
-		const structSize = dataView.readUint16()
+		/*const structSize =*/ dataView.readUint16()
 
 		const settings = _.times(settingsNum, () => {
 			return {
@@ -622,7 +626,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		if (resCode !== ResCode.OK) return null
 
-		let histogram!: Uint8Array | undefined
+		// let histogram!: Uint8Array | undefined
 
 		const dataView = new DataView(data)
 
@@ -650,11 +654,11 @@ export class TethrPanasonic extends TethrPTPUSB {
 				case 0x17000003: {
 					// Histogram
 					// const valid = dataView.getUint32(offset + 4, true)
-					const samples = dataView.getUint32(offset + 8, true)
+					// const samples = dataView.getUint32(offset + 8, true)
 					// const elems = dataView.getUint32(offset + 12, true)
-					histogram = new Uint8Array(
-						data.slice(offset + 16, offset + 16 + samples)
-					)
+					// histogram = new Uint8Array(
+					// 	data.slice(offset + 16, offset + 16 + samples)
+					// )
 					break
 				}
 				case 0x17000004: {
