@@ -3,7 +3,7 @@
 		<dt>{{ label }}</dt>
 		<dd style="font-family: monospace">
 			<template v-if="config.writable">
-				<select :value="valueIndex" @change="update">
+				<select :value="valueIndex" @change.prevent="update">
 					<option
 						v-for="(v, i) in config.options"
 						:key="i"
