@@ -1,5 +1,5 @@
 {
-	"name": "camera-control",
+	"name": "tethr",
 	"version": "0.0.0",
 	"scripts": {
 		"dev": "parcel demo/index.html --no-cache",
