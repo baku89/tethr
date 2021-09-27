@@ -12,7 +12,6 @@ const TransparentPng =
 export interface TethrConfig<T extends ConfigType[keyof ConfigType]> {
 	writable: boolean
 	value: T | null
-	updating: boolean
 	update: (value: T) => void
 	options: T[]
 }
@@ -24,7 +23,6 @@ export function useTethrConfig<Name extends keyof ConfigType>(
 	const config = reactive({
 		writable: false,
 		value: null,
-		updating: false,
 		update: () => null,
 		options: [],
 	}) as TethrConfig<ConfigType[Name]>
@@ -46,9 +44,7 @@ export function useTethrConfig<Name extends keyof ConfigType>(
 			config.options = desc.options
 
 			config.update = async (value: any) => {
-				config.updating = true
-				config.value = (await cam.set(name, value)).value
-				config.updating = false
+				cam.set(name, value)
 			}
 
 			cam.on(`${name}Changed` as any, (desc: ConfigDesc<ConfigType[Name]>) => {
