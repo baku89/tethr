@@ -1,4 +1,5 @@
+import {ConfigType} from '../src/configs'
 import {detectTethr} from './detectTethr'
-import {Tethr} from './Tethr'
+import {ConfigDesc, Tethr} from './Tethr'
 
-export {detectTethr, Tethr}
+export {detectTethr, Tethr, ConfigType, ConfigDesc}
