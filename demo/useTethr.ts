@@ -1,7 +1,7 @@
 import {saveAs} from 'file-saver'
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
-import {ConfigDesc, ConfigType, detectTethr, Tethr} from '../src'
+import {ConfigDesc, ConfigType, detectTethr, Tethr} from '~/src'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
