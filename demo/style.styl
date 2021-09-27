@@ -14,8 +14,7 @@ html
 	font-size 15px
 	font-family 'JetBrains Mono', monospace
 
-button, input, select
-	margin 0.5em 0.1em
+input, select, button
 	padding 0 0.5em
 	height 2em
 	border none
@@ -24,6 +23,9 @@ button, input, select
 	color inherit
 	font inherit
 	accent-color inherit
+
+	&.red
+		background #a22041
 
 	&:not([disabled])
 		&:hover, &:focus
@@ -46,21 +48,22 @@ aside
 	height 100%
 	border-left 2px solid #2b2b2b
 
-	input, select
-		width 8em
-
 h2
-	margin 0.5em 0 1em
+	margin 2em 0 0.5em
 
 dl
 	display grid
-	column-gap 1em
+	column-gap 0.5em
+	row-gap 1em
 	grid-template-columns 1fr min-content
 
 dt
-	margin-top 0.5em
 	height 2em
 	line-height 2em
+
+dd
+	input, select, button
+		width 8em
 
 .view
 	display block

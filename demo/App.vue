@@ -1,24 +1,30 @@
 <template>
 	<div class="app">
 		<main>
-			<button @click="toggleCameraConnection">
-				{{ camera ? 'Disconnect' : 'Connect' }}
-			</button>
-			<button @click="runAutoFocus">AF-S</button>
-			<button @click="takePicture">Take Picture</button>
-			<button @click="toggleLiveview">
-				{{ liveviewing ? 'Stop LV' : 'Start LV' }}
-			</button>
-
-			<br />
-
 			<video class="view lv" :srcObject.prop="liveviewMediaStream" autoplay />
-
 			<img class="view picture" :src="lastPictureURL" />
 		</main>
 
 		<aside>
-			<h2>Device Configs</h2>
+			<button @click="toggleCameraConnection">
+				{{ camera ? 'Disconnect' : 'Connect' }}
+			</button>
+
+			<h2>Actions</h2>
+			<dl v-if="camera">
+				<dt>takePicture</dt>
+				<dd><button class="red" @click="takePicture">Shutter</button></dd>
+				<dt>liveview</dt>
+				<dd>
+					<button @click="toggleLiveview">
+						{{ liveviewing ? 'Stop' : 'Start' }}
+					</button>
+				</dd>
+				<dt>autoFocus</dt>
+				<dd><button @click="runAutoFocus">Run</button></dd>
+			</dl>
+
+			<h2>Configs</h2>
 			<dl>
 				<TethrConfig
 					template
