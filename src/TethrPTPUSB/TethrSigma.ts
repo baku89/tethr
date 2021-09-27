@@ -190,7 +190,7 @@ export class TethrSigma extends TethrPTPUSB {
 				status = 'unsupported'
 		}
 
-		for (const config of (await this.listConfigs()) as (keyof ConfigType)[]) {
+		for (const config of await this.listConfigs()) {
 			const desc = await this.getDesc(config)
 			this.emit(`${config}Changed`, desc)
 		}
