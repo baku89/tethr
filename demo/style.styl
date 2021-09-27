@@ -8,92 +8,65 @@
 	outline none
 	-webkit-tap-highlight-color transparent
 
-::selection
-	background red
-	color white
-
 html
-	color rgb(36, 41, 47)
-	font-weight 200
-	font-size 16px
+	background #16160e
+	color #f7fcfe
+	font-size 15px
 	font-family 'JetBrains Mono', monospace
-	accent-color red
 
 button, input, select
 	margin 0.5em 0.1em
-	padding 0.2em
-	border 2px solid rgb(36, 41, 47)
+	padding 0 0.5em
+	height 2em
+	border none
 	border-radius 4px
-	background inherit
+	background #2b2b2b
 	color inherit
 	font inherit
 	accent-color inherit
 
-	&:hover, &:focus
-		border-color red
+	&:not([disabled])
+		&:hover, &:focus
+			background #444
+			transition all ease 0.1s
 
 	&[disabled]
-		border-style dotted
+		color #aaa
 
 .app
 	display grid
 	height 100vh
-	grid-template-columns 1fr min-content
+	grid-template-columns 1fr 25em
 
 	& > *
-		padding 0.5em
+		padding 1em
 
 aside
 	overflow-y scroll
 	height 100%
-	border-left 2px solid currentColor
+	border-left 2px solid #2b2b2b
 
 	input, select
 		width 8em
 
-h1
-	overflow hidden
-	margin 0
-	width 8em
-	background url('../docs/logo.svg') no-repeat
-	background-size contain
-	text-indent 100%
-	aspect-ratio 10 / 3
-
 h2
-	margin 1em 0 0.3em
+	margin 0.5em 0 1em
 
 dl
 	display grid
 	column-gap 1em
-	grid-template-columns min-content 1fr
-
-pre
-	width 25em
-	white-space pre-wrap
-	word-break break-all
-	font-size 0.8em
+	grid-template-columns 1fr min-content
 
 dt
 	margin-top 0.5em
+	height 2em
+	line-height 2em
 
 .view
 	display block
+	margin-top 0.5em
 	width 100%
 	border-radius 0.5em
+	background-color #2b2b2b
 	aspect-ratio 16 / 9
 	object-fit contain
-
-	&.lv
-		background-color rgb(36, 41, 47)
-		background-image radial-gradient(circle, #444 15%, transparent 10%), radial-gradient(circle, #444 15%, transparent 10%)
-		background-position 0 0, 0px 0px
-		background-size 8px 8px
-
-	&.picture
-		background linear-gradient(45deg, #444 5%, rgb(36, 41, 47) 5%, rgb(36, 41, 47) 45%, #444 45%, #444 55%, rgb(36, 41, 47) 55%, rgb(36, 41, 47) 95%, #444 95%)
-		background-position 0px 0px
-		background-size 8px 8px
-
-	& + &
-		margin-top 0.5em

@@ -12,24 +12,21 @@
 
 			<br />
 
-			<video
-				class="view lv"
-				id="liveview"
-				:srcObject.prop="liveviewMediaStream"
-				autoplay
-			/>
+			<video class="view lv" :srcObject.prop="liveviewMediaStream" autoplay />
 
-			<img class="view picture" id="imageViewer" :src="lastPictureURL" />
+			<img class="view picture" :src="lastPictureURL" />
 		</main>
 
 		<aside>
-			<h1>Tethr</h1>
-
 			<h2>Device Configs</h2>
 			<dl>
-				<template v-for="(config, name) in configs" :key="name">
-					<TethrConfig :label="name" :config="config" />
-				</template>
+				<TethrConfig
+					template
+					v-for="(config, name) in configs"
+					:key="name"
+					:label="name"
+					:config="config"
+				/>
 			</dl>
 		</aside>
 	</div>
