@@ -36,6 +36,7 @@ export default defineComponent({
 			required: true,
 		},
 	},
+	inheritAttrs: false,
 	setup(props) {
 		const valueIndex = computed(() => {
 			const {config} = props
