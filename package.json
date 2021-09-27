@@ -1,6 +1,10 @@
 {
 	"name": "tethr",
+	"author": "Baku Hashimoto <mail@baku89.com> (https://baku89.com)",
 	"version": "0.0.0",
+	"description": "Tethers USB-connected cameras, webcam, and smartphone camera from browser",
+	"main": "build/index.js",
+	"types": "build/index.d.ts",
 	"scripts": {
 		"dev": "parcel demo/index.html --no-cache",
 		"lint": "eslint --fix --ext .ts --ignore-path .gitignore .",
@@ -45,5 +49,5 @@
 	},
 	"browserslist": [
 		"since 2020-12"
-	]
+	],
 }
