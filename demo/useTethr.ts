@@ -75,9 +75,16 @@ export function useTethr() {
 		}
 
 		if (!camera.value) {
-			const cams = await detectTethr()
-			if (cams.length === 0) throw new Error('No cameras')
-			if (cams.length > 1) throw new Error('Multiple cameras')
+			let cams: Tethr[]
+
+			try {
+				cams = await detectTethr()
+			} catch (err) {
+				if (err instanceof Error) {
+					alert(err.message)
+				}
+				return
+			}
 
 			const cam = cams[0]
 			await cam.open()
