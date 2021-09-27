@@ -6,7 +6,11 @@ module.exports = {
 		commonjs: true,
 	},
 	parser: '@typescript-eslint/parser',
-	extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+	extends: [
+		'eslint:recommended',
+		'plugin:@typescript-eslint/recommended',
+		'prettier',
+	],
 	parserOptions: {
 		sourceType: 'module',
 		ecmaVersion: 2020,
