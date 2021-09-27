@@ -12,6 +12,9 @@ enum PTPType {
 	Event = 0x4,
 }
 
+const PTPCommandMaxByteLength = 12 + 4 * 3
+const PTPDefaultTimeoutMs = 1000
+
 interface PTPSendCommandOption {
 	label?: string
 	opcode: number
@@ -49,8 +52,6 @@ interface BulkInInfo {
 	transactionId: number
 	payload: ArrayBuffer
 }
-
-const PTP_COMMAND_BYTES_MAX = 12 + 4 * 3
 
 interface EventTypes {
 	[name: `ptpevent:${string}`]: PTPEvent
@@ -137,105 +138,117 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	}
 
 	public sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse> => {
-		return this.bulkInQueue.add(() => this.sendCommandNow(option))
+		const queue = () =>
+			new Promise<PTPResponse>((resolve, reject) => {
+				console.groupCollapsed(`Send Command [${option.label}]`)
+
+				this.sendCommandNow(option).then(resolve)
+
+				setTimeout(() => reject('Timeout'), PTPDefaultTimeoutMs)
+			}).finally(console.groupEnd)
+
+		return this.bulkInQueue.add(queue)
 	}
 
 	public sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
-		return this.bulkInQueue.add(() => this.sendDataNow(option))
+		const queue = () =>
+			new Promise<PTPResponse>((resolve, reject) => {
+				console.groupCollapsed(`Receive Data [${option.label}]`)
+
+				this.sendDataNow(option).then(resolve)
+
+				setTimeout(() => reject('Timeout'), PTPDefaultTimeoutMs)
+			}).finally(console.groupEnd)
+
+		return this.bulkInQueue.add(queue)
 	}
 
 	public receiveData = (
 		option: PTPReceiveDataOption
 	): Promise<PTPDataResponse> => {
-		return this.bulkInQueue.add(() => this.receiveDataNow(option))
+		const queue = () =>
+			new Promise<PTPDataResponse>((resolve, reject) => {
+				console.groupCollapsed(`Receive Data [${option.label}]`)
+
+				this.receiveDataNow(option).then(resolve)
+
+				setTimeout(() => reject('Timeout'), PTPDefaultTimeoutMs)
+			}).finally(console.groupEnd)
+
+		return this.bulkInQueue.add(queue)
 	}
 
 	private sendCommandNow = async (
 		option: PTPSendCommandOption
 	): Promise<PTPResponse> => {
-		const {opcode, label, parameters, expectedResCodes} = {
-			label: '',
+		const {opcode, parameters, expectedResCodes} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
 			...option,
 		}
 		const id = this.generateTransactionId()
 
-		try {
-			console.groupCollapsed(`Send Command [${label}]`)
+		await this.transferOutCommand(opcode, id, parameters)
 
-			await this.transferOutCommand(opcode, id, parameters)
+		const res = await this.waitBulkIn(id, PTPCommandMaxByteLength)
 
-			const res = await this.waitBulkIn(id, PTP_COMMAND_BYTES_MAX)
+		// Error checking
+		if (res.type !== PTPType.Response) {
+			throw new Error(
+				`Expected response type: ${PTPType.Response}, got: ${res.type}`
+			)
+		}
 
-			// Error checking
-			if (res.type !== PTPType.Response) {
-				throw new Error(
-					`Expected response type: ${PTPType.Response}, got: ${res.type}`
-				)
-			}
+		if (!expectedResCodes.includes(res.code)) {
+			const expected = expectedResCodes.map(toHexString)
+			const got = toHexString(res.code)
+			throw new Error(`Expected rescode=[${expected}], got= ${got}`)
+		}
 
-			if (!expectedResCodes.includes(res.code)) {
-				const expected = expectedResCodes.map(toHexString)
-				const got = toHexString(res.code)
-				throw new Error(`Expected rescode=[${expected}], got= ${got}`)
-			}
-
-			return {
-				resCode: res.code,
-				parameters: [...new Uint32Array(res.payload)],
-			}
-		} finally {
-			console.groupEnd()
+		return {
+			resCode: res.code,
+			parameters: [...new Uint32Array(res.payload)],
 		}
 	}
 
 	private sendDataNow = async (
 		option: PTPSendDataOption
 	): Promise<PTPResponse> => {
-		const {opcode, data, label, parameters, expectedResCodes} = {
-			label: '',
+		const {opcode, data, parameters, expectedResCodes} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
 			...option,
 		}
 		const id = this.generateTransactionId()
 
-		try {
-			console.groupCollapsed(`Send Data [${label}]`)
+		await this.transferOutCommand(opcode, id, parameters)
+		await this.transferOutData(opcode, id, data)
 
-			await this.transferOutCommand(opcode, id, parameters)
-			await this.transferOutData(opcode, id, data)
+		const res = await this.waitBulkIn(id, PTPCommandMaxByteLength)
 
-			const res = await this.waitBulkIn(id, PTP_COMMAND_BYTES_MAX)
+		// Error checking
+		if (res.type !== PTPType.Response) {
+			throw new Error(
+				`Expected response type: ${PTPType.Response}, got: ${res.type}`
+			)
+		}
 
-			// Error checking
-			if (res.type !== PTPType.Response) {
-				throw new Error(
-					`Expected response type: ${PTPType.Response}, got: ${res.type}`
-				)
-			}
+		if (!expectedResCodes.includes(res.code)) {
+			const expected = expectedResCodes.map(toHexString)
+			const got = toHexString(res.code)
+			throw new Error(`Expected rescode=[${expected}], got=${got}`)
+		}
 
-			if (!expectedResCodes.includes(res.code)) {
-				const expected = expectedResCodes.map(toHexString)
-				const got = toHexString(res.code)
-				throw new Error(`Expected rescode=[${expected}], got=${got}`)
-			}
-
-			return {
-				resCode: res.code,
-				parameters: [...new Uint32Array(res.payload)],
-			}
-		} finally {
-			console.groupEnd()
+		return {
+			resCode: res.code,
+			parameters: [...new Uint32Array(res.payload)],
 		}
 	}
 
 	private receiveDataNow = async (
 		option: PTPReceiveDataOption
 	): Promise<PTPDataResponse> => {
-		const {opcode, label, parameters, expectedResCodes, maxByteLength} = {
-			label: '',
+		const {opcode, parameters, expectedResCodes, maxByteLength} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
 			maxByteLength: 10_000, // = 10KB. Looks enough for non-media data transfer
@@ -243,42 +256,36 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		}
 		const id = this.generateTransactionId()
 
-		console.groupCollapsed(`Receive Data [${label}]`)
+		await this.transferOutCommand(opcode, id, parameters)
+		const res1 = await this.waitBulkIn(id, maxByteLength)
 
-		try {
-			await this.transferOutCommand(opcode, id, parameters)
-			const res1 = await this.waitBulkIn(id, maxByteLength)
-
-			if (res1.type === PTPType.Response) {
-				if (expectedResCodes.includes(res1.code)) {
-					console.groupEnd()
-					return {
-						resCode: res1.code,
-						parameters: [],
-						data: new ArrayBuffer(0),
-					}
+		if (res1.type === PTPType.Response) {
+			if (expectedResCodes.includes(res1.code)) {
+				console.groupEnd()
+				return {
+					resCode: res1.code,
+					parameters: [],
+					data: new ArrayBuffer(0),
 				}
 			}
+		}
 
-			if (res1.type !== PTPType.Data) {
-				throw new Error(`Cannot receive data code=${toHexString(res1.code)}`)
-			}
+		if (res1.type !== PTPType.Data) {
+			throw new Error(`Cannot receive data code=${toHexString(res1.code)}`)
+		}
 
-			const res2 = await this.waitBulkIn(id, PTP_COMMAND_BYTES_MAX)
+		const res2 = await this.waitBulkIn(id, PTPCommandMaxByteLength)
 
-			if (res2.type !== PTPType.Response) {
-				throw new Error(
-					`Expected response type: ${PTPType.Response}, but got: ${res2.type}`
-				)
-			}
+		if (res2.type !== PTPType.Response) {
+			throw new Error(
+				`Expected response type: ${PTPType.Response}, but got: ${res2.type}`
+			)
+		}
 
-			return {
-				resCode: res2.code,
-				parameters: [...new Uint32Array(res2.payload)],
-				data: res1.payload,
-			}
-		} finally {
-			console.groupEnd()
+		return {
+			resCode: res2.code,
+			parameters: [...new Uint32Array(res2.payload)],
+			data: res1.payload,
 		}
 	}
 
