@@ -22,7 +22,7 @@ import {
 	TakePictureOption,
 } from '../Tethr'
 import {TethrObject} from '../TethrObject'
-import {isntNil, toHexString} from '../util'
+import {isntNil} from '../util'
 import {TethrPTPUSB} from '.'
 
 enum OpCodeSigma {
@@ -247,13 +247,19 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	private async getFocalLengthDesc(): Promise<ConfigDesc<number>> {
-		const data = (await this.getCamDataGroup1()).currentLensFocalLength
-		const value = decodeFocalLength(data)
+		const {currentLensFocalLength} = await this.getCamDataGroup1()
+		const value = decodeFocalLength(currentLensFocalLength)
+
+		const {lensWideFocalLength, lensTeleFocalLength} =
+			await this.getCamDataGroup3()
+
+		const min = decodeFocalLength(lensWideFocalLength)
+		const max = decodeFocalLength(lensTeleFocalLength)
 
 		return {
 			writable: false,
 			value,
-			options: [],
+			options: _.range(min, max, 1),
 		}
 
 		function decodeFocalLength(byte: number) {
@@ -688,7 +694,7 @@ export class TethrSigma extends TethrPTPUSB {
 	private async setImageQuality(
 		imageQuality: string
 	): Promise<OperationResultStatus> {
-		let jpegQuality: null | string = null
+		let jpegQuality: string | null = null
 		let dngBitDepth: number | null = null
 
 		const hasDngMatch = imageQuality.match(/^DNG (12|14)bit(?: \+ ([a-z]+))?/i)
@@ -721,7 +727,6 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 		imageQualityID |= dngBitDepth === null ? 0x00 : 0x10
 
-		// Set camData
 		const setImageQualityResult = await this.setCamData(
 			OpCodeSigma.SetCamDataGroup2,
 			15,
@@ -1031,8 +1036,6 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const dataView = new PTPDataView(data)
 		dataView.skip(3) // OC + FieldPreset
-
-		console.log(toHexString(data))
 
 		return {
 			dcCropMode: dataView.readUint8(),
