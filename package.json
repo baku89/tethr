@@ -2,7 +2,7 @@
 	"name": "camera-control",
 	"version": "0.0.0",
 	"scripts": {
-		"dev": "parcel demo/index.html",
+		"dev": "parcel demo/index.html --no-cache",
 		"lint": "eslint --fix --ext .ts --ignore-path .gitignore .",
 		"check": "tsc --noEmit"
 	},
