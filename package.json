@@ -11,6 +11,7 @@
 		"format": "prettier --write src demo",
 		"fix": "npm run format && npm run lint",
 		"build": "tsc --project tsconfig.prod.json --outDir dist",
+		"build:demo": "rm -rf public && NODE_ENV=production parcel demo/index.html --public-url . --dist-dir public --no-hmr --watch-for-stdin --no-source-maps",
 		"deploy:demo": "gh-pages -d public",
 		"prepare": "npm run build"
 	},
@@ -45,6 +46,7 @@
 		"eslint-plugin-simple-import-sort": "^7.0.0",
 		"eslint-plugin-unused-imports": "^1.1.2",
 		"file-saver": "^2.0.5",
+		"gh-pages": "^3.2.3",
 		"parcel": "^2.0.0-nightly.843",
 		"prettier": "^2.3.2",
 		"typescript": "^4.4.2",
