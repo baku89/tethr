@@ -27,7 +27,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 
 	protected devicePropScheme = (() => {
 		const devicePropScheme: DevicePropScheme = {
-			...super.devicePropScheme,
+			...this.devicePropScheme,
 			shutterSpeed: {
 				devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
 				dataType: DatatypeCode.Uint64,
