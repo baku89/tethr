@@ -34,14 +34,14 @@ export class TethrRicohTheta extends TethrPTPUSB {
 				encode: function (str: string) {
 					let fraction, denominator: number
 
-					if (str.endsWith('"')) {
-						const secs = parseFloat(str.slice(0, -1))
-						denominator = secs % 1 > 0 ? 10 : 1
-						fraction = Math.round(secs * denominator)
-					} else {
+					if (str.includes('/')) {
 						const [fractionStr, denominatorStr] = str.split('/')
 						fraction = parseInt(fractionStr)
 						denominator = parseInt(denominatorStr)
+					} else {
+						const secs = parseFloat(str)
+						denominator = secs % 1 > 0 ? 10 : 1
+						fraction = Math.round(secs * denominator)
 					}
 
 					return (BigInt(denominator) << BigInt(32)) | BigInt(fraction)
@@ -51,7 +51,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 					const fraction = Number(num & BigInt(0xffffffff))
 
 					if (denominator === 1 || denominator === 10) {
-						return fraction / denominator + '"'
+						return (fraction / denominator).toString()
 					}
 
 					return fraction + '/' + denominator
