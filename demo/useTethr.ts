@@ -101,10 +101,10 @@ export function useTethr() {
 	async function takePicture() {
 		if (!camera.value) return
 
-		const objects = await camera.value.takePicture()
+		const result = await camera.value.takePicture()
 
-		if (objects) {
-			for (const object of objects) {
+		if (result.status === 'ok') {
+			for (const object of result.value) {
 				if (object.format === 'raw') {
 					saveAs(object.blob, object.filename)
 				} else {
@@ -125,7 +125,10 @@ export function useTethr() {
 		if (!camera.value) return
 
 		if (liveviewing.value) {
-			liveviewMediaStream.value = await camera.value.startLiveview()
+			const result = await camera.value.startLiveview()
+			if (result.status === 'ok') {
+				liveviewMediaStream.value = result.value
+			}
 		} else {
 			await camera.value.stopLiveview()
 			liveviewMediaStream.value = null
