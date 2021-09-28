@@ -244,13 +244,22 @@ export class TethrPTPUSB extends Tethr {
 					options: [],
 				}
 			}
-			case 'canTakePicture':
+			case 'canTakePicture': {
+				const {operationsSupported} = await this.getDeviceInfo()
+				const can = operationsSupported.includes(OpCode.InitiateCapture)
+				return {
+					writable: false,
+					value: can as T,
+					options: [],
+				}
+			}
+
 			case 'canRunAutoFocus':
 			case 'canRunManualFocus':
 			case 'canStartLiveview':
 				return {
 					writable: false,
-					value: true as T,
+					value: false as T,
 					options: [],
 				}
 		}
