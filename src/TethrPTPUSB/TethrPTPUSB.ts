@@ -1,7 +1,6 @@
 import {BiMap} from 'bim'
 import {identity, range, times} from 'lodash'
 
-import {ActionName} from '../actions'
 import {
 	ConfigType,
 	DriveMode,
@@ -142,10 +141,6 @@ export class TethrPTPUSB extends Tethr {
 		function getConfigNameByDevicePropCode(code: number) {
 			return DevicePropCode[code] ?? toHexString(code, 4)
 		}
-	}
-
-	public async listActions(): Promise<ActionName[]> {
-		return []
 	}
 
 	public async set<K extends keyof ConfigType>(

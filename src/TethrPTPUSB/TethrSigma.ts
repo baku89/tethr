@@ -2,7 +2,6 @@ import {BiMap} from 'bim'
 import {minBy, range} from 'lodash'
 import sleep from 'sleep-promise'
 
-import {ActionName} from '../actions'
 import {
 	Aperture,
 	BatteryLevel,
@@ -130,16 +129,6 @@ export class TethrSigma extends TethrPTPUSB {
 			'imageSize',
 			'imageQuality',
 			'liveviewMagnifyRatio',
-		]
-	}
-
-	public async listActions(): Promise<ActionName[]> {
-		return [
-			...(await super.listActions()),
-			'takePicture',
-			'runAutoFocus',
-			'startLiveview',
-			'stopLiveview',
 		]
 	}
 

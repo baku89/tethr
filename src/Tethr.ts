@@ -1,6 +1,5 @@
 import EventEmitter from 'eventemitter3'
 
-import {ActionName} from './actions'
 import {ConfigType, RunManualFocusOption} from './configs'
 import {TethrObject} from './TethrObject'
 
@@ -46,7 +45,6 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	public abstract get opened(): boolean
 
 	public abstract listConfigs(): Promise<ConfigName[]>
-	public abstract listActions(): Promise<ActionName[]>
 
 	public async get<N extends ConfigName>(
 		name: N

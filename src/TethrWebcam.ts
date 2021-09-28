@@ -33,10 +33,6 @@ export class TethrWebcam extends Tethr {
 		return ['model']
 	}
 
-	public async listActions() {
-		return []
-	}
-
 	public async set(): Promise<OperationResult<void>> {
 		return {
 			status: 'unsupported',
