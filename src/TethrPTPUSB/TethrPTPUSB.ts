@@ -6,7 +6,6 @@ import {
 	ConfigType,
 	DriveModeTable,
 	ExposureModeTable,
-	ManualFocusOption,
 	WhiteBalanceTable,
 } from '../configs'
 import {DeviceInfo} from '../DeviceInfo'
@@ -95,38 +94,6 @@ export class TethrPTPUSB extends Tethr {
 			opcode: OpCode.CloseSession,
 		})
 		await this.device.close()
-	}
-
-	public getStorageInfo = async (): Promise<void> => {
-		const {data} = await this.device.receiveData({
-			label: 'Get Storage IDs',
-			opcode: OpCode.GetStorageIDs,
-		})
-		const dataView = new PTPDataView(data)
-
-		const storageIDs = dataView.readUint32Array()
-		console.log('Storage IDs =', storageIDs)
-
-		for (const id of storageIDs) {
-			const {data} = await this.device.receiveData({
-				label: 'GetStorageInfo',
-				parameters: [id],
-				opcode: OpCode.GetStorageInfo,
-			})
-
-			const storageInfo = new PTPDataView(data)
-
-			const info = {
-				storageType: PTPStorageTypeCode[storageInfo.readUint16()],
-				filesystemType: PTPFilesystemTypeCode[storageInfo.readUint16()],
-				accessCapability: PTPAccessCapabilityCode[storageInfo.readUint16()],
-				maxCapability: storageInfo.readUint64(),
-				freeSpaceInBytes: storageInfo.readUint64(),
-				freeSpaceInImages: storageInfo.readUint32(),
-			}
-
-			console.log(`Storage info for ${id}=`, info)
-		}
 	}
 
 	public async set<K extends ConfigName>(
@@ -348,17 +315,6 @@ export class TethrPTPUSB extends Tethr {
 		return devicePropsSupported.includes(code)
 	}
 
-	public async runAutoFocus(): Promise<OperationResult<void>> {
-		return {status: 'unsupported'}
-	}
-
-	public async runManualFocus(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		option: ManualFocusOption
-	): Promise<OperationResult<void>> {
-		return {status: 'unsupported'}
-	}
-
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
@@ -389,14 +345,6 @@ export class TethrPTPUSB extends Tethr {
 		return {status: 'ok', value: [tethrObject]}
 	}
 
-	public async startLiveview(): Promise<OperationResult<MediaStream>> {
-		return {status: 'unsupported'}
-	}
-
-	public async stopLiveview(): Promise<OperationResult<void>> {
-		return {status: 'unsupported'}
-	}
-
 	protected getDeviceInfo = async (): Promise<DeviceInfo> => {
 		return await TethrPTPUSB.getDeviceInfo(this.device)
 	}
@@ -413,11 +361,11 @@ export class TethrPTPUSB extends Tethr {
 		return {
 			id,
 			storageID: dataView.readUint32(),
-			format: this.getObjectFormat(dataView.readUint16()),
+			format: this.getObjectFormatNameByCode(dataView.readUint16()),
 			// protectionStatus: dataView.readUint16(),
 			byteLength: dataView.skip(2).readUint32(),
 			thumb: {
-				format: this.getObjectFormat(dataView.readUint16()),
+				format: this.getObjectFormatNameByCode(dataView.readUint16()),
 				compressedSize: dataView.readUint32(),
 				width: dataView.readUint32(),
 				height: dataView.readUint32(),
@@ -451,35 +399,41 @@ export class TethrPTPUSB extends Tethr {
 		return data
 	}
 
-	public static async getDeviceInfo(device: PTPDevice): Promise<DeviceInfo> {
-		const {data} = await device.receiveData({
-			label: 'GetDeviceInfo',
-			opcode: OpCode.GetDeviceInfo,
+	protected async getStorageInfo(): Promise<void> {
+		const {data} = await this.device.receiveData({
+			label: 'Get Storage IDs',
+			opcode: OpCode.GetStorageIDs,
 		})
-
 		const dataView = new PTPDataView(data)
 
-		return {
-			standardVersion: dataView.readUint16(),
-			vendorExtensionID: dataView.readUint32(),
-			vendorExtensionVersion: dataView.readUint16(),
-			vendorExtensionDesc: dataView.readFixedUTF16String(),
-			functionalMode: dataView.readUint16(),
-			operationsSupported: dataView.readUint16Array(),
-			eventsSupported: dataView.readUint16Array(),
-			devicePropsSupported: dataView.readUint16Array(),
-			captureFormats: dataView.readUint16Array(),
-			imageFormats: dataView.readUint16Array(),
-			manufacturer: dataView.readFixedUTF16String(),
-			model: dataView.readFixedUTF16String(),
-			deviceVersion: dataView.readFixedUTF16String(),
-			serialNumber: dataView.readFixedUTF16String(),
+		const storageIDs = dataView.readUint32Array()
+		console.log('Storage IDs =', storageIDs)
+
+		for (const id of storageIDs) {
+			const {data} = await this.device.receiveData({
+				label: 'GetStorageInfo',
+				parameters: [id],
+				opcode: OpCode.GetStorageInfo,
+			})
+
+			const storageInfo = new PTPDataView(data)
+
+			const info = {
+				storageType: PTPStorageTypeCode[storageInfo.readUint16()],
+				filesystemType: PTPFilesystemTypeCode[storageInfo.readUint16()],
+				accessCapability: PTPAccessCapabilityCode[storageInfo.readUint16()],
+				maxCapability: storageInfo.readUint64(),
+				freeSpaceInBytes: storageInfo.readUint64(),
+				freeSpaceInImages: storageInfo.readUint32(),
+			}
+
+			console.log(`Storage info for ${id}=`, info)
 		}
 	}
 
 	protected onDevicePropChanged = async (event: PTPEvent) => {
 		const devicePropCode = event.parameters[0]
-		const name = this.getConfigNameFromCode(devicePropCode)
+		const name = this.getConfigNameByCode(devicePropCode)
 
 		if (!name) return
 
@@ -487,11 +441,11 @@ export class TethrPTPUSB extends Tethr {
 		this.emit(`${name}Changed`, desc)
 	}
 
-	protected getConfigNameFromCode(devicePropCode: number): ConfigName | null {
-		return ConfigForDevicePropTable.get(devicePropCode) ?? null
+	protected getConfigNameByCode(code: number) {
+		return ConfigForDevicePropTable.get(code) ?? null
 	}
 
-	protected getObjectFormat(code: number) {
+	protected getObjectFormatNameByCode(code: number) {
 		return ObjectFormatCode[code].toLowerCase()
 	}
 
@@ -631,5 +585,31 @@ export class TethrPTPUSB extends Tethr {
 			decode: identity,
 			encode: identity,
 		},
+	}
+
+	public static async getDeviceInfo(device: PTPDevice): Promise<DeviceInfo> {
+		const {data} = await device.receiveData({
+			label: 'GetDeviceInfo',
+			opcode: OpCode.GetDeviceInfo,
+		})
+
+		const dataView = new PTPDataView(data)
+
+		return {
+			standardVersion: dataView.readUint16(),
+			vendorExtensionID: dataView.readUint32(),
+			vendorExtensionVersion: dataView.readUint16(),
+			vendorExtensionDesc: dataView.readFixedUTF16String(),
+			functionalMode: dataView.readUint16(),
+			operationsSupported: dataView.readUint16Array(),
+			eventsSupported: dataView.readUint16Array(),
+			devicePropsSupported: dataView.readUint16Array(),
+			captureFormats: dataView.readUint16Array(),
+			imageFormats: dataView.readUint16Array(),
+			manufacturer: dataView.readFixedUTF16String(),
+			model: dataView.readFixedUTF16String(),
+			deviceVersion: dataView.readFixedUTF16String(),
+			serialNumber: dataView.readFixedUTF16String(),
+		}
 	}
 }

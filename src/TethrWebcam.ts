@@ -69,15 +69,6 @@ export class TethrWebcam extends Tethr {
 	}
 
 	// Actions
-
-	public async runAutoFocus(): Promise<OperationResult<void>> {
-		return {status: 'unsupported'}
-	}
-
-	public async runManualFocus(): Promise<OperationResult<void>> {
-		return {status: 'unsupported'}
-	}
-
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {

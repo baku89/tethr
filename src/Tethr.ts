@@ -56,13 +56,28 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	): Promise<ConfigDesc<ConfigType[N]>>
 
 	// Actions
-	public abstract runAutoFocus(): Promise<OperationResult<void>>
-	public abstract runManualFocus(
+	public async runAutoFocus(): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
+	}
+
+	public async runManualFocus(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		option: ManualFocusOption
-	): Promise<OperationResult<void>>
-	public abstract takePicture(
+	): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
+	}
+
+	public async takePicture(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		options?: TakePictureOption
-	): Promise<OperationResult<TethrObject[]>>
-	public abstract startLiveview(): Promise<OperationResult<MediaStream>>
-	public abstract stopLiveview(): Promise<OperationResult<void>>
+	): Promise<OperationResult<TethrObject[]>> {
+		return {status: 'unsupported'}
+	}
+
+	public async startLiveview(): Promise<OperationResult<MediaStream>> {
+		return {status: 'unsupported'}
+	}
+	public async stopLiveview(): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
+	}
 }
