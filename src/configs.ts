@@ -1,3 +1,5 @@
+import {BiMap} from 'bim'
+
 export type Aperture = 'auto' | number
 
 export type ISO = 'auto' | number
@@ -115,6 +117,49 @@ export type ConfigType = {
 
 	[v: `0x${string}`]: any
 }
+
+// Table
+export const ConfigForDevicePropTable = new BiMap<number, keyof ConfigType>([
+	[0x5001, 'batteryLevel'],
+	[0x5005, 'whiteBalance'],
+	[0x5007, 'aperture'],
+	[0x5008, 'focalLength'],
+	[0x5009, 'focusDistance'],
+	[0x500d, 'shutterSpeed'],
+	[0x500e, 'exposureMode'],
+	[0x500f, 'iso'],
+	[0x5010, 'exposureComp'],
+	[0x5012, 'captureDelay'],
+	[0x5013, 'driveMode'],
+	[0x5017, 'colorMode'],
+	[0x501a, 'timelapseNumber'],
+	[0x501b, 'timelapseInterval'],
+])
+
+export const ExposureModeTable = new BiMap<number, ExposureMode>([
+	[0x1, 'M'],
+	[0x2, 'P'],
+	[0x3, 'A'],
+	[0x4, 'S'],
+	[0x5, 'creative'],
+	[0x6, 'action'],
+	[0x7, 'portrait'],
+])
+
+export const WhiteBalanceTable = new BiMap<number, WhiteBalance>([
+	[0x1, 'manual'],
+	[0x2, 'auto'],
+	[0x3, 'custom'],
+	[0x4, 'daylight'],
+	[0x5, 'fluorescent'],
+	[0x6, 'tungsten'],
+])
+
+export const DriveModeTable = new BiMap<number, DriveMode>([
+	[0x1, 'normal'],
+	[0x2, 'burst'],
+	[0x3, 'timelapse'],
+])
 
 // Utility functions
 export function computeShutterSpeedSeconds(ss: string) {
