@@ -5,7 +5,7 @@ import {
 	ConfigType,
 	DriveMode,
 	ExposureMode,
-	RunManualFocusOption,
+	ManualFocusOption,
 	WhiteBalance,
 } from '../configs'
 import {DeviceInfo} from '../DeviceInfo'
@@ -135,8 +135,18 @@ export class TethrPTPUSB extends Tethr {
 
 		const deviceInfos = ['model']
 		const deviceProps = devicePropsSupported.map(getConfigNameByDevicePropCode)
+		const actionSupportedFlags = [
+			'canTakePicture',
+			'canRunAutoFocus',
+			'canRunManualFocus',
+			'canStartLiveview',
+		]
 
-		return [...deviceInfos, ...deviceProps] as (keyof ConfigType)[]
+		return [
+			...deviceInfos,
+			...deviceProps,
+			...actionSupportedFlags,
+		] as (keyof ConfigType)[]
 
 		function getConfigNameByDevicePropCode(code: number) {
 			return DevicePropCode[code] ?? toHexString(code, 4)
@@ -225,13 +235,24 @@ export class TethrPTPUSB extends Tethr {
 			return await this.getDevicePropDesc(scheme)
 		}
 
-		if (name === 'model') {
-			const value = (await this.getDeviceInfo()).model
-			return {
-				writable: false,
-				value: value as T,
-				options: [],
+		switch (name) {
+			case 'model': {
+				const value = (await this.getDeviceInfo()).model
+				return {
+					writable: false,
+					value: value as T,
+					options: [],
+				}
 			}
+			case 'canTakePicture':
+			case 'canRunAutoFocus':
+			case 'canRunManualFocus':
+			case 'canStartLiveview':
+				return {
+					writable: false,
+					value: true as T,
+					options: [],
+				}
 		}
 
 		return {
@@ -348,7 +369,7 @@ export class TethrPTPUSB extends Tethr {
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public async runManualFocus(
-		option: RunManualFocusOption
+		option: ManualFocusOption
 	): Promise<OperationResult<void>> {
 		return {status: 'unsupported'}
 	}

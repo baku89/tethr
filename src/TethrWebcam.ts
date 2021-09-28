@@ -30,7 +30,14 @@ export class TethrWebcam extends Tethr {
 	}
 
 	public async listConfigs(): Promise<(keyof ConfigType)[]> {
-		return ['model']
+		return [
+			'model',
+			'liveviewEnabled',
+			'canTakePicture',
+			'canRunAutoFocus',
+			'canRunManualFocus',
+			'canStartLiveview',
+		]
 	}
 
 	public async set(): Promise<OperationResult<void>> {
@@ -41,12 +48,28 @@ export class TethrWebcam extends Tethr {
 	public async getDesc<N extends keyof ConfigType>(
 		name: N
 	): Promise<ConfigDesc<ConfigType[N]>> {
-		if (name === 'model') {
-			return {
-				writable: false,
-				value: 'Webcam' as ConfigType[N],
-				options: [],
-			}
+		switch (name) {
+			case 'model':
+				return {
+					writable: false,
+					value: 'Webcam' as ConfigType[N],
+					options: [],
+				}
+			case 'liveviewEnabled':
+				return {
+					writable: false,
+					value: true as ConfigType[N],
+					options: [],
+				}
+			case 'canTakePicture':
+			case 'canRunAutoFocus':
+			case 'canRunManualFocus':
+			case 'canStartLiveview':
+				return {
+					writable: false,
+					value: true as ConfigType[N],
+					options: [],
+				}
 		}
 
 		return {

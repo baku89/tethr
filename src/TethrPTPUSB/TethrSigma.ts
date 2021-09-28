@@ -232,6 +232,14 @@ export class TethrSigma extends TethrPTPUSB {
 				return this.getLiveviewEnabledDesc() as ReturnType
 			case 'liveviewMagnifyRatio':
 				return this.getLiveviewMagnifyLevelRatioDesc() as ReturnType
+			case 'canTakePicture':
+			case 'canRunAutoFocus':
+			case 'canStartLiveview':
+				return {
+					writable: false,
+					value: true as ConfigType[N],
+					options: [],
+				}
 		}
 
 		return super.getDesc(name)

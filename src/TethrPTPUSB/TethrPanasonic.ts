@@ -6,7 +6,7 @@ import {
 	ConfigType,
 	ExposureMode,
 	ISO,
-	RunManualFocusOption,
+	ManualFocusOption,
 	WhiteBalance,
 } from '../configs'
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
@@ -397,12 +397,27 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 
 		switch (name) {
+			case 'canTakePicture':
+			case 'canRunAutoFocus':
+			case 'canRunManualFocus':
+			case 'canStartLiveview':
+				return {
+					writable: false,
+					value: true as ConfigType[N],
+					options: [],
+				}
 			case 'liveviewSize':
 				return this.getLiveviewSizeDesc() as Promise<ConfigDesc<ConfigType[N]>>
 			case 'liveviewEnabled':
 				return {
 					writable: false,
 					value: this.liveviewEnabled as ConfigType[N],
+					options: [],
+				}
+			case 'manualFocusOptions':
+				return {
+					writable: false,
+					value: ['near:2', 'near:1', 'far:1', 'far:2'] as ConfigType[N],
 					options: [],
 				}
 		}
@@ -741,22 +756,22 @@ export class TethrPanasonic extends TethrPTPUSB {
 	}
 
 	public async runManualFocus(
-		option: RunManualFocusOption
+		option: ManualFocusOption
 	): Promise<OperationResult<void>> {
-		const {direction, speed} = option
+		const [direction, speed] = option.split(':')
 
 		let mode = 0
 
 		if (direction === 'far') {
-			if (speed === 1) mode = 2
-			else if (speed === 2) mode = 1
+			if (speed === '1') mode = 2
+			else if (speed === '2') mode = 1
 		} else if (direction === 'near') {
-			if (speed === 1) mode = 3
-			else if (speed === 2) mode = 4
+			if (speed === '1') mode = 3
+			else if (speed === '2') mode = 4
 		}
 
 		if (!mode) {
-			throw new Error('This speed is not supported')
+			return {status: 'invalid'}
 		}
 
 		const devicePropCode = 0x03010011

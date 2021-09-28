@@ -94,10 +94,6 @@ export function useTethr() {
 		;(window as any).cam = camera.value
 	}
 
-	async function runAutoFocus() {
-		await camera.value?.runAutoFocus()
-	}
-
 	async function takePicture() {
 		if (!camera.value) return
 
@@ -112,6 +108,10 @@ export function useTethr() {
 				}
 			}
 		}
+	}
+
+	async function runAutoFocus() {
+		await camera.value?.runAutoFocus()
 	}
 
 	async function toggleLiveview() {
@@ -156,6 +156,12 @@ export function useTethr() {
 			liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),
 			liveviewSize: useTethrConfig(camera, 'liveviewSize'),
 			batteryLevel: useTethrConfig(camera, 'batteryLevel'),
+
+			canTakePicture: useTethrConfig(camera, 'canTakePicture'),
+			canRunAutoFocus: useTethrConfig(camera, 'canRunAutoFocus'),
+			canRunManualFocus: useTethrConfig(camera, 'canRunManualFocus'),
+			canStartLiveview: useTethrConfig(camera, 'canStartLiveview'),
+			manualFocusOptions: useTethrConfig(camera, 'manualFocusOptions'),
 		},
 
 		liveviewMediaStream,

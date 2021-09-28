@@ -57,10 +57,7 @@ export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
 export type FocalLength = number | 'spherical'
 
-export type RunManualFocusOption = {
-	direction: 'near' | 'far'
-	speed: 1 | 2 | 3
-}
+export type ManualFocusOption = `${'near' | 'far'}:${1 | 2 | 3}`
 
 export type ConfigType = {
 	model: string
@@ -103,9 +100,18 @@ export type ConfigType = {
 	artist: string
 	copyrightInfo: string
 	iso: ISO // added
+
+	// Actions
+	canTakePicture: boolean
+	canRunAutoFocus: boolean
+	canRunManualFocus: boolean
+	canStartLiveview: boolean
+
+	manualFocusOptions: ManualFocusOption[] // added for runManualFocus
+
 	liveviewEnabled: boolean // added
 	liveviewMagnifyRatio: number // added
-	liveviewSize: string // added
+	liveviewSize: string // ad
 
 	[v: `0x${string}`]: any
 }

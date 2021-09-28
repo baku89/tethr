@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 
-import {ConfigType, RunManualFocusOption} from './configs'
+import {ConfigType, ManualFocusOption} from './configs'
 import {TethrObject} from './TethrObject'
 
 type ConfigName = keyof ConfigType
@@ -62,7 +62,7 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	// Actions
 	public abstract runAutoFocus(): Promise<OperationResult<void>>
 	public abstract runManualFocus(
-		option: RunManualFocusOption
+		option: ManualFocusOption
 	): Promise<OperationResult<void>>
 	public abstract takePicture(
 		options?: TakePictureOption
