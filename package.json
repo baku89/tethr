@@ -26,7 +26,8 @@
 		"eventemitter3": "^4.0.7",
 		"lodash": "^4.17.21",
 		"promise-queue": "^2.2.5",
-		"sleep-promise": "^9.1.0"
+		"sleep-promise": "^9.1.0",
+		"webusb": "^2.2.0"
 	},
 	"devDependencies": {
 		"@parcel/transformer-stylus": "^2.0.0-nightly.845",

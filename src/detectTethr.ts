@@ -1,9 +1,8 @@
 import {Tethr} from './Tethr'
 import {initTethrUSBPTP} from './TethrPTPUSB'
 import {initTethrWebcam} from './TethrWebcam'
+import {usb} from './usb'
 import {isntNil} from './util'
-
-const usb = navigator.usb
 
 type TethrDetectStrategy = 'first' | 'all'
 
@@ -56,6 +55,7 @@ export async function detectTethr({
 	}
 
 	async function detectTethrWebcam() {
+		if ('navigator' in globalThis) return []
 		if (!navigator.mediaDevices?.getUserMedia) return []
 
 		const media = await navigator.mediaDevices.getUserMedia({video: true})
