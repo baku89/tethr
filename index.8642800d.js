@@ -140,328 +140,14 @@
       this[globalName] = mainExports;
     }
   }
-})({"boNp0":[function(require,module,exports) {
-var HMR_HOST = null;
-var HMR_PORT = null;
-var HMR_SECURE = false;
-var HMR_ENV_HASH = "69f74e7f31319ffd";
-module.bundle.HMR_BUNDLE_ID = "773997cfdc1c7f13";
-"use strict";
-function _createForOfIteratorHelper(o, allowArrayLike) {
-    var it;
-    if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
-        if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-            if (it) o = it;
-            var i = 0;
-            var F = function F1() {
-            };
-            return {
-                s: F,
-                n: function n() {
-                    if (i >= o.length) return {
-                        done: true
-                    };
-                    return {
-                        done: false,
-                        value: o[i++]
-                    };
-                },
-                e: function e(_e) {
-                    throw _e;
-                },
-                f: F
-            };
-        }
-        throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-    var normalCompletion = true, didErr = false, err;
-    return {
-        s: function s() {
-            it = o[Symbol.iterator]();
-        },
-        n: function n() {
-            var step = it.next();
-            normalCompletion = step.done;
-            return step;
-        },
-        e: function e(_e2) {
-            didErr = true;
-            err = _e2;
-        },
-        f: function f() {
-            try {
-                if (!normalCompletion && it.return != null) it.return();
-            } finally{
-                if (didErr) throw err;
-            }
-        }
-    };
-}
-function _unsupportedIterableToArray(o, minLen) {
-    if (!o) return;
-    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-}
-function _arrayLikeToArray(arr, len) {
-    if (len == null || len > arr.length) len = arr.length;
-    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
-    return arr2;
-}
-/* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE */ /*::
-import type {
-  HMRAsset,
-  HMRMessage,
-} from '@parcel/reporter-dev-server/src/HMRServer.js';
-interface ParcelRequire {
-  (string): mixed;
-  cache: {|[string]: ParcelModule|};
-  hotData: mixed;
-  Module: any;
-  parent: ?ParcelRequire;
-  isParcelRequire: true;
-  modules: {|[string]: [Function, {|[string]: string|}]|};
-  HMR_BUNDLE_ID: string;
-  root: ParcelRequire;
-}
-interface ParcelModule {
-  hot: {|
-    data: mixed,
-    accept(cb: (Function) => void): void,
-    dispose(cb: (mixed) => void): void,
-    // accept(deps: Array<string> | string, cb: (Function) => void): void,
-    // decline(): void,
-    _acceptCallbacks: Array<(Function) => void>,
-    _disposeCallbacks: Array<(mixed) => void>,
-  |};
-}
-declare var module: {bundle: ParcelRequire, ...};
-declare var HMR_HOST: string;
-declare var HMR_PORT: string;
-declare var HMR_ENV_HASH: string;
-declare var HMR_SECURE: boolean;
-*/ var OVERLAY_ID = '__parcel__error__overlay__';
-var OldModule = module.bundle.Module;
-function Module(moduleName) {
-    OldModule.call(this, moduleName);
-    this.hot = {
-        data: module.bundle.hotData,
-        _acceptCallbacks: [],
-        _disposeCallbacks: [],
-        accept: function accept(fn) {
-            this._acceptCallbacks.push(fn || function() {
-            });
-        },
-        dispose: function dispose(fn) {
-            this._disposeCallbacks.push(fn);
-        }
-    };
-    module.bundle.hotData = undefined;
-}
-module.bundle.Module = Module;
-var checkedAssets, acceptedAssets, assetsToAccept;
-function getHostname() {
-    return HMR_HOST || (location.protocol.indexOf('http') === 0 ? location.hostname : 'localhost');
-}
-function getPort() {
-    return HMR_PORT || location.port;
-} // eslint-disable-next-line no-redeclare
-var parent = module.bundle.parent;
-if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
-    var hostname = getHostname();
-    var port = getPort();
-    var protocol = HMR_SECURE || location.protocol == 'https:' && !/localhost|127.0.0.1|0.0.0.0/.test(hostname) ? 'wss' : 'ws';
-    var ws = new WebSocket(protocol + '://' + hostname + (port ? ':' + port : '') + '/'); // $FlowFixMe
-    ws.onmessage = function(event) {
-        checkedAssets = {
-        };
-        acceptedAssets = {
-        };
-        assetsToAccept = [];
-        var data = JSON.parse(event.data);
-        if (data.type === 'update') {
-            // Remove error overlay if there is one
-            removeErrorOverlay();
-            var assets = data.assets.filter(function(asset) {
-                return asset.envHash === HMR_ENV_HASH;
-            }); // Handle HMR Update
-            var handled = assets.every(function(asset) {
-                return asset.type === 'css' || asset.type === 'js' && hmrAcceptCheck(module.bundle.root, asset.id, asset.depsByBundle);
-            });
-            if (handled) {
-                console.clear();
-                assets.forEach(function(asset) {
-                    hmrApply(module.bundle.root, asset);
-                });
-                for(var i = 0; i < assetsToAccept.length; i++){
-                    var id = assetsToAccept[i][1];
-                    if (!acceptedAssets[id]) hmrAcceptRun(assetsToAccept[i][0], id);
-                }
-            } else window.location.reload();
-        }
-        if (data.type === 'error') {
-            // Log parcel errors to console
-            var _iterator = _createForOfIteratorHelper(data.diagnostics.ansi), _step;
-            try {
-                for(_iterator.s(); !(_step = _iterator.n()).done;){
-                    var ansiDiagnostic = _step.value;
-                    var stack = ansiDiagnostic.codeframe ? ansiDiagnostic.codeframe : ansiDiagnostic.stack;
-                    console.error('🚨 [parcel]: ' + ansiDiagnostic.message + '\n' + stack + '\n\n' + ansiDiagnostic.hints.join('\n'));
-                } // Render the fancy html overlay
-            } catch (err) {
-                _iterator.e(err);
-            } finally{
-                _iterator.f();
-            }
-            removeErrorOverlay();
-            var overlay = createErrorOverlay(data.diagnostics.html); // $FlowFixMe
-            document.body.appendChild(overlay);
-        }
-    };
-    ws.onerror = function(e) {
-        console.error(e.message);
-    };
-    ws.onclose = function() {
-        console.warn('[parcel] 🚨 Connection to the HMR server was lost');
-    };
-}
-function removeErrorOverlay() {
-    var overlay = document.getElementById(OVERLAY_ID);
-    if (overlay) {
-        overlay.remove();
-        console.log('[parcel] ✨ Error resolved');
-    }
-}
-function createErrorOverlay(diagnostics) {
-    var overlay = document.createElement('div');
-    overlay.id = OVERLAY_ID;
-    var errorHTML = '<div style="background: black; opacity: 0.85; font-size: 16px; color: white; position: fixed; height: 100%; width: 100%; top: 0px; left: 0px; padding: 30px; font-family: Menlo, Consolas, monospace; z-index: 9999;">';
-    var _iterator2 = _createForOfIteratorHelper(diagnostics), _step2;
-    try {
-        for(_iterator2.s(); !(_step2 = _iterator2.n()).done;){
-            var diagnostic = _step2.value;
-            var stack = diagnostic.codeframe ? diagnostic.codeframe : diagnostic.stack;
-            errorHTML += "\n      <div>\n        <div style=\"font-size: 18px; font-weight: bold; margin-top: 20px;\">\n          \uD83D\uDEA8 ".concat(diagnostic.message, "\n        </div>\n        <pre>\n          ").concat(stack, "\n        </pre>\n        <div>\n          ").concat(diagnostic.hints.map(function(hint) {
-                return '<div>' + hint + '</div>';
-            }).join(''), "\n        </div>\n      </div>\n    ");
-        }
-    } catch (err) {
-        _iterator2.e(err);
-    } finally{
-        _iterator2.f();
-    }
-    errorHTML += '</div>';
-    overlay.innerHTML = errorHTML;
-    return overlay;
-}
-function getParents(bundle, id) /*: Array<[ParcelRequire, string]> */ {
-    var modules = bundle.modules;
-    if (!modules) return [];
-    var parents = [];
-    var k, d, dep;
-    for(k in modules)for(d in modules[k][1]){
-        dep = modules[k][1][d];
-        if (dep === id || Array.isArray(dep) && dep[dep.length - 1] === id) parents.push([
-            bundle,
-            k
-        ]);
-    }
-    if (bundle.parent) parents = parents.concat(getParents(bundle.parent, id));
-    return parents;
-}
-function updateLink(link) {
-    var newLink = link.cloneNode();
-    newLink.onload = function() {
-        if (link.parentNode !== null) // $FlowFixMe
-        link.parentNode.removeChild(link);
-    };
-    newLink.setAttribute('href', link.getAttribute('href').split('?')[0] + '?' + Date.now()); // $FlowFixMe
-    link.parentNode.insertBefore(newLink, link.nextSibling);
-}
-var cssTimeout = null;
-function reloadCSS() {
-    if (cssTimeout) return;
-    cssTimeout = setTimeout(function() {
-        var links = document.querySelectorAll('link[rel="stylesheet"]');
-        for(var i = 0; i < links.length; i++){
-            // $FlowFixMe[incompatible-type]
-            var href = links[i].getAttribute('href');
-            var hostname = getHostname();
-            var servedFromHMRServer = hostname === 'localhost' ? new RegExp('^(https?:\\/\\/(0.0.0.0|127.0.0.1)|localhost):' + getPort()).test(href) : href.indexOf(hostname + ':' + getPort());
-            var absolute = /^https?:\/\//i.test(href) && href.indexOf(window.location.origin) !== 0 && !servedFromHMRServer;
-            if (!absolute) updateLink(links[i]);
-        }
-        cssTimeout = null;
-    }, 50);
-}
-function hmrApply(bundle, asset) {
-    var modules = bundle.modules;
-    if (!modules) return;
-    if (asset.type === 'css') {
-        reloadCSS();
-        return;
-    }
-    var deps = asset.depsByBundle[bundle.HMR_BUNDLE_ID];
-    if (deps) {
-        var fn = new Function('require', 'module', 'exports', asset.output);
-        modules[asset.id] = [
-            fn,
-            deps
-        ];
-    } else if (bundle.parent) hmrApply(bundle.parent, asset);
-}
-function hmrAcceptCheck(bundle, id, depsByBundle) {
-    var modules = bundle.modules;
-    if (!modules) return;
-    if (depsByBundle && !depsByBundle[bundle.HMR_BUNDLE_ID]) {
-        // If we reached the root bundle without finding where the asset should go,
-        // there's nothing to do. Mark as "accepted" so we don't reload the page.
-        if (!bundle.parent) return true;
-        return hmrAcceptCheck(bundle.parent, id, depsByBundle);
-    }
-    if (checkedAssets[id]) return;
-    checkedAssets[id] = true;
-    var cached = bundle.cache[id];
-    assetsToAccept.push([
-        bundle,
-        id
-    ]);
-    if (cached && cached.hot && cached.hot._acceptCallbacks.length) return true;
-    return getParents(module.bundle.root, id).some(function(v) {
-        return hmrAcceptCheck(v[0], v[1], null);
-    });
-}
-function hmrAcceptRun(bundle, id) {
-    var cached = bundle.cache[id];
-    bundle.hotData = {
-    };
-    if (cached && cached.hot) cached.hot.data = bundle.hotData;
-    if (cached && cached.hot && cached.hot._disposeCallbacks.length) cached.hot._disposeCallbacks.forEach(function(cb) {
-        cb(bundle.hotData);
-    });
-    delete bundle.cache[id];
-    bundle(id);
-    cached = bundle.cache[id];
-    if (cached && cached.hot && cached.hot._acceptCallbacks.length) cached.hot._acceptCallbacks.forEach(function(cb) {
-        var assetsToAlsoAccept = cb(function() {
-            return getParents(module.bundle.root, id);
-        });
-        if (assetsToAlsoAccept && assetsToAccept.length) // $FlowFixMe[method-unbinding]
-        assetsToAccept.push.apply(assetsToAccept, assetsToAlsoAccept);
-    });
-    acceptedAssets[id] = true;
-}
-
-},{}],"bxQVA":[function(require,module,exports) {
+})({"2emZo":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _vue = require("vue");
 var _appVue = require("./App.vue");
 var _appVueDefault = parcelHelpers.interopDefault(_appVue);
 _vue.createApp(_appVueDefault.default).mount('#app');
 
-},{"vue":"eg0LR","./App.vue":"jyliN","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"eg0LR":[function(require,module,exports) {
+},{"vue":"h7dRr","./App.vue":"lJSMA","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"h7dRr":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "compile", ()=>compile
@@ -471,12 +157,10 @@ parcelHelpers.exportAll(_runtimeDom, exports);
 function initDev() {
     _runtimeDom.initCustomFormatter();
 }
-initDev();
 const compile = ()=>{
-    _runtimeDom.warn(`Runtime compilation is not supported in this build of Vue.` + ` Configure your bundler to alias "vue" to "vue/dist/vue.esm-bundler.js".`);
 };
 
-},{"@vue/runtime-dom":"i9SjY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"i9SjY":[function(require,module,exports) {
+},{"@vue/runtime-dom":"hwGpR","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"hwGpR":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Transition", ()=>Transition
@@ -632,7 +316,7 @@ function patchStyle(el, prev, next) {
     } else {
         for(const key in next)setStyle(style, key, next[key]);
         if (prev && !_shared.isString(prev)) {
-            for(const key1 in prev)if (next[key1] == null) setStyle(style, key1, '');
+            for(const key in prev)if (next[key] == null) setStyle(style, key, '');
         }
     }
 }
@@ -727,7 +411,6 @@ prevChildren, parentComponent, parentSuspense, unmountChildren) {
     try {
         el[key] = value;
     } catch (e) {
-        _runtimeCore.warn(`Failed setting prop "${key}" on <${el.tagName.toLowerCase()}>: ` + `value ${value} is invalid.`, e);
     }
 }
 // Async edge case fix requires storing an event listener's attach timestamp.
@@ -824,7 +507,7 @@ function patchStopImmediatePropagation(e, value) {
             originalStop.call(e);
             e._stopped = true;
         };
-        return value.map((fn)=>(e1)=>!e1._stopped && fn(e1)
+        return value.map((fn)=>(e)=>!e._stopped && fn(e)
         );
     } else return value;
 }
@@ -901,12 +584,9 @@ class VueElement extends BaseClass {
         this._connected = false;
         this._resolved = false;
         if (this.shadowRoot && hydrate) hydrate(this._createVNode(), this.shadowRoot);
-        else {
-            if (this.shadowRoot) _runtimeCore.warn(`Custom element has pre-rendered declarative shadow root but is not ` + `defined as hydratable. Use \`defineSSRCustomElement\`.`);
-            this.attachShadow({
-                mode: 'open'
-            });
-        }
+        else this.attachShadow({
+            mode: 'open'
+        });
         // set initial attrs
         for(let i = 0; i < this.attributes.length; i++)this._setAttr(this.attributes[i].name);
         // watch future attr changes
@@ -986,22 +666,7 @@ class VueElement extends BaseClass {
         if (!this._instance) vnode.ce = (instance)=>{
             this._instance = instance;
             instance.isCE = true;
-            instance.ceReload = (newStyles)=>{
-                // alawys reset styles
-                if (this._styles) {
-                    this._styles.forEach((s)=>this.shadowRoot.removeChild(s)
-                    );
-                    this._styles.length = 0;
-                }
-                this._applyStyles(newStyles);
-                // if this is an async component, ceReload is called from the inner
-                // component so no need to reload the async wrapper
-                if (!this._def.__asyncLoader) {
-                    // reload
-                    this._instance = null;
-                    render(this._createVNode(), this.shadowRoot);
-                }
-            };
+            var newStyles, s;
             // intercept emit
             instance.emit = (event, ...args)=>{
                 this.dispatchEvent(new CustomEvent(event, {
@@ -1022,27 +687,17 @@ class VueElement extends BaseClass {
             const s = document.createElement('style');
             s.textContent = css;
             this.shadowRoot.appendChild(s);
-            (this._styles || (this._styles = [])).push(s);
         });
     }
 }
 function useCssModule(name = '$style') {
     /* istanbul ignore else */ {
         const instance = _runtimeCore.getCurrentInstance();
-        if (!instance) {
-            _runtimeCore.warn(`useCssModule must be called inside setup()`);
-            return _shared.EMPTY_OBJ;
-        }
+        if (!instance) return _shared.EMPTY_OBJ;
         const modules = instance.type.__cssModules;
-        if (!modules) {
-            _runtimeCore.warn(`Current instance does not have CSS modules injected.`);
-            return _shared.EMPTY_OBJ;
-        }
+        if (!modules) return _shared.EMPTY_OBJ;
         const mod = modules[name];
-        if (!mod) {
-            _runtimeCore.warn(`Current instance does not have CSS module named "${name}".`);
-            return _shared.EMPTY_OBJ;
-        }
+        if (!mod) return _shared.EMPTY_OBJ;
         return mod;
     }
 }
@@ -1051,10 +706,7 @@ function useCssModule(name = '$style') {
  * @private
  */ function useCssVars(getter) {
     const instance = _runtimeCore.getCurrentInstance();
-    /* istanbul ignore next */ if (!instance) {
-        _runtimeCore.warn(`useCssVars is called without current active component instance.`);
-        return;
-    }
+    /* istanbul ignore next */ if (!instance) return;
     const setVars = ()=>setVarsOnVNode(instance.subTree, getter(instance.proxy))
     ;
     _runtimeCore.watchPostEffect(setVars);
@@ -1247,7 +899,6 @@ function normalizeDuration(duration) {
 }
 function NumberOf(val) {
     const res = _shared.toNumber(val);
-    validateDuration(res);
     return res;
 }
 function validateDuration(val) {
@@ -1289,7 +940,7 @@ function whenTransitionEnds(el, expectedType, explicitTimeout, resolve) {
         resolveIfNotStale();
     };
     const onEnd = (e)=>{
-        if (e.target === el && (++ended) >= propCount) end();
+        if (e.target === el && ++ended >= propCount) end();
     };
     setTimeout(()=>{
         if (ended < propCount) end();
@@ -1337,7 +988,7 @@ function getTransitionInfo(el, expectedType) {
 }
 function getTimeout(delays, durations) {
     while(delays.length < durations.length)delays = delays.concat(delays);
-    return Math.max(...durations.map((d, i1)=>toMs(d) + toMs(delays[i1])
+    return Math.max(...durations.map((d, i)=>toMs(d) + toMs(delays[i])
     ));
 }
 // Old versions of Chromium (below 61.0.3163.100) formats floating pointer
@@ -1399,13 +1050,12 @@ const TransitionGroupImpl = {
             let tag = rawProps.tag || _runtimeCore.Fragment;
             prevChildren = children;
             children = slots.default ? _runtimeCore.getTransitionRawChildren(slots.default()) : [];
-            for(let i1 = 0; i1 < children.length; i1++){
-                const child = children[i1];
+            for(let i = 0; i < children.length; i++){
+                const child = children[i];
                 if (child.key != null) _runtimeCore.setTransitionHooks(child, _runtimeCore.resolveTransitionHooks(child, cssTransitionProps, state, instance));
-                else _runtimeCore.warn(`<TransitionGroup> children must be keyed.`);
             }
-            if (prevChildren) for(let i2 = 0; i2 < prevChildren.length; i2++){
-                const child = prevChildren[i2];
+            if (prevChildren) for(let i1 = 0; i1 < prevChildren.length; i1++){
+                const child = prevChildren[i1];
                 _runtimeCore.setTransitionHooks(child, _runtimeCore.resolveTransitionHooks(child, cssTransitionProps, state, instance));
                 positionMap.set(child, child.el.getBoundingClientRect());
             }
@@ -1599,18 +1249,15 @@ const vModelSelect = {
 };
 function setSelected(el, value) {
     const isMultiple = el.multiple;
-    if (isMultiple && !_shared.isArray(value) && !_shared.isSet(value)) {
-        _runtimeCore.warn(`<select multiple v-model> expects an Array or Set value for its binding, ` + `but got ${Object.prototype.toString.call(value).slice(8, -1)}.`);
-        return;
-    }
-    for(let i1 = 0, l = el.options.length; i1 < l; i1++){
-        const option = el.options[i1];
+    if (isMultiple && !_shared.isArray(value) && !_shared.isSet(value)) return;
+    for(let i = 0, l = el.options.length; i < l; i++){
+        const option = el.options[i];
         const optionValue = getValue(option);
         if (isMultiple) {
             if (_shared.isArray(value)) option.selected = _shared.looseIndexOf(value, optionValue) > -1;
             else option.selected = value.has(optionValue);
         } else if (_shared.looseEqual(getValue(option), value)) {
-            if (el.selectedIndex !== i1) el.selectedIndex = i1;
+            if (el.selectedIndex !== i) el.selectedIndex = i;
             return;
         }
     }
@@ -1697,8 +1344,8 @@ const modifierGuards = {
  * @private
  */ const withModifiers = (fn, modifiers)=>{
     return (event, ...args)=>{
-        for(let i1 = 0; i1 < modifiers.length; i1++){
-            const guard = modifierGuards[modifiers[i1]];
+        for(let i = 0; i < modifiers.length; i++){
+            const guard = modifierGuards[modifiers[i]];
             if (guard && guard(event, modifiers)) return;
         }
         return fn(event, ...args);
@@ -1777,8 +1424,6 @@ const hydrate1 = (...args)=>{
 };
 const createApp = (...args)=>{
     const app = ensureRenderer().createApp(...args);
-    injectNativeTagCheck(app);
-    injectCompilerOptionsCheck(app);
     const { mount  } = app;
     app.mount = (containerOrSelector)=>{
         const container = normalizeContainer(containerOrSelector);
@@ -1802,8 +1447,6 @@ const createApp = (...args)=>{
 };
 const createSSRApp = (...args)=>{
     const app = ensureHydrationRenderer().createApp(...args);
-    injectNativeTagCheck(app);
-    injectCompilerOptionsCheck(app);
     const { mount  } = app;
     app.mount = (containerOrSelector)=>{
         const container = normalizeContainer(containerOrSelector);
@@ -1848,14 +1491,12 @@ function injectCompilerOptionsCheck(app) {
 function normalizeContainer(container) {
     if (_shared.isString(container)) {
         const res = document.querySelector(container);
-        if (!res) _runtimeCore.warn(`Failed to mount app: mount target selector "${container}" returned null.`);
         return res;
     }
-    if (window.ShadowRoot && container instanceof window.ShadowRoot && container.mode === 'closed') _runtimeCore.warn(`mounting on a ShadowRoot with \`{mode: "closed"}\` may lead to unpredictable bugs`);
     return container;
 }
 
-},{"@vue/runtime-core":"6wrge","@vue/shared":"8bcX0","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"6wrge":[function(require,module,exports) {
+},{"@vue/runtime-core":"fmy95","@vue/shared":"jjDCJ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"fmy95":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "EffectScope", ()=>_reactivity.EffectScope
@@ -1926,7 +1567,7 @@ parcelHelpers.export(exports, "toHandlerKey", ()=>_shared.toHandlerKey
 );
 parcelHelpers.export(exports, "BaseTransition", ()=>BaseTransition
 );
-parcelHelpers.export(exports, "Comment", ()=>Comment1
+parcelHelpers.export(exports, "Comment", ()=>Comment
 );
 parcelHelpers.export(exports, "Fragment", ()=>Fragment
 );
@@ -1938,7 +1579,7 @@ parcelHelpers.export(exports, "Suspense", ()=>Suspense
 );
 parcelHelpers.export(exports, "Teleport", ()=>Teleport
 );
-parcelHelpers.export(exports, "Text", ()=>Text1
+parcelHelpers.export(exports, "Text", ()=>Text
 );
 parcelHelpers.export(exports, "callWithAsyncErrorHandling", ()=>callWithAsyncErrorHandling
 );
@@ -2104,18 +1745,9 @@ parcelHelpers.export(exports, "withScopeId", ()=>withScopeId
 );
 var _reactivity = require("@vue/reactivity");
 var _shared = require("@vue/shared");
-var global = arguments[3];
 /* eslint-disable no-restricted-globals */ let isHmrUpdating = false;
 const hmrDirtyComponents = new Set();
-{
-    const globalObject = typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {
-    };
-    globalObject.__VUE_HMR_RUNTIME__ = {
-        createRecord: tryWrap(createRecord),
-        rerender: tryWrap(rerender),
-        reload: tryWrap(reload)
-    };
-}const map = new Map();
+const map = new Map();
 function registerHMR(instance) {
     const id = instance.type.__hmrId;
     let record = map.get(id);
@@ -2217,8 +1849,8 @@ function devtoolsInitApp(app, version) {
     if (!devtools) return;
     devtools.emit("app:init" /* APP_INIT */ , app, version, {
         Fragment,
-        Text: Text1,
-        Comment: Comment1,
+        Text,
+        Comment,
         Static
     });
 }
@@ -2436,27 +2068,7 @@ const deprecationData = {
 const instanceWarned = Object.create(null);
 const warnCount = Object.create(null);
 function warnDeprecation(key, instance, ...args) {
-    instance = instance || getCurrentInstance();
-    // check user config
-    const config = getCompatConfigForKey(key, instance);
-    if (config === 'suppress-warning') return;
-    const dupKey = key + args.join('');
-    let compId = instance && formatComponentName(instance, instance.type);
-    if (compId === 'Anonymous' && instance) compId = instance.uid;
-    // skip if the same warning is emitted for the same component type
-    const componentDupKey = dupKey + compId;
-    if (componentDupKey in instanceWarned) return;
-    instanceWarned[componentDupKey] = true;
-    // same warning, but different component. skip the long message and just
-    // log the key and count.
-    if (dupKey in warnCount) {
-        warn(`(deprecation ${key}) (${(++warnCount[dupKey]) + 1})`);
-        return;
-    }
-    warnCount[dupKey] = 0;
-    const { message , link  } = deprecationData[key];
-    warn(`(deprecation ${key}) ${typeof message === 'function' ? message(...args) : message}${link ? `\n  Details: ${link}` : ``}`);
-    if (!isCompatEnabled(key, instance, true)) console.error(`^ The above deprecation's compat behavior is disabled and will likely ` + `lead to runtime errors.`);
+    return;
 }
 const globalCompatConfig = {
     MODE: 2
@@ -2477,20 +2089,6 @@ function isCompatEnabled(key, instance, enableForBuiltIn = false) {
 }
 function emit(instance, event, ...rawArgs) {
     const props = instance.vnode.props || _shared.EMPTY_OBJ;
-    {
-        const { emitsOptions , propsOptions: [propsOptions]  } = instance;
-        if (emitsOptions) {
-            if (!(event in emitsOptions) && true) {
-                if (!propsOptions || !(_shared.toHandlerKey(event) in propsOptions)) warn(`Component emitted event "${event}" but it is neither declared in ` + `the emits option nor as an "${_shared.toHandlerKey(event)}" prop.`);
-            } else {
-                const validator = emitsOptions[event];
-                if (_shared.isFunction(validator)) {
-                    const isValid = validator(...rawArgs);
-                    if (!isValid) warn(`Invalid event arguments: event validation failed for event "${event}".`);
-                }
-            }
-        }
-    }
     let args = rawArgs;
     const isModelListener = event.startsWith('update:');
     // for v-model update:xxx events, apply modifiers on args
@@ -2502,11 +2100,7 @@ function emit(instance, event, ...rawArgs) {
         );
         else if (number) args = rawArgs.map(_shared.toNumber);
     }
-    devtoolsComponentEmit(instance, event, args);
-    {
-        const lowerCaseEvent = event.toLowerCase();
-        if (lowerCaseEvent !== event && props[_shared.toHandlerKey(lowerCaseEvent)]) warn(`Event "${lowerCaseEvent}" is emitted in component ` + `${formatComponentName(instance, instance.type)} but the handler is registered for "${event}". ` + `Note that HTML attributes are case-insensitive and you cannot use ` + `v-on to listen to camelCase events when using in-DOM templates. ` + `You should probably use "${_shared.hyphenate(event)}" instead of "${event}".`);
-    }
+    if (__VUE_PROD_DEVTOOLS__) devtoolsComponentEmit(instance, event, args);
     let handlerName;
     let handler = props[handlerName = _shared.toHandlerKey(event)] || // also try camelCase event handler (#2249)
     props[handlerName = _shared.toHandlerKey(_shared.camelize(event))];
@@ -2533,8 +2127,8 @@ function normalizeEmitsOptions(comp, appContext, asMixin = false) {
     // apply mixin/extends props
     let hasExtends = false;
     if (__VUE_OPTIONS_API__ && !_shared.isFunction(comp)) {
-        const extendEmits = (raw1)=>{
-            const normalizedFromExtend = normalizeEmitsOptions(raw1, appContext, true);
+        const extendEmits = (raw)=>{
+            const normalizedFromExtend = normalizeEmitsOptions(raw, appContext, true);
             if (normalizedFromExtend) {
                 hasExtends = true;
                 _shared.extend(normalized, normalizedFromExtend);
@@ -2619,7 +2213,7 @@ let currentScopeId = null;
         const res = fn(...args);
         setCurrentRenderingInstance(prevInstance);
         if (renderFnWithContext._d) setBlockTracking(1);
-        devtoolsComponentUpdated(ctx);
+        if (__VUE_PROD_DEVTOOLS__) devtoolsComponentUpdated(ctx);
         return res;
     };
     // mark normalized to avoid duplicated wrapping
@@ -2641,10 +2235,9 @@ function markAttrsAccessed() {
     accessedAttrs = true;
 }
 function renderComponentRoot(instance) {
-    const { type: Component , vnode , proxy , withProxy , props , propsOptions: [propsOptions] , slots , attrs , emit: emit1 , render , renderCache , data , setupState , ctx , inheritAttrs  } = instance;
+    const { type: Component , vnode , proxy , withProxy , props , propsOptions: [propsOptions] , slots , attrs , emit , render , renderCache , data , setupState , ctx , inheritAttrs  } = instance;
     let result;
     const prev = setCurrentRenderingInstance(instance);
-    accessedAttrs = false;
     try {
         let fallthroughAttrs;
         if (vnode.shapeFlag & 4 /* STATEFUL_COMPONENT */ ) {
@@ -2655,17 +2248,12 @@ function renderComponentRoot(instance) {
             fallthroughAttrs = attrs;
         } else {
             // functional
-            const render1 = Component;
-            // in dev, mark attrs accessed if optional props (attrs === props)
-            if (attrs === props) markAttrsAccessed();
-            result = normalizeVNode(render1.length > 1 ? render1(props, {
-                get attrs () {
-                    markAttrsAccessed();
-                    return attrs;
-                },
+            const render = Component;
+            result = normalizeVNode(render.length > 1 ? render(props, {
+                attrs,
                 slots,
-                emit: emit1
-            }) : render1(props, null));
+                emit
+            }) : render(props, null));
             fallthroughAttrs = Component.props ? attrs : getFunctionalFallthrough(attrs);
         }
         // attr merging
@@ -2673,7 +2261,6 @@ function renderComponentRoot(instance) {
         // to have comments along side the root element which makes it a fragment
         let root = result;
         let setRoot = undefined;
-        if (result.patchFlag > 0 && result.patchFlag & 2048 /* DEV_ROOT_FRAGMENT */ ) [root, setRoot] = getChildRoot(result);
         if (fallthroughAttrs && inheritAttrs !== false) {
             const keys = Object.keys(fallthroughAttrs);
             const { shapeFlag  } = root;
@@ -2685,40 +2272,18 @@ function renderComponentRoot(instance) {
                     // related: #1543, #1643, #1989
                     fallthroughAttrs = filterModelListeners(fallthroughAttrs, propsOptions);
                     root = cloneVNode(root, fallthroughAttrs);
-                } else if (!accessedAttrs && root.type !== Comment1) {
-                    const allAttrs = Object.keys(attrs);
-                    const eventAttrs = [];
-                    const extraAttrs = [];
-                    for(let i = 0, l = allAttrs.length; i < l; i++){
-                        const key = allAttrs[i];
-                        if (_shared.isOn(key)) // ignore v-model handlers when they fail to fallthrough
-                        {
-                            if (!_shared.isModelListener(key)) // remove `on`, lowercase first letter to reflect event casing
-                            // accurately
-                            eventAttrs.push(key[2].toLowerCase() + key.slice(3));
-                        } else extraAttrs.push(key);
-                    }
-                    if (extraAttrs.length) warn(`Extraneous non-props attributes (` + `${extraAttrs.join(', ')}) ` + `were passed to component but could not be automatically inherited ` + `because component renders fragment or text root nodes.`);
-                    if (eventAttrs.length) warn(`Extraneous non-emits event listeners (` + `${eventAttrs.join(', ')}) ` + `were passed to component but could not be automatically inherited ` + `because component renders fragment or text root nodes. ` + `If the listener is intended to be a component custom event listener only, ` + `declare it using the "emits" option.`);
                 }
             }
         }
         // inherit directives
-        if (vnode.dirs) {
-            if (!isElementRoot(root)) warn(`Runtime directive used on component with non-element root node. ` + `The directives will not function as intended.`);
-            root.dirs = root.dirs ? root.dirs.concat(vnode.dirs) : vnode.dirs;
-        }
+        if (vnode.dirs) root.dirs = root.dirs ? root.dirs.concat(vnode.dirs) : vnode.dirs;
         // inherit transition data
-        if (vnode.transition) {
-            if (!isElementRoot(root)) warn(`Component inside <Transition> renders non-element root node ` + `that cannot be animated.`);
-            root.transition = vnode.transition;
-        }
-        if (setRoot) setRoot(root);
-        else result = root;
+        if (vnode.transition) root.transition = vnode.transition;
+        result = root;
     } catch (err) {
         blockStack.length = 0;
         handleError(err, instance, 1 /* RENDER_FUNCTION */ );
-        result = createVNode(Comment1);
+        result = createVNode(Comment);
     }
     setCurrentRenderingInstance(prev);
     return result;
@@ -2759,7 +2324,7 @@ function filterSingleRoot(children) {
         const child = children[i];
         if (isVNode(child)) // ignore user comment
         {
-            if (child.type !== Comment1 || child.children === 'v-if') {
+            if (child.type !== Comment || child.children === 'v-if') {
                 if (singleRoot) // has more than 1 non-comment child, return now
                 return;
                 else singleRoot = child;
@@ -2781,17 +2346,13 @@ const filterModelListeners = (attrs, props)=>{
     return res;
 };
 const isElementRoot = (vnode)=>{
-    return vnode.shapeFlag & 7 /* ELEMENT */  || vnode.type === Comment1 // potential v-if branch switch
+    return vnode.shapeFlag & 7 /* ELEMENT */  || vnode.type === Comment // potential v-if branch switch
     ;
 };
 function shouldUpdateComponent(prevVNode, nextVNode, optimized) {
     const { props: prevProps , children: prevChildren , component  } = prevVNode;
     const { props: nextProps , children: nextChildren , patchFlag  } = nextVNode;
     const emits = component.emitsOptions;
-    // Parent component's render function was hot-updated. Since this may have
-    // caused the child component's slots content to have changed, we need to
-    // force the child to update as well.
-    if ((prevChildren || nextChildren) && isHmrUpdating) return true;
     // force child update for runtime directive or transition on component vnode.
     if (nextVNode.dirs || nextVNode.transition) return true;
     if (optimized && patchFlag >= 0) {
@@ -2961,11 +2522,6 @@ function patchSuspense(n1, n2, container, anchor, parentComponent, isSVG, slotSc
 }
 let hasWarned = false;
 function createSuspenseBoundary(vnode, parent, parentComponent, container1, hiddenContainer, anchor1, isSVG, slotScopeIds, optimized, rendererInternals, isHydrating = false) {
-    /* istanbul ignore if */ if (!hasWarned) {
-        hasWarned = true;
-        // @ts-ignore `console.info` cannot be null error
-        console[console.info ? 'info' : 'log'](`<Suspense> is an experimental feature and its API will likely change.`);
-    }
     const { p: patch , m: move , um: unmount , n: next , o: { parentNode , remove  }  } = rendererInternals;
     const timeout = _shared.toNumber(vnode.props && vnode.props.timeout);
     const suspense = {
@@ -2986,67 +2542,65 @@ function createSuspenseBoundary(vnode, parent, parentComponent, container1, hidd
         isUnmounted: false,
         effects: [],
         resolve (resume = false) {
-            if (!resume && !suspense.pendingBranch) throw new Error(`suspense.resolve() is called without a pending branch.`);
-            if (suspense.isUnmounted) throw new Error(`suspense.resolve() is called on an already unmounted suspense boundary.`);
-            const { vnode: vnode1 , activeBranch , pendingBranch , pendingId , effects , parentComponent: parentComponent1 , container: container1  } = suspense;
+            const { vnode , activeBranch , pendingBranch , pendingId , effects , parentComponent , container  } = suspense;
             if (suspense.isHydrating) suspense.isHydrating = false;
             else if (!resume) {
                 const delayEnter = activeBranch && pendingBranch.transition && pendingBranch.transition.mode === 'out-in';
                 if (delayEnter) activeBranch.transition.afterLeave = ()=>{
-                    if (pendingId === suspense.pendingId) move(pendingBranch, container1, anchor1, 0 /* ENTER */ );
+                    if (pendingId === suspense.pendingId) move(pendingBranch, container, anchor1, 0 /* ENTER */ );
                 };
                 // this is initial anchor on mount
-                let { anchor: anchor1  } = suspense;
+                let { anchor  } = suspense;
                 // unmount current active tree
                 if (activeBranch) {
                     // if the fallback tree was mounted, it may have been moved
                     // as part of a parent suspense. get the latest anchor for insertion
-                    anchor1 = next(activeBranch);
-                    unmount(activeBranch, parentComponent1, suspense, true);
+                    anchor = next(activeBranch);
+                    unmount(activeBranch, parentComponent, suspense, true);
                 }
                 if (!delayEnter) // move content from off-dom container to actual container
-                move(pendingBranch, container1, anchor1, 0 /* ENTER */ );
+                move(pendingBranch, container, anchor, 0 /* ENTER */ );
             }
             setActiveBranch(suspense, pendingBranch);
             suspense.pendingBranch = null;
             suspense.isInFallback = false;
             // flush buffered effects
             // check if there is a pending parent suspense
-            let parent1 = suspense.parent;
+            let parent = suspense.parent;
             let hasUnresolvedAncestor = false;
-            while(parent1){
-                if (parent1.pendingBranch) {
+            while(parent){
+                if (parent.pendingBranch) {
                     // found a pending parent suspense, merge buffered post jobs
                     // into that parent
-                    parent1.effects.push(...effects);
+                    parent.effects.push(...effects);
                     hasUnresolvedAncestor = true;
                     break;
                 }
-                parent1 = parent1.parent;
+                parent = parent.parent;
             }
             // no pending parent suspense, flush all jobs
             if (!hasUnresolvedAncestor) queuePostFlushCb(effects);
             suspense.effects = [];
             // invoke @resolve event
-            triggerEvent(vnode1, 'onResolve');
+            triggerEvent(vnode, 'onResolve');
         },
         fallback (fallbackVNode) {
             if (!suspense.pendingBranch) return;
-            const { vnode: vnode1 , activeBranch , parentComponent: parentComponent1 , container: container1 , isSVG: isSVG1  } = suspense;
+            const { vnode , activeBranch , parentComponent , container , isSVG  } = suspense;
             // invoke @fallback event
-            triggerEvent(vnode1, 'onFallback');
-            const anchor1 = next(activeBranch);
+            triggerEvent(vnode, 'onFallback');
+            const anchor = next(activeBranch);
             const mountFallback = ()=>{
                 if (!suspense.isInFallback) return;
                 // mount the fallback tree
-                patch(null, fallbackVNode, container1, anchor1, parentComponent1, null, isSVG1, slotScopeIds, optimized);
+                patch(null, fallbackVNode, container, anchor, parentComponent, null, isSVG, slotScopeIds, optimized);
                 setActiveBranch(suspense, fallbackVNode);
             };
             const delayEnter = fallbackVNode.transition && fallbackVNode.transition.mode === 'out-in';
             if (delayEnter) activeBranch.transition.afterLeave = mountFallback;
             suspense.isInFallback = true;
             // unmount current active branch
-            unmount(activeBranch, parentComponent1, null, true // shouldRemove
+            unmount(activeBranch, parentComponent, null, true // shouldRemove
             );
             if (!delayEnter) mountFallback();
         },
@@ -3069,24 +2623,22 @@ function createSuspenseBoundary(vnode, parent, parentComponent, container1, hidd
                 if (instance.isUnmounted || suspense.isUnmounted || suspense.pendingId !== instance.suspenseId) return;
                 // retry from this component
                 instance.asyncResolved = true;
-                const { vnode: vnode1  } = instance;
-                pushWarningContext(vnode1);
+                const { vnode  } = instance;
                 handleSetupResult(instance, asyncSetupResult, false);
                 if (hydratedEl) // vnode may have been replaced if an update happened before the
                 // async dep is resolved.
-                vnode1.el = hydratedEl;
+                vnode.el = hydratedEl;
                 const placeholder = !hydratedEl && instance.subTree.el;
-                setupRenderEffect(instance, vnode1, // component may have been moved before resolve.
+                setupRenderEffect(instance, vnode, // component may have been moved before resolve.
                 // if this is not a hydration, instance.subTree will be the comment
                 // placeholder.
                 parentNode(hydratedEl || instance.subTree.el), // anchor will not be used if this is hydration, so only need to
                 // consider the comment placeholder case.
                 hydratedEl ? null : next(instance.subTree), suspense, isSVG, optimized);
                 if (placeholder) remove(placeholder);
-                updateHOCHostEl(instance, vnode1.el);
-                popWarningContext();
+                updateHOCHostEl(instance, vnode.el);
                 // only decrease deps count if suspense is not already resolved
-                if (isInPendingSuspense && (--suspense.deps) === 0) suspense.resolve();
+                if (isInPendingSuspense && --suspense.deps === 0) suspense.resolve();
             });
         },
         unmount (parentSuspense, doRemove) {
@@ -3113,7 +2665,7 @@ function normalizeSuspenseChildren(vnode) {
     const { shapeFlag , children  } = vnode;
     const isSlotChildren = shapeFlag & 32 /* SLOTS_CHILDREN */ ;
     vnode.ssContent = normalizeSuspenseSlot(isSlotChildren ? children.default : children);
-    vnode.ssFallback = isSlotChildren ? normalizeSuspenseSlot(children.fallback) : createVNode(Comment1);
+    vnode.ssFallback = isSlotChildren ? normalizeSuspenseSlot(children.fallback) : createVNode(Comment);
 }
 function normalizeSuspenseSlot(s) {
     let block;
@@ -3135,7 +2687,6 @@ function normalizeSuspenseSlot(s) {
     }
     if (_shared.isArray(s)) {
         const singleChild = filterSingleRoot(s);
-        if (!singleChild) warn(`<Suspense> slots expect a single root node.`);
         s = singleChild;
     }
     s = normalizeVNode(s);
@@ -3161,7 +2712,7 @@ function setActiveBranch(suspense, branch) {
     }
 }
 function provide(key, value) {
-    if (!currentInstance) warn(`provide() can only be used inside setup().`);
+    if (!currentInstance) ;
     else {
         let provides = currentInstance.provides;
         // by default an instance inherits its parent's provides object
@@ -3187,8 +2738,7 @@ function inject(key, defaultValue, treatDefaultAsFactory = false) {
         if (provides && key in provides) // TS doesn't allow symbol as index type
         return provides[key];
         else if (arguments.length > 1) return treatDefaultAsFactory && _shared.isFunction(defaultValue) ? defaultValue.call(instance.proxy) : defaultValue;
-        else warn(`injection "${String(key)}" not found.`);
-    } else warn(`inject() can only be used inside setup() or functional components.`);
+    }
 }
 function useTransitionState() {
     const state = {
@@ -3238,18 +2788,10 @@ const BaseTransitionImpl = {
         return ()=>{
             const children = slots.default && getTransitionRawChildren(slots.default(), true);
             if (!children || !children.length) return;
-            // warn multiple elements
-            if (children.length > 1) warn("<transition> can only be used on a single element or component. Use <transition-group> for lists.");
             // there's no need to track reactivity for these props so use the raw
             // props for a bit better perf
             const rawProps = _reactivity.toRaw(props);
             const { mode  } = rawProps;
-            // check mode
-            if (mode && ![
-                'in-out',
-                'out-in',
-                'default'
-            ].includes(mode)) warn(`invalid <transition> mode: ${mode}`);
             // at this point children has a guaranteed length of 1.
             const child = children[0];
             if (state.isLeaving) return emptyPlaceholder(child);
@@ -3272,7 +2814,7 @@ const BaseTransitionImpl = {
                 }
             }
             // handle mode
-            if (oldInnerChild && oldInnerChild.type !== Comment1 && (!isSameVNodeType(innerChild, oldInnerChild) || transitionKeyChanged)) {
+            if (oldInnerChild && oldInnerChild.type !== Comment && (!isSameVNodeType(innerChild, oldInnerChild) || transitionKeyChanged)) {
                 const leavingHooks = resolveTransitionHooks(oldInnerChild, rawProps, state, instance);
                 // update old tree's hooks in case of dynamic transition
                 setTransitionHooks(oldInnerChild, leavingHooks);
@@ -3285,7 +2827,7 @@ const BaseTransitionImpl = {
                         instance.update();
                     };
                     return emptyPlaceholder(child);
-                } else if (mode === 'in-out' && innerChild.type !== Comment1) leavingHooks.delayLeave = (el, earlyRemove, delayedLeave)=>{
+                } else if (mode === 'in-out' && innerChild.type !== Comment) leavingHooks.delayLeave = (el, earlyRemove, delayedLeave)=>{
                     const leavingVNodesCache = getLeavingNodesForType(state, oldInnerChild);
                     leavingVNodesCache[String(oldInnerChild.key)] = oldInnerChild;
                     // early removal callback
@@ -3371,7 +2913,7 @@ function resolveTransitionHooks(vnode1, props, state, instance) {
             } else done();
         },
         leave (el, remove) {
-            const key1 = String(vnode1.key);
+            const key = String(vnode1.key);
             if (el._enterCb) el._enterCb(true);
             if (state.isUnmounting) return remove();
             callHook(onBeforeLeave, [
@@ -3389,9 +2931,9 @@ function resolveTransitionHooks(vnode1, props, state, instance) {
                     el
                 ]);
                 el._leaveCb = undefined;
-                if (leavingVNodesCache[key1] === vnode1) delete leavingVNodesCache[key1];
+                if (leavingVNodesCache[key] === vnode1) delete leavingVNodesCache[key];
             };
-            leavingVNodesCache[key1] = vnode1;
+            leavingVNodesCache[key] = vnode1;
             if (onLeave) {
                 onLeave(el, done);
                 if (onLeave.length <= 1) done();
@@ -3433,7 +2975,7 @@ function getTransitionRawChildren(children, keepComment = false) {
         if (child.type === Fragment) {
             if (child.patchFlag & 128 /* KEYED_FRAGMENT */ ) keyedFragmentCount++;
             ret = ret.concat(getTransitionRawChildren(child.children, keepComment));
-        } else if (keepComment || child.type !== Comment1) ret.push(child);
+        } else if (keepComment || child.type !== Comment) ret.push(child);
     }
     // #1126 if a transition children list contains multiple sub fragments, these
     // fragments will be merged into a flat children array. Since each v-for
@@ -3478,10 +3020,8 @@ function defineAsyncComponent(source) {
             else throw err;
         }).then((comp)=>{
             if (thisRequest !== pendingRequest && pendingRequest) return pendingRequest;
-            if (!comp) warn(`Async component loader resolved to undefined. ` + `If you are using retry(), make sure to return its return value.`);
             // interop module default
             if (comp && (comp.__esModule || comp[Symbol.toStringTag] === 'Module')) comp = comp.default;
-            if (comp && !_shared.isObject(comp) && !_shared.isFunction(comp)) throw new Error(`Invalid async component load result: ${comp}`);
             resolvedComp = comp;
             return comp;
         }));
@@ -3588,35 +3128,35 @@ const KeepAliveImpl = {
         const cache = new Map();
         const keys = new Set();
         let current = null;
-        instance.__v_cache = cache;
+        if (__VUE_PROD_DEVTOOLS__) instance.__v_cache = cache;
         const parentSuspense = instance.suspense;
         const { renderer: { p: patch , m: move , um: _unmount , o: { createElement  }  }  } = sharedContext;
         const storageContainer = createElement('div');
         sharedContext.activate = (vnode, container, anchor, isSVG, optimized)=>{
-            const instance1 = vnode.component;
+            const instance = vnode.component;
             move(vnode, container, anchor, 0 /* ENTER */ , parentSuspense);
             // in case props have changed
-            patch(instance1.vnode, vnode, container, anchor, instance1, parentSuspense, isSVG, vnode.slotScopeIds, optimized);
+            patch(instance.vnode, vnode, container, anchor, instance, parentSuspense, isSVG, vnode.slotScopeIds, optimized);
             queuePostRenderEffect(()=>{
-                instance1.isDeactivated = false;
-                if (instance1.a) _shared.invokeArrayFns(instance1.a);
+                instance.isDeactivated = false;
+                if (instance.a) _shared.invokeArrayFns(instance.a);
                 const vnodeHook = vnode.props && vnode.props.onVnodeMounted;
-                if (vnodeHook) invokeVNodeHook(vnodeHook, instance1.parent, vnode);
+                if (vnodeHook) invokeVNodeHook(vnodeHook, instance.parent, vnode);
             }, parentSuspense);
-            // Update components tree
-            devtoolsComponentAdded(instance1);
+            if (__VUE_PROD_DEVTOOLS__) // Update components tree
+            devtoolsComponentAdded(instance);
         };
         sharedContext.deactivate = (vnode)=>{
-            const instance1 = vnode.component;
+            const instance = vnode.component;
             move(vnode, storageContainer, null, 1 /* LEAVE */ , parentSuspense);
             queuePostRenderEffect(()=>{
-                if (instance1.da) _shared.invokeArrayFns(instance1.da);
+                if (instance.da) _shared.invokeArrayFns(instance.da);
                 const vnodeHook = vnode.props && vnode.props.onVnodeUnmounted;
-                if (vnodeHook) invokeVNodeHook(vnodeHook, instance1.parent, vnode);
-                instance1.isDeactivated = true;
+                if (vnodeHook) invokeVNodeHook(vnodeHook, instance.parent, vnode);
+                instance.isDeactivated = true;
             }, parentSuspense);
-            // Update components tree
-            devtoolsComponentAdded(instance1);
+            if (__VUE_PROD_DEVTOOLS__) // Update components tree
+            devtoolsComponentAdded(instance);
         };
         function unmount(vnode) {
             // reset the shapeFlag so it can be properly unmounted
@@ -3682,7 +3222,6 @@ const KeepAliveImpl = {
             const children = slots.default();
             const rawVNode = children[0];
             if (children.length > 1) {
-                warn(`KeepAlive should contain exactly one component child.`);
                 current = null;
                 return children;
             } else if (!isVNode(rawVNode) || !(rawVNode.shapeFlag & 4 /* STATEFUL_COMPONENT */ ) && !(rawVNode.shapeFlag & 128 /* SUSPENSE */ )) {
@@ -3819,9 +3358,6 @@ function injectHook(type, hook, target = currentInstance, prepend = false) {
         if (prepend) hooks.unshift(wrappedHook);
         else hooks.push(wrappedHook);
         return wrappedHook;
-    } else {
-        const apiName = _shared.toHandlerKey(ErrorTypeStrings[type].replace(/ hook$/, ''));
-        warn(`${apiName} is called when there is no active component instance to be ` + `associated with. ` + `Lifecycle injection APIs can only be used during execution of setup().` + (` If you are using async setup(), make sure to register lifecycle ` + `hooks before the first await statement.`));
     }
 }
 const createHook = (lifecycle)=>(hook, target = currentInstance)=>// post-create lifecycle registrations are noops during SSR (except for serverPrefetch)
@@ -3861,11 +3397,7 @@ function applyOptions(instance) {
     created , beforeMount , mounted , beforeUpdate , updated , activated , deactivated , beforeDestroy , beforeUnmount , destroyed , unmounted , render , renderTracked , renderTriggered , errorCaptured , serverPrefetch , // public API
     expose , inheritAttrs , // assets
     components , directives , filters  } = options;
-    const checkDuplicateProperties = createDuplicateChecker();
-    {
-        const [propsOptions] = instance.propsOptions;
-        if (propsOptions) for(const key in propsOptions)checkDuplicateProperties("Props" /* PROPS */ , key);
-    }
+    const checkDuplicateProperties = null;
     // options initialization order (to be consistent with Vue 2):
     // - props (already done outside of this function)
     // - inject
@@ -3876,45 +3408,19 @@ function applyOptions(instance) {
     if (injectOptions) resolveInjections(injectOptions, ctx, checkDuplicateProperties, instance.appContext.config.unwrapInjectedRef);
     if (methods) for(const key in methods){
         const methodHandler = methods[key];
-        if (_shared.isFunction(methodHandler)) {
-            Object.defineProperty(ctx, key, {
-                value: methodHandler.bind(publicThis),
-                configurable: true,
-                enumerable: true,
-                writable: true
-            });
-            checkDuplicateProperties("Methods" /* METHODS */ , key);
-        } else warn(`Method "${key}" has type "${typeof methodHandler}" in the component definition. ` + `Did you reference the function correctly?`);
+        if (_shared.isFunction(methodHandler)) ctx[key] = methodHandler.bind(publicThis);
     }
     if (dataOptions) {
-        if (!_shared.isFunction(dataOptions)) warn(`The data option must be a function. ` + `Plain object usage is no longer supported.`);
         const data = dataOptions.call(publicThis, publicThis);
-        if (_shared.isPromise(data)) warn(`data() returned a Promise - note data() cannot be async; If you ` + `intend to perform data fetching before component renders, use ` + `async setup() + <Suspense>.`);
-        if (!_shared.isObject(data)) warn(`data() should return an object.`);
-        else {
-            instance.data = _reactivity.reactive(data);
-            for(const key1 in data){
-                checkDuplicateProperties("Data" /* DATA */ , key1);
-                // expose data on ctx during dev
-                if (key1[0] !== '$' && key1[0] !== '_') Object.defineProperty(ctx, key1, {
-                    configurable: true,
-                    enumerable: true,
-                    get: ()=>data[key1]
-                    ,
-                    set: _shared.NOOP
-                });
-            }
-        }
+        if (!_shared.isObject(data)) ;
+        else instance.data = _reactivity.reactive(data);
     }
     // state initialization complete at this point - start caching access
     shouldCacheAccess = true;
     if (computedOptions) for(const key1 in computedOptions){
         const opt = computedOptions[key1];
         const get = _shared.isFunction(opt) ? opt.bind(publicThis, publicThis) : _shared.isFunction(opt.get) ? opt.get.bind(publicThis, publicThis) : _shared.NOOP;
-        if (get === _shared.NOOP) warn(`Computed property "${key1}" has no getter.`);
-        const set = !_shared.isFunction(opt) && _shared.isFunction(opt.set) ? opt.set.bind(publicThis) : ()=>{
-            warn(`Write operation failed: computed property "${key1}" is readonly.`);
-        };
+        const set = !_shared.isFunction(opt) && _shared.isFunction(opt.set) ? opt.set.bind(publicThis) : _shared.NOOP;
         const c = _reactivity.computed({
             get,
             set
@@ -3926,13 +3432,12 @@ function applyOptions(instance) {
             ,
             set: (v)=>c.value = v
         });
-        checkDuplicateProperties("Computed" /* COMPUTED */ , key1);
     }
     if (watchOptions) for(const key2 in watchOptions)createWatcher(watchOptions[key2], ctx, publicThis, key2);
     if (provideOptions) {
         const provides = _shared.isFunction(provideOptions) ? provideOptions.call(publicThis) : provideOptions;
-        Reflect.ownKeys(provides).forEach((key3)=>{
-            provide(key3, provides[key3]);
+        Reflect.ownKeys(provides).forEach((key)=>{
+            provide(key, provides[key]);
         });
     }
     if (created) callHook(created, instance, "c" /* CREATED */ );
@@ -3957,11 +3462,11 @@ function applyOptions(instance) {
         if (expose.length) {
             const exposed = instance.exposed || (instance.exposed = {
             });
-            expose.forEach((key3)=>{
-                Object.defineProperty(exposed, key3, {
-                    get: ()=>publicThis[key3]
+            expose.forEach((key)=>{
+                Object.defineProperty(exposed, key, {
+                    get: ()=>publicThis[key]
                     ,
-                    set: (val)=>publicThis[key3] = val
+                    set: (val)=>publicThis[key] = val
                 });
             });
         } else if (!instance.exposed) instance.exposed = {
@@ -3993,12 +3498,8 @@ function resolveInjections(injectOptions, ctx, checkDuplicateProperties = _share
                 ,
                 set: (v)=>injected.value = v
             });
-            else {
-                warn(`injected property "${key}" is a ref and will be auto-unwrapped ` + `and no longer needs \`.value\` in the next minor release. ` + `To opt-in to the new behavior now, ` + `set \`app.config.unwrapInjectedRef = true\` (this config is ` + `temporary and will not be needed in the future.)`);
-                ctx[key] = injected;
-            }
+            else ctx[key] = injected;
         } else ctx[key] = injected;
-        checkDuplicateProperties("Inject" /* INJECT */ , key);
     }
 }
 function callHook(hook, instance, type) {
@@ -4011,7 +3512,6 @@ function createWatcher(raw, ctx, publicThis, key) {
     if (_shared.isString(raw)) {
         const handler = ctx[raw];
         if (_shared.isFunction(handler)) watch(getter, handler);
-        else warn(`Invalid watch handler specified by key "${raw}"`, handler);
     } else if (_shared.isFunction(raw)) watch(getter, raw.bind(publicThis));
     else if (_shared.isObject(raw)) {
         if (_shared.isArray(raw)) raw.forEach((r)=>createWatcher(r, ctx, publicThis, key)
@@ -4019,9 +3519,8 @@ function createWatcher(raw, ctx, publicThis, key) {
         else {
             const handler = _shared.isFunction(raw.handler) ? raw.handler.bind(publicThis) : ctx[raw.handler];
             if (_shared.isFunction(handler)) watch(getter, handler, raw);
-            else warn(`Invalid watch handler specified by key "${raw.handler}"`, handler);
         }
-    } else warn(`Invalid watch option: "${key}"`, raw);
+    } else ;
 }
 /**
  * Resolve merged options and cache it on the component.
@@ -4050,10 +3549,12 @@ function mergeOptions(to, from, strats, asMixin = false) {
     if (extendsOptions) mergeOptions(to, extendsOptions, strats, true);
     if (mixins) mixins.forEach((m)=>mergeOptions(to, m, strats, true)
     );
-    for(const key in from)if (asMixin && key === 'expose') warn(`"expose" option is ignored when declared in mixins or extends. ` + `It should only be declared in the base component itself.`);
-    else {
-        const strat = internalOptionMergeStrats[key] || strats && strats[key];
-        to[key] = strat ? strat(to[key], from[key]) : from[key];
+    for(const key in from){
+        if (asMixin && key === 'expose') ;
+        else {
+            const strat = internalOptionMergeStrats[key] || strats && strats[key];
+            to[key] = strat ? strat(to[key], from[key]) : from[key];
+        }
     }
     return to;
 }
@@ -4132,8 +3633,6 @@ function initProps(instance, rawProps, isStateful, isSSR = false) {
     setFullProps(instance, rawProps, props, attrs);
     // ensure all declared prop keys are present
     for(const key in instance.propsOptions[0])if (!(key in props)) props[key] = undefined;
-    validateProps(rawProps || {
-    }, props, instance);
     if (isStateful) // stateful
     instance.props = isSSR ? props : _reactivity.shallowReactive(props);
     else if (!instance.type.props) // functional w/ optional props, props === attrs
@@ -4150,7 +3649,7 @@ function updateProps(instance, rawProps, rawPrevProps, optimized) {
     if (// always force full diff in dev
     // - #1942 if hmr is enabled with sfc component
     // - vite#872 non-sfc component used by sfc component
-    !(instance.type.__hmrId || instance.parent && instance.parent.type.__hmrId) && (optimized || patchFlag > 0) && !(patchFlag & 16 /* FULL_PROPS */ )) {
+    (optimized || patchFlag > 0) && !(patchFlag & 16 /* FULL_PROPS */ )) {
         if (patchFlag & 8 /* PROPS */ ) {
             // Compiler-generated props & no keys change, just set the updated
             // the props.
@@ -4192,16 +3691,14 @@ function updateProps(instance, rawProps, rawPrevProps, optimized) {
         // in the case of functional component w/o props declaration, props and
         // attrs point to the same object so it should already have been updated.
         if (attrs !== rawCurrentProps) {
-            for(const key1 in attrs)if (!rawProps || !_shared.hasOwn(rawProps, key1)) {
-                delete attrs[key1];
+            for(const key in attrs)if (!rawProps || !_shared.hasOwn(rawProps, key)) {
+                delete attrs[key];
                 hasAttrsChanged = true;
             }
         }
     }
     // trigger updates for $attrs in case it's used in component slots
     if (hasAttrsChanged) _reactivity.trigger(instance, "set" /* SET */ , '$attrs');
-    validateProps(rawProps || {
-    }, props, instance);
 }
 function setFullProps(instance, rawProps, props, attrs) {
     const [options, needCastKeys] = instance.propsOptions;
@@ -4229,8 +3726,8 @@ function setFullProps(instance, rawProps, props, attrs) {
         const rawCurrentProps = _reactivity.toRaw(props);
         const castValues = rawCastValues || _shared.EMPTY_OBJ;
         for(let i = 0; i < needCastKeys.length; i++){
-            const key1 = needCastKeys[i];
-            props[key1] = resolvePropValue(options, rawCurrentProps, key1, castValues[key1], instance, !_shared.hasOwn(castValues, key1));
+            const key = needCastKeys[i];
+            props[key] = resolvePropValue(options, rawCurrentProps, key, castValues[key], instance, !_shared.hasOwn(castValues, key));
         }
     }
     return hasAttrsChanged;
@@ -4271,9 +3768,9 @@ function normalizePropsOptions(comp, appContext, asMixin = false) {
     // apply mixin/extends props
     let hasExtends = false;
     if (__VUE_OPTIONS_API__ && !_shared.isFunction(comp)) {
-        const extendProps = (raw1)=>{
+        const extendProps = (raw)=>{
             hasExtends = true;
-            const [props, keys] = normalizePropsOptions(raw1, appContext, true);
+            const [props, keys] = normalizePropsOptions(raw, appContext, true);
             _shared.extend(normalized, props);
             if (keys) needCastKeys.push(...keys);
         };
@@ -4286,27 +3783,23 @@ function normalizePropsOptions(comp, appContext, asMixin = false) {
         return _shared.EMPTY_ARR;
     }
     if (_shared.isArray(raw)) for(let i = 0; i < raw.length; i++){
-        if (!_shared.isString(raw[i])) warn(`props must be strings when using array syntax.`, raw[i]);
         const normalizedKey = _shared.camelize(raw[i]);
         if (validatePropName(normalizedKey)) normalized[normalizedKey] = _shared.EMPTY_OBJ;
     }
-    else if (raw) {
-        if (!_shared.isObject(raw)) warn(`invalid props options`, raw);
-        for(const key in raw){
-            const normalizedKey = _shared.camelize(key);
-            if (validatePropName(normalizedKey)) {
-                const opt = raw[key];
-                const prop = normalized[normalizedKey] = _shared.isArray(opt) || _shared.isFunction(opt) ? {
-                    type: opt
-                } : opt;
-                if (prop) {
-                    const booleanIndex = getTypeIndex(Boolean, prop.type);
-                    const stringIndex = getTypeIndex(String, prop.type);
-                    prop[0 /* shouldCast */ ] = booleanIndex > -1;
-                    prop[1 /* shouldCastTrue */ ] = stringIndex < 0 || booleanIndex < stringIndex;
-                    // if the prop needs boolean casting or default value
-                    if (booleanIndex > -1 || _shared.hasOwn(prop, 'default')) needCastKeys.push(normalizedKey);
-                }
+    else if (raw) for(const key in raw){
+        const normalizedKey = _shared.camelize(key);
+        if (validatePropName(normalizedKey)) {
+            const opt = raw[key];
+            const prop = normalized[normalizedKey] = _shared.isArray(opt) || _shared.isFunction(opt) ? {
+                type: opt
+            } : opt;
+            if (prop) {
+                const booleanIndex = getTypeIndex(Boolean, prop.type);
+                const stringIndex = getTypeIndex(String, prop.type);
+                prop[0 /* shouldCast */ ] = booleanIndex > -1;
+                prop[1 /* shouldCastTrue */ ] = stringIndex < 0 || booleanIndex < stringIndex;
+                // if the prop needs boolean casting or default value
+                if (booleanIndex > -1 || _shared.hasOwn(prop, 'default')) needCastKeys.push(normalizedKey);
             }
         }
     }
@@ -4319,7 +3812,6 @@ function normalizePropsOptions(comp, appContext, asMixin = false) {
 }
 function validatePropName(key) {
     if (key[0] !== '$') return true;
-    else warn(`Invalid prop name: "${key}" is a reserved property.`);
     return false;
 }
 // use function string name to check type constructors
@@ -4447,7 +3939,6 @@ const normalizeSlotValue = (value)=>_shared.isArray(value) ? value.map(normalize
 ;
 const normalizeSlot = (key, rawSlot, ctx)=>{
     const normalized = withCtx((...args)=>{
-        if (currentInstance) warn(`Slot "${key}" invoked outside of the render function: ` + `this will not track dependencies used in the slot. ` + `Invoke the slot function inside the render function instead.`);
         return normalizeSlotValue(rawSlot(...args));
     }, ctx);
     normalized._c = false;
@@ -4460,7 +3951,6 @@ const normalizeObjectSlots = (rawSlots, slots, instance)=>{
         const value = rawSlots[key];
         if (_shared.isFunction(value)) slots[key] = normalizeSlot(key, value, ctx);
         else if (value != null) {
-            warn(`Non-function value encountered for slot "${key}". ` + `Prefer function slots for better performance.`);
             const normalized = normalizeSlotValue(value);
             slots[key] = ()=>normalized
             ;
@@ -4468,7 +3958,6 @@ const normalizeObjectSlots = (rawSlots, slots, instance)=>{
     }
 };
 const normalizeVNodeSlots = (instance, children)=>{
-    if (!isKeepAlive(instance.vnode) && true) warn(`Non-function value encountered for default slot. ` + `Prefer function slots for better performance.`);
     const normalized = normalizeSlotValue(children);
     instance.slots.default = ()=>normalized
     ;
@@ -4498,11 +3987,7 @@ const updateSlots = (instance, children, optimized)=>{
     if (vnode.shapeFlag & 32 /* SLOTS_CHILDREN */ ) {
         const type = children._;
         if (type) {
-            // compiled slots.
-            if (isHmrUpdating) // Parent was HMR updated so slot content may have changed.
-            // force update slots and mark instance for hmr as well
-            _shared.extend(slots, children);
-            else if (optimized && type === 1 /* STABLE */ ) // compiled AND stable.
+            if (optimized && type === 1 /* STABLE */ ) // compiled AND stable.
             // no need to update, and skip stale slots removal.
             needDeletionCheck = false;
             else {
@@ -4551,10 +4036,7 @@ function validateDirectiveName(name) {
  * Adds directives to a VNode.
  */ function withDirectives(vnode, directives) {
     const internalInstance = currentRenderingInstance;
-    if (internalInstance === null) {
-        warn(`withDirectives can only be used inside render functions.`);
-        return vnode;
-    }
+    if (internalInstance === null) return vnode;
     const instance = internalInstance.proxy;
     const bindings = vnode.dirs || (vnode.dirs = []);
     for(let i = 0; i < directives.length; i++){
@@ -4625,10 +4107,7 @@ function createAppContext() {
 let uid = 0;
 function createAppAPI(render, hydrate) {
     return function createApp(rootComponent, rootProps = null) {
-        if (rootProps != null && !_shared.isObject(rootProps)) {
-            warn(`root props passed to app.mount() must be an object.`);
-            rootProps = null;
-        }
+        if (rootProps != null && !_shared.isObject(rootProps)) rootProps = null;
         const context = createAppContext();
         const installedPlugins = new Set();
         let isMounted = false;
@@ -4644,37 +4123,31 @@ function createAppAPI(render, hydrate) {
                 return context.config;
             },
             set config (v){
-                warn(`app.config cannot be replaced. Modify individual options instead.`);
             },
             use (plugin, ...options) {
-                if (installedPlugins.has(plugin)) warn(`Plugin has already been applied to target app.`);
+                if (installedPlugins.has(plugin)) ;
                 else if (plugin && _shared.isFunction(plugin.install)) {
                     installedPlugins.add(plugin);
                     plugin.install(app, ...options);
                 } else if (_shared.isFunction(plugin)) {
                     installedPlugins.add(plugin);
                     plugin(app, ...options);
-                } else warn(`A plugin must either be a function or an object with an "install" ` + `function.`);
+                }
                 return app;
             },
             mixin (mixin) {
                 if (__VUE_OPTIONS_API__) {
                     if (!context.mixins.includes(mixin)) context.mixins.push(mixin);
-                    else warn('Mixin has already been applied to target app' + (mixin.name ? `: ${mixin.name}` : ''));
-                } else warn('Mixins are only available in builds supporting Options API');
+                }
                 return app;
             },
             component (name, component) {
-                validateComponentName(name, context.config);
                 if (!component) return context.components[name];
-                if (context.components[name]) warn(`Component "${name}" has already been registered in target app.`);
                 context.components[name] = component;
                 return app;
             },
             directive (name, directive) {
-                validateDirectiveName(name);
                 if (!directive) return context.directives[name];
-                if (context.directives[name]) warn(`Directive "${name}" has already been registered in target app.`);
                 context.directives[name] = directive;
                 return app;
             },
@@ -4684,29 +4157,29 @@ function createAppAPI(render, hydrate) {
                     // store app context on the root VNode.
                     // this will be set on the root instance on initial mount.
                     vnode.appContext = context;
-                    context.reload = ()=>{
-                        render(cloneVNode(vnode), rootContainer, isSVG);
-                    };
                     if (isHydrate && hydrate) hydrate(vnode, rootContainer);
                     else render(vnode, rootContainer, isSVG);
                     isMounted = true;
                     app._container = rootContainer;
                     rootContainer.__vue_app__ = app;
-                    app._instance = vnode.component;
-                    devtoolsInitApp(app, version);
+                    if (__VUE_PROD_DEVTOOLS__) {
+                        app._instance = vnode.component;
+                        devtoolsInitApp(app, version);
+                    }
                     return vnode.component.proxy;
-                } else warn(`App has already been mounted.\n` + `If you want to remount the same app, move your app creation logic ` + `into a factory function and create fresh app instances for each ` + `mount - e.g. \`const createMyApp = () => createApp(App)\``);
+                }
             },
             unmount () {
                 if (isMounted) {
                     render(null, app._container);
-                    app._instance = null;
-                    devtoolsUnmountApp(app);
+                    if (__VUE_PROD_DEVTOOLS__) {
+                        app._instance = null;
+                        devtoolsUnmountApp(app);
+                    }
                     delete app._container.__vue_app__;
-                } else warn(`Cannot unmount an app that is not mounted.`);
+                }
             },
             provide (key, value) {
-                if (key in context.provides) warn(`App already provides property with key "${String(key)}". ` + `It will be overwritten with the new value.`);
                 // TypeScript doesn't allow symbols as index type
                 // https://github.com/Microsoft/TypeScript/issues/24587
                 context.provides[key] = value;
@@ -4730,7 +4203,6 @@ function createHydrationFunctions(rendererInternals) {
     const { mt: mountComponent , p: patch , o: { patchProp , nextSibling , parentNode , remove , insert , createComment  }  } = rendererInternals;
     const hydrate = (vnode, container)=>{
         if (!container.hasChildNodes()) {
-            warn(`Attempting to hydrate existing markup but container is empty. ` + `Performing full mount instead.`);
             patch(null, vnode, container);
             flushPostFlushCbs();
             return;
@@ -4750,18 +4222,17 @@ function createHydrationFunctions(rendererInternals) {
         vnode.el = node;
         let nextNode = null;
         switch(type){
-            case Text1:
+            case Text:
                 if (domType !== 3 /* TEXT */ ) nextNode = onMismatch();
                 else {
                     if (node.data !== vnode.children) {
                         hasMismatch = true;
-                        warn(`Hydration text mismatch:` + `\n- Client: ${JSON.stringify(node.data)}` + `\n- Server: ${JSON.stringify(vnode.children)}`);
                         node.data = vnode.children;
                     }
                     nextNode = nextSibling(node);
                 }
                 break;
-            case Comment1:
+            case Comment:
                 if (domType !== 8 /* COMMENT */  || isFragmentStart) nextNode = onMismatch();
                 else nextNode = nextSibling(node);
                 break;
@@ -4817,7 +4288,6 @@ function createHydrationFunctions(rendererInternals) {
                     if (domType !== 8 /* COMMENT */ ) nextNode = onMismatch();
                     else nextNode = vnode.type.hydrate(node, vnode, parentComponent, parentSuspense, slotScopeIds, optimized, rendererInternals, hydrateChildren);
                 } else if (shapeFlag & 128 /* SUSPENSE */ ) nextNode = vnode.type.hydrate(node, vnode, parentComponent, parentSuspense, isSVGContainer(parentNode(node)), slotScopeIds, optimized, rendererInternals, hydrateNode);
-                else warn('Invalid HostVNode type:', type, `(${typeof type})`);
         }
         if (ref != null) setRef(ref, null, parentSuspense, vnode);
         return nextNode;
@@ -4851,13 +4321,9 @@ function createHydrationFunctions(rendererInternals) {
             if (shapeFlag & 16 /* ARRAY_CHILDREN */  && // skip if element has innerHTML / textContent
             !(props && (props.innerHTML || props.textContent))) {
                 let next = hydrateChildren(el.firstChild, vnode, el, parentComponent, parentSuspense, slotScopeIds, optimized);
-                let hasWarned1 = false;
+                let hasWarned = false;
                 while(next){
                     hasMismatch = true;
-                    if (!hasWarned1) {
-                        warn(`Hydration children mismatch in <${vnode.type}>: ` + `server rendered element contains more child nodes than client vdom.`);
-                        hasWarned1 = true;
-                    }
                     // The SSRed DOM contains more nodes than it should. Remove them.
                     const cur = next;
                     next = next.nextSibling;
@@ -4866,7 +4332,6 @@ function createHydrationFunctions(rendererInternals) {
             } else if (shapeFlag & 8 /* TEXT_CHILDREN */ ) {
                 if (el.textContent !== vnode.children) {
                     hasMismatch = true;
-                    warn(`Hydration text content mismatch in <${vnode.type}>:\n` + `- Client: ${el.textContent}\n` + `- Server: ${vnode.children}`);
                     el.textContent = vnode.children;
                 }
             }
@@ -4877,17 +4342,13 @@ function createHydrationFunctions(rendererInternals) {
         optimized = optimized || !!parentVNode.dynamicChildren;
         const children = parentVNode.children;
         const l = children.length;
-        let hasWarned1 = false;
+        let hasWarned = false;
         for(let i = 0; i < l; i++){
             const vnode = optimized ? children[i] : children[i] = normalizeVNode(children[i]);
             if (node) node = hydrateNode(node, vnode, parentComponent, parentSuspense, slotScopeIds, optimized);
-            else if (vnode.type === Text1 && !vnode.children) continue;
+            else if (vnode.type === Text && !vnode.children) continue;
             else {
                 hasMismatch = true;
-                if (!hasWarned1) {
-                    warn(`Hydration children mismatch in <${container.tagName.toLowerCase()}>: ` + `server rendered element contains fewer child nodes than client vdom.`);
-                    hasWarned1 = true;
-                }
                 // the SSRed DOM didn't contain enough nodes. Mount the missing ones.
                 patch(null, vnode, container, null, parentComponent, parentSuspense, isSVGContainer(container), slotScopeIds);
             }
@@ -4911,7 +4372,6 @@ function createHydrationFunctions(rendererInternals) {
     };
     const handleMismatch = (node, vnode, parentComponent, parentSuspense, slotScopeIds, isFragment)=>{
         hasMismatch = true;
-        warn(`Hydration node mismatch:\n- Client vnode:`, vnode.type, `\n- Server rendered DOM:`, node, node.nodeType === 3 /* TEXT */  ? `(text)` : isComment(node) && node.data === '[' ? `(start of fragment)` : ``);
         vnode.el = null;
         if (isFragment) {
             // remove excessive fragment nodes
@@ -4951,7 +4411,7 @@ let supported;
 let perf;
 function startMeasure(instance, type) {
     if (instance.appContext.config.performance && isSupported()) perf.mark(`vue-${type}-${instance.uid}`);
-    devtoolsPerfStart(instance, type, supported ? perf.now() : Date.now());
+    if (__VUE_PROD_DEVTOOLS__) devtoolsPerfStart(instance, type, supported ? perf.now() : Date.now());
 }
 function endMeasure(instance, type) {
     if (instance.appContext.config.performance && isSupported()) {
@@ -4962,7 +4422,7 @@ function endMeasure(instance, type) {
         perf.clearMarks(startTag);
         perf.clearMarks(endTag);
     }
-    devtoolsPerfEnd(instance, type, supported ? perf.now() : Date.now());
+    if (__VUE_PROD_DEVTOOLS__) devtoolsPerfEnd(instance, type, supported ? perf.now() : Date.now());
 }
 function isSupported() {
     if (supported !== undefined) return supported;
@@ -4988,7 +4448,6 @@ function isSupported() {
         needWarn = true;
         _shared.getGlobalThis().__VUE_PROD_DEVTOOLS__ = false;
     }
-    if (needWarn) console.warn(`You are running the esm-bundler build of Vue. It is recommended to ` + `configure your bundler to explicitly replace feature flag globals ` + `with boolean literals to get proper tree-shaking in the final bundle. ` + `See http://link.vuejs.org/feature-flags for more details.`);
 }
 const queuePostRenderEffect = queueEffectWithSuspense;
 /**
@@ -5017,7 +4476,7 @@ function createHydrationRenderer(options) {
 // implementation
 function baseCreateRenderer(options, createHydrationFns) {
     initFeatureFlags();
-    {
+    if (__VUE_PROD_DEVTOOLS__) {
         const target = _shared.getGlobalThis();
         target.__VUE__ = true;
         setDevtoolsHook(target.__VUE_DEVTOOLS_GLOBAL_HOOK__);
@@ -5025,7 +4484,7 @@ function baseCreateRenderer(options, createHydrationFns) {
     const { insert: hostInsert , remove: hostRemove , patchProp: hostPatchProp , createElement: hostCreateElement , createText: hostCreateText , createComment: hostCreateComment , setText: hostSetText , setElementText: hostSetElementText , parentNode: hostParentNode , nextSibling: hostNextSibling , setScopeId: hostSetScopeId = _shared.NOOP , cloneNode: hostCloneNode , insertStaticContent: hostInsertStaticContent  } = options;
     // Note: functions inside this closure should use `const xxx = () => {}`
     // style in order to prevent being inlined by minifiers.
-    const patch = (n1, n2, container, anchor = null, parentComponent = null, parentSuspense = null, isSVG = false, slotScopeIds = null, optimized = isHmrUpdating ? false : !!n2.dynamicChildren)=>{
+    const patch = (n1, n2, container, anchor = null, parentComponent = null, parentSuspense = null, isSVG = false, slotScopeIds = null, optimized = !!n2.dynamicChildren)=>{
         if (n1 === n2) return;
         // patching & not same type, unmount old tree
         if (n1 && !isSameVNodeType(n1, n2)) {
@@ -5039,15 +4498,14 @@ function baseCreateRenderer(options, createHydrationFns) {
         }
         const { type , ref , shapeFlag  } = n2;
         switch(type){
-            case Text1:
+            case Text:
                 processText(n1, n2, container, anchor);
                 break;
-            case Comment1:
+            case Comment:
                 processCommentNode(n1, n2, container, anchor);
                 break;
             case Static:
                 if (n1 == null) mountStaticNode(n2, container, anchor, isSVG);
-                else patchStaticNode(n1, n2, container, isSVG);
                 break;
             case Fragment:
                 processFragment(n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, slotScopeIds, optimized);
@@ -5057,7 +4515,6 @@ function baseCreateRenderer(options, createHydrationFns) {
                 else if (shapeFlag & 6 /* COMPONENT */ ) processComponent(n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, slotScopeIds, optimized);
                 else if (shapeFlag & 64 /* TELEPORT */ ) type.process(n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, slotScopeIds, optimized, internals);
                 else if (shapeFlag & 128 /* SUSPENSE */ ) type.process(n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, slotScopeIds, optimized, internals);
-                else warn('Invalid VNode type:', type, `(${typeof type})`);
         }
         // set ref
         if (ref != null && parentComponent) setRef(ref, n1 && n1.ref, parentSuspense, n2 || n1, !n2);
@@ -5118,16 +4575,22 @@ function baseCreateRenderer(options, createHydrationFns) {
         let el;
         let vnodeHook;
         const { type , props , shapeFlag , transition , patchFlag , dirs  } = vnode;
-        el = vnode.el = hostCreateElement(vnode.type, isSVG, props && props.is, props);
-        // mount children first, since some props may rely on child content
-        // being already rendered, e.g. `<select value>`
-        if (shapeFlag & 8 /* TEXT_CHILDREN */ ) hostSetElementText(el, vnode.children);
-        else if (shapeFlag & 16 /* ARRAY_CHILDREN */ ) mountChildren(vnode.children, el, null, parentComponent, parentSuspense, isSVG && type !== 'foreignObject', slotScopeIds, optimized);
-        if (dirs) invokeDirectiveHook(vnode, null, parentComponent, 'created');
-        // props
-        if (props) {
-            for(const key in props)if (key !== 'value' && !_shared.isReservedProp(key)) hostPatchProp(el, key, null, props[key], isSVG, vnode.children, parentComponent, parentSuspense, unmountChildren);
-            /**
+        if (vnode.el && hostCloneNode !== undefined && patchFlag === -1 /* HOISTED */ ) // If a vnode has non-null el, it means it's being reused.
+        // Only static vnodes can be reused, so its mounted DOM nodes should be
+        // exactly the same, and we can simply do a clone here.
+        // only do this in production since cloned trees cannot be HMR updated.
+        el = vnode.el = hostCloneNode(vnode.el);
+        else {
+            el = vnode.el = hostCreateElement(vnode.type, isSVG, props && props.is, props);
+            // mount children first, since some props may rely on child content
+            // being already rendered, e.g. `<select value>`
+            if (shapeFlag & 8 /* TEXT_CHILDREN */ ) hostSetElementText(el, vnode.children);
+            else if (shapeFlag & 16 /* ARRAY_CHILDREN */ ) mountChildren(vnode.children, el, null, parentComponent, parentSuspense, isSVG && type !== 'foreignObject', slotScopeIds, optimized);
+            if (dirs) invokeDirectiveHook(vnode, null, parentComponent, 'created');
+            // props
+            if (props) {
+                for(const key in props)if (key !== 'value' && !_shared.isReservedProp(key)) hostPatchProp(el, key, null, props[key], isSVG, vnode.children, parentComponent, parentSuspense, unmountChildren);
+                /**
                  * Special case for setting value on DOM elements:
                  * - it can be order-sensitive (e.g. should be set *after* min/max, #2325, #4024)
                  * - it needs to be forced (#1471)
@@ -5136,18 +4599,21 @@ function baseCreateRenderer(options, createHydrationFns) {
                  * here to reduce the complexity. (Special casing it also should not
                  * affect non-DOM renderers)
                  */ if ('value' in props) hostPatchProp(el, 'value', null, props.value);
-            if (vnodeHook = props.onVnodeBeforeMount) invokeVNodeHook(vnodeHook, parentComponent, vnode);
+                if (vnodeHook = props.onVnodeBeforeMount) invokeVNodeHook(vnodeHook, parentComponent, vnode);
+            }
+            // scopeId
+            setScopeId(el, vnode, vnode.scopeId, slotScopeIds, parentComponent);
         }
-        // scopeId
-        setScopeId(el, vnode, vnode.scopeId, slotScopeIds, parentComponent);
-        Object.defineProperty(el, '__vnode', {
-            value: vnode,
-            enumerable: false
-        });
-        Object.defineProperty(el, '__vueParentComponent', {
-            value: parentComponent,
-            enumerable: false
-        });
+        if (__VUE_PROD_DEVTOOLS__) {
+            Object.defineProperty(el, '__vnode', {
+                value: vnode,
+                enumerable: false
+            });
+            Object.defineProperty(el, '__vueParentComponent', {
+                value: parentComponent,
+                enumerable: false
+            });
+        }
         if (dirs) invokeDirectiveHook(vnode, null, parentComponent, 'beforeMount');
         // #1583 For inside suspense + suspense not resolved case, enter hook should call when suspense resolved
         // #1689 For inside suspense + suspense resolved case, just call it
@@ -5165,7 +4631,6 @@ function baseCreateRenderer(options, createHydrationFns) {
         if (slotScopeIds) for(let i = 0; i < slotScopeIds.length; i++)hostSetScopeId(el, slotScopeIds[i]);
         if (parentComponent) {
             let subTree = parentComponent.subTree;
-            if (subTree.patchFlag > 0 && subTree.patchFlag & 2048 /* DEV_ROOT_FRAGMENT */ ) subTree = filterSingleRoot(subTree.children) || subTree;
             if (vnode === subTree) {
                 const parentVNode = parentComponent.vnode;
                 setScopeId(el, parentVNode, parentVNode.scopeId, parentVNode.slotScopeIds, parentComponent.parent);
@@ -5189,17 +4654,9 @@ function baseCreateRenderer(options, createHydrationFns) {
         let vnodeHook;
         if (vnodeHook = newProps.onVnodeBeforeUpdate) invokeVNodeHook(vnodeHook, parentComponent, n2, n1);
         if (dirs) invokeDirectiveHook(n2, n1, parentComponent, 'beforeUpdate');
-        if (isHmrUpdating) {
-            // HMR updated, force full diff
-            patchFlag = 0;
-            optimized = false;
-            dynamicChildren = null;
-        }
         const areChildrenSVG = isSVG && n2.type !== 'foreignObject';
-        if (dynamicChildren) {
-            patchBlockChildren(n1.dynamicChildren, dynamicChildren, el, parentComponent, parentSuspense, areChildrenSVG, slotScopeIds);
-            if (parentComponent && parentComponent.type.__hmrId) traverseStaticChildren(n1, n2);
-        } else if (!optimized) // full diff
+        if (dynamicChildren) patchBlockChildren(n1.dynamicChildren, dynamicChildren, el, parentComponent, parentSuspense, areChildrenSVG, slotScopeIds);
+        else if (!optimized) // full diff
         patchChildren(n1, n2, el, null, parentComponent, parentSuspense, areChildrenSVG, slotScopeIds, false);
         if (patchFlag > 0) {
             // the presence of a patchFlag means this element's render code was
@@ -5274,7 +4731,7 @@ function baseCreateRenderer(options, createHydrationFns) {
                 if (next !== prev && key !== 'value') hostPatchProp(el, key, prev, next, isSVG, vnode.children, parentComponent, parentSuspense, unmountChildren);
             }
             if (oldProps !== _shared.EMPTY_OBJ) {
-                for(const key1 in oldProps)if (!_shared.isReservedProp(key1) && !(key1 in newProps)) hostPatchProp(el, key1, oldProps[key1], null, isSVG, vnode.children, parentComponent, parentSuspense, unmountChildren);
+                for(const key in oldProps)if (!_shared.isReservedProp(key) && !(key in newProps)) hostPatchProp(el, key, oldProps[key], null, isSVG, vnode.children, parentComponent, parentSuspense, unmountChildren);
             }
             if ('value' in newProps) hostPatchProp(el, 'value', oldProps.value, newProps.value);
         }
@@ -5283,12 +4740,6 @@ function baseCreateRenderer(options, createHydrationFns) {
         const fragmentStartAnchor = n2.el = n1 ? n1.el : hostCreateText('');
         const fragmentEndAnchor = n2.anchor = n1 ? n1.anchor : hostCreateText('');
         let { patchFlag , dynamicChildren , slotScopeIds: fragmentSlotScopeIds  } = n2;
-        if (isHmrUpdating) {
-            // HMR updated, force full diff
-            patchFlag = 0;
-            optimized = false;
-            dynamicChildren = null;
-        }
         // check if this is a slot fragment with :slotted scope ids
         if (fragmentSlotScopeIds) slotScopeIds = slotScopeIds ? slotScopeIds.concat(fragmentSlotScopeIds) : fragmentSlotScopeIds;
         if (n1 == null) {
@@ -5304,8 +4755,7 @@ function baseCreateRenderer(options, createHydrationFns) {
             // a stable fragment (template root or <template v-for>) doesn't need to
             // patch children order, but it may contain dynamicChildren.
             patchBlockChildren(n1.dynamicChildren, dynamicChildren, container, parentComponent, parentSuspense, isSVG, slotScopeIds);
-            if (parentComponent && parentComponent.type.__hmrId) traverseStaticChildren(n1, n2);
-            else if (// #2080 if the stable fragment has a key, it's a <template v-for> that may
+            if (// #2080 if the stable fragment has a key, it's a <template v-for> that may
             //  get moved around. Make sure all root level vnodes inherit el.
             // #2134 or if it's a component root, it may also get moved around
             // as the component is being moved.
@@ -5325,14 +4775,9 @@ function baseCreateRenderer(options, createHydrationFns) {
     };
     const mountComponent = (initialVNode, container, anchor, parentComponent, parentSuspense, isSVG, optimized)=>{
         const instance = initialVNode.component = createComponentInstance(initialVNode, parentComponent, parentSuspense);
-        if (instance.type.__hmrId) registerHMR(instance);
-        pushWarningContext(initialVNode);
-        startMeasure(instance, `mount`);
         // inject renderer internals for keepAlive
         if (isKeepAlive(initialVNode)) instance.ctx.renderer = internals;
-        startMeasure(instance, `init`);
         setupComponent(instance);
-        endMeasure(instance, `init`);
         // setup() is async. This component relies on async logic to be resolved
         // before proceeding
         if (instance.asyncDep) {
@@ -5340,22 +4785,18 @@ function baseCreateRenderer(options, createHydrationFns) {
             // Give it a placeholder if this is not hydration
             // TODO handle self-defined fallback
             if (!initialVNode.el) {
-                const placeholder = instance.subTree = createVNode(Comment1);
+                const placeholder = instance.subTree = createVNode(Comment);
                 processCommentNode(null, placeholder, container, anchor);
             }
             return;
         }
         setupRenderEffect(instance, initialVNode, container, anchor, parentSuspense, isSVG, optimized);
-        popWarningContext();
-        endMeasure(instance, `mount`);
     };
     const updateComponent = (n1, n2, optimized)=>{
         const instance = n2.component = n1.component;
         if (shouldUpdateComponent(n1, n2, optimized)) {
             if (instance.asyncDep && !instance.asyncResolved) {
-                pushWarningContext(n2);
                 updateComponentPreRender(instance, n2, optimized);
-                popWarningContext();
                 return;
             } else {
                 // normal update
@@ -5389,12 +4830,8 @@ function baseCreateRenderer(options, createHydrationFns) {
                 if (el && hydrateNode) {
                     // vnode has adopted host node - perform hydration instead of mount.
                     const hydrateSubTree = ()=>{
-                        startMeasure(instance, `render`);
                         instance.subTree = renderComponentRoot(instance);
-                        endMeasure(instance, `render`);
-                        startMeasure(instance, `hydrate`);
                         hydrateNode(el, instance.subTree, instance, parentSuspense, null);
-                        endMeasure(instance, `hydrate`);
                     };
                     if (isAsyncWrapperVNode) initialVNode.type.__asyncLoader().then(// note: we are moving the render call into an async callback,
                     // which means it won't track dependencies - but it's ok because
@@ -5404,12 +4841,8 @@ function baseCreateRenderer(options, createHydrationFns) {
                     );
                     else hydrateSubTree();
                 } else {
-                    startMeasure(instance, `render`);
                     const subTree = instance.subTree = renderComponentRoot(instance);
-                    endMeasure(instance, `render`);
-                    startMeasure(instance, `patch`);
                     patch(null, subTree, container, anchor, instance, parentSuspense, isSVG);
-                    endMeasure(instance, `patch`);
                     initialVNode.el = subTree.el;
                 }
                 // mounted hook
@@ -5425,7 +4858,7 @@ function baseCreateRenderer(options, createHydrationFns) {
                 // since the hook may be injected by a child keep-alive
                 if (initialVNode.shapeFlag & 256 /* COMPONENT_SHOULD_KEEP_ALIVE */ ) instance.a && queuePostRenderEffect(instance.a, parentSuspense);
                 instance.isMounted = true;
-                devtoolsComponentAdded(instance);
+                if (__VUE_PROD_DEVTOOLS__) devtoolsComponentAdded(instance);
                 // #2458: deference mount-only object parameters to prevent memleaks
                 initialVNode = container = anchor = null;
             } else {
@@ -5435,7 +4868,6 @@ function baseCreateRenderer(options, createHydrationFns) {
                 let { next , bu , u , parent , vnode  } = instance;
                 let originNext = next;
                 let vnodeHook;
-                pushWarningContext(next || instance.vnode);
                 // Disallow component effect recursion during pre-lifecycle hooks.
                 effect.allowRecurse = false;
                 if (next) {
@@ -5447,16 +4879,12 @@ function baseCreateRenderer(options, createHydrationFns) {
                 // onVnodeBeforeUpdate
                 if (vnodeHook = next.props && next.props.onVnodeBeforeUpdate) invokeVNodeHook(vnodeHook, parent, next, vnode);
                 effect.allowRecurse = true;
-                startMeasure(instance, `render`);
                 const nextTree = renderComponentRoot(instance);
-                endMeasure(instance, `render`);
                 const prevTree = instance.subTree;
                 instance.subTree = nextTree;
-                startMeasure(instance, `patch`);
                 patch(prevTree, nextTree, // parent may have changed if it's in a teleport
                 hostParentNode(prevTree.el), // anchor may have changed if it's in a fragment
                 getNextHostNode(prevTree), instance, parentSuspense, isSVG);
-                endMeasure(instance, `patch`);
                 next.el = nextTree.el;
                 if (originNext === null) // self-triggered update. In case of HOC, update parent component
                 // vnode el. HOC is indicated by parent instance's subTree pointing
@@ -5467,8 +4895,7 @@ function baseCreateRenderer(options, createHydrationFns) {
                 // onVnodeUpdated
                 if (vnodeHook = next.props && next.props.onVnodeUpdated) queuePostRenderEffect(()=>invokeVNodeHook(vnodeHook, parent, next, vnode)
                 , parentSuspense);
-                devtoolsComponentUpdated(instance);
-                popWarningContext();
+                if (__VUE_PROD_DEVTOOLS__) devtoolsComponentUpdated(instance);
             }
         };
         // create reactive effect for rendering
@@ -5480,12 +4907,7 @@ function baseCreateRenderer(options, createHydrationFns) {
         // allowRecurse
         // #1801, #2043 component render effects should allow recursive updates
         effect.allowRecurse = update.allowRecurse = true;
-        effect.onTrack = instance.rtc ? (e)=>_shared.invokeArrayFns(instance.rtc, e)
-         : void 0;
-        effect.onTrigger = instance.rtg ? (e)=>_shared.invokeArrayFns(instance.rtg, e)
-         : void 0;
-        // @ts-ignore (for scheduler)
-        update.ownerInstance = instance;
+        var e, e1;
         update();
     };
     const updateComponentPreRender = (instance, nextVNode, optimized)=>{
@@ -5608,10 +5030,7 @@ function baseCreateRenderer(options, createHydrationFns) {
             const keyToNewIndexMap = new Map();
             for(i = s2; i <= e2; i++){
                 const nextChild = c2[i] = optimized ? cloneIfMounted(c2[i]) : normalizeVNode(c2[i]);
-                if (nextChild.key != null) {
-                    if (keyToNewIndexMap.has(nextChild.key)) warn(`Duplicate keys found during update:`, JSON.stringify(nextChild.key), `Make sure keys are unique.`);
-                    keyToNewIndexMap.set(nextChild.key, i);
-                }
+                if (nextChild.key != null) keyToNewIndexMap.set(nextChild.key, i);
             }
             // 5.2 loop through old children left to be patched and try to patch
             // matching nodes & remove nodes that are no longer present
@@ -5785,7 +5204,6 @@ function baseCreateRenderer(options, createHydrationFns) {
         hostRemove(end);
     };
     const unmountComponent = (instance, parentSuspense, doRemove)=>{
-        if (instance.type.__hmrId) unregisterHMR(instance);
         const { bum , scope , update , subTree , um  } = instance;
         // beforeUnmount hook
         if (bum) _shared.invokeArrayFns(bum);
@@ -5810,7 +5228,7 @@ function baseCreateRenderer(options, createHydrationFns) {
             parentSuspense.deps--;
             if (parentSuspense.deps === 0) parentSuspense.resolve();
         }
-        devtoolsComponentRemoved(instance);
+        if (__VUE_PROD_DEVTOOLS__) devtoolsComponentRemoved(instance);
     };
     const unmountChildren = (children, parentComponent, parentSuspense, doRemove = false, optimized = false, start = 0)=>{
         for(let i = start; i < children.length; i++)unmount(children[i], parentComponent, parentSuspense, doRemove, optimized);
@@ -5860,10 +5278,6 @@ function setRef(rawRef, oldRawRef, parentSuspense, vnode, isUnmount = false) {
     const refValue = vnode.shapeFlag & 4 /* STATEFUL_COMPONENT */  ? getExposeProxy(vnode.component) || vnode.component.proxy : vnode.el;
     const value = isUnmount ? null : refValue;
     const { i: owner , r: ref  } = rawRef;
-    if (!owner) {
-        warn(`Missing ref owner context. ref cannot be used on hoisted vnodes. ` + `A vnode with ref must be created inside the render function.`);
-        return;
-    }
     const oldRef = oldRawRef && oldRawRef.r;
     const refs = owner.refs === _shared.EMPTY_OBJ ? owner.refs = {
     } : owner.refs;
@@ -5899,7 +5313,6 @@ function setRef(rawRef, oldRawRef, parentSuspense, vnode, isUnmount = false) {
         value,
         refs
     ]);
-    else warn('Invalid template ref type:', value, `(${typeof value})`);
 }
 function invokeVNodeHook(hook, instance, vnode, prevVNode = null) {
     callWithAsyncErrorHandling(hook, instance, 7 /* VNODE_HOOK */ , [
@@ -5932,9 +5345,6 @@ function invokeVNodeHook(hook, instance, vnode, prevVNode = null) {
             }
             if (!shallow) traverseStaticChildren(c1, c2);
         }
-        // also inherit for comment nodes, but not placeholders (e.g. v-if which
-        // would have received .el during block patch)
-        if (c2.type === Comment1 && !c2.el) c2.el = c1.el;
     }
 }
 // https://en.wikipedia.org/wiki/Longest_increasing_subsequence
@@ -5969,7 +5379,7 @@ function getSequence(arr) {
     }
     u = result.length;
     v = result[u - 1];
-    while((u--) > 0){
+    while(u-- > 0){
         result[u] = v;
         v = p[v];
     }
@@ -5984,18 +5394,12 @@ const isTargetSVG = (target)=>typeof SVGElement !== 'undefined' && target instan
 const resolveTarget = (props, select)=>{
     const targetSelector = props && props.to;
     if (_shared.isString(targetSelector)) {
-        if (!select) {
-            warn(`Current renderer does not support string target for Teleports. ` + `(missing querySelector renderer option)`);
-            return null;
-        } else {
+        if (!select) return null;
+        else {
             const target = select(targetSelector);
-            if (!target) warn(`Failed to locate Teleport target with selector "${targetSelector}". ` + `Note the target element must exist before the component is mounted - ` + `i.e. the target cannot be rendered by the component itself, and ` + `ideally should be outside of the entire Vue component tree.`);
             return target;
         }
-    } else {
-        if (!targetSelector && !isTeleportDisabled(props)) warn(`Invalid Teleport target: ${targetSelector}`);
-        return targetSelector;
-    }
+    } else return targetSelector;
 };
 const TeleportImpl = {
     __isTeleport: true,
@@ -6003,16 +5407,10 @@ const TeleportImpl = {
         const { mc: mountChildren , pc: patchChildren , pbc: patchBlockChildren , o: { insert , querySelector , createText , createComment  }  } = internals;
         const disabled = isTeleportDisabled(n2.props);
         let { shapeFlag , children , dynamicChildren  } = n2;
-        // #3302
-        // HMR updated, force full diff
-        if (isHmrUpdating) {
-            optimized = false;
-            dynamicChildren = null;
-        }
         if (n1 == null) {
             // insert anchors in the main view
-            const placeholder = n2.el = createComment('teleport start');
-            const mainAnchor = n2.anchor = createComment('teleport end');
+            const placeholder = n2.el = createText('');
+            const mainAnchor = n2.anchor = createText('');
             insert(placeholder, container, anchor);
             insert(mainAnchor, container, anchor);
             const target = n2.target = resolveTarget(n2.props, querySelector);
@@ -6021,7 +5419,7 @@ const TeleportImpl = {
                 insert(targetAnchor, target);
                 // #2652 we could be teleporting from a non-SVG tree into an SVG tree
                 isSVG = isSVG || isTargetSVG(target);
-            } else if (!disabled) warn('Invalid Teleport target on mount:', target, `(${typeof target})`);
+            }
             const mount = (container, anchor)=>{
                 // Teleport *always* has Array children. This is enforced in both the
                 // compiler and vnode children normalization.
@@ -6056,7 +5454,6 @@ const TeleportImpl = {
                 if ((n2.props && n2.props.to) !== (n1.props && n1.props.to)) {
                     const nextTarget = n2.target = resolveTarget(n2.props, querySelector);
                     if (nextTarget) moveTeleport(n2, nextTarget, null, internals, 0 /* TARGET_CHANGE */ );
-                    else warn('Invalid Teleport target on update:', target, `(${typeof target})`);
                 } else if (wasDisabled) // disabled -> enabled
                 // move into teleport target
                 moveTeleport(n2, target, targetAnchor, internals, 1 /* TOGGLE */ );
@@ -6152,17 +5549,16 @@ function resolveAsset(type, name, warnMissing = true, maybeSelfReference = false
         resolve(instance.appContext[type], name);
         if (!res && maybeSelfReference) // fallback to implicit self-reference
         return Component;
-        if (warnMissing && !res) warn(`Failed to resolve ${type.slice(0, -1)}: ${name}`);
         return res;
-    } else warn(`resolve${_shared.capitalize(type.slice(0, -1))} ` + `can only be used in render() or setup().`);
+    }
 }
 function resolve(registry, name) {
     return registry && (registry[name] || registry[_shared.camelize(name)] || registry[_shared.capitalize(_shared.camelize(name))]);
 }
-const Fragment = Symbol('Fragment');
-const Text1 = Symbol('Text');
-const Comment1 = Symbol('Comment');
-const Static = Symbol('Static');
+const Fragment = Symbol(undefined);
+const Text = Symbol(undefined);
+const Comment = Symbol(undefined);
+const Static = Symbol(undefined);
 // Since v-if and v-for are the two possible ways node structure can dynamically
 // change, once we consider v-if branches and each v-for fragment a block, we
 // can divide a template into nested blocks, and within each block the node
@@ -6243,8 +5639,6 @@ function isVNode(value) {
     return value ? value.__v_isVNode === true : false;
 }
 function isSameVNodeType(n1, n2) {
-    if (n2.shapeFlag & 6 /* COMPONENT */  && hmrDirtyComponents.has(n2.type)) // HMR only: if the component has been hot-updated, force a reload.
-    return false;
     return n1.type === n2.type && n1.key === n2.key;
 }
 let vnodeArgsTransformer;
@@ -6303,8 +5697,6 @@ function createBaseVNode(type, props = null, children = null, patchFlag = 0, dyn
     } else if (children) // compiled element vnode - if children is passed, only possible types are
     // string or Array.
     vnode.shapeFlag |= _shared.isString(children) ? 8 /* TEXT_CHILDREN */  : 16 /* ARRAY_CHILDREN */ ;
-    // validate key
-    if (vnode.key !== vnode.key) warn(`VNode created with invalid key (NaN). VNode type:`, vnode.type);
     // track vnode for block tree
     if (isBlockTreeEnabled > 0 && // avoid a block node from tracking itself
     !isBlockNode && // has current parent block
@@ -6313,12 +5705,9 @@ function createBaseVNode(type, props = null, children = null, patchFlag = 0, dyn
     vnode.patchFlag !== 32 /* HYDRATE_EVENTS */ ) currentBlock.push(vnode);
     return vnode;
 }
-const createVNode = createVNodeWithArgsTransform;
+const createVNode = _createVNode;
 function _createVNode(type, props = null, children = null, patchFlag = 0, dynamicProps = null, isBlockNode = false) {
-    if (!type || type === NULL_DYNAMIC_COMPONENT) {
-        if (!type) warn(`Invalid vnode type when creating vnode: ${type}.`);
-        type = Comment1;
-    }
+    if (!type || type === NULL_DYNAMIC_COMPONENT) type = Comment;
     if (isVNode(type)) {
         // createVNode receiving an existing vnode. This happens in cases like
         // <component :is="vnode"/>
@@ -6345,10 +5734,6 @@ function _createVNode(type, props = null, children = null, patchFlag = 0, dynami
     }
     // encode the vnode type information into a bitmap
     const shapeFlag = _shared.isString(type) ? 1 /* ELEMENT */  : isSuspense(type) ? 128 /* SUSPENSE */  : isTeleport(type) ? 64 /* TELEPORT */  : _shared.isObject(type) ? 4 /* STATEFUL_COMPONENT */  : _shared.isFunction(type) ? 2 /* FUNCTIONAL_COMPONENT */  : 0;
-    if (shapeFlag & 4 /* STATEFUL_COMPONENT */  && _reactivity.isProxy(type)) {
-        type = _reactivity.toRaw(type);
-        warn(`Vue received a Component which was made a reactive object. This can ` + `lead to unnecessary performance overhead, and should be avoided by ` + `marking the component with \`markRaw\` or using \`shallowRef\` ` + `instead of \`ref\`.`, `\nComponent that was made reactive: `, type);
-    }
     return createBaseVNode(type, props, children, patchFlag, dynamicProps, shapeFlag, isBlockNode, true);
 }
 function guardReactiveProps(props) {
@@ -6376,7 +5761,7 @@ function cloneVNode(vnode, extraProps, mergeRef = false) {
         ] : normalizeRef(extraProps) : ref,
         scopeId: vnode.scopeId,
         slotScopeIds: vnode.slotScopeIds,
-        children: patchFlag === -1 /* HOISTED */  && _shared.isArray(children) ? children.map(deepCloneVNode) : children,
+        children: children,
         target: vnode.target,
         targetAnchor: vnode.targetAnchor,
         staticCount: vnode.staticCount,
@@ -6416,7 +5801,7 @@ function cloneVNode(vnode, extraProps, mergeRef = false) {
 /**
  * @private
  */ function createTextVNode(text = ' ', flag = 0) {
-    return createVNode(Text1, null, text, flag);
+    return createVNode(Text, null, text, flag);
 }
 /**
  * @private
@@ -6432,11 +5817,11 @@ function cloneVNode(vnode, extraProps, mergeRef = false) {
  */ function createCommentVNode(text = '', // when used as the v-else branch, the comment node must be created as a
 // block to ensure correct updates.
 asBlock = false) {
-    return asBlock ? (openBlock(), createBlock(Comment1, null, text)) : createVNode(Comment1, null, text);
+    return asBlock ? (openBlock(), createBlock(Comment, null, text)) : createVNode(Comment, null, text);
 }
 function normalizeVNode(child) {
     if (child == null || typeof child === 'boolean') // empty placeholder
-    return createVNode(Comment1);
+    return createVNode(Comment);
     else if (_shared.isArray(child)) // fragment
     return createVNode(Fragment, null, // #3666, avoid reference pollution when reusing vnode
     child.slice());
@@ -6444,7 +5829,7 @@ function normalizeVNode(child) {
     // always produce all-vnode children arrays
     return cloneIfMounted(child);
     else // strings and numbers
-    return createVNode(Text1, null, String(child));
+    return createVNode(Text, null, String(child));
 }
 // optimized normalization for template-compiled render fns
 function cloneIfMounted(child) {
@@ -6532,10 +5917,6 @@ function mergeProps(...args) {
         ret = new Array(source.length);
         for(let i = 0, l = source.length; i < l; i++)ret[i] = renderItem(source[i], i, undefined, cached && cached[i]);
     } else if (typeof source === 'number') {
-        if (!Number.isInteger(source)) {
-            warn(`The v-for range expect an integer value but got ${source}.`);
-            return [];
-        }
         ret = new Array(source);
         for(let i = 0; i < source; i++)ret[i] = renderItem(i + 1, i, undefined, cached && cached[i]);
     } else if (_shared.isObject(source)) {
@@ -6577,11 +5958,6 @@ fallback, noSlotted) {
         name
     }, fallback && fallback());
     let slot = slots[name];
-    if (slot && slot.length > 1) {
-        warn(`SSR-optimized slot function detected in a non-SSR-optimized render ` + `function. You need to mark this component with $dynamic-slots in the ` + `parent template.`);
-        slot = ()=>[]
-        ;
-    }
     // a compiled slot disables block tracking by default to avoid manual
     // invocation interfering with template-based block tracking, but in
     // `renderSlot` we can be sure that it's template-based so we can force
@@ -6601,7 +5977,7 @@ fallback, noSlotted) {
 function ensureValidVNode(vnodes) {
     return vnodes.some((child)=>{
         if (!isVNode(child)) return true;
-        if (child.type === Comment1) return false;
+        if (child.type === Comment) return false;
         if (child.type === Fragment && !ensureValidVNode(child.children)) return false;
         return true;
     }) ? vnodes : null;
@@ -6612,10 +5988,6 @@ function ensureValidVNode(vnodes) {
  */ function toHandlers(obj) {
     const ret = {
     };
-    if (!_shared.isObject(obj)) {
-        warn(`v-on with no argument expects an object value.`);
-        return ret;
-    }
     for(const key in obj)ret[_shared.toHandlerKey(key)] = obj[key];
     return ret;
 }
@@ -6635,13 +6007,13 @@ const publicPropertiesMap = _shared.extend(Object.create(null), {
     ,
     $data: (i)=>i.data
     ,
-    $props: (i)=>_reactivity.shallowReadonly(i.props)
+    $props: (i)=>i.props
     ,
-    $attrs: (i)=>_reactivity.shallowReadonly(i.attrs)
+    $attrs: (i)=>i.attrs
     ,
-    $slots: (i)=>_reactivity.shallowReadonly(i.slots)
+    $slots: (i)=>i.slots
     ,
-    $refs: (i)=>_reactivity.shallowReadonly(i.refs)
+    $refs: (i)=>i.refs
     ,
     $parent: (i)=>getPublicInstance(i.parent)
     ,
@@ -6660,13 +6032,6 @@ const publicPropertiesMap = _shared.extend(Object.create(null), {
 const PublicInstanceProxyHandlers = {
     get ({ _: instance  }, key) {
         const { ctx , setupState , data , props , accessCache , type , appContext  } = instance;
-        // for internal formatters to know that this is a Vue instance
-        if (key === '__isVue') return true;
-        // prioritize <script setup> bindings during dev.
-        // this allows even properties that start with _ or $ to be used - so that
-        // it aligns with the production behavior where the render fn is inlined and
-        // indeed has access to all declared variables.
-        if (setupState !== _shared.EMPTY_OBJ && setupState.__isScriptSetup && _shared.hasOwn(setupState, key)) return setupState[key];
         // data / props / ctx
         // This getter gets called for every property access on the render context
         // during render and is a major hotspot. The most expensive part of this
@@ -6706,10 +6071,7 @@ const PublicInstanceProxyHandlers = {
         let cssModule, globalProperties;
         // public $xxx properties
         if (publicGetter) {
-            if (key === '$attrs') {
-                _reactivity.track(instance, "get" /* GET */ , key);
-                markAttrsAccessed();
-            }
+            if (key === '$attrs') _reactivity.track(instance, "get" /* GET */ , key);
             return publicGetter(instance);
         } else if (// css module (injected by vue-loader)
         (cssModule = type.__cssModules) && (cssModule = cssModule[key])) return cssModule;
@@ -6718,29 +6080,13 @@ const PublicInstanceProxyHandlers = {
             accessCache[key] = 3 /* CONTEXT */ ;
             return ctx[key];
         } else if (globalProperties = appContext.config.globalProperties, _shared.hasOwn(globalProperties, key)) return globalProperties[key];
-        else if (currentRenderingInstance && (!_shared.isString(key) || // #1091 avoid internal isRef/isVNode checks on component instance leading
-        // to infinite warning loop
-        key.indexOf('__v') !== 0)) {
-            if (data !== _shared.EMPTY_OBJ && (key[0] === '$' || key[0] === '_') && _shared.hasOwn(data, key)) warn(`Property ${JSON.stringify(key)} must be accessed via $data because it starts with a reserved ` + `character ("$" or "_") and is not proxied on the render context.`);
-            else if (instance === currentRenderingInstance) warn(`Property ${JSON.stringify(key)} was accessed during render ` + `but is not defined on instance.`);
-        }
     },
     set ({ _: instance  }, key, value) {
         const { data , setupState , ctx  } = instance;
         if (setupState !== _shared.EMPTY_OBJ && _shared.hasOwn(setupState, key)) setupState[key] = value;
         else if (data !== _shared.EMPTY_OBJ && _shared.hasOwn(data, key)) data[key] = value;
-        else if (_shared.hasOwn(instance.props, key)) {
-            warn(`Attempting to mutate prop "${key}". Props are readonly.`, instance);
-            return false;
-        }
-        if (key[0] === '$' && key.slice(1) in instance) {
-            warn(`Attempting to mutate public property "${key}". ` + `Properties starting with $ are reserved and readonly.`, instance);
-            return false;
-        } else if (key in instance.appContext.config.globalProperties) Object.defineProperty(ctx, key, {
-            enumerable: true,
-            configurable: true,
-            value
-        });
+        else if (_shared.hasOwn(instance.props, key)) return false;
+        if (key[0] === '$' && key.slice(1) in instance) return false;
         else ctx[key] = value;
         return true;
     },
@@ -6749,10 +6095,7 @@ const PublicInstanceProxyHandlers = {
         return accessCache[key] !== undefined || data !== _shared.EMPTY_OBJ && _shared.hasOwn(data, key) || setupState !== _shared.EMPTY_OBJ && _shared.hasOwn(setupState, key) || (normalizedProps = propsOptions[0]) && _shared.hasOwn(normalizedProps, key) || _shared.hasOwn(ctx, key) || _shared.hasOwn(publicPropertiesMap, key) || _shared.hasOwn(appContext.config.globalProperties, key);
     }
 };
-PublicInstanceProxyHandlers.ownKeys = (target)=>{
-    warn(`Avoid app logic that relies on enumerating keys on a component instance. ` + `The keys will be empty in production mode to avoid performance overhead.`);
-    return Reflect.ownKeys(target);
-};
+var target1;
 const RuntimeCompiledPublicInstanceProxyHandlers = /*#__PURE__*/ _shared.extend({
 }, PublicInstanceProxyHandlers, {
     get (target, key) {
@@ -6762,7 +6105,6 @@ const RuntimeCompiledPublicInstanceProxyHandlers = /*#__PURE__*/ _shared.extend(
     },
     has (_, key) {
         const has = key[0] !== '_' && !_shared.isGloballyWhitelisted(key);
-        if (!has && PublicInstanceProxyHandlers.has(_, key)) warn(`Property ${JSON.stringify(key)} should not start with _ which is a reserved prefix for Vue internals.`);
         return has;
     }
 });
@@ -6895,7 +6237,9 @@ function createComponentInstance(vnode, parent, suspense) {
         ec: null,
         sp: null
     };
-    instance.ctx = createDevRenderContext(instance);
+    instance.ctx = {
+        _: instance
+    };
     instance.root = parent ? parent.root : instance;
     instance.emit = emit.bind(null, instance);
     // apply custom element special handling
@@ -6934,22 +6278,11 @@ function setupComponent(instance, isSSR = false) {
 }
 function setupStatefulComponent(instance, isSSR) {
     const Component = instance.type;
-    if (Component.name) validateComponentName(Component.name, instance.appContext.config);
-    if (Component.components) {
-        const names = Object.keys(Component.components);
-        for(let i = 0; i < names.length; i++)validateComponentName(names[i], instance.appContext.config);
-    }
-    if (Component.directives) {
-        const names = Object.keys(Component.directives);
-        for(let i = 0; i < names.length; i++)validateDirectiveName(names[i]);
-    }
-    if (Component.compilerOptions && isRuntimeOnly()) warn(`"compilerOptions" is only supported when using a build of Vue that ` + `includes the runtime compiler. Since you are using a runtime-only ` + `build, the options should be passed via your build tool config instead.`);
     // 0. create render proxy property access cache
     instance.accessCache = Object.create(null);
     // 1. create public instance / render proxy
     // also mark it raw so it's never observed
     instance.proxy = _reactivity.markRaw(new Proxy(instance.ctx, PublicInstanceProxyHandlers));
-    exposePropsOnRenderContext(instance);
     // 2. call setup()
     const { setup  } = Component;
     if (setup) {
@@ -6957,7 +6290,7 @@ function setupStatefulComponent(instance, isSSR) {
         setCurrentInstance(instance);
         _reactivity.pauseTracking();
         const setupResult = callWithErrorHandling(setup, instance, 0 /* SETUP_FUNCTION */ , [
-            _reactivity.shallowReadonly(instance.props),
+            instance.props,
             setupContext
         ]);
         _reactivity.resetTracking();
@@ -6979,11 +6312,11 @@ function setupStatefulComponent(instance, isSSR) {
 function handleSetupResult(instance, setupResult, isSSR) {
     if (_shared.isFunction(setupResult)) instance.render = setupResult;
     else if (_shared.isObject(setupResult)) {
-        if (isVNode(setupResult)) warn(`setup() should not return VNodes directly - ` + `return a render function instead.`);
-        instance.devtoolsRawSetupState = setupResult;
+        // setup returned bindings.
+        // assuming a render function compiled from template is present.
+        if (__VUE_PROD_DEVTOOLS__) instance.devtoolsRawSetupState = setupResult;
         instance.setupState = _reactivity.proxyRefs(setupResult);
-        exposeSetupStateOnRenderContext(instance);
-    } else if (setupResult !== undefined) warn(`setup() should return an object. Received: ${setupResult === null ? 'null' : typeof setupResult}`);
+    }
     finishComponentSetup(instance, isSSR);
 }
 let compile;
@@ -7008,7 +6341,6 @@ function finishComponentSetup(instance, isSSR, skipOptions) {
         if (compile && !Component.render) {
             const template = Component.template;
             if (template) {
-                startMeasure(instance, `compile`);
                 const { isCustomElement , compilerOptions  } = instance.appContext.config;
                 const { delimiters , compilerOptions: componentCompilerOptions  } = Component;
                 const finalCompilerOptions = _shared.extend(_shared.extend({
@@ -7016,7 +6348,6 @@ function finishComponentSetup(instance, isSSR, skipOptions) {
                     delimiters
                 }, compilerOptions), componentCompilerOptions);
                 Component.render = compile(template, finalCompilerOptions);
-                endMeasure(instance, `compile`);
             }
         }
         instance.render = Component.render || _shared.NOOP;
@@ -7033,52 +6364,30 @@ function finishComponentSetup(instance, isSSR, skipOptions) {
         _reactivity.resetTracking();
         unsetCurrentInstance();
     }
-    // warn missing template/render
-    // the runtime compilation of template in SSR is done by server-render
-    if (!Component.render && instance.render === _shared.NOOP && !isSSR) {
-        /* istanbul ignore if */ if (!compile && Component.template) warn(`Component provided template option but ` + `runtime compilation is not supported in this build of Vue.` + ` Configure your bundler to alias "vue" to "vue/dist/vue.esm-bundler.js".`);
-        else warn(`Component is missing template or render function.`);
-    }
 }
 function createAttrsProxy(instance) {
     return new Proxy(instance.attrs, {
         get (target, key) {
-            markAttrsAccessed();
             _reactivity.track(instance, "get" /* GET */ , '$attrs');
             return target[key];
-        },
-        set () {
-            warn(`setupContext.attrs is readonly.`);
-            return false;
-        },
-        deleteProperty () {
-            warn(`setupContext.attrs is readonly.`);
-            return false;
         }
     });
 }
 function createSetupContext(instance) {
     const expose = (exposed)=>{
-        if (instance.exposed) warn(`expose() should be called only once per setup().`);
         instance.exposed = exposed || {
         };
     };
     let attrs;
-    // We use getters in dev in case libs like test-utils overwrite instance
-    // properties (overwrites should not be done in prod)
-    return Object.freeze({
+    var event, args;
+    return {
         get attrs () {
             return attrs || (attrs = createAttrsProxy(instance));
         },
-        get slots () {
-            return _reactivity.shallowReadonly(instance.slots);
-        },
-        get emit () {
-            return (event, ...args)=>instance.emit(event, ...args)
-            ;
-        },
+        slots: instance.slots,
+        emit: instance.emit,
         expose
-    });
+    };
 }
 function getExposeProxy(instance) {
     if (instance.exposed) return instance.exposeProxy || (instance.exposeProxy = new Proxy(_reactivity.proxyRefs(_reactivity.markRaw(instance.exposed)), {
@@ -7283,7 +6592,7 @@ function handleError(err, instance, type, throwInDev = true) {
         // the exposed instance is the render proxy to keep it consistent with 2.x
         const exposedInstance = instance.proxy;
         // in production the hook receives only the error code
-        const errorInfo = ErrorTypeStrings[type];
+        const errorInfo = type;
         while(cur){
             const errorCapturedHooks = cur.ec;
             if (errorCapturedHooks) for(let i = 0; i < errorCapturedHooks.length; i++){
@@ -7305,15 +6614,8 @@ function handleError(err, instance, type, throwInDev = true) {
     logError(err, type, contextVNode, throwInDev);
 }
 function logError(err, type, contextVNode, throwInDev = true) {
-    {
-        const info = ErrorTypeStrings[type];
-        if (contextVNode) pushWarningContext(contextVNode);
-        warn(`Unhandled error${info ? ` during execution of ${info}` : ``}`);
-        if (contextVNode) popWarningContext();
-        // crash in dev by default so it's more noticeable
-        if (throwInDev) throw err;
-        else console.error(err);
-    }
+    // recover in prod to reduce the impact on end-user
+    console.error(err);
 }
 let isFlushing = false;
 let isFlushPending = false;
@@ -7393,11 +6695,7 @@ function flushPreFlushCbs(seen, parentJob = null) {
             ...new Set(pendingPreFlushCbs)
         ];
         pendingPreFlushCbs.length = 0;
-        seen = seen || new Map();
-        for(preFlushIndex = 0; preFlushIndex < activePreFlushCbs.length; preFlushIndex++){
-            if (checkRecursiveUpdates(seen, activePreFlushCbs[preFlushIndex])) continue;
-            activePreFlushCbs[preFlushIndex]();
-        }
+        for(preFlushIndex = 0; preFlushIndex < activePreFlushCbs.length; preFlushIndex++)activePreFlushCbs[preFlushIndex]();
         activePreFlushCbs = null;
         preFlushIndex = 0;
         currentPreFlushParentJob = null;
@@ -7417,13 +6715,9 @@ function flushPostFlushCbs(seen) {
             return;
         }
         activePostFlushCbs = deduped;
-        seen = seen || new Map();
         activePostFlushCbs.sort((a, b)=>getId(a) - getId(b)
         );
-        for(postFlushIndex = 0; postFlushIndex < activePostFlushCbs.length; postFlushIndex++){
-            if (checkRecursiveUpdates(seen, activePostFlushCbs[postFlushIndex])) continue;
-            activePostFlushCbs[postFlushIndex]();
-        }
+        for(postFlushIndex = 0; postFlushIndex < activePostFlushCbs.length; postFlushIndex++)activePostFlushCbs[postFlushIndex]();
         activePostFlushCbs = null;
         postFlushIndex = 0;
     }
@@ -7433,7 +6727,6 @@ const getId = (job)=>job.id == null ? Infinity : job.id
 function flushJobs(seen) {
     isFlushPending = false;
     isFlushing = true;
-    seen = seen || new Map();
     flushPreFlushCbs(seen);
     // Sort queue before flush.
     // This ensures that:
@@ -7447,11 +6740,8 @@ function flushJobs(seen) {
     try {
         for(flushIndex = 0; flushIndex < queue.length; flushIndex++){
             const job = queue[flushIndex];
-            if (job && job.active !== false) {
-                if (checkRecursiveUpdates(seen, job)) continue;
-                // console.log(`running:`, job.id)
-                callWithErrorHandling(job, null, 14 /* SCHEDULER */ );
-            }
+            if (job && job.active !== false) // console.log(`running:`, job.id)
+            callWithErrorHandling(job, null, 14 /* SCHEDULER */ );
         }
     } finally{
         flushIndex = 0;
@@ -7481,30 +6771,23 @@ function watchEffect(effect, options) {
     return doWatch(effect, null, options);
 }
 function watchPostEffect(effect, options) {
-    return doWatch(effect, null, Object.assign(options || {
-    }, {
+    return doWatch(effect, null, {
         flush: 'post'
-    }));
+    });
 }
 function watchSyncEffect(effect, options) {
-    return doWatch(effect, null, Object.assign(options || {
-    }, {
+    return doWatch(effect, null, {
         flush: 'sync'
-    }));
+    });
 }
 // initial value for watchers to trigger on undefined initial values
 const INITIAL_WATCHER_VALUE = {
 };
 // implementation
 function watch(source, cb, options) {
-    if (!_shared.isFunction(cb)) warn(`\`watch(fn, options?)\` signature has been moved to a separate API. ` + `Use \`watchEffect(fn, options?)\` instead. \`watch\` now only ` + `supports \`watch(source, cb, options?) signature.`);
     return doWatch(source, cb, options);
 }
 function doWatch(source, cb, { immediate , deep , flush , onTrack , onTrigger  } = _shared.EMPTY_OBJ) {
-    if (!cb) {
-        if (immediate !== undefined) warn(`watch() "immediate" option is only respected when using the ` + `watch(source, callback, options?) signature.`);
-        if (deep !== undefined) warn(`watch() "deep" option is only respected when using the ` + `watch(source, callback, options?) signature.`);
-    }
     const warnInvalidSource = (s)=>{
         warn(`Invalid watch source: `, s, `A watch source can only be a getter/effect function, a ref, ` + `a reactive object, or an array of these types.`);
     };
@@ -7527,7 +6810,6 @@ function doWatch(source, cb, { immediate , deep , flush , onTrack , onTrigger  }
                 if (_reactivity.isRef(s)) return s.value;
                 else if (_reactivity.isReactive(s)) return traverse(s);
                 else if (_shared.isFunction(s)) return callWithErrorHandling(s, instance, 2 /* WATCH_GETTER */ );
-                else warnInvalidSource(s);
             })
         ;
     } else if (_shared.isFunction(source)) {
@@ -7542,10 +6824,7 @@ function doWatch(source, cb, { immediate , deep , flush , onTrack , onTrigger  }
                 onInvalidate
             ]);
         };
-    } else {
-        getter = _shared.NOOP;
-        warnInvalidSource(source);
-    }
+    } else getter = _shared.NOOP;
     if (cb && deep) {
         const baseGetter = getter;
         getter = ()=>traverse(baseGetter())
@@ -7593,8 +6872,6 @@ function doWatch(source, cb, { immediate , deep , flush , onTrack , onTrigger  }
         job();
     };
     const effect = new _reactivity.ReactiveEffect(getter, scheduler);
-    effect.onTrack = onTrack;
-    effect.onTrigger = onTrigger;
     // initial run
     if (cb) {
         if (immediate) job();
@@ -7645,9 +6922,6 @@ function traverse(value, seen = new Set()) {
     else if (_shared.isPlainObject(value)) for(const key in value)traverse(value[key], seen);
     return value;
 }
-Object.freeze({
-});
-Object.freeze([]);
 const isFunction = (val)=>typeof val === 'function'
 ;
 const isObject = (val)=>val !== null && typeof val === 'object'
@@ -7660,12 +6934,10 @@ const warnRuntimeUsage = (method)=>warn(`${method}() is a compiler-hint helper t
 ;
 // implementation
 function defineProps() {
-    warnRuntimeUsage(`defineProps`);
     return null;
 }
 // implementation
 function defineEmits() {
-    warnRuntimeUsage(`defineEmits`);
     return null;
 }
 /**
@@ -7680,7 +6952,6 @@ function defineEmits() {
  * This is only usable inside `<script setup>`, is compiled away in the
  * output and should **not** be actually called at runtime.
  */ function defineExpose(exposed) {
-    warnRuntimeUsage(`defineExpose`);
 }
 /**
  * Vue `<script setup>` compiler macro for providing props default values when
@@ -7700,7 +6971,6 @@ function defineEmits() {
  * This is only usable inside `<script setup>`, is compiled away in the output
  * and should **not** be actually called at runtime.
  */ function withDefaults(props, defaults) {
-    warnRuntimeUsage(`withDefaults`);
     return null;
 }
 function useSlots() {
@@ -7711,7 +6981,6 @@ function useAttrs() {
 }
 function getContext() {
     const i = getCurrentInstance();
-    if (!i) warn(`useContext() called without active instance.`);
     return i.setupContext || (i.setupContext = createSetupContext(i));
 }
 /**
@@ -7726,7 +6995,6 @@ props, defaults) {
         else if (val === null) props[key] = {
             default: defaults[key]
         };
-        else warn(`props default key "${key}" has no corresponding declaration.`);
     }
     return props;
 }
@@ -7749,7 +7017,6 @@ props, defaults) {
  * @internal
  */ function withAsyncContext(getAwaitable) {
     const ctx = getCurrentInstance();
-    if (!ctx) warn(`withAsyncContext called without active current instance. ` + `This is likely a bug.`);
     let awaitable = getAwaitable();
     unsetCurrentInstance();
     if (isPromise(awaitable)) awaitable = awaitable.catch((e)=>{
@@ -7782,7 +7049,7 @@ function h(type, propsOrChildren, children) {
         return createVNode(type, propsOrChildren, children);
     }
 }
-const ssrContextKey = Symbol(`ssrContext`);
+const ssrContextKey = Symbol(``);
 const useSSRContext = ()=>{
     {
         const ctx = inject(ssrContextKey);
@@ -7791,92 +7058,25 @@ const useSSRContext = ()=>{
     }
 };
 function initCustomFormatter() {
-    /* eslint-disable no-restricted-globals */ if (typeof window === 'undefined') return;
-    const vueStyle = {
-        style: 'color:#3ba776'
-    };
-    const numberStyle = {
-        style: 'color:#0b1bc9'
-    };
-    const stringStyle = {
-        style: 'color:#b62e24'
-    };
-    const keywordStyle = {
-        style: 'color:#9d288c'
-    };
-    // custom formatter for Chrome
-    // https://www.mattzeunert.com/2016/02/19/custom-chrome-devtools-object-formatters.html
-    const formatter = {
-        header (obj) {
-            // TODO also format ComponentPublicInstance & ctx.slots/attrs in setup
-            if (!_shared.isObject(obj)) return null;
-            if (obj.__isVue) return [
-                'div',
-                vueStyle,
-                `VueInstance`
-            ];
-            else if (_reactivity.isRef(obj)) return [
-                'div',
-                {
-                },
-                [
-                    'span',
-                    vueStyle,
-                    genRefFlag(obj)
-                ],
-                '<',
-                formatValue(obj.value),
-                `>`
-            ];
-            else if (_reactivity.isReactive(obj)) return [
-                'div',
-                {
-                },
-                [
-                    'span',
-                    vueStyle,
-                    'Reactive'
-                ],
-                '<',
-                formatValue(obj),
-                `>${_reactivity.isReadonly(obj) ? ` (readonly)` : ``}`
-            ];
-            else if (_reactivity.isReadonly(obj)) return [
-                'div',
-                {
-                },
-                [
-                    'span',
-                    vueStyle,
-                    'Readonly'
-                ],
-                '<',
-                formatValue(obj),
-                '>'
-            ];
-            return null;
-        },
-        hasBody (obj) {
-            return obj && obj.__isVue;
-        },
-        body (obj) {
-            if (obj && obj.__isVue) return [
-                'div',
-                {
-                },
-                ...formatInstance(obj.$)
-            ];
-        }
-    };
     function formatInstance(instance) {
         const blocks = [];
-        if (instance.type.props && instance.props) blocks.push(createInstanceBlock('props', _reactivity.toRaw(instance.props)));
-        if (instance.setupState !== _shared.EMPTY_OBJ) blocks.push(createInstanceBlock('setup', instance.setupState));
-        if (instance.data !== _shared.EMPTY_OBJ) blocks.push(createInstanceBlock('data', _reactivity.toRaw(instance.data)));
+        if (instance.type.props && instance.props) {
+            blocks.push(createInstanceBlock('props', _reactivity.toRaw(instance.props)));
+        }
+        if (instance.setupState !== _shared.EMPTY_OBJ) {
+            blocks.push(createInstanceBlock('setup', instance.setupState));
+        }
+        if (instance.data !== _shared.EMPTY_OBJ) {
+            blocks.push(createInstanceBlock('data', _reactivity.toRaw(instance.data)));
+        }
         const computed = extractKeys(instance, 'computed');
-        if (computed) blocks.push(createInstanceBlock('computed', computed));
+        if (computed) {
+            blocks.push(createInstanceBlock('computed', computed));
+        }
         const injected = extractKeys(instance, 'inject');
-        if (injected) blocks.push(createInstanceBlock('injected', injected));
+        if (injected) {
+            blocks.push(createInstanceBlock('injected', injected));
+        }
         blocks.push([
             'div',
             {
@@ -7900,11 +7100,13 @@ function initCustomFormatter() {
     function createInstanceBlock(type, target) {
         target = _shared.extend({
         }, target);
-        if (!Object.keys(target).length) return [
-            'span',
-            {
-            }
-        ];
+        if (!Object.keys(target).length) {
+            return [
+                'span',
+                {
+                }
+            ];
+        }
         return [
             'div',
             {
@@ -7939,57 +7141,76 @@ function initCustomFormatter() {
         ];
     }
     function formatValue(v, asRaw = true) {
-        if (typeof v === 'number') return [
-            'span',
-            numberStyle,
-            v
-        ];
-        else if (typeof v === 'string') return [
-            'span',
-            stringStyle,
-            JSON.stringify(v)
-        ];
-        else if (typeof v === 'boolean') return [
-            'span',
-            keywordStyle,
-            v
-        ];
-        else if (_shared.isObject(v)) return [
-            'object',
-            {
-                object: asRaw ? _reactivity.toRaw(v) : v
-            }
-        ];
-        else return [
-            'span',
-            stringStyle,
-            String(v)
-        ];
+        if (typeof v === 'number') {
+            return [
+                'span',
+                numberStyle,
+                v
+            ];
+        } else if (typeof v === 'string') {
+            return [
+                'span',
+                stringStyle,
+                JSON.stringify(v)
+            ];
+        } else if (typeof v === 'boolean') {
+            return [
+                'span',
+                keywordStyle,
+                v
+            ];
+        } else if (_shared.isObject(v)) {
+            return [
+                'object',
+                {
+                    object: asRaw ? _reactivity.toRaw(v) : v
+                }
+            ];
+        } else {
+            return [
+                'span',
+                stringStyle,
+                String(v)
+            ];
+        }
     }
     function extractKeys(instance, type) {
         const Comp = instance.type;
-        if (_shared.isFunction(Comp)) return;
+        if (_shared.isFunction(Comp)) {
+            return;
+        }
         const extracted = {
         };
-        for(const key in instance.ctx)if (isKeyOfType(Comp, key, type)) extracted[key] = instance.ctx[key];
+        for(const key in instance.ctx){
+            if (isKeyOfType(Comp, key, type)) {
+                extracted[key] = instance.ctx[key];
+            }
+        }
         return extracted;
     }
     function isKeyOfType(Comp, key, type) {
         const opts = Comp[type];
-        if (_shared.isArray(opts) && opts.includes(key) || _shared.isObject(opts) && key in opts) return true;
-        if (Comp.extends && isKeyOfType(Comp.extends, key, type)) return true;
+        if (_shared.isArray(opts) && opts.includes(key) || _shared.isObject(opts) && key in opts) {
+            return true;
+        }
+        if (Comp.extends && isKeyOfType(Comp.extends, key, type)) {
+            return true;
+        }
         if (Comp.mixins && Comp.mixins.some((m)=>isKeyOfType(m, key, type)
-        )) return true;
+        )) {
+            return true;
+        }
     }
     function genRefFlag(v) {
-        if (v._shallow) return `ShallowRef`;
-        if (v.effect) return `ComputedRef`;
+        if (v._shallow) {
+            return `ShallowRef`;
+        }
+        if (v.effect) {
+            return `ComputedRef`;
+        }
         return `Ref`;
     }
-    if (window.devtoolsFormatters) window.devtoolsFormatters.push(formatter);
-    else window.devtoolsFormatters = [
-        formatter
-    ];
+    return;
 }
 function withMemo(memo, render, cache, index) {
     const cached = cache[index];
@@ -8030,7 +7251,7 @@ const _ssrUtils = {
  * @internal only exposed in compat builds.
  */ const compatUtils = null;
 
-},{"@vue/reactivity":"8HAvF","@vue/shared":"8bcX0","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"8HAvF":[function(require,module,exports) {
+},{"@vue/reactivity":"j9cvP","@vue/shared":"jjDCJ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"j9cvP":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "EffectScope", ()=>EffectScope
@@ -8122,7 +7343,6 @@ class EffectScope {
         } finally{
             this.off();
         }
-        else warn(`cannot run an inactive effect scope.`);
     }
     on() {
         if (this.active) {
@@ -8157,8 +7377,8 @@ class EffectScope {
         }
     }
 }
-function effectScope(detached1) {
-    return new EffectScope(detached1);
+function effectScope(detached) {
+    return new EffectScope(detached);
 }
 function recordEffectScope(effect, scope) {
     scope = scope || activeEffectScope;
@@ -8169,7 +7389,6 @@ function getCurrentScope() {
 }
 function onScopeDispose(fn) {
     if (activeEffectScope) activeEffectScope.cleanups.push(fn);
-    else warn(`onScopeDispose() is called when there is no active effect scope` + ` to be associated with.`);
 }
 const createDep = (effects)=>{
     const dep = new Set(effects);
@@ -8210,8 +7429,8 @@ let trackOpBit = 1;
  */ const maxMarkerBits = 30;
 const effectStack = [];
 let activeEffect;
-const ITERATE_KEY = Symbol('iterate');
-const MAP_KEY_ITERATE_KEY = Symbol('Map key iterate');
+const ITERATE_KEY = Symbol('');
+const MAP_KEY_ITERATE_KEY = Symbol('');
 class ReactiveEffect {
     constructor(fn, scheduler = null, scope){
         this.fn = fn;
@@ -8253,9 +7472,9 @@ function cleanupEffect(effect) {
         deps.length = 0;
     }
 }
-function effect(fn1, options) {
-    if (fn1.effect) fn1 = fn1.effect.fn;
-    const _effect = new ReactiveEffect(fn1);
+function effect(fn, options) {
+    if (fn.effect) fn = fn.effect.fn;
+    const _effect = new ReactiveEffect(fn);
     if (options) {
         _shared.extend(_effect, options);
         if (options.scope) recordEffectScope(_effect, options.scope);
@@ -8288,32 +7507,24 @@ function track(target, type, key) {
     if (!depsMap) targetMap.set(target, depsMap = new Map());
     let dep = depsMap.get(key);
     if (!dep) depsMap.set(key, dep = createDep());
-    const eventInfo = {
-        effect: activeEffect,
-        target,
-        type,
-        key
-    };
+    const eventInfo = undefined;
     trackEffects(dep, eventInfo);
 }
 function isTracking() {
     return shouldTrack && activeEffect !== undefined;
 }
 function trackEffects(dep, debuggerEventExtraInfo) {
-    let shouldTrack1 = false;
+    let shouldTrack = false;
     if (effectTrackDepth <= maxMarkerBits) {
         if (!newTracked(dep)) {
             dep.n |= trackOpBit; // set newly tracked
-            shouldTrack1 = !wasTracked(dep);
+            shouldTrack = !wasTracked(dep);
         }
     } else // Full cleanup mode.
-    shouldTrack1 = !dep.has(activeEffect);
-    if (shouldTrack1) {
+    shouldTrack = !dep.has(activeEffect);
+    if (shouldTrack) {
         dep.add(activeEffect);
         activeEffect.deps.push(dep);
-        if (activeEffect.onTrack) activeEffect.onTrack(Object.assign({
-            effect: activeEffect
-        }, debuggerEventExtraInfo));
     }
 }
 function trigger(target, type, key, newValue, oldValue, oldTarget) {
@@ -8326,8 +7537,8 @@ function trigger(target, type, key, newValue, oldValue, oldTarget) {
     deps = [
         ...depsMap.values()
     ];
-    else if (key === 'length' && _shared.isArray(target)) depsMap.forEach((dep, key1)=>{
-        if (key1 === 'length' || key1 >= newValue) deps.push(dep);
+    else if (key === 'length' && _shared.isArray(target)) depsMap.forEach((dep, key)=>{
+        if (key === 'length' || key >= newValue) deps.push(dep);
     });
     else {
         // schedule runs for SET | ADD | DELETE
@@ -8352,32 +7563,22 @@ function trigger(target, type, key, newValue, oldValue, oldTarget) {
                 break;
         }
     }
-    const eventInfo = {
-        target,
-        type,
-        key,
-        newValue,
-        oldValue,
-        oldTarget
-    };
+    const eventInfo = undefined;
     if (deps.length === 1) {
-        if (deps[0]) triggerEffects(deps[0], eventInfo);
+        if (deps[0]) triggerEffects(deps[0]);
     } else {
         const effects = [];
         for (const dep of deps)if (dep) effects.push(...dep);
-        triggerEffects(createDep(effects), eventInfo);
+        triggerEffects(createDep(effects));
     }
 }
 function triggerEffects(dep, debuggerEventExtraInfo) {
     // spread into array for stabilization
-    for (const effect1 of _shared.isArray(dep) ? dep : [
+    for (const effect of _shared.isArray(dep) ? dep : [
         ...dep
-    ])if (effect1 !== activeEffect || effect1.allowRecurse) {
-        if (effect1.onTrigger) effect1.onTrigger(_shared.extend({
-            effect: effect1
-        }, debuggerEventExtraInfo));
-        if (effect1.scheduler) effect1.scheduler();
-        else effect1.run();
+    ])if (effect !== activeEffect || effect.allowRecurse) {
+        if (effect.scheduler) effect.scheduler();
+        else effect.run();
     }
 }
 const isNonTrackableKeys = /*#__PURE__*/ _shared.makeMap(`__proto__,__v_isRef,__isVue`);
@@ -8423,7 +7624,7 @@ function createArrayInstrumentations() {
     return instrumentations;
 }
 function createGetter(isReadonly = false, shallow = false) {
-    return function get1(target, key, receiver) {
+    return function get(target, key, receiver) {
         if (key === "__v_isReactive" /* IS_REACTIVE */ ) return !isReadonly;
         else if (key === "__v_isReadonly" /* IS_READONLY */ ) return isReadonly;
         else if (key === "__v_raw" /* RAW */  && receiver === (isReadonly ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target)) return target;
@@ -8448,7 +7649,7 @@ function createGetter(isReadonly = false, shallow = false) {
 const set = /*#__PURE__*/ createSetter();
 const shallowSet = /*#__PURE__*/ createSetter(true);
 function createSetter(shallow = false) {
-    return function set1(target, key, value, receiver) {
+    return function set(target, key, value, receiver) {
         let oldValue = target[key];
         if (!shallow) {
             value = toRaw(value);
@@ -8494,11 +7695,9 @@ const mutableHandlers = {
 const readonlyHandlers = {
     get: readonlyGet,
     set (target, key) {
-        console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
         return true;
     },
     deleteProperty (target, key) {
-        console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
         return true;
     }
 };
@@ -8530,10 +7729,10 @@ function get$1(target, key, isReadonly = false, isShallow = false) {
     const rawKey = toRaw(key);
     if (key !== rawKey) !isReadonly && track(rawTarget, "get" /* GET */ , key);
     !isReadonly && track(rawTarget, "get" /* GET */ , rawKey);
-    const { has: has1  } = getProto(rawTarget);
+    const { has  } = getProto(rawTarget);
     const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive;
-    if (has1.call(rawTarget, key)) return wrap(target.get(key));
-    else if (has1.call(rawTarget, rawKey)) return wrap(target.get(rawKey));
+    if (has.call(rawTarget, key)) return wrap(target.get(key));
+    else if (has.call(rawTarget, rawKey)) return wrap(target.get(rawKey));
     else if (target !== rawTarget) // #3602 readonly(reactive(Map))
     // ensure that the nested reactive `Map` can do tracking for itself
     target.get(key);
@@ -8565,13 +7764,13 @@ function add(value) {
 function set$1(key, value) {
     value = toRaw(value);
     const target = toRaw(this);
-    const { has: has1 , get: get1  } = getProto(target);
-    let hadKey = has1.call(target, key);
+    const { has , get  } = getProto(target);
+    let hadKey = has.call(target, key);
     if (!hadKey) {
         key = toRaw(key);
-        hadKey = has1.call(target, key);
-    } else checkIdentityKeys(target, has1, key);
-    const oldValue = get1.call(target, key);
+        hadKey = has.call(target, key);
+    }
+    const oldValue = get.call(target, key);
     target.set(key, value);
     if (!hadKey) trigger(target, "add" /* ADD */ , key, value);
     else if (_shared.hasChanged(value, oldValue)) trigger(target, "set" /* SET */ , key, value, oldValue);
@@ -8579,13 +7778,13 @@ function set$1(key, value) {
 }
 function deleteEntry(key) {
     const target = toRaw(this);
-    const { has: has1 , get: get1  } = getProto(target);
-    let hadKey = has1.call(target, key);
+    const { has , get  } = getProto(target);
+    let hadKey = has.call(target, key);
     if (!hadKey) {
         key = toRaw(key);
-        hadKey = has1.call(target, key);
-    } else checkIdentityKeys(target, has1, key);
-    const oldValue = get1 ? get1.call(target, key) : undefined;
+        hadKey = has.call(target, key);
+    }
+    const oldValue = get ? get.call(target, key) : undefined;
     // forward the operation before queueing reactions
     const result = target.delete(key);
     if (hadKey) trigger(target, "delete" /* DELETE */ , key, undefined, oldValue);
@@ -8594,7 +7793,7 @@ function deleteEntry(key) {
 function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = _shared.isMap(target) ? new Map(target) : new Set(target);
+    const oldTarget = undefined;
     // forward the operation before queueing reactions
     const result = target.clear();
     if (hadItems) trigger(target, "clear" /* CLEAR */ , undefined, undefined, oldTarget);
@@ -8651,10 +7850,6 @@ function createIterableMethod(method, isReadonly, isShallow) {
 }
 function createReadonlyMethod(type) {
     return function(...args) {
-        {
-            const key = args[0] ? `on key "${args[0]}" ` : ``;
-            console.warn(`${_shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
-        }
         return type === "delete" /* DELETE */  ? false : this;
     };
 }
@@ -8760,9 +7955,9 @@ const readonlyCollectionHandlers = {
 const shallowReadonlyCollectionHandlers = {
     get: /*#__PURE__*/ createInstrumentationGetter(true, true)
 };
-function checkIdentityKeys(target, has1, key) {
+function checkIdentityKeys(target, has, key) {
     const rawKey = toRaw(key);
-    if (rawKey !== key && has1.call(target, rawKey)) {
+    if (rawKey !== key && has.call(target, rawKey)) {
         const type = _shared.toRawType(target);
         console.warn(`Reactive ${type} contains both the raw and reactive ` + `versions of the same object${type === `Map` ? ` as keys` : ``}, ` + `which can lead to inconsistencies. ` + `Avoid differentiating between the raw and reactive versions ` + `of an object and only use the reactive version if possible.`);
     }
@@ -8815,10 +8010,7 @@ function reactive(target) {
     return createReactiveObject(target, true, shallowReadonlyHandlers, shallowReadonlyCollectionHandlers, shallowReadonlyMap);
 }
 function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
-    if (!_shared.isObject(target)) {
-        console.warn(`value cannot be made reactive: ${String(target)}`);
-        return target;
-    }
+    if (!_shared.isObject(target)) return target;
     // target is already a Proxy, return it.
     // exception: calling readonly() on a reactive object
     if (target["__v_raw" /* RAW */ ] && !(isReadonly && target["__v_isReactive" /* IS_REACTIVE */ ])) return target;
@@ -8854,21 +8046,12 @@ function trackRefValue(ref) {
     if (isTracking()) {
         ref = toRaw(ref);
         if (!ref.dep) ref.dep = createDep();
-        trackEffects(ref.dep, {
-            target: ref,
-            type: "get" /* GET */ ,
-            key: 'value'
-        });
+        trackEffects(ref.dep);
     }
 }
 function triggerRefValue(ref, newVal) {
     ref = toRaw(ref);
-    if (ref.dep) triggerEffects(ref.dep, {
-        target: ref,
-        type: "set" /* SET */ ,
-        key: 'value',
-        newValue: newVal
-    });
+    if (ref.dep) triggerEffects(ref.dep);
 }
 const convert = (val)=>_shared.isObject(val) ? reactive(val) : val
 ;
@@ -8906,21 +8089,21 @@ function createRef(rawValue, shallow) {
     if (isRef(rawValue)) return rawValue;
     return new RefImpl(rawValue, shallow);
 }
-function triggerRef(ref1) {
-    triggerRefValue(ref1, ref1.value);
+function triggerRef(ref) {
+    triggerRefValue(ref, void 0);
 }
-function unref(ref1) {
-    return isRef(ref1) ? ref1.value : ref1;
+function unref(ref) {
+    return isRef(ref) ? ref.value : ref;
 }
 const shallowUnwrapHandlers = {
     get: (target, key, receiver)=>unref(Reflect.get(target, key, receiver))
     ,
-    set: (target, key, value1, receiver)=>{
+    set: (target, key, value, receiver)=>{
         const oldValue = target[key];
-        if (isRef(oldValue) && !isRef(value1)) {
-            oldValue.value = value1;
+        if (isRef(oldValue) && !isRef(value)) {
+            oldValue.value = value;
             return true;
-        } else return Reflect.set(target, key, value1, receiver);
+        } else return Reflect.set(target, key, value, receiver);
     }
 };
 function proxyRefs(objectWithRefs) {
@@ -8943,11 +8126,10 @@ class CustomRefImpl {
         this._set(newVal);
     }
 }
-function customRef(factory1) {
-    return new CustomRefImpl(factory1);
+function customRef(factory) {
+    return new CustomRefImpl(factory);
 }
 function toRefs(object) {
-    if (!isProxy(object)) console.warn(`toRefs() expects a reactive object but received a plain one.`);
     const ret = _shared.isArray(object) ? new Array(object.length) : {
     };
     for(const key in object)ret[key] = toRef(object, key);
@@ -8999,30 +8181,24 @@ class ComputedRefImpl {
     }
 }
 function computed(getterOrOptions, debugOptions) {
-    let getter1;
+    let getter;
     let setter;
     if (_shared.isFunction(getterOrOptions)) {
-        getter1 = getterOrOptions;
-        setter = ()=>{
-            console.warn('Write operation failed: computed value is readonly');
-        };
+        getter = getterOrOptions;
+        setter = _shared.NOOP;
     } else {
-        getter1 = getterOrOptions.get;
+        getter = getterOrOptions.get;
         setter = getterOrOptions.set;
     }
-    const cRef = new ComputedRefImpl(getter1, setter, _shared.isFunction(getterOrOptions) || !getterOrOptions.set);
-    if (debugOptions) {
-        cRef.effect.onTrack = debugOptions.onTrack;
-        cRef.effect.onTrigger = debugOptions.onTrigger;
-    }
+    const cRef = new ComputedRefImpl(getter, setter, _shared.isFunction(getterOrOptions) || !getterOrOptions.set);
     return cRef;
 }
 var _a;
 const tick = Promise.resolve();
 const queue = [];
 let queued = false;
-const scheduler1 = (fn1)=>{
-    queue.push(fn1);
+const scheduler1 = (fn)=>{
+    queue.push(fn);
     if (!queued) {
         queued = true;
         tick.then(flush);
@@ -9079,11 +8255,11 @@ class DeferredComputedRefImpl {
     }
 }
 _a = "__v_isReadonly" /* IS_READONLY */ ;
-function deferredComputed(getter2) {
-    return new DeferredComputedRefImpl(getter2);
+function deferredComputed(getter) {
+    return new DeferredComputedRefImpl(getter);
 }
 
-},{"@vue/shared":"8bcX0","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"8bcX0":[function(require,module,exports) {
+},{"@vue/shared":"jjDCJ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"jjDCJ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "EMPTY_ARR", ()=>EMPTY_ARR
@@ -9488,8 +8664,8 @@ const replacer = (_key, val)=>{
     else if (isMap(val)) return {
         [`Map(${val.size})`]: [
             ...val.entries()
-        ].reduce((entries, [key, val1])=>{
-            entries[`${key} =>`] = val1;
+        ].reduce((entries, [key, val])=>{
+            entries[`${key} =>`] = val;
             return entries;
         }, {
         })
@@ -9512,9 +8688,9 @@ const replacer = (_key, val)=>{
     'optionalChaining',
     'nullishCoalescingOperator'
 ];
-const EMPTY_OBJ = Object.freeze({
-});
-const EMPTY_ARR = Object.freeze([]);
+const EMPTY_OBJ = {
+};
+const EMPTY_ARR = [];
 const NOOP = ()=>{
 };
 /**
@@ -9615,7 +8791,7 @@ const getGlobalThis = ()=>{
     });
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"JacNc":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"4N8i7":[function(require,module,exports) {
 exports.interopDefault = function(a) {
     return a && a.__esModule ? a : {
         default: a
@@ -9647,7 +8823,7 @@ exports.export = function(dest, destName, get) {
     });
 };
 
-},{}],"jyliN":[function(require,module,exports) {
+},{}],"lJSMA":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 let script;
@@ -9660,18 +8836,9 @@ let initialize = ()=>{
     script.__file = "/Users/baku/Sites/tethr/demo/App.vue";
 };
 initialize();
-if (module.hot) {
-    script.__hmrId = '848d49-hmr';
-    module.hot.accept(()=>{
-        setTimeout(()=>{
-            initialize();
-            if (!__VUE_HMR_RUNTIME__.createRecord('848d49-hmr', script)) __VUE_HMR_RUNTIME__.reload('848d49-hmr', script);
-        }, 0);
-    });
-}
 exports.default = script;
 
-},{"script:./App.vue":"dTiE1","template:./App.vue":"c5z27","custom:./App.vue":"kWNV3","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"dTiE1":[function(require,module,exports) {
+},{"script:./App.vue":"kLmZv","template:./App.vue":"6vloM","custom:./App.vue":"gjUnI","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"kLmZv":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _vue = require("vue");
@@ -9687,7 +8854,7 @@ exports.default = _vue.defineComponent({
     }
 });
 
-},{"vue":"eg0LR","./useTethr":"jETAO","./TethrConfig.vue":"eapFv","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"jETAO":[function(require,module,exports) {
+},{"vue":"h7dRr","./useTethr":"k7q4R","./TethrConfig.vue":"dFXd9","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"k7q4R":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "useTethrConfig", ()=>useTethrConfig
@@ -9720,10 +8887,10 @@ function useTethrConfig(camera, name) {
         config.update = async (value)=>{
             cam.set(name, value);
         };
-        cam.on(`${name}Changed`, (desc1)=>{
-            config.value = desc1.value;
-            config.writable = desc1.writable;
-            config.options = desc1.options;
+        cam.on(`${name}Changed`, (desc)=>{
+            config.value = desc.value;
+            config.writable = desc.writable;
+            config.options = desc.options;
         });
     }, {
         immediate: true
@@ -9757,28 +8924,26 @@ function useTethr() {
         }
         window.cam = camera.value;
     }
-    async function runAutoFocus() {
-        await camera.value?.runAutoFocus();
-    }
     async function takePicture() {
         if (!camera.value) return;
-        const objects = await camera.value.takePicture();
-        if (objects) {
-            for (const object of objects)if (object.format === 'raw') _fileSaver.saveAs(object.blob, object.filename);
+        const result = await camera.value.takePicture();
+        if (result.status === 'ok') {
+            for (const object of result.value)if (object.format === 'raw') _fileSaver.saveAs(object.blob, object.filename);
             else lastPictureURL.value = URL.createObjectURL(object.blob);
         }
     }
-    const liveviewing = _vue.ref(false);
-    _vue.watch(camera, (cam)=>{
-        if (!cam) liveviewing.value = false;
-    });
+    async function runAutoFocus() {
+        await camera.value?.runAutoFocus();
+    }
     async function toggleLiveview() {
-        liveviewing.value = !liveviewing.value;
         if (!camera.value) return;
-        if (liveviewing.value) liveviewMediaStream.value = await camera.value.startLiveview();
-        else {
+        const enabled = await camera.value.get('liveviewEnabled');
+        if (enabled) {
             await camera.value.stopLiveview();
             liveviewMediaStream.value = null;
+        } else {
+            const result = await camera.value.startLiveview();
+            if (result.status === 'ok') liveviewMediaStream.value = result.value;
         }
     }
     return {
@@ -9803,11 +8968,16 @@ function useTethr() {
             timelapseInterval: useTethrConfig(camera, 'timelapseInterval'),
             focalLength: useTethrConfig(camera, 'focalLength'),
             liveviewMagnifyRatio: useTethrConfig(camera, 'liveviewMagnifyRatio'),
+            liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),
             liveviewSize: useTethrConfig(camera, 'liveviewSize'),
-            batteryLevel: useTethrConfig(camera, 'batteryLevel')
+            batteryLevel: useTethrConfig(camera, 'batteryLevel'),
+            canTakePicture: useTethrConfig(camera, 'canTakePicture'),
+            canRunAutoFocus: useTethrConfig(camera, 'canRunAutoFocus'),
+            canRunManualFocus: useTethrConfig(camera, 'canRunManualFocus'),
+            canStartLiveview: useTethrConfig(camera, 'canStartLiveview'),
+            manualFocusOptions: useTethrConfig(camera, 'manualFocusOptions')
         },
         liveviewMediaStream,
-        liveviewing: _vue.readonly(liveviewing),
         lastPictureURL,
         runAutoFocus,
         toggleCameraConnection,
@@ -9816,7 +8986,7 @@ function useTethr() {
     };
 }
 
-},{"file-saver":"9od9o","vue":"eg0LR","~/src":"4aleK","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"9od9o":[function(require,module,exports) {
+},{"file-saver":"1oiUH","vue":"h7dRr","~/src":"7Dowi","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"1oiUH":[function(require,module,exports) {
 var global = arguments[3];
 (function(a, b) {
     if ("function" == typeof define && define.amd) define([], b);
@@ -9825,72 +8995,72 @@ var global = arguments[3];
     };
 })(this, function() {
     "use strict";
-    function b(a, b1) {
-        return "undefined" == typeof b1 ? b1 = {
+    function b(a, b) {
+        return "undefined" == typeof b ? b = {
             autoBom: !1
-        } : "object" != typeof b1 && (console.warn("Deprecated: Expected third argument to be a object"), b1 = {
-            autoBom: !b1
-        }), b1.autoBom && /^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type) ? new Blob([
+        } : "object" != typeof b && (console.warn("Deprecated: Expected third argument to be a object"), b = {
+            autoBom: !b
+        }), b.autoBom && /^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type) ? new Blob([
             "\uFEFF",
             a
         ], {
             type: a.type
         }) : a;
     }
-    function c(a, b1, c1) {
+    function c(a, b, c) {
         var d = new XMLHttpRequest;
         d.open("GET", a), d.responseType = "blob", d.onload = function() {
-            g(d.response, b1, c1);
+            g(d.response, b, c);
         }, d.onerror = function() {
             console.error("could not download file");
         }, d.send();
     }
     function d(a) {
-        var b1 = new XMLHttpRequest;
-        b1.open("HEAD", a, !1);
+        var b = new XMLHttpRequest;
+        b.open("HEAD", a, !1);
         try {
-            b1.send();
+            b.send();
         } catch (a1) {
         }
-        return 200 <= b1.status && 299 >= b1.status;
+        return 200 <= b.status && 299 >= b.status;
     }
     function e(a) {
         try {
             a.dispatchEvent(new MouseEvent("click"));
-        } catch (c1) {
-            var b1 = document.createEvent("MouseEvents");
-            b1.initMouseEvent("click", !0, !0, window, 0, 0, 0, 80, 20, !1, !1, !1, !1, 0, null), a.dispatchEvent(b1);
+        } catch (c) {
+            var b = document.createEvent("MouseEvents");
+            b.initMouseEvent("click", !0, !0, window, 0, 0, 0, 80, 20, !1, !1, !1, !1, 0, null), a.dispatchEvent(b);
         }
     }
     var f = "object" == typeof window && window.window === window ? window : "object" == typeof self && self.self === self ? self : "object" == typeof global && global.global === global ? global : void 0, a = f.navigator && /Macintosh/.test(navigator.userAgent) && /AppleWebKit/.test(navigator.userAgent) && !/Safari/.test(navigator.userAgent), g = f.saveAs || ("object" != typeof window || window !== f ? function() {
-    } : "download" in HTMLAnchorElement.prototype && !a ? function(b2, g1, h) {
+    } : "download" in HTMLAnchorElement.prototype && !a ? function(b, g, h) {
         var i = f.URL || f.webkitURL, j = document.createElement("a");
-        g1 = g1 || b2.name || "download", j.download = g1, j.rel = "noopener", "string" == typeof b2 ? (j.href = b2, j.origin === location.origin ? e(j) : d(j.href) ? c(b2, g1, h) : e(j, j.target = "_blank")) : (j.href = i.createObjectURL(b2), setTimeout(function() {
+        g = g || b.name || "download", j.download = g, j.rel = "noopener", "string" == typeof b ? (j.href = b, j.origin === location.origin ? e(j) : d(j.href) ? c(b, g, h) : e(j, j.target = "_blank")) : (j.href = i.createObjectURL(b), setTimeout(function() {
             i.revokeObjectURL(j.href);
         }, 40000), setTimeout(function() {
             e(j);
         }, 0));
-    } : "msSaveOrOpenBlob" in navigator ? function(f1, g1, h) {
-        if (g1 = g1 || f1.name || "download", "string" != typeof f1) navigator.msSaveOrOpenBlob(b(f1, h), g1);
-        else if (d(f1)) c(f1, g1, h);
+    } : "msSaveOrOpenBlob" in navigator ? function(f, g, h) {
+        if (g = g || f.name || "download", "string" != typeof f) navigator.msSaveOrOpenBlob(b(f, h), g);
+        else if (d(f)) c(f, g, h);
         else {
             var i = document.createElement("a");
-            i.href = f1, i.target = "_blank", setTimeout(function() {
+            i.href = f, i.target = "_blank", setTimeout(function() {
                 e(i);
             });
         }
-    } : function(b2, d1, e1, g1) {
-        if (g1 = g1 || open("", "_blank"), g1 && (g1.document.title = g1.document.body.innerText = "downloading..."), "string" == typeof b2) return c(b2, d1, e1);
-        var h = "application/octet-stream" === b2.type, i = /constructor/i.test(f.HTMLElement) || f.safari, j = /CriOS\/[\d]+/.test(navigator.userAgent);
+    } : function(b, d, e, g) {
+        if (g = g || open("", "_blank"), g && (g.document.title = g.document.body.innerText = "downloading..."), "string" == typeof b) return c(b, d, e);
+        var h = "application/octet-stream" === b.type, i = /constructor/i.test(f.HTMLElement) || f.safari, j = /CriOS\/[\d]+/.test(navigator.userAgent);
         if ((j || h && i || a) && "undefined" != typeof FileReader) {
             var k = new FileReader;
             k.onloadend = function() {
-                var a1 = k.result;
-                a1 = j ? a1 : a1.replace(/^data:[^;]*;/, "data:attachment/file;"), g1 ? g1.location.href = a1 : location = a1, g1 = null;
-            }, k.readAsDataURL(b2);
+                var a = k.result;
+                a = j ? a : a.replace(/^data:[^;]*;/, "data:attachment/file;"), g ? g.location.href = a : location = a, g = null;
+            }, k.readAsDataURL(b);
         } else {
-            var l = f.URL || f.webkitURL, m = l.createObjectURL(b2);
-            g1 ? g1.location = m : location.href = m, g1 = null, setTimeout(function() {
+            var l = f.URL || f.webkitURL, m = l.createObjectURL(b);
+            g ? g.location = m : location.href = m, g = null, setTimeout(function() {
                 l.revokeObjectURL(m);
             }, 40000);
         }
@@ -9898,7 +9068,7 @@ var global = arguments[3];
     f.saveAs = g.saveAs = g, "undefined" != typeof module && (module.exports = g);
 });
 
-},{}],"4aleK":[function(require,module,exports) {
+},{}],"7Dowi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "detectTethr", ()=>_detectTethr.detectTethr
@@ -9913,12 +9083,149 @@ var _configs = require("../src/configs");
 var _detectTethr = require("./detectTethr");
 var _tethr = require("./Tethr");
 
-},{"../src/configs":"2uyxY","./detectTethr":"jnKtw","./Tethr":"kne57","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"2uyxY":[function(require,module,exports) {
+},{"../src/configs":"6m2W9","./detectTethr":"aaHzO","./Tethr":"cDt1x","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"6m2W9":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "ConfigForDevicePropTable", ()=>ConfigForDevicePropTable
+);
+parcelHelpers.export(exports, "ExposureModeTable", ()=>ExposureModeTable
+);
+parcelHelpers.export(exports, "WhiteBalanceTable", ()=>WhiteBalanceTable
+);
+parcelHelpers.export(exports, "DriveModeTable", ()=>DriveModeTable
+);
 // Utility functions
 parcelHelpers.export(exports, "computeShutterSpeedSeconds", ()=>computeShutterSpeedSeconds
 );
+var _bim = require("bim");
+const ConfigForDevicePropTable = new _bim.BiMap([
+    [
+        20481,
+        'batteryLevel'
+    ],
+    [
+        20485,
+        'whiteBalance'
+    ],
+    [
+        20487,
+        'aperture'
+    ],
+    [
+        20488,
+        'focalLength'
+    ],
+    [
+        20489,
+        'focusDistance'
+    ],
+    [
+        20493,
+        'shutterSpeed'
+    ],
+    [
+        20494,
+        'exposureMode'
+    ],
+    [
+        20495,
+        'iso'
+    ],
+    [
+        20496,
+        'exposureComp'
+    ],
+    [
+        20498,
+        'captureDelay'
+    ],
+    [
+        20499,
+        'driveMode'
+    ],
+    [
+        20503,
+        'colorMode'
+    ],
+    [
+        20506,
+        'timelapseNumber'
+    ],
+    [
+        20507,
+        'timelapseInterval'
+    ], 
+]);
+const ExposureModeTable = new _bim.BiMap([
+    [
+        1,
+        'M'
+    ],
+    [
+        2,
+        'P'
+    ],
+    [
+        3,
+        'A'
+    ],
+    [
+        4,
+        'S'
+    ],
+    [
+        5,
+        'creative'
+    ],
+    [
+        6,
+        'action'
+    ],
+    [
+        7,
+        'portrait'
+    ], 
+]);
+const WhiteBalanceTable = new _bim.BiMap([
+    [
+        1,
+        'manual'
+    ],
+    [
+        2,
+        'auto'
+    ],
+    [
+        3,
+        'custom'
+    ],
+    [
+        4,
+        'daylight'
+    ],
+    [
+        5,
+        'fluorescent'
+    ],
+    [
+        6,
+        'tungsten'
+    ], 
+]);
+const DriveModeTable = new _bim.BiMap([
+    [
+        1,
+        'normal'
+    ],
+    [
+        2,
+        'burst'
+    ],
+    [
+        3,
+        'timelapse'
+    ], 
+]);
 function computeShutterSpeedSeconds(ss) {
     if (ss === 'bulk' || ss === 'sync') return Infinity;
     if (ss.includes('/')) {
@@ -9928,7 +9235,195 @@ function computeShutterSpeedSeconds(ss) {
     return parseFloat(ss);
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"jnKtw":[function(require,module,exports) {
+},{"bim":"fiCRV","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"fiCRV":[function(require,module,exports) {
+"use strict";
+var __importDefault = this && this.__importDefault || function(mod) {
+    return mod && mod.__esModule ? mod : {
+        "default": mod
+    };
+};
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.WeakBiMap = exports.BiMap = void 0;
+var BiMap_1 = require("./BiMap");
+Object.defineProperty(exports, "BiMap", {
+    enumerable: true,
+    get: function() {
+        return __importDefault(BiMap_1).default;
+    }
+});
+var WeakBiMap_1 = require("./WeakBiMap");
+Object.defineProperty(exports, "WeakBiMap", {
+    enumerable: true,
+    get: function() {
+        return __importDefault(WeakBiMap_1).default;
+    }
+});
+
+},{"./BiMap":"JYjTI","./WeakBiMap":"ghuQO"}],"JYjTI":[function(require,module,exports) {
+"use strict";
+var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
+};
+var __classPrivateFieldGet = this && this.__classPrivateFieldGet || function(receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var _BiMap_left, _BiMap_right;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+class BiMap {
+    constructor(iterable){
+        _BiMap_left.set(this, void 0);
+        _BiMap_right.set(this, void 0);
+        __classPrivateFieldSet(this, _BiMap_left, new Map(), "f");
+        __classPrivateFieldSet(this, _BiMap_right, new Map(), "f");
+        if (iterable === undefined) return;
+        for (const [k, v] of iterable){
+            __classPrivateFieldGet(this, _BiMap_left, "f").set(k, v);
+            __classPrivateFieldGet(this, _BiMap_right, "f").set(v, k);
+        }
+    }
+    clear() {
+        __classPrivateFieldGet(this, _BiMap_left, "f").clear();
+        __classPrivateFieldGet(this, _BiMap_right, "f").clear();
+    }
+    delete(key) {
+        const val = __classPrivateFieldGet(this, _BiMap_left, "f").get(key);
+        if (!__classPrivateFieldGet(this, _BiMap_right, "f").has(val)) return false;
+        __classPrivateFieldGet(this, _BiMap_right, "f").delete(val);
+        return __classPrivateFieldGet(this, _BiMap_left, "f").delete(key);
+    }
+    entries() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").entries();
+    }
+    forEach(callbackfn, thisArg) {
+        __classPrivateFieldGet(this, _BiMap_left, "f").forEach(callbackfn, thisArg);
+    }
+    get(key) {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").get(key);
+    }
+    has(key) {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").has(key);
+    }
+    keys() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").keys();
+    }
+    set(key, value) {
+        const left = __classPrivateFieldGet(this, _BiMap_left, "f");
+        const right = __classPrivateFieldGet(this, _BiMap_right, "f");
+        const oldVal = left.get(key);
+        const oldKey = right.get(value);
+        if (left.has(key)) right.delete(oldVal);
+        if (right.has(value)) left.delete(oldKey);
+        left.set(key, value);
+        right.set(value, key);
+        return this;
+    }
+    get size() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").size;
+    }
+    values() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").values();
+    }
+    [(_BiMap_left = new WeakMap(), _BiMap_right = new WeakMap(), Symbol.iterator)]() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f")[Symbol.iterator]();
+    }
+    get [Symbol.toStringTag]() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f")[Symbol.toStringTag];
+    }
+    deleteValue(value) {
+        const key = __classPrivateFieldGet(this, _BiMap_right, "f").get(value);
+        if (!__classPrivateFieldGet(this, _BiMap_left, "f").has(key)) return false;
+        __classPrivateFieldGet(this, _BiMap_left, "f").delete(key);
+        return __classPrivateFieldGet(this, _BiMap_right, "f").delete(value);
+    }
+    getKey(value) {
+        return __classPrivateFieldGet(this, _BiMap_right, "f").get(value);
+    }
+    hasValue(value) {
+        return __classPrivateFieldGet(this, _BiMap_right, "f").has(value);
+    }
+}
+exports.default = BiMap;
+
+},{}],"ghuQO":[function(require,module,exports) {
+"use strict";
+var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
+};
+var __classPrivateFieldGet = this && this.__classPrivateFieldGet || function(receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var _WeakBiMap_left, _WeakBiMap_right;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+class WeakBiMap {
+    constructor(iterable){
+        _WeakBiMap_left.set(this, void 0);
+        _WeakBiMap_right.set(this, void 0);
+        __classPrivateFieldSet(this, _WeakBiMap_left, new WeakMap(), "f");
+        __classPrivateFieldSet(this, _WeakBiMap_right, new WeakMap(), "f");
+        if (iterable === undefined) return;
+        for (const [k, v] of iterable){
+            __classPrivateFieldGet(this, _WeakBiMap_left, "f").set(k, v);
+            __classPrivateFieldGet(this, _WeakBiMap_right, "f").set(v, k);
+        }
+    }
+    delete(key) {
+        const val = __classPrivateFieldGet(this, _WeakBiMap_left, "f").get(key);
+        if (!__classPrivateFieldGet(this, _WeakBiMap_right, "f").has(val)) return false;
+        __classPrivateFieldGet(this, _WeakBiMap_right, "f").delete(val);
+        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").delete(key);
+    }
+    get(key) {
+        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").get(key);
+    }
+    has(key) {
+        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").has(key);
+    }
+    set(key, value) {
+        const left = __classPrivateFieldGet(this, _WeakBiMap_left, "f");
+        const right = __classPrivateFieldGet(this, _WeakBiMap_right, "f");
+        const oldVal = left.get(key);
+        const oldKey = right.get(value);
+        if (left.has(key)) right.delete(oldVal);
+        if (right.has(value)) left.delete(oldKey);
+        left.set(key, value);
+        right.set(value, key);
+        return this;
+    }
+    get [(_WeakBiMap_left = new WeakMap(), _WeakBiMap_right = new WeakMap(), Symbol.toStringTag)]() {
+        return __classPrivateFieldGet(this, _WeakBiMap_left, "f")[Symbol.toStringTag];
+    }
+    deleteValue(value) {
+        const key = __classPrivateFieldGet(this, _WeakBiMap_right, "f").get(value);
+        if (!__classPrivateFieldGet(this, _WeakBiMap_left, "f").has(key)) return false;
+        __classPrivateFieldGet(this, _WeakBiMap_left, "f").delete(key);
+        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").delete(value);
+    }
+    getKey(value) {
+        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").get(value);
+    }
+    hasValue(value) {
+        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").has(value);
+    }
+}
+exports.default = WeakBiMap;
+
+},{}],"aaHzO":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "detectTethr", ()=>detectTethr
@@ -9949,8 +9444,8 @@ async function detectTethr({ strategy ='first'  } = {
         if (!usb) return [];
         const pairedDevices = await usb.getDevices();
         const pairedPromises = Promise.all(pairedDevices.map(_tethrPTPUSB.initTethrUSBPTP));
-        const tethrs1 = (await pairedPromises).filter(_util.isntNil);
-        return tethrs1;
+        const tethrs = (await pairedPromises).filter(_util.isntNil);
+        return tethrs;
     }
     async function requestTethrPTPUSB() {
         if (!usb) return [];
@@ -9981,7 +9476,7 @@ async function detectTethr({ strategy ='first'  } = {
     return tethrs;
 }
 
-},{"./TethrPTPUSB":"CiLrY","./TethrWebcam":"6dNCk","./util":"kykCo","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"CiLrY":[function(require,module,exports) {
+},{"./TethrPTPUSB":"afXnW","./TethrWebcam":"4lCec","./util":"id2fi","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"afXnW":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "initTethrUSBPTP", ()=>initTethrUSBPTP
@@ -10017,7 +9512,7 @@ async function initTethrUSBPTP(usb) {
     return tethr;
 }
 
-},{"../PTPDevice":"9n0gz","./TethrPanasonic":"fvVqX","./TethrPTPUSB":"7yZjY","./TethrRicohTheta":"dU2Xp","./TethrSigma":"aoRyW","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"9n0gz":[function(require,module,exports) {
+},{"../PTPDevice":"l1a6P","./TethrPanasonic":"9JW6y","./TethrPTPUSB":"anSbZ","./TethrRicohTheta":"4nPBX","./TethrSigma":"ilHr2","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"l1a6P":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "PTPDevice", ()=>PTPDevice
@@ -10030,11 +9525,11 @@ var _ptpdatacode = require("./PTPDatacode");
 var _ptpdataView = require("./PTPDataView");
 var _util = require("./util");
 var PTPType;
-(function(PTPType1) {
-    PTPType1[PTPType1["Command"] = 1] = "Command";
-    PTPType1[PTPType1["Data"] = 2] = "Data";
-    PTPType1[PTPType1["Response"] = 3] = "Response";
-    PTPType1[PTPType1["Event"] = 4] = "Event";
+(function(PTPType) {
+    PTPType[PTPType["Command"] = 1] = "Command";
+    PTPType[PTPType["Data"] = 2] = "Data";
+    PTPType[PTPType["Response"] = 3] = "Response";
+    PTPType[PTPType["Event"] = 4] = "Event";
 })(PTPType || (PTPType = {
 }));
 const PTPCommandMaxByteLength = 24;
@@ -10305,7 +9800,7 @@ class PTPDevice extends _eventemitter3Default.default {
     }
 }
 
-},{"eventemitter3":"gTdcb","promise-queue":"5c6R8","./PTPDatacode":"gzikr","./PTPDataView":"6vBdq","./util":"kykCo","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"gTdcb":[function(require,module,exports) {
+},{"eventemitter3":"5J6rp","promise-queue":"a5zvq","./PTPDatacode":"dzGjw","./PTPDataView":"2SXC8","./util":"id2fi","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"5J6rp":[function(require,module,exports) {
 'use strict';
 var has = Object.prototype.hasOwnProperty, prefix = '~';
 /**
@@ -10372,7 +9867,7 @@ if (Object.create) {
  * @param {(String|Symbol)} evt The Event name.
  * @private
  */ function clearEvent(emitter, evt) {
-    if ((--emitter._eventsCount) === 0) emitter._events = new Events();
+    if (--emitter._eventsCount === 0) emitter._events = new Events();
     else delete emitter._events[evt];
 }
 /**
@@ -10420,10 +9915,10 @@ if (Object.create) {
  * @returns {Number} The number of listeners.
  * @public
  */ EventEmitter.prototype.listenerCount = function listenerCount(event) {
-    var evt = prefix ? prefix + event : event, listeners1 = this._events[evt];
-    if (!listeners1) return 0;
-    if (listeners1.fn) return 1;
-    return listeners1.length;
+    var evt = prefix ? prefix + event : event, listeners = this._events[evt];
+    if (!listeners) return 0;
+    if (listeners.fn) return 1;
+    return listeners.length;
 };
 /**
  * Calls each of the listeners registered for a given event.
@@ -10434,45 +9929,45 @@ if (Object.create) {
  */ EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
     var evt = prefix ? prefix + event : event;
     if (!this._events[evt]) return false;
-    var listeners1 = this._events[evt], len = arguments.length, args, i;
-    if (listeners1.fn) {
-        if (listeners1.once) this.removeListener(event, listeners1.fn, undefined, true);
+    var listeners = this._events[evt], len = arguments.length, args, i;
+    if (listeners.fn) {
+        if (listeners.once) this.removeListener(event, listeners.fn, undefined, true);
         switch(len){
             case 1:
-                return listeners1.fn.call(listeners1.context), true;
+                return listeners.fn.call(listeners.context), true;
             case 2:
-                return listeners1.fn.call(listeners1.context, a1), true;
+                return listeners.fn.call(listeners.context, a1), true;
             case 3:
-                return listeners1.fn.call(listeners1.context, a1, a2), true;
+                return listeners.fn.call(listeners.context, a1, a2), true;
             case 4:
-                return listeners1.fn.call(listeners1.context, a1, a2, a3), true;
+                return listeners.fn.call(listeners.context, a1, a2, a3), true;
             case 5:
-                return listeners1.fn.call(listeners1.context, a1, a2, a3, a4), true;
+                return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
             case 6:
-                return listeners1.fn.call(listeners1.context, a1, a2, a3, a4, a5), true;
+                return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
         }
         for(i = 1, args = new Array(len - 1); i < len; i++)args[i - 1] = arguments[i];
-        listeners1.fn.apply(listeners1.context, args);
+        listeners.fn.apply(listeners.context, args);
     } else {
-        var length = listeners1.length, j;
+        var length = listeners.length, j;
         for(i = 0; i < length; i++){
-            if (listeners1[i].once) this.removeListener(event, listeners1[i].fn, undefined, true);
+            if (listeners[i].once) this.removeListener(event, listeners[i].fn, undefined, true);
             switch(len){
                 case 1:
-                    listeners1[i].fn.call(listeners1[i].context);
+                    listeners[i].fn.call(listeners[i].context);
                     break;
                 case 2:
-                    listeners1[i].fn.call(listeners1[i].context, a1);
+                    listeners[i].fn.call(listeners[i].context, a1);
                     break;
                 case 3:
-                    listeners1[i].fn.call(listeners1[i].context, a1, a2);
+                    listeners[i].fn.call(listeners[i].context, a1, a2);
                     break;
                 case 4:
-                    listeners1[i].fn.call(listeners1[i].context, a1, a2, a3);
+                    listeners[i].fn.call(listeners[i].context, a1, a2, a3);
                     break;
                 default:
                     if (!args) for(j = 1, args = new Array(len - 1); j < len; j++)args[j - 1] = arguments[j];
-                    listeners1[i].fn.apply(listeners1[i].context, args);
+                    listeners[i].fn.apply(listeners[i].context, args);
             }
         }
     }
@@ -10509,18 +10004,18 @@ if (Object.create) {
  * @param {Boolean} once Only remove one-time listeners.
  * @returns {EventEmitter} `this`.
  * @public
- */ EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once1) {
+ */ EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
     var evt = prefix ? prefix + event : event;
     if (!this._events[evt]) return this;
     if (!fn) {
         clearEvent(this, evt);
         return this;
     }
-    var listeners1 = this._events[evt];
-    if (listeners1.fn) {
-        if (listeners1.fn === fn && (!once1 || listeners1.once) && (!context || listeners1.context === context)) clearEvent(this, evt);
+    var listeners = this._events[evt];
+    if (listeners.fn) {
+        if (listeners.fn === fn && (!once || listeners.once) && (!context || listeners.context === context)) clearEvent(this, evt);
     } else {
-        for(var i = 0, events = [], length = listeners1.length; i < length; i++)if (listeners1[i].fn !== fn || once1 && !listeners1[i].once || context && listeners1[i].context !== context) events.push(listeners1[i]);
+        for(var i = 0, events = [], length = listeners.length; i < length; i++)if (listeners[i].fn !== fn || once && !listeners[i].once || context && listeners[i].context !== context) events.push(listeners[i]);
         //
         // Reset the array, or remove it completely if we have no more listeners.
         //
@@ -10564,10 +10059,10 @@ EventEmitter.EventEmitter = EventEmitter;
 //
 if ('undefined' !== typeof module) module.exports = EventEmitter;
 
-},{}],"5c6R8":[function(require,module,exports) {
+},{}],"a5zvq":[function(require,module,exports) {
 module.exports = require('./lib');
 
-},{"./lib":"7DCF3"}],"7DCF3":[function(require,module,exports) {
+},{"./lib":"h2ZuS"}],"h2ZuS":[function(require,module,exports) {
 /* global define, Promise */ (function(root, factory) {
     if (typeof module === 'object' && module.exports && typeof require === 'function') // CommonJS
     module.exports = factory();
@@ -10713,7 +10208,7 @@ module.exports = require('./lib');
     return Queue;
 });
 
-},{}],"gzikr":[function(require,module,exports) {
+},{}],"dzGjw":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "OpCode", ()=>OpCode
@@ -10728,191 +10223,221 @@ parcelHelpers.export(exports, "DevicePropCode", ()=>DevicePropCode
 );
 parcelHelpers.export(exports, "DatatypeCode", ()=>DatatypeCode
 );
+parcelHelpers.export(exports, "PTPStorageTypeCode", ()=>PTPStorageTypeCode
+);
+parcelHelpers.export(exports, "PTPFilesystemTypeCode", ()=>PTPFilesystemTypeCode
+);
+parcelHelpers.export(exports, "PTPAccessCapabilityCode", ()=>PTPAccessCapabilityCode
+);
 var OpCode;
-(function(OpCode1) {
-    OpCode1[OpCode1["Undefined"] = 4096] = "Undefined";
-    OpCode1[OpCode1["GetDeviceInfo"] = 4097] = "GetDeviceInfo";
-    OpCode1[OpCode1["OpenSession"] = 4098] = "OpenSession";
-    OpCode1[OpCode1["CloseSession"] = 4099] = "CloseSession";
-    OpCode1[OpCode1["GetStorageIDs"] = 4100] = "GetStorageIDs";
-    OpCode1[OpCode1["GetStorageInfo"] = 4101] = "GetStorageInfo";
-    OpCode1[OpCode1["GetNumObjects"] = 4102] = "GetNumObjects";
-    OpCode1[OpCode1["GetObjectHandles"] = 4103] = "GetObjectHandles";
-    OpCode1[OpCode1["GetObjectInfo"] = 4104] = "GetObjectInfo";
-    OpCode1[OpCode1["GetObject"] = 4105] = "GetObject";
-    OpCode1[OpCode1["GetThumb"] = 4106] = "GetThumb";
-    OpCode1[OpCode1["DeleteObject"] = 4107] = "DeleteObject";
-    OpCode1[OpCode1["SendObjectInfo"] = 4108] = "SendObjectInfo";
-    OpCode1[OpCode1["SendObject"] = 4109] = "SendObject";
-    OpCode1[OpCode1["InitiateCapture"] = 4110] = "InitiateCapture";
-    OpCode1[OpCode1["FormatStore"] = 4111] = "FormatStore";
-    OpCode1[OpCode1["ResetDevice"] = 4112] = "ResetDevice";
-    OpCode1[OpCode1["SelfTest"] = 4113] = "SelfTest";
-    OpCode1[OpCode1["SetObjectProtection"] = 4114] = "SetObjectProtection";
-    OpCode1[OpCode1["PowerDown"] = 4115] = "PowerDown";
-    OpCode1[OpCode1["GetDevicePropDesc"] = 4116] = "GetDevicePropDesc";
-    OpCode1[OpCode1["GetDevicePropValue"] = 4117] = "GetDevicePropValue";
-    OpCode1[OpCode1["SetDevicePropValue"] = 4118] = "SetDevicePropValue";
-    OpCode1[OpCode1["ResetDevicePropValue"] = 4119] = "ResetDevicePropValue";
-    OpCode1[OpCode1["TerminateOpenCapture"] = 4120] = "TerminateOpenCapture";
-    OpCode1[OpCode1["MoveObject"] = 4121] = "MoveObject";
-    OpCode1[OpCode1["CopyObject"] = 4122] = "CopyObject";
-    OpCode1[OpCode1["GetPartialObject"] = 4123] = "GetPartialObject";
-    OpCode1[OpCode1["InitiateOpenCapture"] = 4124] = "InitiateOpenCapture";
+(function(OpCode) {
+    OpCode[OpCode["Undefined"] = 4096] = "Undefined";
+    OpCode[OpCode["GetDeviceInfo"] = 4097] = "GetDeviceInfo";
+    OpCode[OpCode["OpenSession"] = 4098] = "OpenSession";
+    OpCode[OpCode["CloseSession"] = 4099] = "CloseSession";
+    OpCode[OpCode["GetStorageIDs"] = 4100] = "GetStorageIDs";
+    OpCode[OpCode["GetStorageInfo"] = 4101] = "GetStorageInfo";
+    OpCode[OpCode["GetNumObjects"] = 4102] = "GetNumObjects";
+    OpCode[OpCode["GetObjectHandles"] = 4103] = "GetObjectHandles";
+    OpCode[OpCode["GetObjectInfo"] = 4104] = "GetObjectInfo";
+    OpCode[OpCode["GetObject"] = 4105] = "GetObject";
+    OpCode[OpCode["GetThumb"] = 4106] = "GetThumb";
+    OpCode[OpCode["DeleteObject"] = 4107] = "DeleteObject";
+    OpCode[OpCode["SendObjectInfo"] = 4108] = "SendObjectInfo";
+    OpCode[OpCode["SendObject"] = 4109] = "SendObject";
+    OpCode[OpCode["InitiateCapture"] = 4110] = "InitiateCapture";
+    OpCode[OpCode["FormatStore"] = 4111] = "FormatStore";
+    OpCode[OpCode["ResetDevice"] = 4112] = "ResetDevice";
+    OpCode[OpCode["SelfTest"] = 4113] = "SelfTest";
+    OpCode[OpCode["SetObjectProtection"] = 4114] = "SetObjectProtection";
+    OpCode[OpCode["PowerDown"] = 4115] = "PowerDown";
+    OpCode[OpCode["GetDevicePropDesc"] = 4116] = "GetDevicePropDesc";
+    OpCode[OpCode["GetDevicePropValue"] = 4117] = "GetDevicePropValue";
+    OpCode[OpCode["SetDevicePropValue"] = 4118] = "SetDevicePropValue";
+    OpCode[OpCode["ResetDevicePropValue"] = 4119] = "ResetDevicePropValue";
+    OpCode[OpCode["TerminateOpenCapture"] = 4120] = "TerminateOpenCapture";
+    OpCode[OpCode["MoveObject"] = 4121] = "MoveObject";
+    OpCode[OpCode["CopyObject"] = 4122] = "CopyObject";
+    OpCode[OpCode["GetPartialObject"] = 4123] = "GetPartialObject";
+    OpCode[OpCode["InitiateOpenCapture"] = 4124] = "InitiateOpenCapture";
 })(OpCode || (OpCode = {
 }));
 var ResCode;
-(function(ResCode1) {
-    ResCode1[ResCode1["Undefined"] = 8192] = "Undefined";
-    ResCode1[ResCode1["OK"] = 8193] = "OK";
-    ResCode1[ResCode1["GeneralError"] = 8194] = "GeneralError";
-    ResCode1[ResCode1["SessionNotOpen"] = 8195] = "SessionNotOpen";
-    ResCode1[ResCode1["InvalidTransactionID"] = 8196] = "InvalidTransactionID";
-    ResCode1[ResCode1["OperationNotSupported"] = 8197] = "OperationNotSupported";
-    ResCode1[ResCode1["ParameterNotSupported"] = 8198] = "ParameterNotSupported";
-    ResCode1[ResCode1["IncompleteTransfer"] = 8199] = "IncompleteTransfer";
-    ResCode1[ResCode1["InvalidStorageID"] = 8200] = "InvalidStorageID";
-    ResCode1[ResCode1["InvalidObjectHandle"] = 8201] = "InvalidObjectHandle";
-    ResCode1[ResCode1["DevicePropNotSupported"] = 8202] = "DevicePropNotSupported";
-    ResCode1[ResCode1["InvalidObjectFormatCode"] = 8203] = "InvalidObjectFormatCode";
-    ResCode1[ResCode1["StoreFull"] = 8204] = "StoreFull";
-    ResCode1[ResCode1["ObjectWriteProtected"] = 8205] = "ObjectWriteProtected";
-    ResCode1[ResCode1["StoreReadOnly"] = 8206] = "StoreReadOnly";
-    ResCode1[ResCode1["AccessDenied"] = 8207] = "AccessDenied";
-    ResCode1[ResCode1["NoThumbnailPresent"] = 8208] = "NoThumbnailPresent";
-    ResCode1[ResCode1["SelfTestFailed"] = 8209] = "SelfTestFailed";
-    ResCode1[ResCode1["PartialDeletion"] = 8210] = "PartialDeletion";
-    ResCode1[ResCode1["StoreNotAvailable"] = 8211] = "StoreNotAvailable";
-    ResCode1[ResCode1["SpecificationByFormatUnsupported"] = 8212] = "SpecificationByFormatUnsupported";
-    ResCode1[ResCode1["NoValidObjectInfo"] = 8213] = "NoValidObjectInfo";
-    ResCode1[ResCode1["InvalidCodeFormat"] = 8214] = "InvalidCodeFormat";
-    ResCode1[ResCode1["UnknownVendorCode"] = 8215] = "UnknownVendorCode";
-    ResCode1[ResCode1["CaptureAlreadyTerminated"] = 8216] = "CaptureAlreadyTerminated";
-    ResCode1[ResCode1["DeviceBusy"] = 8217] = "DeviceBusy";
-    ResCode1[ResCode1["InvalidParentObject"] = 8218] = "InvalidParentObject";
-    ResCode1[ResCode1["InvalidDevicePropFormat"] = 8219] = "InvalidDevicePropFormat";
-    ResCode1[ResCode1["InvalidDevicePropValue"] = 8220] = "InvalidDevicePropValue";
-    ResCode1[ResCode1["InvalidParameter"] = 8221] = "InvalidParameter";
-    ResCode1[ResCode1["SessionAlreadyOpen"] = 8222] = "SessionAlreadyOpen";
-    ResCode1[ResCode1["TransactionCancelled"] = 8223] = "TransactionCancelled";
-    ResCode1[ResCode1["SpecificationOfDestinationUnsupported"] = 8224] = "SpecificationOfDestinationUnsupported";
+(function(ResCode) {
+    ResCode[ResCode["Undefined"] = 8192] = "Undefined";
+    ResCode[ResCode["OK"] = 8193] = "OK";
+    ResCode[ResCode["GeneralError"] = 8194] = "GeneralError";
+    ResCode[ResCode["SessionNotOpen"] = 8195] = "SessionNotOpen";
+    ResCode[ResCode["InvalidTransactionID"] = 8196] = "InvalidTransactionID";
+    ResCode[ResCode["OperationNotSupported"] = 8197] = "OperationNotSupported";
+    ResCode[ResCode["ParameterNotSupported"] = 8198] = "ParameterNotSupported";
+    ResCode[ResCode["IncompleteTransfer"] = 8199] = "IncompleteTransfer";
+    ResCode[ResCode["InvalidStorageID"] = 8200] = "InvalidStorageID";
+    ResCode[ResCode["InvalidObjectHandle"] = 8201] = "InvalidObjectHandle";
+    ResCode[ResCode["DevicePropNotSupported"] = 8202] = "DevicePropNotSupported";
+    ResCode[ResCode["InvalidObjectFormatCode"] = 8203] = "InvalidObjectFormatCode";
+    ResCode[ResCode["StoreFull"] = 8204] = "StoreFull";
+    ResCode[ResCode["ObjectWriteProtected"] = 8205] = "ObjectWriteProtected";
+    ResCode[ResCode["StoreReadOnly"] = 8206] = "StoreReadOnly";
+    ResCode[ResCode["AccessDenied"] = 8207] = "AccessDenied";
+    ResCode[ResCode["NoThumbnailPresent"] = 8208] = "NoThumbnailPresent";
+    ResCode[ResCode["SelfTestFailed"] = 8209] = "SelfTestFailed";
+    ResCode[ResCode["PartialDeletion"] = 8210] = "PartialDeletion";
+    ResCode[ResCode["StoreNotAvailable"] = 8211] = "StoreNotAvailable";
+    ResCode[ResCode["SpecificationByFormatUnsupported"] = 8212] = "SpecificationByFormatUnsupported";
+    ResCode[ResCode["NoValidObjectInfo"] = 8213] = "NoValidObjectInfo";
+    ResCode[ResCode["InvalidCodeFormat"] = 8214] = "InvalidCodeFormat";
+    ResCode[ResCode["UnknownVendorCode"] = 8215] = "UnknownVendorCode";
+    ResCode[ResCode["CaptureAlreadyTerminated"] = 8216] = "CaptureAlreadyTerminated";
+    ResCode[ResCode["DeviceBusy"] = 8217] = "DeviceBusy";
+    ResCode[ResCode["InvalidParentObject"] = 8218] = "InvalidParentObject";
+    ResCode[ResCode["InvalidDevicePropFormat"] = 8219] = "InvalidDevicePropFormat";
+    ResCode[ResCode["InvalidDevicePropValue"] = 8220] = "InvalidDevicePropValue";
+    ResCode[ResCode["InvalidParameter"] = 8221] = "InvalidParameter";
+    ResCode[ResCode["SessionAlreadyOpen"] = 8222] = "SessionAlreadyOpen";
+    ResCode[ResCode["TransactionCancelled"] = 8223] = "TransactionCancelled";
+    ResCode[ResCode["SpecificationOfDestinationUnsupported"] = 8224] = "SpecificationOfDestinationUnsupported";
 })(ResCode || (ResCode = {
 }));
 var EventCode;
-(function(EventCode1) {
-    EventCode1[EventCode1["Undefined"] = 16384] = "Undefined";
-    EventCode1[EventCode1["CancelTransaction"] = 16385] = "CancelTransaction";
-    EventCode1[EventCode1["ObjectAdded"] = 16386] = "ObjectAdded";
-    EventCode1[EventCode1["ObjectRemoved"] = 16387] = "ObjectRemoved";
-    EventCode1[EventCode1["StoreAdded"] = 16388] = "StoreAdded";
-    EventCode1[EventCode1["StoreRemoved"] = 16389] = "StoreRemoved";
-    EventCode1[EventCode1["DevicePropChanged"] = 16390] = "DevicePropChanged";
-    EventCode1[EventCode1["ObjectInfoChanged"] = 16391] = "ObjectInfoChanged";
-    EventCode1[EventCode1["DeviceInfoChanged"] = 16392] = "DeviceInfoChanged";
-    EventCode1[EventCode1["RequestObjectTransfer"] = 16393] = "RequestObjectTransfer";
-    EventCode1[EventCode1["StoreFull"] = 16394] = "StoreFull";
-    EventCode1[EventCode1["DeviceReset"] = 16395] = "DeviceReset";
-    EventCode1[EventCode1["StorageInfoChanged"] = 16396] = "StorageInfoChanged";
-    EventCode1[EventCode1["CaptureComplete"] = 16397] = "CaptureComplete";
-    EventCode1[EventCode1["UnreportedStatus"] = 16398] = "UnreportedStatus";
+(function(EventCode) {
+    EventCode[EventCode["Undefined"] = 16384] = "Undefined";
+    EventCode[EventCode["CancelTransaction"] = 16385] = "CancelTransaction";
+    EventCode[EventCode["ObjectAdded"] = 16386] = "ObjectAdded";
+    EventCode[EventCode["ObjectRemoved"] = 16387] = "ObjectRemoved";
+    EventCode[EventCode["StoreAdded"] = 16388] = "StoreAdded";
+    EventCode[EventCode["StoreRemoved"] = 16389] = "StoreRemoved";
+    EventCode[EventCode["DevicePropChanged"] = 16390] = "DevicePropChanged";
+    EventCode[EventCode["ObjectInfoChanged"] = 16391] = "ObjectInfoChanged";
+    EventCode[EventCode["DeviceInfoChanged"] = 16392] = "DeviceInfoChanged";
+    EventCode[EventCode["RequestObjectTransfer"] = 16393] = "RequestObjectTransfer";
+    EventCode[EventCode["StoreFull"] = 16394] = "StoreFull";
+    EventCode[EventCode["DeviceReset"] = 16395] = "DeviceReset";
+    EventCode[EventCode["StorageInfoChanged"] = 16396] = "StorageInfoChanged";
+    EventCode[EventCode["CaptureComplete"] = 16397] = "CaptureComplete";
+    EventCode[EventCode["UnreportedStatus"] = 16398] = "UnreportedStatus";
 })(EventCode || (EventCode = {
 }));
 var ObjectFormatCode;
-(function(ObjectFormatCode1) {
-    ObjectFormatCode1[ObjectFormatCode1["Undefined"] = 12288] = "Undefined";
-    ObjectFormatCode1[ObjectFormatCode1["Association"] = 12289] = "Association";
-    ObjectFormatCode1[ObjectFormatCode1["Script"] = 12290] = "Script";
-    ObjectFormatCode1[ObjectFormatCode1["Executable"] = 12291] = "Executable";
-    ObjectFormatCode1[ObjectFormatCode1["Text"] = 12292] = "Text";
-    ObjectFormatCode1[ObjectFormatCode1["Html"] = 12293] = "Html";
-    ObjectFormatCode1[ObjectFormatCode1["Dpof"] = 12294] = "Dpof";
-    ObjectFormatCode1[ObjectFormatCode1["Aiff"] = 12295] = "Aiff";
-    ObjectFormatCode1[ObjectFormatCode1["Wav"] = 12296] = "Wav";
-    ObjectFormatCode1[ObjectFormatCode1["MP3"] = 12297] = "MP3";
-    ObjectFormatCode1[ObjectFormatCode1["AVI"] = 12298] = "AVI";
-    ObjectFormatCode1[ObjectFormatCode1["MPEG"] = 12299] = "MPEG";
-    ObjectFormatCode1[ObjectFormatCode1["ASF"] = 12300] = "ASF";
-    ObjectFormatCode1[ObjectFormatCode1["Jpeg"] = 14337] = "Jpeg";
-    ObjectFormatCode1[ObjectFormatCode1["TiffEp"] = 14338] = "TiffEp";
-    ObjectFormatCode1[ObjectFormatCode1["FlashPix"] = 14339] = "FlashPix";
-    ObjectFormatCode1[ObjectFormatCode1["Bmp"] = 14340] = "Bmp";
-    ObjectFormatCode1[ObjectFormatCode1["Ciff"] = 14341] = "Ciff";
-    ObjectFormatCode1[ObjectFormatCode1["GIF"] = 14343] = "GIF";
-    ObjectFormatCode1[ObjectFormatCode1["JFIF"] = 14344] = "JFIF";
-    ObjectFormatCode1[ObjectFormatCode1["PCD"] = 14345] = "PCD";
-    ObjectFormatCode1[ObjectFormatCode1["PICT"] = 14346] = "PICT";
-    ObjectFormatCode1[ObjectFormatCode1["PNG"] = 14347] = "PNG";
-    ObjectFormatCode1[ObjectFormatCode1["TIFF"] = 14349] = "TIFF";
-    ObjectFormatCode1[ObjectFormatCode1["TiffIt"] = 14350] = "TiffIt";
-    ObjectFormatCode1[ObjectFormatCode1["Jp2"] = 14351] = "Jp2";
-    ObjectFormatCode1[ObjectFormatCode1["Jpx"] = 14352] = "Jpx";
-    ObjectFormatCode1[ObjectFormatCode1["QuickTime"] = 12301] = "QuickTime";
+(function(ObjectFormatCode) {
+    ObjectFormatCode[ObjectFormatCode["Undefined"] = 12288] = "Undefined";
+    ObjectFormatCode[ObjectFormatCode["Association"] = 12289] = "Association";
+    ObjectFormatCode[ObjectFormatCode["Script"] = 12290] = "Script";
+    ObjectFormatCode[ObjectFormatCode["Executable"] = 12291] = "Executable";
+    ObjectFormatCode[ObjectFormatCode["Text"] = 12292] = "Text";
+    ObjectFormatCode[ObjectFormatCode["Html"] = 12293] = "Html";
+    ObjectFormatCode[ObjectFormatCode["Dpof"] = 12294] = "Dpof";
+    ObjectFormatCode[ObjectFormatCode["Aiff"] = 12295] = "Aiff";
+    ObjectFormatCode[ObjectFormatCode["Wav"] = 12296] = "Wav";
+    ObjectFormatCode[ObjectFormatCode["MP3"] = 12297] = "MP3";
+    ObjectFormatCode[ObjectFormatCode["AVI"] = 12298] = "AVI";
+    ObjectFormatCode[ObjectFormatCode["MPEG"] = 12299] = "MPEG";
+    ObjectFormatCode[ObjectFormatCode["ASF"] = 12300] = "ASF";
+    ObjectFormatCode[ObjectFormatCode["Jpeg"] = 14337] = "Jpeg";
+    ObjectFormatCode[ObjectFormatCode["TiffEp"] = 14338] = "TiffEp";
+    ObjectFormatCode[ObjectFormatCode["FlashPix"] = 14339] = "FlashPix";
+    ObjectFormatCode[ObjectFormatCode["Bmp"] = 14340] = "Bmp";
+    ObjectFormatCode[ObjectFormatCode["Ciff"] = 14341] = "Ciff";
+    ObjectFormatCode[ObjectFormatCode["GIF"] = 14343] = "GIF";
+    ObjectFormatCode[ObjectFormatCode["JFIF"] = 14344] = "JFIF";
+    ObjectFormatCode[ObjectFormatCode["PCD"] = 14345] = "PCD";
+    ObjectFormatCode[ObjectFormatCode["PICT"] = 14346] = "PICT";
+    ObjectFormatCode[ObjectFormatCode["PNG"] = 14347] = "PNG";
+    ObjectFormatCode[ObjectFormatCode["TIFF"] = 14349] = "TIFF";
+    ObjectFormatCode[ObjectFormatCode["TiffIt"] = 14350] = "TiffIt";
+    ObjectFormatCode[ObjectFormatCode["Jp2"] = 14351] = "Jp2";
+    ObjectFormatCode[ObjectFormatCode["Jpx"] = 14352] = "Jpx";
+    ObjectFormatCode[ObjectFormatCode["QuickTime"] = 12301] = "QuickTime";
 })(ObjectFormatCode || (ObjectFormatCode = {
 }));
 var DevicePropCode;
-(function(DevicePropCode1) {
-    DevicePropCode1[DevicePropCode1["Undefined"] = 20480] = "Undefined";
-    DevicePropCode1[DevicePropCode1["BatteryLevel"] = 20481] = "BatteryLevel";
-    DevicePropCode1[DevicePropCode1["FunctionalMode"] = 20482] = "FunctionalMode";
-    DevicePropCode1[DevicePropCode1["ImageSize"] = 20483] = "ImageSize";
-    DevicePropCode1[DevicePropCode1["CompressionSetting"] = 20484] = "CompressionSetting";
-    DevicePropCode1[DevicePropCode1["WhiteBalance"] = 20485] = "WhiteBalance";
-    DevicePropCode1[DevicePropCode1["RGBGain"] = 20486] = "RGBGain";
-    DevicePropCode1[DevicePropCode1["FNumber"] = 20487] = "FNumber";
-    DevicePropCode1[DevicePropCode1["FocalLength"] = 20488] = "FocalLength";
-    DevicePropCode1[DevicePropCode1["FocusDistance"] = 20489] = "FocusDistance";
-    DevicePropCode1[DevicePropCode1["FocusMode"] = 20490] = "FocusMode";
-    DevicePropCode1[DevicePropCode1["ExposureMeteringMode"] = 20491] = "ExposureMeteringMode";
-    DevicePropCode1[DevicePropCode1["FlashMode"] = 20492] = "FlashMode";
-    DevicePropCode1[DevicePropCode1["ExposureTime"] = 20493] = "ExposureTime";
-    DevicePropCode1[DevicePropCode1["ExposureProgramMode"] = 20494] = "ExposureProgramMode";
-    DevicePropCode1[DevicePropCode1["ExposureIndex"] = 20495] = "ExposureIndex";
-    DevicePropCode1[DevicePropCode1["ExposureBiasCompensation"] = 20496] = "ExposureBiasCompensation";
-    DevicePropCode1[DevicePropCode1["DateTime"] = 20497] = "DateTime";
-    DevicePropCode1[DevicePropCode1["CaptureDelay"] = 20498] = "CaptureDelay";
-    DevicePropCode1[DevicePropCode1["StillCaptureMode"] = 20499] = "StillCaptureMode";
-    DevicePropCode1[DevicePropCode1["Contrast"] = 20500] = "Contrast";
-    DevicePropCode1[DevicePropCode1["Sharpness"] = 20501] = "Sharpness";
-    DevicePropCode1[DevicePropCode1["DigitalZoom"] = 20502] = "DigitalZoom";
-    DevicePropCode1[DevicePropCode1["ColorMode"] = 20503] = "ColorMode";
-    DevicePropCode1[DevicePropCode1["BurstNumber"] = 20504] = "BurstNumber";
-    DevicePropCode1[DevicePropCode1["BurstInterval"] = 20505] = "BurstInterval";
-    DevicePropCode1[DevicePropCode1["TimelapseNumber"] = 20506] = "TimelapseNumber";
-    DevicePropCode1[DevicePropCode1["TimelapseInterval"] = 20507] = "TimelapseInterval";
-    DevicePropCode1[DevicePropCode1["FocusMeteringMode"] = 20508] = "FocusMeteringMode";
-    DevicePropCode1[DevicePropCode1["UploadURL"] = 20509] = "UploadURL";
-    DevicePropCode1[DevicePropCode1["Artist"] = 20510] = "Artist";
-    DevicePropCode1[DevicePropCode1["CopyrightInfo"] = 20511] = "CopyrightInfo";
+(function(DevicePropCode) {
+    DevicePropCode[DevicePropCode["Undefined"] = 20480] = "Undefined";
+    DevicePropCode[DevicePropCode["BatteryLevel"] = 20481] = "BatteryLevel";
+    DevicePropCode[DevicePropCode["FunctionalMode"] = 20482] = "FunctionalMode";
+    DevicePropCode[DevicePropCode["ImageSize"] = 20483] = "ImageSize";
+    DevicePropCode[DevicePropCode["CompressionSetting"] = 20484] = "CompressionSetting";
+    DevicePropCode[DevicePropCode["WhiteBalance"] = 20485] = "WhiteBalance";
+    DevicePropCode[DevicePropCode["RGBGain"] = 20486] = "RGBGain";
+    DevicePropCode[DevicePropCode["FNumber"] = 20487] = "FNumber";
+    DevicePropCode[DevicePropCode["FocalLength"] = 20488] = "FocalLength";
+    DevicePropCode[DevicePropCode["FocusDistance"] = 20489] = "FocusDistance";
+    DevicePropCode[DevicePropCode["FocusMode"] = 20490] = "FocusMode";
+    DevicePropCode[DevicePropCode["ExposureMeteringMode"] = 20491] = "ExposureMeteringMode";
+    DevicePropCode[DevicePropCode["FlashMode"] = 20492] = "FlashMode";
+    DevicePropCode[DevicePropCode["ExposureTime"] = 20493] = "ExposureTime";
+    DevicePropCode[DevicePropCode["ExposureProgramMode"] = 20494] = "ExposureProgramMode";
+    DevicePropCode[DevicePropCode["ExposureIndex"] = 20495] = "ExposureIndex";
+    DevicePropCode[DevicePropCode["ExposureBiasCompensation"] = 20496] = "ExposureBiasCompensation";
+    DevicePropCode[DevicePropCode["DateTime"] = 20497] = "DateTime";
+    DevicePropCode[DevicePropCode["CaptureDelay"] = 20498] = "CaptureDelay";
+    DevicePropCode[DevicePropCode["StillCaptureMode"] = 20499] = "StillCaptureMode";
+    DevicePropCode[DevicePropCode["Contrast"] = 20500] = "Contrast";
+    DevicePropCode[DevicePropCode["Sharpness"] = 20501] = "Sharpness";
+    DevicePropCode[DevicePropCode["DigitalZoom"] = 20502] = "DigitalZoom";
+    DevicePropCode[DevicePropCode["ColorMode"] = 20503] = "ColorMode";
+    DevicePropCode[DevicePropCode["BurstNumber"] = 20504] = "BurstNumber";
+    DevicePropCode[DevicePropCode["BurstInterval"] = 20505] = "BurstInterval";
+    DevicePropCode[DevicePropCode["TimelapseNumber"] = 20506] = "TimelapseNumber";
+    DevicePropCode[DevicePropCode["TimelapseInterval"] = 20507] = "TimelapseInterval";
+    DevicePropCode[DevicePropCode["FocusMeteringMode"] = 20508] = "FocusMeteringMode";
+    DevicePropCode[DevicePropCode["UploadURL"] = 20509] = "UploadURL";
+    DevicePropCode[DevicePropCode["Artist"] = 20510] = "Artist";
+    DevicePropCode[DevicePropCode["CopyrightInfo"] = 20511] = "CopyrightInfo";
 })(DevicePropCode || (DevicePropCode = {
 }));
 var DatatypeCode;
-(function(DatatypeCode1) {
-    DatatypeCode1[DatatypeCode1["Undef"] = 0] = "Undef";
-    DatatypeCode1[DatatypeCode1["Int8"] = 1] = "Int8";
-    DatatypeCode1[DatatypeCode1["Uint8"] = 2] = "Uint8";
-    DatatypeCode1[DatatypeCode1["Int16"] = 3] = "Int16";
-    DatatypeCode1[DatatypeCode1["Uint16"] = 4] = "Uint16";
-    DatatypeCode1[DatatypeCode1["Int32"] = 5] = "Int32";
-    DatatypeCode1[DatatypeCode1["Uint32"] = 6] = "Uint32";
-    DatatypeCode1[DatatypeCode1["Int64"] = 7] = "Int64";
-    DatatypeCode1[DatatypeCode1["Uint64"] = 8] = "Uint64";
-    DatatypeCode1[DatatypeCode1["Int128"] = 9] = "Int128";
-    DatatypeCode1[DatatypeCode1["Uint128"] = 10] = "Uint128";
-    DatatypeCode1[DatatypeCode1["Int8Array"] = 16385] = "Int8Array";
-    DatatypeCode1[DatatypeCode1["Uint8Array"] = 16386] = "Uint8Array";
-    DatatypeCode1[DatatypeCode1["Int16Array"] = 16387] = "Int16Array";
-    DatatypeCode1[DatatypeCode1["Uint16Array"] = 16388] = "Uint16Array";
-    DatatypeCode1[DatatypeCode1["Int32Array"] = 16389] = "Int32Array";
-    DatatypeCode1[DatatypeCode1["Uint32Array"] = 16390] = "Uint32Array";
-    DatatypeCode1[DatatypeCode1["Int64Array"] = 16391] = "Int64Array";
-    DatatypeCode1[DatatypeCode1["Uint64Array"] = 16392] = "Uint64Array";
-    DatatypeCode1[DatatypeCode1["Int128Array"] = 16393] = "Int128Array";
-    DatatypeCode1[DatatypeCode1["Uint128Array"] = 16394] = "Uint128Array";
-    DatatypeCode1[DatatypeCode1["String"] = 65535] = "String";
+(function(DatatypeCode) {
+    DatatypeCode[DatatypeCode["Undef"] = 0] = "Undef";
+    DatatypeCode[DatatypeCode["Int8"] = 1] = "Int8";
+    DatatypeCode[DatatypeCode["Uint8"] = 2] = "Uint8";
+    DatatypeCode[DatatypeCode["Int16"] = 3] = "Int16";
+    DatatypeCode[DatatypeCode["Uint16"] = 4] = "Uint16";
+    DatatypeCode[DatatypeCode["Int32"] = 5] = "Int32";
+    DatatypeCode[DatatypeCode["Uint32"] = 6] = "Uint32";
+    DatatypeCode[DatatypeCode["Int64"] = 7] = "Int64";
+    DatatypeCode[DatatypeCode["Uint64"] = 8] = "Uint64";
+    DatatypeCode[DatatypeCode["Int128"] = 9] = "Int128";
+    DatatypeCode[DatatypeCode["Uint128"] = 10] = "Uint128";
+    DatatypeCode[DatatypeCode["Int8Array"] = 16385] = "Int8Array";
+    DatatypeCode[DatatypeCode["Uint8Array"] = 16386] = "Uint8Array";
+    DatatypeCode[DatatypeCode["Int16Array"] = 16387] = "Int16Array";
+    DatatypeCode[DatatypeCode["Uint16Array"] = 16388] = "Uint16Array";
+    DatatypeCode[DatatypeCode["Int32Array"] = 16389] = "Int32Array";
+    DatatypeCode[DatatypeCode["Uint32Array"] = 16390] = "Uint32Array";
+    DatatypeCode[DatatypeCode["Int64Array"] = 16391] = "Int64Array";
+    DatatypeCode[DatatypeCode["Uint64Array"] = 16392] = "Uint64Array";
+    DatatypeCode[DatatypeCode["Int128Array"] = 16393] = "Int128Array";
+    DatatypeCode[DatatypeCode["Uint128Array"] = 16394] = "Uint128Array";
+    DatatypeCode[DatatypeCode["String"] = 65535] = "String";
 })(DatatypeCode || (DatatypeCode = {
 }));
+var PTPStorageTypeCode;
+(function(PTPStorageTypeCode) {
+    PTPStorageTypeCode[PTPStorageTypeCode["Undefined"] = 0] = "Undefined";
+    PTPStorageTypeCode[PTPStorageTypeCode["FixedROM"] = 1] = "FixedROM";
+    PTPStorageTypeCode[PTPStorageTypeCode["RemovableROM"] = 2] = "RemovableROM";
+    PTPStorageTypeCode[PTPStorageTypeCode["FixedRAM"] = 3] = "FixedRAM";
+    PTPStorageTypeCode[PTPStorageTypeCode["RemovableRAM"] = 4] = "RemovableRAM";
+})(PTPStorageTypeCode || (PTPStorageTypeCode = {
+}));
+var PTPFilesystemTypeCode;
+(function(PTPFilesystemTypeCode) {
+    PTPFilesystemTypeCode[PTPFilesystemTypeCode["Undefined"] = 0] = "Undefined";
+    PTPFilesystemTypeCode[PTPFilesystemTypeCode["GenericFlat"] = 1] = "GenericFlat";
+    PTPFilesystemTypeCode[PTPFilesystemTypeCode["GenericHierarchical"] = 2] = "GenericHierarchical";
+    PTPFilesystemTypeCode[PTPFilesystemTypeCode["DCF"] = 3] = "DCF";
+})(PTPFilesystemTypeCode || (PTPFilesystemTypeCode = {
+}));
+var PTPAccessCapabilityCode;
+(function(PTPAccessCapabilityCode) {
+    PTPAccessCapabilityCode[PTPAccessCapabilityCode["ReadWrite"] = 0] = "ReadWrite";
+    PTPAccessCapabilityCode[PTPAccessCapabilityCode["ReadOnlyWithoutObjectDeletion"] = 1] = "ReadOnlyWithoutObjectDeletion";
+    PTPAccessCapabilityCode[PTPAccessCapabilityCode["ReadOnlyWithObjectDeletion"] = 2] = "ReadOnlyWithObjectDeletion";
+})(PTPAccessCapabilityCode || (PTPAccessCapabilityCode = {
+}));
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"6vBdq":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"2SXC8":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 /**
@@ -10921,7 +10446,6 @@ parcelHelpers.defineInteropFlag(exports);
 );
 var _dateFormatParse = require("date-format-parse");
 var _lodash = require("lodash");
-var _lodashDefault = parcelHelpers.interopDefault(_lodash);
 const DEFAULT_BUFFER_SIZE = 2048;
 class PTPDataView {
     constructor(bufferOrSize = DEFAULT_BUFFER_SIZE){
@@ -11007,7 +10531,7 @@ class PTPDataView {
         };
         this.readArray = (getFunc)=>{
             const length = this.readUint32();
-            return _lodashDefault.default.times(length, getFunc.bind(this));
+            return _lodash.times(length, getFunc.bind(this));
         };
         if (typeof bufferOrSize === 'number') this.buffer = new ArrayBuffer(bufferOrSize);
         else this.buffer = bufferOrSize;
@@ -11086,7 +10610,7 @@ class PTPDataView {
     }
 }
 
-},{"date-format-parse":"ixf2Q","lodash":"f4H2C","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"ixf2Q":[function(require,module,exports) {
+},{"date-format-parse":"d61HT","lodash":"4nfxA","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"d61HT":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "format", ()=>_format.format
@@ -11105,7 +10629,7 @@ var _format = require("./format");
 var _parse = require("./parse");
 var _util = require("./util");
 
-},{"./format":"KlW1w","./parse":"d9X7h","./util":"fXRvy","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"KlW1w":[function(require,module,exports) {
+},{"./format":"ijs77","./parse":"6uLNN","./util":"lsbHV","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"ijs77":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "format", ()=>format
@@ -11132,7 +10656,7 @@ function formatTimezone(offset) {
     var minutes = absOffset % 60;
     return sign + pad(hours, 2) + delimeter + pad(minutes, 2);
 }
-var meridiem = function meridiem1(h, _, isLowercase) {
+var meridiem = function meridiem(h, _, isLowercase) {
     var word = h < 12 ? 'AM' : 'PM';
     return isLowercase ? word.toLocaleLowerCase() : word;
 };
@@ -11285,7 +10809,7 @@ function format(val, str) {
     });
 }
 
-},{"./util":"fXRvy","./locale/en":"dbb2x","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"fXRvy":[function(require,module,exports) {
+},{"./util":"lsbHV","./locale/en":"ko4YV","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"lsbHV":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "isDate", ()=>isDate
@@ -11349,7 +10873,7 @@ function getWeek(value) {
     return Math.round(diff / 604800000) + 1;
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"dbb2x":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"ko4YV":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var locale = {
@@ -11413,7 +10937,7 @@ var locale = {
 };
 exports.default = locale;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"d9X7h":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"6uLNN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "parse", ()=>parse
@@ -11522,12 +11046,12 @@ var SECOND = 'second';
 var MILLISECOND = 'millisecond';
 var parseFlags = {
 };
-var addParseFlag = function addParseFlag1(token, regex, callback) {
+var addParseFlag = function addParseFlag(token, regex, callback) {
     var tokens = Array.isArray(token) ? token : [
         token
     ];
     var func;
-    if (typeof callback === 'string') func = function func1(input) {
+    if (typeof callback === 'string') func = function func(input) {
         var value = parseInt(input, 10);
         return _defineProperty({
         }, callback, value);
@@ -11540,17 +11064,17 @@ var addParseFlag = function addParseFlag1(token, regex, callback) {
         ];
     });
 };
-var escapeStringRegExp = function escapeStringRegExp1(str) {
+var escapeStringRegExp = function escapeStringRegExp(str) {
     return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
 };
-var matchWordRegExp = function matchWordRegExp1(localeKey) {
+var matchWordRegExp = function matchWordRegExp(localeKey) {
     return function(locale) {
         var array = locale[localeKey];
         if (!Array.isArray(array)) throw new Error("Locale[".concat(localeKey, "] need an array"));
         return new RegExp(array.map(escapeStringRegExp).join('|'));
     };
 };
-var matchWordCallback = function matchWordCallback1(localeKey, key) {
+var matchWordCallback = function matchWordCallback(localeKey, key) {
     return function(input, locale) {
         var array = locale[localeKey];
         if (!Array.isArray(array)) throw new Error("Locale[".concat(localeKey, "] need an array"));
@@ -11773,7 +11297,7 @@ function parse(str, format) {
     }
 }
 
-},{"./locale/en":"dbb2x","./util":"fXRvy","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"f4H2C":[function(require,module,exports) {
+},{"./locale/en":"ko4YV","./util":"lsbHV","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"4nfxA":[function(require,module,exports) {
 var global = arguments[3];
 (function() {
     /** Used as a safe reference for `undefined` in pre-ES5 environments. */ var undefined;
@@ -12219,7 +11743,7 @@ var global = arguments[3];
    * @returns {Function} Returns `accumulator`.
    */ function arrayAggregator(array, setter, iteratee, accumulator) {
         var index = -1, length = array == null ? 0 : array.length;
-        while((++index) < length){
+        while(++index < length){
             var value = array[index];
             setter(accumulator, value, iteratee(value), array);
         }
@@ -12235,7 +11759,7 @@ var global = arguments[3];
    * @returns {Array} Returns `array`.
    */ function arrayEach(array, iteratee) {
         var index = -1, length = array == null ? 0 : array.length;
-        while((++index) < length){
+        while(++index < length){
             if (iteratee(array[index], index, array) === false) break;
         }
         return array;
@@ -12266,7 +11790,7 @@ var global = arguments[3];
    *  else `false`.
    */ function arrayEvery(array, predicate) {
         var index = -1, length = array == null ? 0 : array.length;
-        while((++index) < length){
+        while(++index < length){
             if (!predicate(array[index], index, array)) return false;
         }
         return true;
@@ -12281,7 +11805,7 @@ var global = arguments[3];
    * @returns {Array} Returns the new filtered array.
    */ function arrayFilter(array, predicate) {
         var index = -1, length = array == null ? 0 : array.length, resIndex = 0, result = [];
-        while((++index) < length){
+        while(++index < length){
             var value = array[index];
             if (predicate(value, index, array)) result[resIndex++] = value;
         }
@@ -12309,7 +11833,7 @@ var global = arguments[3];
    * @returns {boolean} Returns `true` if `target` is found, else `false`.
    */ function arrayIncludesWith(array, value, comparator) {
         var index = -1, length = array == null ? 0 : array.length;
-        while((++index) < length){
+        while(++index < length){
             if (comparator(value, array[index])) return true;
         }
         return false;
@@ -12324,7 +11848,7 @@ var global = arguments[3];
    * @returns {Array} Returns the new mapped array.
    */ function arrayMap(array, iteratee) {
         var index = -1, length = array == null ? 0 : array.length, result = Array(length);
-        while((++index) < length)result[index] = iteratee(array[index], index, array);
+        while(++index < length)result[index] = iteratee(array[index], index, array);
         return result;
     }
     /**
@@ -12336,7 +11860,7 @@ var global = arguments[3];
    * @returns {Array} Returns `array`.
    */ function arrayPush(array, values) {
         var index = -1, length = values.length, offset = array.length;
-        while((++index) < length)array[offset + index] = values[index];
+        while(++index < length)array[offset + index] = values[index];
         return array;
     }
     /**
@@ -12353,7 +11877,7 @@ var global = arguments[3];
    */ function arrayReduce(array, iteratee, accumulator, initAccum) {
         var index = -1, length = array == null ? 0 : array.length;
         if (initAccum && length) accumulator = array[++index];
-        while((++index) < length)accumulator = iteratee(accumulator, array[index], index, array);
+        while(++index < length)accumulator = iteratee(accumulator, array[index], index, array);
         return accumulator;
     }
     /**
@@ -12384,7 +11908,7 @@ var global = arguments[3];
    *  else `false`.
    */ function arraySome(array, predicate) {
         var index = -1, length = array == null ? 0 : array.length;
-        while((++index) < length){
+        while(++index < length){
             if (predicate(array[index], index, array)) return true;
         }
         return false;
@@ -12426,8 +11950,8 @@ var global = arguments[3];
    * @returns {*} Returns the found element or its key, else `undefined`.
    */ function baseFindKey(collection, predicate, eachFunc) {
         var result;
-        eachFunc(collection, function(value, key, collection1) {
-            if (predicate(value, key, collection1)) {
+        eachFunc(collection, function(value, key, collection) {
+            if (predicate(value, key, collection)) {
                 result = key;
                 return false;
             }
@@ -12446,7 +11970,7 @@ var global = arguments[3];
    * @returns {number} Returns the index of the matched value, else `-1`.
    */ function baseFindIndex(array, predicate, fromIndex, fromRight) {
         var length = array.length, index = fromIndex + (fromRight ? 1 : -1);
-        while(fromRight ? index-- : (++index) < length){
+        while(fromRight ? index-- : ++index < length){
             if (predicate(array[index], index, array)) return index;
         }
         return -1;
@@ -12473,7 +11997,7 @@ var global = arguments[3];
    * @returns {number} Returns the index of the matched value, else `-1`.
    */ function baseIndexOfWith(array, value, fromIndex, comparator) {
         var index = fromIndex - 1, length = array.length;
-        while((++index) < length){
+        while(++index < length){
             if (comparator(array[index], value)) return index;
         }
         return -1;
@@ -12534,8 +12058,8 @@ var global = arguments[3];
    * @param {Function} eachFunc The function to iterate over `collection`.
    * @returns {*} Returns the accumulated value.
    */ function baseReduce(collection, iteratee, accumulator, initAccum, eachFunc) {
-        eachFunc(collection, function(value, index, collection1) {
-            accumulator = initAccum ? (initAccum = false, value) : iteratee(accumulator, value, index, collection1);
+        eachFunc(collection, function(value, index, collection) {
+            accumulator = initAccum ? (initAccum = false, value) : iteratee(accumulator, value, index, collection);
         });
         return accumulator;
     }
@@ -12564,7 +12088,7 @@ var global = arguments[3];
    * @returns {number} Returns the sum.
    */ function baseSum(array, iteratee) {
         var result, index = -1, length = array.length;
-        while((++index) < length){
+        while(++index < length){
             var current = iteratee(array[index]);
             if (current !== undefined) result = result === undefined ? current : result + current;
         }
@@ -12580,7 +12104,7 @@ var global = arguments[3];
    * @returns {Array} Returns the array of results.
    */ function baseTimes(n, iteratee) {
         var index = -1, result = Array(n);
-        while((++index) < n)result[index] = iteratee(index);
+        while(++index < n)result[index] = iteratee(index);
         return result;
     }
     /**
@@ -12653,7 +12177,7 @@ var global = arguments[3];
    * @returns {number} Returns the index of the first unmatched string symbol.
    */ function charsStartIndex(strSymbols, chrSymbols) {
         var index = -1, length = strSymbols.length;
-        while((++index) < length && baseIndexOf(chrSymbols, strSymbols[index], 0) > -1);
+        while(++index < length && baseIndexOf(chrSymbols, strSymbols[index], 0) > -1);
         return index;
     }
     /**
@@ -12782,7 +12306,7 @@ var global = arguments[3];
    * @returns {Array} Returns the new array of placeholder indexes.
    */ function replaceHolders(array, placeholder) {
         var index = -1, length = array.length, resIndex = 0, result = [];
-        while((++index) < length){
+        while(++index < length){
             var value = array[index];
             if (value === placeholder || value === PLACEHOLDER) {
                 array[index] = PLACEHOLDER;
@@ -12831,7 +12355,7 @@ var global = arguments[3];
    * @returns {number} Returns the index of the matched value, else `-1`.
    */ function strictIndexOf(array, value, fromIndex) {
         var index = fromIndex - 1, length = array.length;
-        while((++index) < length){
+        while(++index < length){
             if (array[index] === value) return index;
         }
         return -1;
@@ -12879,7 +12403,7 @@ var global = arguments[3];
    * @returns {number} Returns the index of the last non-whitespace character.
    */ function trimmedEndIndex(string) {
         var index = string.length;
-        while((index--) && reWhitespace.test(string.charAt(index)));
+        while(index-- && reWhitespace.test(string.charAt(index)));
         return index;
     }
     /**
@@ -12946,10 +12470,10 @@ var global = arguments[3];
    *
    * // Create a suped-up `defer` in Node.js.
    * var defer = _.runInContext({ 'setTimeout': setImmediate }).defer;
-   */ var runInContext = function runInContext1(context) {
+   */ var runInContext = function runInContext(context) {
         context = context == null ? root : _.defaults(root.Object(), context, _.pick(root, contextProps));
-        /** Built-in constructor references. */ var Array1 = context.Array, Date1 = context.Date, Error1 = context.Error, Function1 = context.Function, Math1 = context.Math, Object1 = context.Object, RegExp1 = context.RegExp, String1 = context.String, TypeError1 = context.TypeError;
-        /** Used for built-in method references. */ var arrayProto = Array1.prototype, funcProto = Function1.prototype, objectProto = Object1.prototype;
+        /** Built-in constructor references. */ var Array = context.Array, Date = context.Date, Error = context.Error, Function = context.Function, Math = context.Math, Object = context.Object, RegExp = context.RegExp, String = context.String, TypeError = context.TypeError;
+        /** Used for built-in method references. */ var arrayProto = Array.prototype, funcProto = Function.prototype, objectProto = Object.prototype;
         /** Used to detect overreaching core-js shims. */ var coreJsData = context['__core-js_shared__'];
         /** Used to resolve the decompiled source of functions. */ var funcToString = funcProto.toString;
         /** Used to check objects for own properties. */ var hasOwnProperty = objectProto.hasOwnProperty;
@@ -12963,13 +12487,13 @@ var global = arguments[3];
      * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
      * of values.
      */ var nativeObjectToString = objectProto.toString;
-        /** Used to infer the `Object` constructor. */ var objectCtorString = funcToString.call(Object1);
+        /** Used to infer the `Object` constructor. */ var objectCtorString = funcToString.call(Object);
         /** Used to restore the original `_` reference in `_.noConflict`. */ var oldDash = root._;
-        /** Used to detect if a method is native. */ var reIsNative = RegExp1('^' + funcToString.call(hasOwnProperty).replace(reRegExpChar, '\\$&').replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$');
-        /** Built-in value references. */ var Buffer = moduleExports ? context.Buffer : undefined, Symbol1 = context.Symbol, Uint8Array1 = context.Uint8Array, allocUnsafe = Buffer ? Buffer.allocUnsafe : undefined, getPrototype = overArg(Object1.getPrototypeOf, Object1), objectCreate = Object1.create, propertyIsEnumerable = objectProto.propertyIsEnumerable, splice = arrayProto.splice, spreadableSymbol = Symbol1 ? Symbol1.isConcatSpreadable : undefined, symIterator = Symbol1 ? Symbol1.iterator : undefined, symToStringTag = Symbol1 ? Symbol1.toStringTag : undefined;
+        /** Used to detect if a method is native. */ var reIsNative = RegExp('^' + funcToString.call(hasOwnProperty).replace(reRegExpChar, '\\$&').replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$');
+        /** Built-in value references. */ var Buffer = moduleExports ? context.Buffer : undefined, Symbol = context.Symbol, Uint8Array = context.Uint8Array, allocUnsafe = Buffer ? Buffer.allocUnsafe : undefined, getPrototype = overArg(Object.getPrototypeOf, Object), objectCreate = Object.create, propertyIsEnumerable = objectProto.propertyIsEnumerable, splice = arrayProto.splice, spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined, symIterator = Symbol ? Symbol.iterator : undefined, symToStringTag = Symbol ? Symbol.toStringTag : undefined;
         var defineProperty = function() {
             try {
-                var func = getNative(Object1, 'defineProperty');
+                var func = getNative(Object, 'defineProperty');
                 func({
                 }, '', {
                 });
@@ -12977,14 +12501,14 @@ var global = arguments[3];
             } catch (e) {
             }
         }();
-        /** Mocked built-ins. */ var ctxClearTimeout = context.clearTimeout !== root.clearTimeout && context.clearTimeout, ctxNow = Date1 && Date1.now !== root.Date.now && Date1.now, ctxSetTimeout = context.setTimeout !== root.setTimeout && context.setTimeout;
-        /* Built-in method references for those with the same name as other `lodash` methods. */ var nativeCeil = Math1.ceil, nativeFloor = Math1.floor, nativeGetSymbols = Object1.getOwnPropertySymbols, nativeIsBuffer = Buffer ? Buffer.isBuffer : undefined, nativeIsFinite = context.isFinite, nativeJoin = arrayProto.join, nativeKeys = overArg(Object1.keys, Object1), nativeMax = Math1.max, nativeMin = Math1.min, nativeNow = Date1.now, nativeParseInt = context.parseInt, nativeRandom = Math1.random, nativeReverse = arrayProto.reverse;
-        /* Built-in method references that are verified to be native. */ var DataView1 = getNative(context, 'DataView'), Map1 = getNative(context, 'Map'), Promise1 = getNative(context, 'Promise'), Set1 = getNative(context, 'Set'), WeakMap1 = getNative(context, 'WeakMap'), nativeCreate = getNative(Object1, 'create');
-        /** Used to store function metadata. */ var metaMap = WeakMap1 && new WeakMap1;
+        /** Mocked built-ins. */ var ctxClearTimeout = context.clearTimeout !== root.clearTimeout && context.clearTimeout, ctxNow = Date && Date.now !== root.Date.now && Date.now, ctxSetTimeout = context.setTimeout !== root.setTimeout && context.setTimeout;
+        /* Built-in method references for those with the same name as other `lodash` methods. */ var nativeCeil = Math.ceil, nativeFloor = Math.floor, nativeGetSymbols = Object.getOwnPropertySymbols, nativeIsBuffer = Buffer ? Buffer.isBuffer : undefined, nativeIsFinite = context.isFinite, nativeJoin = arrayProto.join, nativeKeys = overArg(Object.keys, Object), nativeMax = Math.max, nativeMin = Math.min, nativeNow = Date.now, nativeParseInt = context.parseInt, nativeRandom = Math.random, nativeReverse = arrayProto.reverse;
+        /* Built-in method references that are verified to be native. */ var DataView = getNative(context, 'DataView'), Map = getNative(context, 'Map'), Promise = getNative(context, 'Promise'), Set = getNative(context, 'Set'), WeakMap = getNative(context, 'WeakMap'), nativeCreate = getNative(Object, 'create');
+        /** Used to store function metadata. */ var metaMap = WeakMap && new WeakMap;
         /** Used to lookup unminified function names. */ var realNames = {
         };
-        /** Used to detect maps, sets, and weakmaps. */ var dataViewCtorString = toSource(DataView1), mapCtorString = toSource(Map1), promiseCtorString = toSource(Promise1), setCtorString = toSource(Set1), weakMapCtorString = toSource(WeakMap1);
-        /** Used to convert symbols to primitives and strings. */ var symbolProto = Symbol1 ? Symbol1.prototype : undefined, symbolValueOf = symbolProto ? symbolProto.valueOf : undefined, symbolToString = symbolProto ? symbolProto.toString : undefined;
+        /** Used to detect maps, sets, and weakmaps. */ var dataViewCtorString = toSource(DataView), mapCtorString = toSource(Map), promiseCtorString = toSource(Promise), setCtorString = toSource(Set), weakMapCtorString = toSource(WeakMap);
+        /** Used to convert symbols to primitives and strings. */ var symbolProto = Symbol ? Symbol.prototype : undefined, symbolValueOf = symbolProto ? symbolProto.valueOf : undefined, symbolToString = symbolProto ? symbolProto.toString : undefined;
         /*------------------------------------------------------------------------*/ /**
      * Creates a `lodash` object which wraps `value` to enable implicit method
      * chain sequences. Methods that operate on and return arrays, collections,
@@ -13264,7 +12788,7 @@ var global = arguments[3];
             outer: while((length--) && resIndex < takeCount){
                 index += dir;
                 var iterIndex = -1, value = array[index];
-                while((++iterIndex) < iterLength){
+                while(++iterIndex < iterLength){
                     var data = iteratees[iterIndex], iteratee = data.iteratee, type = data.type, computed = iteratee(value);
                     if (type == LAZY_MAP_FLAG) value = computed;
                     else if (!computed) {
@@ -13288,7 +12812,7 @@ var global = arguments[3];
      */ function Hash(entries) {
             var index = -1, length = entries == null ? 0 : entries.length;
             this.clear();
-            while((++index) < length){
+            while(++index < length){
                 var entry = entries[index];
                 this.set(entry[0], entry[1]);
             }
@@ -13376,7 +12900,7 @@ var global = arguments[3];
      */ function ListCache(entries) {
             var index = -1, length = entries == null ? 0 : entries.length;
             this.clear();
-            while((++index) < length){
+            while(++index < length){
                 var entry = entries[index];
                 this.set(entry[0], entry[1]);
             }
@@ -13466,7 +12990,7 @@ var global = arguments[3];
      */ function MapCache(entries) {
             var index = -1, length = entries == null ? 0 : entries.length;
             this.clear();
-            while((++index) < length){
+            while(++index < length){
                 var entry = entries[index];
                 this.set(entry[0], entry[1]);
             }
@@ -13481,7 +13005,7 @@ var global = arguments[3];
             this.size = 0;
             this.__data__ = {
                 'hash': new Hash,
-                'map': new (Map1 || ListCache),
+                'map': new (Map || ListCache),
                 'string': new Hash
             };
         }
@@ -13551,7 +13075,7 @@ var global = arguments[3];
      */ function SetCache(values) {
             var index = -1, length = values == null ? 0 : values.length;
             this.__data__ = new MapCache;
-            while((++index) < length)this.add(values[index]);
+            while(++index < length)this.add(values[index]);
         }
         /**
      * Adds `value` to the array cache.
@@ -13648,7 +13172,7 @@ var global = arguments[3];
             var data = this.__data__;
             if (data instanceof ListCache) {
                 var pairs = data.__data__;
-                if (!Map1 || pairs.length < LARGE_ARRAY_SIZE - 1) {
+                if (!Map || pairs.length < LARGE_ARRAY_SIZE - 1) {
                     pairs.push([
                         key,
                         value
@@ -13676,7 +13200,7 @@ var global = arguments[3];
      * @param {boolean} inherited Specify returning inherited property names.
      * @returns {Array} Returns the array of property names.
      */ function arrayLikeKeys(value, inherited) {
-            var isArr = isArray(value), isArg = !isArr && isArguments(value), isBuff = !isArr && !isArg && isBuffer(value), isType = !isArr && !isArg && !isBuff && isTypedArray(value), skipIndexes = isArr || isArg || isBuff || isType, result = skipIndexes ? baseTimes(value.length, String1) : [], length = result.length;
+            var isArr = isArray(value), isArg = !isArr && isArguments(value), isBuff = !isArr && !isArg && isBuffer(value), isType = !isArr && !isArg && !isBuff && isTypedArray(value), skipIndexes = isArr || isArg || isBuff || isType, result = skipIndexes ? baseTimes(value.length, String) : [], length = result.length;
             for(var key in value)if ((inherited || hasOwnProperty.call(value, key)) && !(skipIndexes && // Safari 9 has enumerable `arguments.length` in strict mode.
             (key == 'length' || isBuff && (key == 'offset' || key == 'parent') || isType && (key == 'buffer' || key == 'byteLength' || key == 'byteOffset') || // Skip index properties.
             isIndex(key, length)))) result.push(key);
@@ -13760,8 +13284,8 @@ var global = arguments[3];
      * @param {Object} accumulator The initial aggregated object.
      * @returns {Function} Returns `accumulator`.
      */ function baseAggregator(collection, setter, iteratee, accumulator) {
-            baseEach(collection, function(value, key, collection1) {
-                setter(accumulator, value, iteratee(value), collection1);
+            baseEach(collection, function(value, key, collection) {
+                setter(accumulator, value, iteratee(value), collection);
             });
             return accumulator;
         }
@@ -13812,8 +13336,8 @@ var global = arguments[3];
      * @param {string[]} paths The property paths to pick.
      * @returns {Array} Returns the picked elements.
      */ function baseAt(object, paths) {
-            var index = -1, length = paths.length, result = Array1(length), skip = object == null;
-            while((++index) < length)result[index] = skip ? undefined : get(object, paths[index]);
+            var index = -1, length = paths.length, result = Array(length), skip = object == null;
+            while(++index < length)result[index] = skip ? undefined : get(object, paths[index]);
             return result;
         }
         /**
@@ -13876,18 +13400,18 @@ var global = arguments[3];
             if (isSet(value)) value.forEach(function(subValue) {
                 result.add(baseClone(subValue, bitmask, customizer, subValue, value, stack));
             });
-            else if (isMap(value)) value.forEach(function(subValue, key1) {
-                result.set(key1, baseClone(subValue, bitmask, customizer, key1, value, stack));
+            else if (isMap(value)) value.forEach(function(subValue, key) {
+                result.set(key, baseClone(subValue, bitmask, customizer, key, value, stack));
             });
             var keysFunc = isFull ? isFlat ? getAllKeysIn : getAllKeys : isFlat ? keysIn : keys;
             var props = isArr ? undefined : keysFunc(value);
-            arrayEach(props || value, function(subValue, key1) {
+            arrayEach(props || value, function(subValue, key) {
                 if (props) {
-                    key1 = subValue;
-                    subValue = value[key1];
+                    key = subValue;
+                    subValue = value[key];
                 }
                 // Recursively populate clone (susceptible to call stack limits).
-                assignValue(result, key1, baseClone(subValue, bitmask, customizer, key1, value, stack));
+                assignValue(result, key, baseClone(subValue, bitmask, customizer, key, value, stack));
             });
             return result;
         }
@@ -13913,7 +13437,7 @@ var global = arguments[3];
      */ function baseConformsTo(object, source, props) {
             var length = props.length;
             if (object == null) return !length;
-            object = Object1(object);
+            object = Object(object);
             while(length--){
                 var key = props[length], predicate = source[key], value = object[key];
                 if (value === undefined && !(key in object) || !predicate(value)) return false;
@@ -13930,7 +13454,7 @@ var global = arguments[3];
      * @param {Array} args The arguments to provide to `func`.
      * @returns {number|Object} Returns the timer id or timeout object.
      */ function baseDelay(func, wait, args) {
-            if (typeof func != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (typeof func != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             return setTimeout(function() {
                 func.apply(undefined, args);
             }, wait);
@@ -13957,7 +13481,7 @@ var global = arguments[3];
                 isCommon = false;
                 values = new SetCache(values);
             }
-            outer: while((++index) < length){
+            outer: while(++index < length){
                 var value = array[index], computed = iteratee == null ? value : iteratee(value);
                 value = comparator || value !== 0 ? value : 0;
                 if (isCommon && computed === computed) {
@@ -13996,8 +13520,8 @@ var global = arguments[3];
      *  else `false`
      */ function baseEvery(collection, predicate) {
             var result = true;
-            baseEach(collection, function(value, index, collection1) {
-                result = !!predicate(value, index, collection1);
+            baseEach(collection, function(value, index, collection) {
+                result = !!predicate(value, index, collection);
                 return result;
             });
             return result;
@@ -14013,7 +13537,7 @@ var global = arguments[3];
      * @returns {*} Returns the extremum value.
      */ function baseExtremum(array, iteratee, comparator) {
             var index = -1, length = array.length;
-            while((++index) < length){
+            while(++index < length){
                 var value = array[index], current = iteratee(value);
                 if (current != null && (computed === undefined ? current === current && !isSymbol(current) : comparator(current, computed))) var computed = current, result = value;
             }
@@ -14047,8 +13571,8 @@ var global = arguments[3];
      * @returns {Array} Returns the new filtered array.
      */ function baseFilter(collection, predicate) {
             var result = [];
-            baseEach(collection, function(value, index, collection1) {
-                if (predicate(value, index, collection1)) result.push(value);
+            baseEach(collection, function(value, index, collection) {
+                if (predicate(value, index, collection)) result.push(value);
             });
             return result;
         }
@@ -14066,7 +13590,7 @@ var global = arguments[3];
             var index = -1, length = array.length;
             predicate || (predicate = isFlattenable);
             result || (result = []);
-            while((++index) < length){
+            while(++index < length){
                 var value = array[index];
                 if (depth > 0 && predicate(value)) {
                     if (depth > 1) // Recursively flatten arrays (susceptible to call stack limits).
@@ -14165,7 +13689,7 @@ var global = arguments[3];
      * @returns {string} Returns the `toStringTag`.
      */ function baseGetTag(value) {
             if (value == null) return value === undefined ? undefinedTag : nullTag;
-            return symToStringTag && symToStringTag in Object1(value) ? getRawTag(value) : objectToString(value);
+            return symToStringTag && symToStringTag in Object(value) ? getRawTag(value) : objectToString(value);
         }
         /**
      * The base implementation of `_.gt` which doesn't coerce arguments.
@@ -14196,7 +13720,7 @@ var global = arguments[3];
      * @param {Array|string} key The key to check.
      * @returns {boolean} Returns `true` if `key` exists, else `false`.
      */ function baseHasIn(object, key) {
-            return object != null && key in Object1(object);
+            return object != null && key in Object(object);
         }
         /**
      * The base implementation of `_.inRange` which doesn't coerce arguments.
@@ -14219,7 +13743,7 @@ var global = arguments[3];
      * @param {Function} [comparator] The comparator invoked per element.
      * @returns {Array} Returns the new array of shared values.
      */ function baseIntersection(arrays, iteratee, comparator) {
-            var includes = comparator ? arrayIncludesWith : arrayIncludes, length = arrays[0].length, othLength = arrays.length, othIndex = othLength, caches = Array1(othLength), maxLength = Infinity, result = [];
+            var includes = comparator ? arrayIncludesWith : arrayIncludes, length = arrays[0].length, othLength = arrays.length, othIndex = othLength, caches = Array(othLength), maxLength = Infinity, result = [];
             while(othIndex--){
                 var array = arrays[othIndex];
                 if (othIndex && iteratee) array = arrayMap(array, baseUnary(iteratee));
@@ -14228,7 +13752,7 @@ var global = arguments[3];
             }
             array = arrays[0];
             var index = -1, seen = caches[0];
-            outer: while((++index) < length && result.length < maxLength){
+            outer: while(++index < length && result.length < maxLength){
                 var value = array[index], computed = iteratee ? iteratee(value) : value;
                 value = comparator || value !== 0 ? value : 0;
                 if (!(seen ? cacheHas(seen, computed) : includes(result, computed, comparator))) {
@@ -14254,8 +13778,8 @@ var global = arguments[3];
      * @param {Object} accumulator The initial inverted object.
      * @returns {Function} Returns `accumulator`.
      */ function baseInverter(object, setter, iteratee, accumulator) {
-            baseForOwn(object, function(value, key, object1) {
-                setter(accumulator, iteratee(value), key, object1);
+            baseForOwn(object, function(value, key, object) {
+                setter(accumulator, iteratee(value), key, object);
             });
             return accumulator;
         }
@@ -14379,12 +13903,12 @@ var global = arguments[3];
      */ function baseIsMatch(object, source, matchData, customizer) {
             var index = matchData.length, length = index, noCustomizer = !customizer;
             if (object == null) return !length;
-            object = Object1(object);
+            object = Object(object);
             while(index--){
                 var data = matchData[index];
                 if (noCustomizer && data[2] ? data[1] !== object[data[0]] : !(data[0] in object)) return false;
             }
-            while((++index) < length){
+            while(++index < length){
                 data = matchData[index];
                 var key = data[0], objValue = object[key], srcValue = data[1];
                 if (noCustomizer && data[2]) {
@@ -14459,7 +13983,7 @@ var global = arguments[3];
      */ function baseKeys(object) {
             if (!isPrototype(object)) return nativeKeys(object);
             var result = [];
-            for(var key in Object1(object))if (hasOwnProperty.call(object, key) && key != 'constructor') result.push(key);
+            for(var key in Object(object))if (hasOwnProperty.call(object, key) && key != 'constructor') result.push(key);
             return result;
         }
         /**
@@ -14493,9 +14017,9 @@ var global = arguments[3];
      * @param {Function} iteratee The function invoked per iteration.
      * @returns {Array} Returns the new mapped array.
      */ function baseMap(collection, iteratee) {
-            var index = -1, result = isArrayLike(collection) ? Array1(collection.length) : [];
-            baseEach(collection, function(value, key, collection1) {
-                result[++index] = iteratee(value, key, collection1);
+            var index = -1, result = isArrayLike(collection) ? Array(collection.length) : [];
+            baseEach(collection, function(value, key, collection) {
+                result[++index] = iteratee(value, key, collection);
             });
             return result;
         }
@@ -14630,7 +14154,7 @@ var global = arguments[3];
             ];
             var index = -1;
             iteratees = arrayMap(iteratees, baseUnary(getIteratee()));
-            var result = baseMap(collection, function(value, key, collection1) {
+            var result = baseMap(collection, function(value, key, collection) {
                 var criteria = arrayMap(iteratees, function(iteratee) {
                     return iteratee(value);
                 });
@@ -14668,7 +14192,7 @@ var global = arguments[3];
      */ function basePickBy(object, paths, predicate) {
             var index = -1, length = paths.length, result = {
             };
-            while((++index) < length){
+            while(++index < length){
                 var path = paths[index], value = baseGet(object, path);
                 if (predicate(value, path)) baseSet(result, castPath(path, object), value);
             }
@@ -14699,7 +14223,7 @@ var global = arguments[3];
             var indexOf = comparator ? baseIndexOfWith : baseIndexOf, index = -1, length = values.length, seen = array;
             if (array === values) values = copyArray(values);
             if (iteratee) seen = arrayMap(array, baseUnary(iteratee));
-            while((++index) < length){
+            while(++index < length){
                 var fromIndex = 0, value = values[index], computed = iteratee ? iteratee(value) : value;
                 while((fromIndex = indexOf(seen, computed, fromIndex, comparator)) > -1){
                     if (seen !== array) splice.call(seen, fromIndex, 1);
@@ -14750,7 +14274,7 @@ var global = arguments[3];
      * @param {boolean} [fromRight] Specify iterating from right to left.
      * @returns {Array} Returns the range of numbers.
      */ function baseRange(start, end, step, fromRight) {
-            var index = -1, length = nativeMax(nativeCeil((end - start) / (step || 1)), 0), result = Array1(length);
+            var index = -1, length = nativeMax(nativeCeil((end - start) / (step || 1)), 0), result = Array(length);
             while(length--){
                 result[fromRight ? length : ++index] = start;
                 start += step;
@@ -14819,7 +14343,7 @@ var global = arguments[3];
             if (!isObject(object)) return object;
             path = castPath(path, object);
             var index = -1, length = path.length, lastIndex = length - 1, nested = object;
-            while(nested != null && (++index) < length){
+            while(nested != null && ++index < length){
                 var key = toKey(path[index]), newValue = value;
                 if (key === '__proto__' || key === 'constructor' || key === 'prototype') return object;
                 if (index != lastIndex) {
@@ -14883,8 +14407,8 @@ var global = arguments[3];
             if (end < 0) end += length;
             length = start > end ? 0 : end - start >>> 0;
             start >>>= 0;
-            var result = Array1(length);
-            while((++index) < length)result[index] = array[index + start];
+            var result = Array(length);
+            while(++index < length)result[index] = array[index + start];
             return result;
         }
         /**
@@ -14897,8 +14421,8 @@ var global = arguments[3];
      *  else `false`.
      */ function baseSome(collection, predicate) {
             var result;
-            baseEach(collection, function(value, index, collection1) {
-                result = predicate(value, index, collection1);
+            baseEach(collection, function(value, index, collection) {
+                result = predicate(value, index, collection);
                 return !result;
             });
             return !!result;
@@ -14966,7 +14490,7 @@ var global = arguments[3];
      * @returns {Array} Returns the new duplicate free array.
      */ function baseSortedUniq(array, iteratee) {
             var index = -1, length = array.length, resIndex = 0, result = [];
-            while((++index) < length){
+            while(++index < length){
                 var value = array[index], computed = iteratee ? iteratee(value) : value;
                 if (!index || !eq(computed, seen)) {
                     var seen = computed;
@@ -15023,7 +14547,7 @@ var global = arguments[3];
                 includes = cacheHas;
                 seen = new SetCache;
             } else seen = iteratee ? [] : result;
-            outer: while((++index) < length){
+            outer: while(++index < length){
                 var value = array[index], computed = iteratee ? iteratee(value) : value;
                 value = comparator || value !== 0 ? value : 0;
                 if (isCommon && computed === computed) {
@@ -15076,7 +14600,7 @@ var global = arguments[3];
      * @returns {Array} Returns the slice of `array`.
      */ function baseWhile(array, predicate, isDrop, fromRight) {
             var length = array.length, index = fromRight ? length : -1;
-            while((fromRight ? index-- : (++index) < length) && predicate(array[index], index, array));
+            while((fromRight ? index-- : ++index < length) && predicate(array[index], index, array));
             return isDrop ? baseSlice(array, fromRight ? 0 : index, fromRight ? index + 1 : length) : baseSlice(array, fromRight ? index + 1 : 0, fromRight ? length : index);
         }
         /**
@@ -15091,9 +14615,9 @@ var global = arguments[3];
      */ function baseWrapperValue(value, actions) {
             var result = value;
             if (result instanceof LazyWrapper) result = result.value();
-            return arrayReduce(actions, function(result1, action) {
+            return arrayReduce(actions, function(result, action) {
                 return action.func.apply(action.thisArg, arrayPush([
-                    result1
+                    result
                 ], action.args));
             }, result);
         }
@@ -15109,10 +14633,10 @@ var global = arguments[3];
      */ function baseXor(arrays, iteratee, comparator) {
             var length = arrays.length;
             if (length < 2) return length ? baseUniq(arrays[0]) : [];
-            var index = -1, result = Array1(length);
-            while((++index) < length){
+            var index = -1, result = Array(length);
+            while(++index < length){
                 var array = arrays[index], othIndex = -1;
-                while((++othIndex) < length)if (othIndex != index) result[index] = baseDifference(result[index] || array, arrays[othIndex], iteratee, comparator);
+                while(++othIndex < length)if (othIndex != index) result[index] = baseDifference(result[index] || array, arrays[othIndex], iteratee, comparator);
             }
             return baseUniq(baseFlatten(result, 1), iteratee, comparator);
         }
@@ -15127,7 +14651,7 @@ var global = arguments[3];
      */ function baseZipObject(props, values, assignFunc) {
             var index = -1, length = props.length, valsLength = values.length, result = {
             };
-            while((++index) < length){
+            while(++index < length){
                 var value = index < valsLength ? values[index] : undefined;
                 assignFunc(result, props[index], value);
             }
@@ -15215,7 +14739,7 @@ var global = arguments[3];
      * @returns {ArrayBuffer} Returns the cloned array buffer.
      */ function cloneArrayBuffer(arrayBuffer) {
             var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
-            new Uint8Array1(result).set(new Uint8Array1(arrayBuffer));
+            new Uint8Array(result).set(new Uint8Array(arrayBuffer));
             return result;
         }
         /**
@@ -15247,7 +14771,7 @@ var global = arguments[3];
      * @param {Object} symbol The symbol object to clone.
      * @returns {Object} Returns the cloned symbol object.
      */ function cloneSymbol(symbol) {
-            return symbolValueOf ? Object1(symbolValueOf.call(symbol)) : {
+            return symbolValueOf ? Object(symbolValueOf.call(symbol)) : {
             };
         }
         /**
@@ -15292,7 +14816,7 @@ var global = arguments[3];
      * @returns {number} Returns the sort order indicator for `object`.
      */ function compareMultiple(object, other, orders) {
             var index = -1, objCriteria = object.criteria, othCriteria = other.criteria, length = objCriteria.length, ordersLength = orders.length;
-            while((++index) < length){
+            while(++index < length){
                 var result = compareAscending(objCriteria[index], othCriteria[index]);
                 if (result) {
                     if (index >= ordersLength) return result;
@@ -15320,9 +14844,9 @@ var global = arguments[3];
      * @params {boolean} [isCurried] Specify composing for a curried function.
      * @returns {Array} Returns the new array of composed arguments.
      */ function composeArgs(args, partials, holders, isCurried) {
-            var argsIndex = -1, argsLength = args.length, holdersLength = holders.length, leftIndex = -1, leftLength = partials.length, rangeLength = nativeMax(argsLength - holdersLength, 0), result = Array1(leftLength + rangeLength), isUncurried = !isCurried;
-            while((++leftIndex) < leftLength)result[leftIndex] = partials[leftIndex];
-            while((++argsIndex) < holdersLength)if (isUncurried || argsIndex < argsLength) result[holders[argsIndex]] = args[argsIndex];
+            var argsIndex = -1, argsLength = args.length, holdersLength = holders.length, leftIndex = -1, leftLength = partials.length, rangeLength = nativeMax(argsLength - holdersLength, 0), result = Array(leftLength + rangeLength), isUncurried = !isCurried;
+            while(++leftIndex < leftLength)result[leftIndex] = partials[leftIndex];
+            while(++argsIndex < holdersLength)if (isUncurried || argsIndex < argsLength) result[holders[argsIndex]] = args[argsIndex];
             while(rangeLength--)result[leftIndex++] = args[argsIndex++];
             return result;
         }
@@ -15337,11 +14861,11 @@ var global = arguments[3];
      * @params {boolean} [isCurried] Specify composing for a curried function.
      * @returns {Array} Returns the new array of composed arguments.
      */ function composeArgsRight(args, partials, holders, isCurried) {
-            var argsIndex = -1, argsLength = args.length, holdersIndex = -1, holdersLength = holders.length, rightIndex = -1, rightLength = partials.length, rangeLength = nativeMax(argsLength - holdersLength, 0), result = Array1(rangeLength + rightLength), isUncurried = !isCurried;
-            while((++argsIndex) < rangeLength)result[argsIndex] = args[argsIndex];
+            var argsIndex = -1, argsLength = args.length, holdersIndex = -1, holdersLength = holders.length, rightIndex = -1, rightLength = partials.length, rangeLength = nativeMax(argsLength - holdersLength, 0), result = Array(rangeLength + rightLength), isUncurried = !isCurried;
+            while(++argsIndex < rangeLength)result[argsIndex] = args[argsIndex];
             var offset = argsIndex;
-            while((++rightIndex) < rightLength)result[offset + rightIndex] = partials[rightIndex];
-            while((++holdersIndex) < holdersLength)if (isUncurried || argsIndex < argsLength) result[offset + holders[holdersIndex]] = args[argsIndex++];
+            while(++rightIndex < rightLength)result[offset + rightIndex] = partials[rightIndex];
+            while(++holdersIndex < holdersLength)if (isUncurried || argsIndex < argsLength) result[offset + holders[holdersIndex]] = args[argsIndex++];
             return result;
         }
         /**
@@ -15353,8 +14877,8 @@ var global = arguments[3];
      * @returns {Array} Returns `array`.
      */ function copyArray(source, array) {
             var index = -1, length = source.length;
-            array || (array = Array1(length));
-            while((++index) < length)array[index] = source[index];
+            array || (array = Array(length));
+            while(++index < length)array[index] = source[index];
             return array;
         }
         /**
@@ -15371,7 +14895,7 @@ var global = arguments[3];
             object || (object = {
             });
             var index = -1, length = props.length;
-            while((++index) < length){
+            while(++index < length){
                 var key = props[index];
                 var newValue = customizer ? customizer(object[key], source[key], key, object, source) : undefined;
                 if (newValue === undefined) newValue = source[key];
@@ -15428,8 +14952,8 @@ var global = arguments[3];
                     customizer = length < 3 ? undefined : customizer;
                     length = 1;
                 }
-                object = Object1(object);
-                while((++index) < length){
+                object = Object(object);
+                while(++index < length){
                     var source = sources[index];
                     if (source) assigner(object, source, index, customizer);
                 }
@@ -15447,8 +14971,8 @@ var global = arguments[3];
             return function(collection, iteratee) {
                 if (collection == null) return collection;
                 if (!isArrayLike(collection)) return eachFunc(collection, iteratee);
-                var length = collection.length, index = fromRight ? length : -1, iterable = Object1(collection);
-                while(fromRight ? index-- : (++index) < length){
+                var length = collection.length, index = fromRight ? length : -1, iterable = Object(collection);
+                while(fromRight ? index-- : ++index < length){
                     if (iteratee(iterable[index], index, iterable) === false) break;
                 }
                 return collection;
@@ -15462,7 +14986,7 @@ var global = arguments[3];
      * @returns {Function} Returns the new base function.
      */ function createBaseFor(fromRight) {
             return function(object, iteratee, keysFunc) {
-                var index = -1, iterable = Object1(object), props = keysFunc(object), length = props.length;
+                var index = -1, iterable = Object(object), props = keysFunc(object), length = props.length;
                 while(length--){
                     var key = props[fromRight ? length : ++index];
                     if (iteratee(iterable[key], key, iterable) === false) break;
@@ -15561,7 +15085,7 @@ var global = arguments[3];
      */ function createCurry(func, bitmask, arity) {
             var Ctor = createCtor(func);
             function wrapper() {
-                var length = arguments.length, args = Array1(length), index = length, placeholder = getHolder(wrapper);
+                var length = arguments.length, args = Array(length), index = length, placeholder = getHolder(wrapper);
                 while(index--)args[index] = arguments[index];
                 var holders = length < 3 && args[0] !== placeholder && args[length - 1] !== placeholder ? [] : replaceHolders(args, placeholder);
                 length -= holders.length;
@@ -15579,7 +15103,7 @@ var global = arguments[3];
      * @returns {Function} Returns the new find function.
      */ function createFind(findIndexFunc) {
             return function(collection, predicate, fromIndex) {
-                var iterable = Object1(collection);
+                var iterable = Object(collection);
                 if (!isArrayLike(collection)) {
                     var iteratee = getIteratee(predicate, 3);
                     collection = keys(collection);
@@ -15603,11 +15127,11 @@ var global = arguments[3];
                 if (fromRight) funcs.reverse();
                 while(index--){
                     var func = funcs[index];
-                    if (typeof func != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+                    if (typeof func != 'function') throw new TypeError(FUNC_ERROR_TEXT);
                     if (prereq && !wrapper && getFuncName(func) == 'wrapper') var wrapper = new LodashWrapper([], true);
                 }
                 index = wrapper ? index : length;
-                while((++index) < length){
+                while(++index < length){
                     func = funcs[index];
                     var funcName = getFuncName(func), data = funcName == 'wrapper' ? getData(func) : undefined;
                     if (data && isLaziable(data[0]) && data[1] == (WRAP_ARY_FLAG | WRAP_CURRY_FLAG | WRAP_PARTIAL_FLAG | WRAP_REARG_FLAG) && !data[4].length && data[9] == 1) wrapper = wrapper[getFuncName(data[0])].apply(wrapper, data[3]);
@@ -15616,8 +15140,8 @@ var global = arguments[3];
                 return function() {
                     var args = arguments, value = args[0];
                     if (wrapper && args.length == 1 && isArray(value)) return wrapper.plant(value).value();
-                    var index1 = 0, result = length ? funcs[index1].apply(this, args) : value;
-                    while((++index1) < length)result = funcs[index1].call(this, result);
+                    var index = 0, result = length ? funcs[index].apply(this, args) : value;
+                    while(++index < length)result = funcs[index].call(this, result);
                     return result;
                 };
             });
@@ -15643,7 +15167,7 @@ var global = arguments[3];
      */ function createHybrid(func, bitmask, thisArg, partials, holders, partialsRight, holdersRight, argPos, ary, arity) {
             var isAry = bitmask & WRAP_ARY_FLAG, isBind = bitmask & WRAP_BIND_FLAG, isBindKey = bitmask & WRAP_BIND_KEY_FLAG, isCurried = bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG), isFlip = bitmask & WRAP_FLIP_FLAG, Ctor = isBindKey ? undefined : createCtor(func);
             function wrapper() {
-                var length = arguments.length, args = Array1(length), index = length;
+                var length = arguments.length, args = Array(length), index = length;
                 while(index--)args[index] = arguments[index];
                 if (isCurried) var placeholder = getHolder(wrapper), holdersCount = countHolders(args, placeholder);
                 if (partials) args = composeArgs(args, partials, holders, isCurried);
@@ -15748,8 +15272,8 @@ var global = arguments[3];
      */ function createPartial(func, bitmask, thisArg, partials) {
             var isBind = bitmask & WRAP_BIND_FLAG, Ctor = createCtor(func);
             function wrapper() {
-                var argsIndex = -1, argsLength = arguments.length, leftIndex = -1, leftLength = partials.length, args = Array1(leftLength + argsLength), fn = this && this !== root && this instanceof wrapper ? Ctor : func;
-                while((++leftIndex) < leftLength)args[leftIndex] = partials[leftIndex];
+                var argsIndex = -1, argsLength = arguments.length, leftIndex = -1, leftLength = partials.length, args = Array(leftLength + argsLength), fn = this && this !== root && this instanceof wrapper ? Ctor : func;
+                while(++leftIndex < leftLength)args[leftIndex] = partials[leftIndex];
                 while(argsLength--)args[leftIndex++] = arguments[++argsIndex];
                 return apply(fn, isBind ? thisArg : this, args);
             }
@@ -15834,7 +15358,7 @@ var global = arguments[3];
      * @param {string} methodName The name of the `Math` method to use when rounding.
      * @returns {Function} Returns the new round function.
      */ function createRound(methodName) {
-            var func = Math1[methodName];
+            var func = Math[methodName];
             return function(number, precision) {
                 number = toNumber(number);
                 precision = precision == null ? 0 : nativeMin(toInteger(precision), 292);
@@ -15854,11 +15378,11 @@ var global = arguments[3];
      * @private
      * @param {Array} values The values to add to the set.
      * @returns {Object} Returns the new set.
-     */ var createSet = !(Set1 && 1 / setToArray(new Set1([
+     */ var createSet = !(Set && 1 / setToArray(new Set([
             ,
             -0
         ]))[1] == INFINITY) ? noop : function(values) {
-            return new Set1(values);
+            return new Set(values);
         };
         /**
      * Creates a `_.toPairs` or `_.toPairsIn` function.
@@ -15900,7 +15424,7 @@ var global = arguments[3];
      * @returns {Function} Returns the new wrapped function.
      */ function createWrap(func, bitmask, thisArg, partials, holders, argPos, ary, arity) {
             var isBindKey = bitmask & WRAP_BIND_KEY_FLAG;
-            if (!isBindKey && typeof func != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (!isBindKey && typeof func != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             var length = partials ? partials.length : 0;
             if (!length) {
                 bitmask &= ~(WRAP_PARTIAL_FLAG | WRAP_PARTIAL_RIGHT_FLAG);
@@ -16012,7 +15536,7 @@ var global = arguments[3];
             stack.set(array, other);
             stack.set(other, array);
             // Ignore non-index properties.
-            while((++index) < arrLength){
+            while(++index < arrLength){
                 var arrValue = array[index], othValue = other[index];
                 if (customizer) var compared = isPartial ? customizer(othValue, arrValue, index, other, array, stack) : customizer(arrValue, othValue, index, array, other, stack);
                 if (compared !== undefined) {
@@ -16022,8 +15546,8 @@ var global = arguments[3];
                 }
                 // Recursively compare arrays (susceptible to call stack limits).
                 if (seen) {
-                    if (!arraySome(other, function(othValue1, othIndex) {
-                        if (!cacheHas(seen, othIndex) && (arrValue === othValue1 || equalFunc(arrValue, othValue1, bitmask, customizer, stack))) return seen.push(othIndex);
+                    if (!arraySome(other, function(othValue, othIndex) {
+                        if (!cacheHas(seen, othIndex) && (arrValue === othValue || equalFunc(arrValue, othValue, bitmask, customizer, stack))) return seen.push(othIndex);
                     })) {
                         result = false;
                         break;
@@ -16060,7 +15584,7 @@ var global = arguments[3];
                     object = object.buffer;
                     other = other.buffer;
                 case arrayBufferTag:
-                    if (object.byteLength != other.byteLength || !equalFunc(new Uint8Array1(object), new Uint8Array1(other))) return false;
+                    if (object.byteLength != other.byteLength || !equalFunc(new Uint8Array(object), new Uint8Array(other))) return false;
                     return true;
                 case boolTag:
                 case dateTag:
@@ -16124,7 +15648,7 @@ var global = arguments[3];
             stack.set(object, other);
             stack.set(other, object);
             var skipCtor = isPartial;
-            while((++index) < objLength){
+            while(++index < objLength){
                 key = objProps[index];
                 var objValue = object[key], othValue = other[key];
                 if (customizer) var compared = isPartial ? customizer(othValue, objValue, key, other, object, stack) : customizer(objValue, othValue, key, object, other, stack);
@@ -16288,7 +15812,7 @@ var global = arguments[3];
      * @returns {Array} Returns the array of symbols.
      */ var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
             if (object == null) return [];
-            object = Object1(object);
+            object = Object(object);
             return arrayFilter(nativeGetSymbols(object), function(symbol) {
                 return propertyIsEnumerable.call(object, symbol);
             });
@@ -16315,7 +15839,7 @@ var global = arguments[3];
      * @returns {string} Returns the `toStringTag`.
      */ var getTag = baseGetTag;
         // Fallback for data views, maps, sets, and weak maps in IE 11 and promises in Node.js < 6.
-        if (DataView1 && getTag(new DataView1(new ArrayBuffer(1))) != dataViewTag || Map1 && getTag(new Map1) != mapTag || Promise1 && getTag(Promise1.resolve()) != promiseTag || Set1 && getTag(new Set1) != setTag || WeakMap1 && getTag(new WeakMap1) != weakMapTag) getTag = function(value) {
+        if (DataView && getTag(new DataView(new ArrayBuffer(1))) != dataViewTag || Map && getTag(new Map) != mapTag || Promise && getTag(Promise.resolve()) != promiseTag || Set && getTag(new Set) != setTag || WeakMap && getTag(new WeakMap) != weakMapTag) getTag = function(value) {
             var result = baseGetTag(value), Ctor = result == objectTag ? value.constructor : undefined, ctorString = Ctor ? toSource(Ctor) : '';
             if (ctorString) switch(ctorString){
                 case dataViewCtorString:
@@ -16342,7 +15866,7 @@ var global = arguments[3];
      *  positions of the view.
      */ function getView(start, end, transforms) {
             var index = -1, length = transforms.length;
-            while((++index) < length){
+            while(++index < length){
                 var data = transforms[index], size = data.size;
                 switch(data.type){
                     case 'drop':
@@ -16385,12 +15909,12 @@ var global = arguments[3];
      */ function hasPath(object, path, hasFunc) {
             path = castPath(path, object);
             var index = -1, length = path.length, result = false;
-            while((++index) < length){
+            while(++index < length){
                 var key = toKey(path[index]);
                 if (!(result = object != null && hasFunc(object, key))) break;
                 object = object[key];
             }
-            if (result || (++index) != length) return result;
+            if (result || ++index != length) return result;
             length = object == null ? 0 : object.length;
             return !!length && isLength(length) && isIndex(key, length) && (isArray(object) || isArguments(object));
         }
@@ -16525,7 +16049,7 @@ var global = arguments[3];
             if (isArray(value)) return false;
             var type = typeof value;
             if (type == 'number' || type == 'symbol' || type == 'boolean' || value == null || isSymbol(value)) return true;
-            return reIsPlainProp.test(value) || !reIsDeepProp.test(value) || object != null && value in Object1(object);
+            return reIsPlainProp.test(value) || !reIsDeepProp.test(value) || object != null && value in Object(object);
         }
         /**
      * Checks if `value` is suitable for use as unique object key.
@@ -16598,7 +16122,7 @@ var global = arguments[3];
      */ function matchesStrictComparable(key, srcValue) {
             return function(object) {
                 if (object == null) return false;
-                return object[key] === srcValue && (srcValue !== undefined || key in Object1(object));
+                return object[key] === srcValue && (srcValue !== undefined || key in Object(object));
             };
         }
         /**
@@ -16678,7 +16202,7 @@ var global = arguments[3];
      * @returns {Array} Returns the array of property names.
      */ function nativeKeysIn(object) {
             var result = [];
-            if (object != null) for(var key in Object1(object))result.push(key);
+            if (object != null) for(var key in Object(object))result.push(key);
             return result;
         }
         /**
@@ -16701,11 +16225,11 @@ var global = arguments[3];
      */ function overRest(func, start, transform) {
             start = nativeMax(start === undefined ? func.length - 1 : start, 0);
             return function() {
-                var args = arguments, index = -1, length = nativeMax(args.length - start, 0), array = Array1(length);
-                while((++index) < length)array[index] = args[start + index];
+                var args = arguments, index = -1, length = nativeMax(args.length - start, 0), array = Array(length);
+                while(++index < length)array[index] = args[start + index];
                 index = -1;
-                var otherArgs = Array1(start + 1);
-                while((++index) < start)otherArgs[index] = args[index];
+                var otherArgs = Array(start + 1);
+                while(++index < start)otherArgs[index] = args[index];
                 otherArgs[start] = transform(array);
                 return apply(func, this, otherArgs);
             };
@@ -16808,7 +16332,7 @@ var global = arguments[3];
                 var stamp = nativeNow(), remaining = HOT_SPAN - (stamp - lastCalled);
                 lastCalled = stamp;
                 if (remaining > 0) {
-                    if ((++count) >= HOT_COUNT) return arguments[0];
+                    if (++count >= HOT_COUNT) return arguments[0];
                 } else count = 0;
                 return func.apply(undefined, arguments);
             };
@@ -16823,7 +16347,7 @@ var global = arguments[3];
      */ function shuffleSelf(array, size) {
             var index = -1, length = array.length, lastIndex = length - 1;
             size = size === undefined ? length : size;
-            while((++index) < size){
+            while(++index < size){
                 var rand = baseRandom(index, lastIndex), value = array[rand];
                 array[rand] = array[index];
                 array[index] = value;
@@ -16870,7 +16394,7 @@ var global = arguments[3];
                 }
                 try {
                     return func + '';
-                } catch (e) {
+                } catch (e1) {
                 }
             }
             return '';
@@ -16928,7 +16452,7 @@ var global = arguments[3];
             else size = nativeMax(toInteger(size), 0);
             var length = array == null ? 0 : array.length;
             if (!length || size < 1) return [];
-            var index = 0, resIndex = 0, result = Array1(nativeCeil(length / size));
+            var index = 0, resIndex = 0, result = Array(nativeCeil(length / size));
             while(index < length)result[resIndex++] = baseSlice(array, index, index += size);
             return result;
         }
@@ -16948,7 +16472,7 @@ var global = arguments[3];
      * // => [1, 2, 3]
      */ function compact(array) {
             var index = -1, length = array == null ? 0 : array.length, resIndex = 0, result = [];
-            while((++index) < length){
+            while(++index < length){
                 var value = array[index];
                 if (value) result[resIndex++] = value;
             }
@@ -16978,7 +16502,7 @@ var global = arguments[3];
      */ function concat() {
             var length = arguments.length;
             if (!length) return [];
-            var args = Array1(length - 1), array = arguments[0], index = length;
+            var args = Array(length - 1), array = arguments[0], index = length;
             while(index--)args[index - 1] = arguments[index];
             return arrayPush(isArray(array) ? copyArray(array) : [
                 array
@@ -17397,7 +16921,7 @@ var global = arguments[3];
      */ function fromPairs(pairs) {
             var index = -1, length = pairs == null ? 0 : pairs.length, result = {
             };
-            while((++index) < length){
+            while(++index < length){
                 var pair = pairs[index];
                 result[pair[0]] = pair[1];
             }
@@ -17787,7 +17311,7 @@ var global = arguments[3];
             if (!(array && array.length)) return result;
             var index = -1, indexes = [], length = array.length;
             predicate = getIteratee(predicate, 3);
-            while((++index) < length){
+            while(++index < length){
                 var value = array[index];
                 if (predicate(value, index, array)) {
                     result.push(value);
@@ -18787,15 +18311,15 @@ var global = arguments[3];
      * wrapped.value();
      * // => [1, 4]
      */ function wrapperPlant(value) {
-            var result, parent1 = this;
-            while(parent1 instanceof baseLodash){
-                var clone = wrapperClone(parent1);
+            var result, parent = this;
+            while(parent instanceof baseLodash){
+                var clone = wrapperClone(parent);
                 clone.__index__ = 0;
                 clone.__values__ = undefined;
                 if (result) previous.__wrapped__ = clone;
                 else result = clone;
                 var previous = clone;
-                parent1 = parent1.__wrapped__;
+                parent = parent.__wrapped__;
             }
             previous.__wrapped__ = value;
             return result;
@@ -19233,7 +18757,7 @@ var global = arguments[3];
      * _.invokeMap([123, 456], String.prototype.split, '');
      * // => [['1', '2', '3'], ['4', '5', '6']]
      */ var invokeMap = baseRest(function(collection, path, args) {
-            var index = -1, isFunc = typeof path == 'function', result = isArrayLike(collection) ? Array1(collection.length) : [];
+            var index = -1, isFunc = typeof path == 'function', result = isArrayLike(collection) ? Array(collection.length) : [];
             baseEach(collection, function(value) {
                 result[++index] = isFunc ? apply(path, value, args) : baseInvoke(value, path, args);
             });
@@ -19704,10 +19228,10 @@ var global = arguments[3];
      * });
      * // => Logs 'done saving!' after the two async saves have completed.
      */ function after(n, func) {
-            if (typeof func != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (typeof func != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             n = toInteger(n);
             return function() {
-                if ((--n) < 1) return func.apply(this, arguments);
+                if (--n < 1) return func.apply(this, arguments);
             };
         }
         /**
@@ -19749,10 +19273,10 @@ var global = arguments[3];
      * // => Allows adding up to 4 contacts to the list.
      */ function before(n, func) {
             var result;
-            if (typeof func != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (typeof func != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             n = toInteger(n);
             return function() {
-                if ((--n) > 0) result = func.apply(this, arguments);
+                if (--n > 0) result = func.apply(this, arguments);
                 if (n <= 1) func = undefined;
                 return result;
             };
@@ -19995,7 +19519,7 @@ var global = arguments[3];
      * jQuery(window).on('popstate', debounced.cancel);
      */ function debounce(func, wait, options) {
             var lastArgs, lastThis, maxWait, result, timerId, lastCallTime, lastInvokeTime = 0, leading = false, maxing = false, trailing = true;
-            if (typeof func != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (typeof func != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             wait = toNumber(wait) || 0;
             if (isObject(options)) {
                 leading = !!options.leading;
@@ -20177,7 +19701,7 @@ var global = arguments[3];
      * // Replace `_.memoize.Cache`.
      * _.memoize.Cache = WeakMap;
      */ function memoize(func, resolver) {
-            if (typeof func != 'function' || resolver != null && typeof resolver != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (typeof func != 'function' || resolver != null && typeof resolver != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             var memoized = function() {
                 var args = arguments, key = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
                 if (cache.has(key)) return cache.get(key);
@@ -20210,7 +19734,7 @@ var global = arguments[3];
      * _.filter([1, 2, 3, 4, 5, 6], _.negate(isEven));
      * // => [1, 3, 5]
      */ function negate(predicate) {
-            if (typeof predicate != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (typeof predicate != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             return function() {
                 var args = arguments;
                 switch(args.length){
@@ -20281,7 +19805,7 @@ var global = arguments[3];
             var funcsLength = transforms.length;
             return baseRest(function(args) {
                 var index = -1, length = nativeMin(args.length, funcsLength);
-                while((++index) < length)args[index] = transforms[index].call(this, args[index]);
+                while(++index < length)args[index] = transforms[index].call(this, args[index]);
                 return apply(func, this, args);
             });
         });
@@ -20405,7 +19929,7 @@ var global = arguments[3];
      * say('hello', 'fred', 'barney', 'pebbles');
      * // => 'hello fred, barney, & pebbles'
      */ function rest(func, start) {
-            if (typeof func != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (typeof func != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             start = start === undefined ? start : toInteger(start);
             return baseRest(func, start);
         }
@@ -20443,7 +19967,7 @@ var global = arguments[3];
      * }));
      * // => a Promise of 76
      */ function spread(func, start) {
-            if (typeof func != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (typeof func != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             start = start == null ? 0 : nativeMax(toInteger(start), 0);
             return baseRest(function(args) {
                 var array = args[start], otherArgs = castSlice(args, 0, start);
@@ -20496,7 +20020,7 @@ var global = arguments[3];
      * jQuery(window).on('popstate', throttled.cancel);
      */ function throttle(func, wait, options) {
             var leading = true, trailing = true;
-            if (typeof func != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+            if (typeof func != 'function') throw new TypeError(FUNC_ERROR_TEXT);
             if (isObject(options)) {
                 leading = 'leading' in options ? !!options.leading : leading;
                 trailing = 'trailing' in options ? !!options.trailing : trailing;
@@ -20852,7 +20376,7 @@ var global = arguments[3];
      *
      * _.isArray(_.noop);
      * // => false
-     */ var isArray = Array1.isArray;
+     */ var isArray = Array.isArray;
         /**
      * Checks if `value` is classified as an `ArrayBuffer` object.
      *
@@ -21429,7 +20953,7 @@ var global = arguments[3];
      * _.isNative(_);
      * // => false
      */ function isNative(value) {
-            if (isMaskable(value)) throw new Error1(CORE_ERROR_TEXT);
+            if (isMaskable(value)) throw new Error(CORE_ERROR_TEXT);
             return baseIsNative(value);
         }
         /**
@@ -22192,17 +21716,17 @@ var global = arguments[3];
      * _.defaults({ 'a': 1 }, { 'b': 2 }, { 'a': 3 });
      * // => { 'a': 1, 'b': 2 }
      */ var defaults = baseRest(function(object, sources) {
-            object = Object1(object);
+            object = Object(object);
             var index = -1;
             var length = sources.length;
             var guard = length > 2 ? sources[2] : undefined;
             if (guard && isIterateeCall(sources[0], sources[1], guard)) length = 1;
-            while((++index) < length){
+            while(++index < length){
                 var source = sources[index];
                 var props = keysIn(source);
                 var propsIndex = -1;
                 var propsLength = props.length;
-                while((++propsIndex) < propsLength){
+                while(++propsIndex < propsLength){
                     var key = props[propsIndex];
                     var value = object[key];
                     if (value === undefined || eq(value, objectProto[key]) && !hasOwnProperty.call(object, key)) object[key] = source[key];
@@ -22707,8 +22231,8 @@ var global = arguments[3];
             var result = {
             };
             iteratee = getIteratee(iteratee, 3);
-            baseForOwn(object, function(value, key, object1) {
-                baseAssignValue(result, iteratee(value, key, object1), value);
+            baseForOwn(object, function(value, key, object) {
+                baseAssignValue(result, iteratee(value, key, object), value);
             });
             return result;
         }
@@ -22743,8 +22267,8 @@ var global = arguments[3];
             var result = {
             };
             iteratee = getIteratee(iteratee, 3);
-            baseForOwn(object, function(value, key, object1) {
-                baseAssignValue(result, key, iteratee(value, key, object1));
+            baseForOwn(object, function(value, key, object) {
+                baseAssignValue(result, key, iteratee(value, key, object));
             });
             return result;
         }
@@ -22957,7 +22481,7 @@ var global = arguments[3];
                 length = 1;
                 object = undefined;
             }
-            while((++index) < length){
+            while(++index < length){
                 var value = object == null ? undefined : object[toKey(path[index])];
                 if (value === undefined) {
                     index = length;
@@ -23112,8 +22636,8 @@ var global = arguments[3];
                 else accumulator = {
                 };
             }
-            (isArrLike ? arrayEach : baseForOwn)(object, function(value, index, object1) {
-                return iteratee(accumulator, value, index, object1);
+            (isArrLike ? arrayEach : baseForOwn)(object, function(value, index, object) {
+                return iteratee(accumulator, value, index, object);
             });
             return accumulator;
         }
@@ -23416,9 +22940,9 @@ var global = arguments[3];
      *
      * _.camelCase('__FOO_BAR__');
      * // => 'fooBar'
-     */ var camelCase = createCompounder(function(result1, word, index) {
+     */ var camelCase = createCompounder(function(result, word, index) {
             word = word.toLowerCase();
-            return result1 + (index ? capitalize(word) : word);
+            return result + (index ? capitalize(word) : word);
         });
         /**
      * Converts the first character of `string` to upper case and the remaining
@@ -23558,8 +23082,8 @@ var global = arguments[3];
      *
      * _.kebabCase('__FOO_BAR__');
      * // => 'foo-bar'
-     */ var kebabCase = createCompounder(function(result1, word, index) {
-            return result1 + (index ? '-' : '') + word.toLowerCase();
+     */ var kebabCase = createCompounder(function(result, word, index) {
+            return result + (index ? '-' : '') + word.toLowerCase();
         });
         /**
      * Converts `string`, as space separated words, to lower case.
@@ -23580,8 +23104,8 @@ var global = arguments[3];
      *
      * _.lowerCase('__FOO_BAR__');
      * // => 'foo bar'
-     */ var lowerCase = createCompounder(function(result1, word, index) {
-            return result1 + (index ? ' ' : '') + word.toLowerCase();
+     */ var lowerCase = createCompounder(function(result, word, index) {
+            return result + (index ? ' ' : '') + word.toLowerCase();
         });
         /**
      * Converts the first character of `string` to lower case.
@@ -23782,8 +23306,8 @@ var global = arguments[3];
      *
      * _.snakeCase('--FOO-BAR--');
      * // => 'foo_bar'
-     */ var snakeCase = createCompounder(function(result1, word, index) {
-            return result1 + (index ? '_' : '') + word.toLowerCase();
+     */ var snakeCase = createCompounder(function(result, word, index) {
+            return result + (index ? '_' : '') + word.toLowerCase();
         });
         /**
      * Splits `string` by `separator`.
@@ -23834,8 +23358,8 @@ var global = arguments[3];
      *
      * _.startCase('__FOO_BAR__');
      * // => 'FOO BAR'
-     */ var startCase = createCompounder(function(result1, word, index) {
-            return result1 + (index ? ' ' : '') + upperFirst(word);
+     */ var startCase = createCompounder(function(result, word, index) {
+            return result + (index ? ' ' : '') + upperFirst(word);
         });
         /**
      * Checks if `string` starts with the given target string.
@@ -23981,7 +23505,7 @@ var global = arguments[3];
             }, options.imports, settings.imports, customDefaultsAssignIn), importsKeys = keys(imports), importsValues = baseValues(imports, importsKeys);
             var isEscaping, isEvaluating, index = 0, interpolate = options.interpolate || reNoMatch, source = "__p += '";
             // Compile the regexp to match each delimiter.
-            var reDelimiters = RegExp1((options.escape || reNoMatch).source + '|' + interpolate.source + '|' + (interpolate === reInterpolate ? reEsTemplate : reNoMatch).source + '|' + (options.evaluate || reNoMatch).source + '|$', 'g');
+            var reDelimiters = RegExp((options.escape || reNoMatch).source + '|' + interpolate.source + '|' + (interpolate === reInterpolate ? reEsTemplate : reNoMatch).source + '|' + (options.evaluate || reNoMatch).source + '|$', 'g');
             // Use a sourceURL for easier debugging.
             // The sourceURL gets injected into the source that's eval-ed, so be careful
             // to normalize all kinds of whitespace, so e.g. newlines (and unicode versions of it) can't sneak in
@@ -24011,19 +23535,19 @@ var global = arguments[3];
             // code to add the data object to the top of the scope chain.
             var variable = hasOwnProperty.call(options, 'variable') && options.variable;
             if (!variable) source = 'with (obj) {\n' + source + '\n}\n';
-            else if (reForbiddenIdentifierChars.test(variable)) throw new Error1(INVALID_TEMPL_VAR_ERROR_TEXT);
+            else if (reForbiddenIdentifierChars.test(variable)) throw new Error(INVALID_TEMPL_VAR_ERROR_TEXT);
             // Cleanup code by stripping empty strings.
             source = (isEvaluating ? source.replace(reEmptyStringLeading, '') : source).replace(reEmptyStringMiddle, '$1').replace(reEmptyStringTrailing, '$1;');
             // Frame code as the function body.
             source = 'function(' + (variable || 'obj') + ') {\n' + (variable ? '' : 'obj || (obj = {});\n') + "var __t, __p = ''" + (isEscaping ? ', __e = _.escape' : '') + (isEvaluating ? ", __j = Array.prototype.join;\nfunction print() { __p += __j.call(arguments, '') }\n" : ';\n') + source + 'return __p\n}';
-            var result1 = attempt(function() {
-                return Function1(importsKeys, sourceURL + 'return ' + source).apply(undefined, importsValues);
+            var result = attempt(function() {
+                return Function(importsKeys, sourceURL + 'return ' + source).apply(undefined, importsValues);
             });
             // Provide the compiled function's source by its `toString` method or
             // the `source` property as a convenience for inlining compiled templates.
-            result1.source = source;
-            if (isError(result1)) throw result1;
-            return result1;
+            result.source = source;
+            if (isError(result)) throw result;
+            return result;
         }
         /**
      * Converts `string`, as a whole, to lower case just like
@@ -24201,22 +23725,22 @@ var global = arguments[3];
             if (length >= strLength) return string;
             var end = length - stringSize(omission);
             if (end < 1) return omission;
-            var result1 = strSymbols ? castSlice(strSymbols, 0, end).join('') : string.slice(0, end);
-            if (separator === undefined) return result1 + omission;
-            if (strSymbols) end += result1.length - end;
+            var result = strSymbols ? castSlice(strSymbols, 0, end).join('') : string.slice(0, end);
+            if (separator === undefined) return result + omission;
+            if (strSymbols) end += result.length - end;
             if (isRegExp(separator)) {
                 if (string.slice(end).search(separator)) {
-                    var match, substring = result1;
-                    if (!separator.global) separator = RegExp1(separator.source, toString(reFlags.exec(separator)) + 'g');
+                    var match, substring = result;
+                    if (!separator.global) separator = RegExp(separator.source, toString(reFlags.exec(separator)) + 'g');
                     separator.lastIndex = 0;
                     while(match = separator.exec(substring))var newEnd = match.index;
-                    result1 = result1.slice(0, newEnd === undefined ? end : newEnd);
+                    result = result.slice(0, newEnd === undefined ? end : newEnd);
                 }
             } else if (string.indexOf(baseToString(separator), end) != end) {
-                var index = result1.lastIndexOf(separator);
-                if (index > -1) result1 = result1.slice(0, index);
+                var index = result.lastIndexOf(separator);
+                if (index > -1) result = result.slice(0, index);
             }
-            return result1 + omission;
+            return result + omission;
         }
         /**
      * The inverse of `_.escape`; this method converts the HTML entities
@@ -24259,8 +23783,8 @@ var global = arguments[3];
      *
      * _.upperCase('__foo_bar__');
      * // => 'FOO BAR'
-     */ var upperCase = createCompounder(function(result1, word, index) {
-            return result1 + (index ? ' ' : '') + word.toUpperCase();
+     */ var upperCase = createCompounder(function(result, word, index) {
+            return result + (index ? ' ' : '') + word.toUpperCase();
         });
         /**
      * Converts the first character of `string` to upper case.
@@ -24328,7 +23852,7 @@ var global = arguments[3];
             try {
                 return apply(func, undefined, args);
             } catch (e) {
-                return isError(e) ? e : new Error1(e);
+                return isError(e) ? e : new Error(e);
             }
         });
         /**
@@ -24394,7 +23918,7 @@ var global = arguments[3];
      */ function cond(pairs) {
             var length = pairs == null ? 0 : pairs.length, toIteratee = getIteratee();
             pairs = !length ? [] : arrayMap(pairs, function(pair) {
-                if (typeof pair[1] != 'function') throw new TypeError1(FUNC_ERROR_TEXT);
+                if (typeof pair[1] != 'function') throw new TypeError(FUNC_ERROR_TEXT);
                 return [
                     toIteratee(pair[0]),
                     pair[1]
@@ -24402,7 +23926,7 @@ var global = arguments[3];
             });
             return baseRest(function(args) {
                 var index = -1;
-                while((++index) < length){
+                while(++index < length){
                     var pair = pairs[index];
                     if (apply(pair[0], this, args)) return apply(pair[1], this, args);
                 }
@@ -24754,21 +24278,21 @@ var global = arguments[3];
                 object = this;
                 methodNames = baseFunctions(source, keys(source));
             }
-            var chain1 = !(isObject(options) && 'chain' in options) || !!options.chain, isFunc = isFunction(object);
+            var chain = !(isObject(options) && 'chain' in options) || !!options.chain, isFunc = isFunction(object);
             arrayEach(methodNames, function(methodName) {
                 var func = source[methodName];
                 object[methodName] = func;
                 if (isFunc) object.prototype[methodName] = function() {
                     var chainAll = this.__chain__;
-                    if (chain1 || chainAll) {
-                        var result1 = object(this.__wrapped__), actions = result1.__actions__ = copyArray(this.__actions__);
+                    if (chain || chainAll) {
+                        var result = object(this.__wrapped__), actions = result.__actions__ = copyArray(this.__actions__);
                         actions.push({
                             'func': func,
                             'args': arguments,
                             'thisArg': object
                         });
-                        result1.__chain__ = chainAll;
-                        return result1;
+                        result.__chain__ = chainAll;
+                        return result;
                     }
                     return func.apply(object, arrayPush([
                         this.value()
@@ -25139,15 +24663,15 @@ var global = arguments[3];
      *
      *  _.times(4, _.constant(0));
      * // => [0, 0, 0, 0]
-     */ function times(n, iteratee1) {
+     */ function times(n, iteratee) {
             n = toInteger(n);
             if (n < 1 || n > MAX_SAFE_INTEGER) return [];
             var index = MAX_ARRAY_LENGTH, length = nativeMin(n, MAX_ARRAY_LENGTH);
-            iteratee1 = getIteratee(iteratee1);
+            iteratee = getIteratee(iteratee);
             n -= MAX_ARRAY_LENGTH;
-            var result2 = baseTimes(length, iteratee1);
-            while((++index) < n)iteratee1(index);
-            return result2;
+            var result = baseTimes(length, iteratee);
+            while(++index < n)iteratee(index);
+            return result;
         }
         /**
      * Converts `value` to a property path array.
@@ -25309,8 +24833,8 @@ var global = arguments[3];
      * // The `_.property` iteratee shorthand.
      * _.maxBy(objects, 'n');
      * // => { 'n': 2 }
-     */ function maxBy(array, iteratee1) {
-            return array && array.length ? baseExtremum(array, getIteratee(iteratee1, 2), baseGt) : undefined;
+     */ function maxBy(array, iteratee) {
+            return array && array.length ? baseExtremum(array, getIteratee(iteratee, 2), baseGt) : undefined;
         }
         /**
      * Computes the mean of the values in `array`.
@@ -25350,8 +24874,8 @@ var global = arguments[3];
      * // The `_.property` iteratee shorthand.
      * _.meanBy(objects, 'n');
      * // => 5
-     */ function meanBy(array, iteratee1) {
-            return baseMean(array, getIteratee(iteratee1, 2));
+     */ function meanBy(array, iteratee) {
+            return baseMean(array, getIteratee(iteratee, 2));
         }
         /**
      * Computes the minimum value of `array`. If `array` is empty or falsey,
@@ -25395,8 +24919,8 @@ var global = arguments[3];
      * // The `_.property` iteratee shorthand.
      * _.minBy(objects, 'n');
      * // => { 'n': 1 }
-     */ function minBy(array, iteratee1) {
-            return array && array.length ? baseExtremum(array, getIteratee(iteratee1, 2), baseLt) : undefined;
+     */ function minBy(array, iteratee) {
+            return array && array.length ? baseExtremum(array, getIteratee(iteratee, 2), baseLt) : undefined;
         }
         /**
      * Multiply two numbers.
@@ -25491,8 +25015,8 @@ var global = arguments[3];
      * // The `_.property` iteratee shorthand.
      * _.sumBy(objects, 'n');
      * // => 20
-     */ function sumBy(array, iteratee1) {
-            return array && array.length ? baseSum(array, getIteratee(iteratee1, 2)) : 0;
+     */ function sumBy(array, iteratee) {
+            return array && array.length ? baseSum(array, getIteratee(iteratee, 2)) : 0;
         }
         /*------------------------------------------------------------------------*/ // Add methods that return wrapped values in chain sequences.
         lodash.after = after;
@@ -25767,7 +25291,7 @@ var global = arguments[3];
         lodash.replace = replace;
         lodash.result = result;
         lodash.round = round;
-        lodash.runInContext = runInContext1;
+        lodash.runInContext = runInContext;
         lodash.sample = sample;
         lodash.size = size;
         lodash.snakeCase = snakeCase;
@@ -25840,13 +25364,13 @@ var global = arguments[3];
         ], function(methodName, index) {
             LazyWrapper.prototype[methodName] = function(n) {
                 n = n === undefined ? 1 : nativeMax(toInteger(n), 0);
-                var result2 = this.__filtered__ && !index ? new LazyWrapper(this) : this.clone();
-                if (result2.__filtered__) result2.__takeCount__ = nativeMin(n, result2.__takeCount__);
-                else result2.__views__.push({
+                var result = this.__filtered__ && !index ? new LazyWrapper(this) : this.clone();
+                if (result.__filtered__) result.__takeCount__ = nativeMin(n, result.__takeCount__);
+                else result.__views__.push({
                     'size': nativeMin(n, MAX_ARRAY_LENGTH),
-                    'type': methodName + (result2.__dir__ < 0 ? 'Right' : '')
+                    'type': methodName + (result.__dir__ < 0 ? 'Right' : '')
                 });
-                return result2;
+                return result;
             };
             LazyWrapper.prototype[methodName + 'Right'] = function(n) {
                 return this.reverse()[methodName](n).reverse();
@@ -25859,14 +25383,14 @@ var global = arguments[3];
             'takeWhile'
         ], function(methodName, index) {
             var type = index + 1, isFilter = type == LAZY_FILTER_FLAG || type == LAZY_WHILE_FLAG;
-            LazyWrapper.prototype[methodName] = function(iteratee1) {
-                var result2 = this.clone();
-                result2.__iteratees__.push({
-                    'iteratee': getIteratee(iteratee1, 3),
+            LazyWrapper.prototype[methodName] = function(iteratee) {
+                var result = this.clone();
+                result.__iteratees__.push({
+                    'iteratee': getIteratee(iteratee, 3),
                     'type': type
                 });
-                result2.__filtered__ = result2.__filtered__ || isFilter;
-                return result2;
+                result.__filtered__ = result.__filtered__ || isFilter;
+                return result;
             };
         });
         // Add `LazyWrapper` methods for `_.head` and `_.last`.
@@ -25909,15 +25433,15 @@ var global = arguments[3];
         };
         LazyWrapper.prototype.slice = function(start, end) {
             start = toInteger(start);
-            var result2 = this;
-            if (result2.__filtered__ && (start > 0 || end < 0)) return new LazyWrapper(result2);
-            if (start < 0) result2 = result2.takeRight(-start);
-            else if (start) result2 = result2.drop(start);
+            var result = this;
+            if (result.__filtered__ && (start > 0 || end < 0)) return new LazyWrapper(result);
+            if (start < 0) result = result.takeRight(-start);
+            else if (start) result = result.drop(start);
             if (end !== undefined) {
                 end = toInteger(end);
-                result2 = end < 0 ? result2.dropRight(-end) : result2.take(end - start);
+                result = end < 0 ? result.dropRight(-end) : result.take(end - start);
             }
-            return result2;
+            return result;
         };
         LazyWrapper.prototype.takeRightWhile = function(predicate) {
             return this.reverse().takeWhile(predicate).reverse();
@@ -25932,31 +25456,31 @@ var global = arguments[3];
             lodash.prototype[methodName] = function() {
                 var value = this.__wrapped__, args = isTaker ? [
                     1
-                ] : arguments, isLazy = value instanceof LazyWrapper, iteratee1 = args[0], useLazy = isLazy || isArray(value);
-                var interceptor = function(value1) {
-                    var result2 = lodashFunc.apply(lodash, arrayPush([
-                        value1
+                ] : arguments, isLazy = value instanceof LazyWrapper, iteratee = args[0], useLazy = isLazy || isArray(value);
+                var interceptor = function(value) {
+                    var result = lodashFunc.apply(lodash, arrayPush([
+                        value
                     ], args));
-                    return isTaker && chainAll ? result2[0] : result2;
+                    return isTaker && chainAll ? result[0] : result;
                 };
-                if (useLazy && checkIteratee && typeof iteratee1 == 'function' && iteratee1.length != 1) // Avoid lazy use if the iteratee has a "length" value other than `1`.
+                if (useLazy && checkIteratee && typeof iteratee == 'function' && iteratee.length != 1) // Avoid lazy use if the iteratee has a "length" value other than `1`.
                 isLazy = useLazy = false;
                 var chainAll = this.__chain__, isHybrid = !!this.__actions__.length, isUnwrapped = retUnwrapped && !chainAll, onlyLazy = isLazy && !isHybrid;
                 if (!retUnwrapped && useLazy) {
                     value = onlyLazy ? value : new LazyWrapper(this);
-                    var result2 = func.apply(value, args);
-                    result2.__actions__.push({
+                    var result = func.apply(value, args);
+                    result.__actions__.push({
                         'func': thru,
                         'args': [
                             interceptor
                         ],
                         'thisArg': undefined
                     });
-                    return new LodashWrapper(result2, chainAll);
+                    return new LodashWrapper(result, chainAll);
                 }
                 if (isUnwrapped && onlyLazy) return func.apply(this, args);
-                result2 = this.thru(interceptor);
-                return isUnwrapped ? isTaker ? result2.value()[0] : result2.value() : result2;
+                result = this.thru(interceptor);
+                return isUnwrapped ? isTaker ? result.value()[0] : result.value() : result;
             };
         });
         // Add `Array` methods to `lodash.prototype`.
@@ -26038,7 +25562,7 @@ var global = arguments[3];
     root._ = _;
 }).call(this);
 
-},{}],"kykCo":[function(require,module,exports) {
+},{}],"id2fi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "toHexString", ()=>toHexString
@@ -26048,19 +25572,18 @@ parcelHelpers.export(exports, "isntNil", ()=>isntNil
 parcelHelpers.export(exports, "sliceJpegData", ()=>sliceJpegData
 );
 var _lodash = require("lodash");
-var _lodashDefault = parcelHelpers.interopDefault(_lodash);
 function toHexString(data, bytes = 'auto') {
     if (typeof data === 'number') {
         const hex = data.toString(16);
         let length;
         if (bytes === 'auto') length = hex.length;
         else length = bytes;
-        return '0x' + _lodashDefault.default.padStart(hex, length, '0');
+        return '0x' + _lodash.padStart(hex, length, '0');
     } else {
         const arr = [
             ...new Uint8Array(data)
         ];
-        return arr.map((byte)=>_lodashDefault.default.padStart(byte.toString(16), 2, '0')
+        return arr.map((byte)=>_lodash.padStart(byte.toString(16), 2, '0')
         ).join(' ');
     }
 }
@@ -26090,94 +25613,93 @@ function sliceJpegData(buffer) {
     return buffer.slice(start, end);
 }
 
-},{"lodash":"f4H2C","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"fvVqX":[function(require,module,exports) {
+},{"lodash":"4nfxA","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"9JW6y":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TethrPanasonic", ()=>TethrPanasonic
 );
 var _bim = require("bim");
 var _lodash = require("lodash");
-var _lodashDefault = parcelHelpers.interopDefault(_lodash);
 var _configs = require("../configs");
 var _ptpdatacode = require("../PTPDatacode");
 var _ptpdataView = require("../PTPDataView");
 var _util = require("../util");
 var _tethrPTPUSB = require("./TethrPTPUSB");
 var OpCodePanasonic;
-(function(OpCodePanasonic1) {
-    OpCodePanasonic1[OpCodePanasonic1["OpenSession"] = 37122] = "OpenSession";
-    OpCodePanasonic1[OpCodePanasonic1["CloseSession"] = 37123] = "CloseSession";
-    OpCodePanasonic1[OpCodePanasonic1["GetDevicePropDesc"] = 37128] = "GetDevicePropDesc";
-    OpCodePanasonic1[OpCodePanasonic1["GetDevicePropValue"] = 37890] = "GetDevicePropValue";
-    OpCodePanasonic1[OpCodePanasonic1["SetDevicePropValue"] = 37891] = "SetDevicePropValue";
-    OpCodePanasonic1[OpCodePanasonic1["InitiateCapture"] = 37892] = "InitiateCapture";
-    OpCodePanasonic1[OpCodePanasonic1["CtrlLiveview"] = 37893] = "CtrlLiveview";
-    OpCodePanasonic1[OpCodePanasonic1["Liveview"] = 37906] = "Liveview";
-    OpCodePanasonic1[OpCodePanasonic1["GetLiveviewSettings"] = 37908] = "GetLiveviewSettings";
-    OpCodePanasonic1[OpCodePanasonic1["SetLiveviewSettings"] = 37909] = "SetLiveviewSettings";
-    OpCodePanasonic1[OpCodePanasonic1["ManualFocusDrive"] = 37910] = "ManualFocusDrive";
-    OpCodePanasonic1[OpCodePanasonic1["LiveviewImage"] = 38662] = "LiveviewImage";
+(function(OpCodePanasonic) {
+    OpCodePanasonic[OpCodePanasonic["OpenSession"] = 37122] = "OpenSession";
+    OpCodePanasonic[OpCodePanasonic["CloseSession"] = 37123] = "CloseSession";
+    OpCodePanasonic[OpCodePanasonic["GetDevicePropDesc"] = 37128] = "GetDevicePropDesc";
+    OpCodePanasonic[OpCodePanasonic["GetDevicePropValue"] = 37890] = "GetDevicePropValue";
+    OpCodePanasonic[OpCodePanasonic["SetDevicePropValue"] = 37891] = "SetDevicePropValue";
+    OpCodePanasonic[OpCodePanasonic["InitiateCapture"] = 37892] = "InitiateCapture";
+    OpCodePanasonic[OpCodePanasonic["CtrlLiveview"] = 37893] = "CtrlLiveview";
+    OpCodePanasonic[OpCodePanasonic["Liveview"] = 37906] = "Liveview";
+    OpCodePanasonic[OpCodePanasonic["GetLiveviewSettings"] = 37908] = "GetLiveviewSettings";
+    OpCodePanasonic[OpCodePanasonic["SetLiveviewSettings"] = 37909] = "SetLiveviewSettings";
+    OpCodePanasonic[OpCodePanasonic["ManualFocusDrive"] = 37910] = "ManualFocusDrive";
+    OpCodePanasonic[OpCodePanasonic["LiveviewImage"] = 38662] = "LiveviewImage";
 })(OpCodePanasonic || (OpCodePanasonic = {
 }));
 var EventCodePanasonic;
-(function(EventCodePanasonic1) {
-    EventCodePanasonic1[EventCodePanasonic1["DevicePropChanged"] = 49410] = "DevicePropChanged";
-    EventCodePanasonic1[EventCodePanasonic1["ObjectAdded"] = 49416] = "ObjectAdded";
+(function(EventCodePanasonic) {
+    EventCodePanasonic[EventCodePanasonic["DevicePropChanged"] = 49410] = "DevicePropChanged";
+    EventCodePanasonic[EventCodePanasonic["ObjectAdded"] = 49416] = "ObjectAdded";
 })(EventCodePanasonic || (EventCodePanasonic = {
 }));
 var // Panasonic does not have regular device properties, they use some 32bit values
 DevicePropCodePanasonic;
-(function(DevicePropCodePanasonic1) {
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["PhotoStyle"] = 33554448] = "PhotoStyle";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["PhotoStyle_Param"] = 33554449] = "PhotoStyle_Param";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ISO"] = 33554464] = "ISO";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ISO_Param"] = 33554465] = "ISO_Param";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ISO_UpperLimit"] = 33554466] = "ISO_UpperLimit";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ShutterSpeed"] = 33554480] = "ShutterSpeed";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ShutterSpeed_Param"] = 33554481] = "ShutterSpeed_Param";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ShutterSpeed_RangeLimit"] = 33554482] = "ShutterSpeed_RangeLimit";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["Aperture"] = 33554496] = "Aperture";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["Aperture_Param"] = 33554497] = "Aperture_Param";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["Aperture_RangeLimit"] = 33554498] = "Aperture_RangeLimit";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["WhiteBalance"] = 33554512] = "WhiteBalance";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["WhiteBalance_Param"] = 33554513] = "WhiteBalance_Param";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["WhiteBalance_KSet"] = 33554514] = "WhiteBalance_KSet";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["WhiteBalance_ADJ_AB"] = 33554515] = "WhiteBalance_ADJ_AB";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["WhiteBalance_ADJ_GM"] = 33554516] = "WhiteBalance_ADJ_GM";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["WhiteBalance_ADJ_AB_Sep"] = 33554517] = "WhiteBalance_ADJ_AB_Sep";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["Exposure"] = 33554528] = "Exposure";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["Exposure_Param"] = 33554529] = "Exposure_Param";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["Exposure_RangeLimit"] = 33554530] = "Exposure_RangeLimit";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["AFArea"] = 33554544] = "AFArea";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["AFArea_AFModeParam"] = 33554545] = "AFArea_AFModeParam";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["AFArea_AFAreaParam"] = 33554546] = "AFArea_AFAreaParam";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["AFArea_SetQuickAFParam"] = 33554547] = "AFArea_SetQuickAFParam";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["CameraMode"] = 33554560] = "CameraMode";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["CameraMode_DriveMode"] = 33554561] = "CameraMode_DriveMode";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["CameraMode_ModePos"] = 33554562] = "CameraMode_ModePos";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["CameraMode_CreativeMode"] = 33554563] = "CameraMode_CreativeMode";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["CameraMode_iAMode"] = 33554564] = "CameraMode_iAMode";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ImageFormat"] = 33554594] = "ImageFormat";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["MeteringInfo"] = 33554608] = "MeteringInfo";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["IntervalInfo"] = 33554624] = "IntervalInfo";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["RecDispConfig"] = 33554656] = "RecDispConfig";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["RecInfoFlash"] = 33554704] = "RecInfoFlash";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["BurstBracket"] = 33554752] = "BurstBracket";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["RecPreviewConfig"] = 33554800] = "RecPreviewConfig";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["RecInfoSelfTimer"] = 33554848] = "RecInfoSelfTimer";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["RecInfoFlash2"] = 33554864] = "RecInfoFlash2";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["RecCtrlRelease"] = 50331664] = "RecCtrlRelease";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ImageMode"] = 33554592] = "ImageMode";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ImageMode_Param"] = 33554593] = "ImageMode_Param";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ImageMode_Quality"] = 33554594] = "ImageMode_Quality";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["ImageMode_ImageAspect"] = 33554595] = "ImageMode_ImageAspect";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["Liveview_TransImg"] = 226492433] = "Liveview_TransImg";
-    DevicePropCodePanasonic1[DevicePropCodePanasonic1["Liveview_RecomImg"] = 226492434] = "Liveview_RecomImg";
+(function(DevicePropCodePanasonic) {
+    DevicePropCodePanasonic[DevicePropCodePanasonic["PhotoStyle"] = 33554448] = "PhotoStyle";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["PhotoStyle_Param"] = 33554449] = "PhotoStyle_Param";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ISO"] = 33554464] = "ISO";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ISO_Param"] = 33554465] = "ISO_Param";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ISO_UpperLimit"] = 33554466] = "ISO_UpperLimit";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ShutterSpeed"] = 33554480] = "ShutterSpeed";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ShutterSpeed_Param"] = 33554481] = "ShutterSpeed_Param";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ShutterSpeed_RangeLimit"] = 33554482] = "ShutterSpeed_RangeLimit";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["Aperture"] = 33554496] = "Aperture";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["Aperture_Param"] = 33554497] = "Aperture_Param";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["Aperture_RangeLimit"] = 33554498] = "Aperture_RangeLimit";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["WhiteBalance"] = 33554512] = "WhiteBalance";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["WhiteBalance_Param"] = 33554513] = "WhiteBalance_Param";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["WhiteBalance_KSet"] = 33554514] = "WhiteBalance_KSet";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["WhiteBalance_ADJ_AB"] = 33554515] = "WhiteBalance_ADJ_AB";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["WhiteBalance_ADJ_GM"] = 33554516] = "WhiteBalance_ADJ_GM";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["WhiteBalance_ADJ_AB_Sep"] = 33554517] = "WhiteBalance_ADJ_AB_Sep";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["Exposure"] = 33554528] = "Exposure";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["Exposure_Param"] = 33554529] = "Exposure_Param";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["Exposure_RangeLimit"] = 33554530] = "Exposure_RangeLimit";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["AFArea"] = 33554544] = "AFArea";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["AFArea_AFModeParam"] = 33554545] = "AFArea_AFModeParam";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["AFArea_AFAreaParam"] = 33554546] = "AFArea_AFAreaParam";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["AFArea_SetQuickAFParam"] = 33554547] = "AFArea_SetQuickAFParam";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["CameraMode"] = 33554560] = "CameraMode";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["CameraMode_DriveMode"] = 33554561] = "CameraMode_DriveMode";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["CameraMode_ModePos"] = 33554562] = "CameraMode_ModePos";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["CameraMode_CreativeMode"] = 33554563] = "CameraMode_CreativeMode";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["CameraMode_iAMode"] = 33554564] = "CameraMode_iAMode";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ImageFormat"] = 33554594] = "ImageFormat";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["MeteringInfo"] = 33554608] = "MeteringInfo";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["IntervalInfo"] = 33554624] = "IntervalInfo";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["RecDispConfig"] = 33554656] = "RecDispConfig";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["RecInfoFlash"] = 33554704] = "RecInfoFlash";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["BurstBracket"] = 33554752] = "BurstBracket";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["RecPreviewConfig"] = 33554800] = "RecPreviewConfig";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["RecInfoSelfTimer"] = 33554848] = "RecInfoSelfTimer";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["RecInfoFlash2"] = 33554864] = "RecInfoFlash2";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["RecCtrlRelease"] = 50331664] = "RecCtrlRelease";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ImageMode"] = 33554592] = "ImageMode";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ImageMode_Param"] = 33554593] = "ImageMode_Param";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ImageMode_Quality"] = 33554594] = "ImageMode_Quality";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["ImageMode_ImageAspect"] = 33554595] = "ImageMode_ImageAspect";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["Liveview_TransImg"] = 226492433] = "Liveview_TransImg";
+    DevicePropCodePanasonic[DevicePropCodePanasonic["Liveview_RecomImg"] = 226492434] = "Liveview_RecomImg";
 })(DevicePropCodePanasonic || (DevicePropCodePanasonic = {
 }));
 var ObjectFormatCodePanasonic;
-(function(ObjectFormatCodePanasonic1) {
-    ObjectFormatCodePanasonic1[ObjectFormatCodePanasonic1["Raw"] = 14336] = "Raw";
+(function(ObjectFormatCodePanasonic) {
+    ObjectFormatCodePanasonic[ObjectFormatCodePanasonic["Raw"] = 14336] = "Raw";
 })(ObjectFormatCodePanasonic || (ObjectFormatCodePanasonic = {
 }));
 class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
@@ -26214,17 +25736,9 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
             'colorTemperature',
             'colorMode',
             'imageAspect',
-            'imageQuality', 
-        ];
-    }
-    async listActions() {
-        return [
-            ...await super.listActions(),
-            'takePicture',
-            'startLiveview',
-            'stopLiveview',
-            'runAutoFocus',
-            'runManualFocus', 
+            'imageQuality',
+            'liveviewEnabled',
+            'liveviewSize', 
         ];
     }
     async set(name, value) {
@@ -26244,7 +25758,7 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
         const dataView = new _ptpdataView.PTPDataView();
         const encodedValue = encode(value);
         if (encodedValue === null) return {
-            status: 'invalid'
+            status: 'invalid parameter'
         };
         dataView.writeUint32(setCode);
         dataView.writeUint32(valueSize);
@@ -26260,13 +25774,42 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
             data: dataView.toBuffer()
         });
         return {
-            status: succeed ? 'ok' : 'invalid'
+            status: succeed ? 'ok' : 'invalid parameter'
         };
     }
-    getDesc(name) {
+    async getDesc(name) {
         const scheme = this.devicePropSchemePanasonic[name] ?? null;
         if (scheme) return this.getDevicePropDescPanasonic(scheme);
-        if (name === 'liveviewSize') return this.getLiveviewSizeDesc();
+        switch(name){
+            case 'canTakePicture':
+            case 'canRunAutoFocus':
+            case 'canRunManualFocus':
+            case 'canStartLiveview':
+                return {
+                    writable: false,
+                    value: true,
+                    options: []
+                };
+            case 'liveviewSize':
+                return this.getLiveviewSizeDesc();
+            case 'liveviewEnabled':
+                return {
+                    writable: false,
+                    value: this.liveviewEnabled,
+                    options: []
+                };
+            case 'manualFocusOptions':
+                return {
+                    writable: false,
+                    value: [
+                        'near:2',
+                        'near:1',
+                        'far:1',
+                        'far:2'
+                    ],
+                    options: []
+                };
+        }
         return super.getDesc(name);
     }
     async getDevicePropDescPanasonic(scheme) {
@@ -26323,14 +25866,14 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
             ]
         });
         const infos = await new Promise((resolve)=>{
-            const infos1 = [];
+            const infos = [];
             const onObjectAdded = async (ev)=>{
                 const objectID = ev.parameters[0];
                 const info = await this.getObjectInfo(objectID);
                 switch(info.format){
                     case 'jpeg':
                     case 'raw':
-                        infos1.push(info);
+                        infos.push(info);
                         break;
                     case 'association':
                         // Ignore folder
@@ -26338,14 +25881,17 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
                     default:
                         throw new Error('Received unexpected objectFormat' + info.format);
                 }
-                if ((--restNumPhotos) === 0) {
+                if (--restNumPhotos === 0) {
                     this.device.offEventCode(EventCodePanasonic.ObjectAdded, onObjectAdded);
-                    resolve(infos1);
+                    resolve(infos);
                 }
             };
             this.device.onEventCode(EventCodePanasonic.ObjectAdded, onObjectAdded);
         });
-        if (!download) return null;
+        if (!download) return {
+            status: 'ok',
+            value: []
+        };
         const objects = [];
         for (const info of infos){
             const data = await this.getObject(info.id);
@@ -26361,12 +25907,17 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
                 blob
             });
         }
-        return objects;
+        return {
+            status: 'ok',
+            value: objects
+        };
     }
     async startLiveview() {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        if (!ctx) return null;
+        if (!ctx) return {
+            status: 'general error'
+        };
         await this.device.sendCommand({
             label: 'Panasonic Liveview',
             opcode: OpCodePanasonic.Liveview,
@@ -26374,9 +25925,10 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
                 218103824
             ]
         });
-        this._liveviewing = true;
+        this.liveviewEnabled = true;
+        this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'));
         const updateFrame = async ()=>{
-            if (!this._liveviewing) return;
+            if (!this.liveviewEnabled) return;
             try {
                 const image = await this.getLiveview();
                 if (!image) return;
@@ -26393,7 +25945,10 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
         };
         updateFrame();
         const stream = canvas.captureStream(60);
-        return stream;
+        return {
+            status: 'ok',
+            value: stream
+        };
     }
     async stopLiveview() {
         await this.device.sendCommand({
@@ -26403,15 +25958,19 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
                 218103825
             ]
         });
-        this._liveviewing = false;
+        this.liveviewEnabled = false;
+        this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'));
+        return {
+            status: 'ok'
+        };
     }
     async getLiveviewSizeDesc() {
         const setting = await this.getLiveviewSetting();
         const settingOptions = await this.getLiveviewRecommendedSettings();
         const value = getSizeStringFromSetting(setting);
         const options = settingOptions.map(getSizeStringFromSetting);
-        function getSizeStringFromSetting(setting1) {
-            return `${setting1.width}x${setting1.height}`;
+        function getSizeStringFromSetting(setting) {
+            return `${setting.width}x${setting.height}`;
         }
         return {
             writable: options.length > 0,
@@ -26425,7 +25984,7 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
         const setting = settings.find((s)=>s.width === width && s.height === height
         );
         if (!setting) return {
-            status: 'invalid'
+            status: 'invalid parameter'
         };
         await this.setLiveviewSetting(setting);
         return {
@@ -26444,7 +26003,7 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
         /*const dataSize =*/ dataView.readUint32();
         const settingsNum = dataView.readUint16();
         /*const structSize =*/ dataView.readUint16();
-        const settings = _lodashDefault.default.times(settingsNum, ()=>{
+        const settings = _lodash.times(settingsNum, ()=>{
             return {
                 height: dataView.readUint16(),
                 width: dataView.readUint16(),
@@ -26536,16 +26095,18 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
         return image;
     }
     async runManualFocus(option) {
-        const { direction , speed  } = option;
+        const [direction, speed] = option.split(':');
         let mode = 0;
         if (direction === 'far') {
-            if (speed === 1) mode = 2;
-            else if (speed === 2) mode = 1;
+            if (speed === '1') mode = 2;
+            else if (speed === '2') mode = 1;
         } else if (direction === 'near') {
-            if (speed === 1) mode = 3;
-            else if (speed === 2) mode = 4;
+            if (speed === '1') mode = 3;
+            else if (speed === '2') mode = 4;
         }
-        if (!mode) throw new Error('This speed is not supported');
+        if (!mode) return {
+            status: 'invalid parameter'
+        };
         const devicePropCode = 50397201;
         const dataView = new _ptpdataView.PTPDataView();
         dataView.writeUint32(devicePropCode);
@@ -26559,7 +26120,9 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
             ],
             data: dataView.toBuffer()
         });
-        return true;
+        return {
+            status: 'ok'
+        };
     }
     async runAutoFocus() {
         await this.device.sendCommand({
@@ -26569,14 +26132,16 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
                 50331684
             ]
         });
-        return true;
+        return {
+            status: 'ok'
+        };
     }
     getObjectFormat(code) {
         return (_ptpdatacode.ObjectFormatCode[code] ?? ObjectFormatCodePanasonic[code]).toLowerCase();
     }
     constructor(...args){
         super(...args);
-        this._liveviewing = false;
+        this.liveviewEnabled = false;
         this.devicePropSchemePanasonic = {
             exposureMode: {
                 getCode: DevicePropCodePanasonic.CameraMode_ModePos,
@@ -26688,8 +26253,8 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
             colorTemperature: {
                 getCode: DevicePropCodePanasonic.WhiteBalance_KSet,
                 setCode: DevicePropCodePanasonic.WhiteBalance_KSet,
-                decode: _lodashDefault.default.identity,
-                encode: _lodashDefault.default.identity,
+                decode: _lodash.identity,
+                encode: _lodash.identity,
                 valueSize: 2
             },
             colorMode: {
@@ -27007,212 +26572,21 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
     }
 }
 
-},{"bim":"gfJhS","lodash":"f4H2C","../configs":"2uyxY","../PTPDatacode":"gzikr","../PTPDataView":"6vBdq","../util":"kykCo","./TethrPTPUSB":"7yZjY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"gfJhS":[function(require,module,exports) {
-"use strict";
-var __importDefault = this && this.__importDefault || function(mod) {
-    return mod && mod.__esModule ? mod : {
-        "default": mod
-    };
-};
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.WeakBiMap = exports.BiMap = void 0;
-var BiMap_1 = require("./BiMap");
-Object.defineProperty(exports, "BiMap", {
-    enumerable: true,
-    get: function() {
-        return __importDefault(BiMap_1).default;
-    }
-});
-var WeakBiMap_1 = require("./WeakBiMap");
-Object.defineProperty(exports, "WeakBiMap", {
-    enumerable: true,
-    get: function() {
-        return __importDefault(WeakBiMap_1).default;
-    }
-});
-
-},{"./BiMap":"731Hr","./WeakBiMap":"2yWkl"}],"731Hr":[function(require,module,exports) {
-"use strict";
-var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
-};
-var __classPrivateFieldGet = this && this.__classPrivateFieldGet || function(receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _BiMap_left, _BiMap_right;
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-class BiMap {
-    constructor(iterable){
-        _BiMap_left.set(this, void 0);
-        _BiMap_right.set(this, void 0);
-        __classPrivateFieldSet(this, _BiMap_left, new Map(), "f");
-        __classPrivateFieldSet(this, _BiMap_right, new Map(), "f");
-        if (iterable === undefined) return;
-        for (const [k, v] of iterable){
-            __classPrivateFieldGet(this, _BiMap_left, "f").set(k, v);
-            __classPrivateFieldGet(this, _BiMap_right, "f").set(v, k);
-        }
-    }
-    clear() {
-        __classPrivateFieldGet(this, _BiMap_left, "f").clear();
-        __classPrivateFieldGet(this, _BiMap_right, "f").clear();
-    }
-    delete(key) {
-        const val = __classPrivateFieldGet(this, _BiMap_left, "f").get(key);
-        if (!__classPrivateFieldGet(this, _BiMap_right, "f").has(val)) return false;
-        __classPrivateFieldGet(this, _BiMap_right, "f").delete(val);
-        return __classPrivateFieldGet(this, _BiMap_left, "f").delete(key);
-    }
-    entries() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").entries();
-    }
-    forEach(callbackfn, thisArg) {
-        __classPrivateFieldGet(this, _BiMap_left, "f").forEach(callbackfn, thisArg);
-    }
-    get(key) {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").get(key);
-    }
-    has(key) {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").has(key);
-    }
-    keys() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").keys();
-    }
-    set(key, value) {
-        const left = __classPrivateFieldGet(this, _BiMap_left, "f");
-        const right = __classPrivateFieldGet(this, _BiMap_right, "f");
-        const oldVal = left.get(key);
-        const oldKey = right.get(value);
-        if (left.has(key)) right.delete(oldVal);
-        if (right.has(value)) left.delete(oldKey);
-        left.set(key, value);
-        right.set(value, key);
-        return this;
-    }
-    get size() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").size;
-    }
-    values() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").values();
-    }
-    [(_BiMap_left = new WeakMap(), _BiMap_right = new WeakMap(), Symbol.iterator)]() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f")[Symbol.iterator]();
-    }
-    get [Symbol.toStringTag]() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f")[Symbol.toStringTag];
-    }
-    deleteValue(value) {
-        const key = __classPrivateFieldGet(this, _BiMap_right, "f").get(value);
-        if (!__classPrivateFieldGet(this, _BiMap_left, "f").has(key)) return false;
-        __classPrivateFieldGet(this, _BiMap_left, "f").delete(key);
-        return __classPrivateFieldGet(this, _BiMap_right, "f").delete(value);
-    }
-    getKey(value) {
-        return __classPrivateFieldGet(this, _BiMap_right, "f").get(value);
-    }
-    hasValue(value) {
-        return __classPrivateFieldGet(this, _BiMap_right, "f").has(value);
-    }
-}
-exports.default = BiMap;
-
-},{}],"2yWkl":[function(require,module,exports) {
-"use strict";
-var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
-};
-var __classPrivateFieldGet = this && this.__classPrivateFieldGet || function(receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _WeakBiMap_left, _WeakBiMap_right;
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-class WeakBiMap {
-    constructor(iterable){
-        _WeakBiMap_left.set(this, void 0);
-        _WeakBiMap_right.set(this, void 0);
-        __classPrivateFieldSet(this, _WeakBiMap_left, new WeakMap(), "f");
-        __classPrivateFieldSet(this, _WeakBiMap_right, new WeakMap(), "f");
-        if (iterable === undefined) return;
-        for (const [k, v] of iterable){
-            __classPrivateFieldGet(this, _WeakBiMap_left, "f").set(k, v);
-            __classPrivateFieldGet(this, _WeakBiMap_right, "f").set(v, k);
-        }
-    }
-    delete(key) {
-        const val = __classPrivateFieldGet(this, _WeakBiMap_left, "f").get(key);
-        if (!__classPrivateFieldGet(this, _WeakBiMap_right, "f").has(val)) return false;
-        __classPrivateFieldGet(this, _WeakBiMap_right, "f").delete(val);
-        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").delete(key);
-    }
-    get(key) {
-        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").get(key);
-    }
-    has(key) {
-        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").has(key);
-    }
-    set(key, value) {
-        const left = __classPrivateFieldGet(this, _WeakBiMap_left, "f");
-        const right = __classPrivateFieldGet(this, _WeakBiMap_right, "f");
-        const oldVal = left.get(key);
-        const oldKey = right.get(value);
-        if (left.has(key)) right.delete(oldVal);
-        if (right.has(value)) left.delete(oldKey);
-        left.set(key, value);
-        right.set(value, key);
-        return this;
-    }
-    get [(_WeakBiMap_left = new WeakMap(), _WeakBiMap_right = new WeakMap(), Symbol.toStringTag)]() {
-        return __classPrivateFieldGet(this, _WeakBiMap_left, "f")[Symbol.toStringTag];
-    }
-    deleteValue(value) {
-        const key = __classPrivateFieldGet(this, _WeakBiMap_right, "f").get(value);
-        if (!__classPrivateFieldGet(this, _WeakBiMap_left, "f").has(key)) return false;
-        __classPrivateFieldGet(this, _WeakBiMap_left, "f").delete(key);
-        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").delete(value);
-    }
-    getKey(value) {
-        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").get(value);
-    }
-    hasValue(value) {
-        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").has(value);
-    }
-}
-exports.default = WeakBiMap;
-
-},{}],"7yZjY":[function(require,module,exports) {
+},{"bim":"fiCRV","lodash":"4nfxA","../configs":"6m2W9","../PTPDatacode":"dzGjw","../PTPDataView":"2SXC8","../util":"id2fi","./TethrPTPUSB":"anSbZ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"anSbZ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TethrPTPUSB", ()=>TethrPTPUSB
 );
-var _bim = require("bim");
 var _lodash = require("lodash");
-var _lodashDefault = parcelHelpers.interopDefault(_lodash);
 var _configs = require("../configs");
 var _ptpdatacode = require("../PTPDatacode");
 var _ptpdataView = require("../PTPDataView");
-var _ptpenum = require("../PTPEnum");
 var _tethr = require("../Tethr");
 var _util = require("../util");
 class TethrPTPUSB extends _tethr.Tethr {
-    constructor(device1){
+    constructor(device){
         super();
-        this.device = device1;
+        this.device = device;
         this._opened = false;
         this.getStorageInfo = async ()=>{
             const { data  } = await this.device.receiveData({
@@ -27223,18 +26597,18 @@ class TethrPTPUSB extends _tethr.Tethr {
             const storageIDs = dataView.readUint32Array();
             console.log('Storage IDs =', storageIDs);
             for (const id of storageIDs){
-                const { data: data1  } = await this.device.receiveData({
+                const { data  } = await this.device.receiveData({
                     label: 'GetStorageInfo',
                     parameters: [
                         id
                     ],
                     opcode: _ptpdatacode.OpCode.GetStorageInfo
                 });
-                const storageInfo = new _ptpdataView.PTPDataView(data1);
+                const storageInfo = new _ptpdataView.PTPDataView(data);
                 const info = {
-                    storageType: _ptpenum.PTPStorageType[storageInfo.readUint16()],
-                    filesystemType: _ptpenum.PTPFilesystemType[storageInfo.readUint16()],
-                    accessCapability: _ptpenum.PTPAccessCapability[storageInfo.readUint16()],
+                    storageType: _ptpdatacode.PTPStorageTypeCode[storageInfo.readUint16()],
+                    filesystemType: _ptpdatacode.PTPFilesystemTypeCode[storageInfo.readUint16()],
+                    accessCapability: _ptpdatacode.PTPAccessCapabilityCode[storageInfo.readUint16()],
                     maxCapability: storageInfo.readUint64(),
                     freeSpaceInBytes: storageInfo.readUint64(),
                     freeSpaceInImages: storageInfo.readUint32()
@@ -27257,10 +26631,10 @@ class TethrPTPUSB extends _tethr.Tethr {
                 devicePropCode: _ptpdatacode.DevicePropCode.ExposureProgramMode,
                 dataType: _ptpdatacode.DatatypeCode.Uint16,
                 decode: (data)=>{
-                    return this.exposureModeTable.get(data) ?? `vendor ${_util.toHexString(data, 4)}`;
+                    return _configs.ExposureModeTable.get(data) ?? `vendor ${_util.toHexString(data, 4)}`;
                 },
                 encode: (value)=>{
-                    return this.exposureModeTable.getKey(value) ?? parseInt(value.replace('vendor ', ''), 16);
+                    return _configs.ExposureModeTable.getKey(value) ?? parseInt(value.replace('vendor ', ''), 16);
                 }
             },
             exposureComp: {
@@ -27314,10 +26688,10 @@ class TethrPTPUSB extends _tethr.Tethr {
                 devicePropCode: _ptpdatacode.DevicePropCode.WhiteBalance,
                 dataType: _ptpdatacode.DatatypeCode.Uint16,
                 decode: (data)=>{
-                    return this.whiteBalanceTable.get(data) ?? `vendor ${_util.toHexString(data, 4)}`;
+                    return _configs.WhiteBalanceTable.get(data) ?? `vendor ${_util.toHexString(data, 4)}`;
                 },
                 encode: (value)=>{
-                    return this.whiteBalanceTable.getKey(value) ?? parseInt(value.replace(/^vendor /, ''), 16);
+                    return _configs.WhiteBalanceTable.getKey(value) ?? parseInt(value.replace(/^vendor /, ''), 16);
                 }
             },
             iso: {
@@ -27335,172 +26709,44 @@ class TethrPTPUSB extends _tethr.Tethr {
             captureDelay: {
                 devicePropCode: _ptpdatacode.DevicePropCode.CaptureDelay,
                 dataType: _ptpdatacode.DatatypeCode.Uint32,
-                decode: _lodashDefault.default.identity,
-                encode: _lodashDefault.default.identity
+                decode: _lodash.identity,
+                encode: _lodash.identity
             },
             driveMode: {
                 devicePropCode: _ptpdatacode.DevicePropCode.StillCaptureMode,
                 dataType: _ptpdatacode.DatatypeCode.Uint16,
                 decode: (data)=>{
-                    return this.driveModeTable.get(data) ?? 'normal';
+                    return _configs.DriveModeTable.get(data) ?? 'normal';
                 },
                 encode: (value)=>{
-                    return this.driveModeTable.getKey(value) ?? 0;
+                    return _configs.DriveModeTable.getKey(value) ?? 0;
                 }
             },
             imageSize: {
                 devicePropCode: _ptpdatacode.DevicePropCode.ImageSize,
                 dataType: _ptpdatacode.DatatypeCode.String,
-                decode: _lodashDefault.default.identity,
-                encode: _lodashDefault.default.identity
+                decode: _lodash.identity,
+                encode: _lodash.identity
             },
             timelapseNumber: {
                 devicePropCode: _ptpdatacode.DevicePropCode.TimelapseNumber,
                 dataType: _ptpdatacode.DatatypeCode.Uint16,
-                decode: _lodashDefault.default.identity,
-                encode: _lodashDefault.default.identity
+                decode: _lodash.identity,
+                encode: _lodash.identity
             },
             timelapseInterval: {
                 devicePropCode: _ptpdatacode.DevicePropCode.TimelapseInterval,
                 dataType: _ptpdatacode.DatatypeCode.Uint32,
-                decode: _lodashDefault.default.identity,
-                encode: _lodashDefault.default.identity
+                decode: _lodash.identity,
+                encode: _lodash.identity
             },
             batteryLevel: {
                 devicePropCode: _ptpdatacode.DevicePropCode.BatteryLevel,
                 dataType: _ptpdatacode.DatatypeCode.Uint8,
-                decode: _lodashDefault.default.identity,
-                encode: _lodashDefault.default.identity
+                decode: _lodash.identity,
+                encode: _lodash.identity
             }
         };
-        this.devicePropTable = new _bim.BiMap([
-            [
-                20481,
-                'batteryLevel'
-            ],
-            [
-                20485,
-                'whiteBalance'
-            ],
-            [
-                20487,
-                'aperture'
-            ],
-            [
-                20488,
-                'focalLength'
-            ],
-            [
-                20489,
-                'focusDistance'
-            ],
-            [
-                20493,
-                'shutterSpeed'
-            ],
-            [
-                20494,
-                'exposureMode'
-            ],
-            [
-                20495,
-                'iso'
-            ],
-            [
-                20496,
-                'exposureComp'
-            ],
-            [
-                20498,
-                'captureDelay'
-            ],
-            [
-                20499,
-                'driveMode'
-            ],
-            [
-                20503,
-                'colorMode'
-            ],
-            [
-                20506,
-                'timelapseNumber'
-            ],
-            [
-                20507,
-                'timelapseInterval'
-            ], 
-        ]);
-        this.exposureModeTable = new _bim.BiMap([
-            [
-                1,
-                'M'
-            ],
-            [
-                2,
-                'P'
-            ],
-            [
-                3,
-                'A'
-            ],
-            [
-                4,
-                'S'
-            ],
-            [
-                5,
-                'creative'
-            ],
-            [
-                6,
-                'action'
-            ],
-            [
-                7,
-                'portrait'
-            ], 
-        ]);
-        this.whiteBalanceTable = new _bim.BiMap([
-            [
-                1,
-                'manual'
-            ],
-            [
-                2,
-                'auto'
-            ],
-            [
-                3,
-                'custom'
-            ],
-            [
-                4,
-                'daylight'
-            ],
-            [
-                5,
-                'fluorescent'
-            ],
-            [
-                6,
-                'tungsten'
-            ], 
-        ]);
-        this.driveModeTable = new _bim.BiMap([
-            [
-                1,
-                'normal'
-            ],
-            [
-                2,
-                'burst'
-            ],
-            [
-                3,
-                'timelapse'
-            ], 
-        ]);
     }
     get opened() {
         return this._opened;
@@ -27540,16 +26786,20 @@ class TethrPTPUSB extends _tethr.Tethr {
             'model'
         ];
         const deviceProps = devicePropsSupported.map(getConfigNameByDevicePropCode);
+        const actionSupportedFlags = [
+            'canTakePicture',
+            'canRunAutoFocus',
+            'canRunManualFocus',
+            'canStartLiveview', 
+        ];
         function getConfigNameByDevicePropCode(code) {
             return _ptpdatacode.DevicePropCode[code] ?? _util.toHexString(code, 4);
         }
         return [
             ...deviceInfos,
-            ...deviceProps
+            ...deviceProps,
+            ...actionSupportedFlags, 
         ];
-    }
-    async listActions() {
-        return [];
     }
     async set(name, value) {
         const scheme = this.devicePropScheme[name];
@@ -27562,7 +26812,7 @@ class TethrPTPUSB extends _tethr.Tethr {
         const encode = scheme.encode;
         const devicePropData = encode(value);
         if (devicePropData === null) return {
-            status: 'invalid'
+            status: 'invalid parameter'
         };
         const dataView = new _ptpdataView.PTPDataView();
         switch(scheme.dataType){
@@ -27615,13 +26865,34 @@ class TethrPTPUSB extends _tethr.Tethr {
     async getDesc(name) {
         const scheme = this.devicePropScheme[name];
         if (scheme) return await this.getDevicePropDesc(scheme);
-        if (name === 'model') {
-            const value = (await this.getDeviceInfo()).model;
-            return {
-                writable: false,
-                value: value,
-                options: []
-            };
+        switch(name){
+            case 'model':
+                {
+                    const value = (await this.getDeviceInfo()).model;
+                    return {
+                        writable: false,
+                        value: value,
+                        options: []
+                    };
+                }
+            case 'canTakePicture':
+                {
+                    const { operationsSupported  } = await this.getDeviceInfo();
+                    const can = operationsSupported.includes(_ptpdatacode.OpCode.InitiateCapture);
+                    return {
+                        writable: false,
+                        value: can,
+                        options: []
+                    };
+                }
+            case 'canRunAutoFocus':
+            case 'canRunManualFocus':
+            case 'canStartLiveview':
+                return {
+                    writable: false,
+                    value: false,
+                    options: []
+                };
         }
         return {
             writable: false,
@@ -27692,14 +26963,14 @@ class TethrPTPUSB extends _tethr.Tethr {
                     const max = decode(readValue());
                     const step = decode(readValue());
                     if (typeof min !== 'number' || typeof max !== 'number' || typeof step !== 'number') throw new Error(`Cannot enumerate supported values of device config`);
-                    options = _lodashDefault.default.range(min, max, step);
+                    options = _lodash.range(min, max, step);
                     break;
                 }
             case 2:
                 {
                     // Enumeration
                     const length = dataView.readUint16();
-                    options = _lodashDefault.default.times(length, readValue).map(decode);
+                    options = _lodash.times(length, readValue).map(decode);
                     break;
                 }
             default:
@@ -27716,14 +26987,22 @@ class TethrPTPUSB extends _tethr.Tethr {
         return devicePropsSupported.includes(code);
     }
     async runAutoFocus() {
-        return false;
+        return {
+            status: 'unsupported'
+        };
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async runManualFocus(option) {
-        return false;
+    async runManualFocus(// eslint-disable-next-line @typescript-eslint/no-unused-vars
+    option) {
+        return {
+            status: 'unsupported'
+        };
     }
     async takePicture({ download =true  } = {
     }) {
+        const { operationsSupported  } = await this.getDeviceInfo();
+        if (!operationsSupported.includes(_ptpdatacode.OpCode.InitiateCapture)) return {
+            status: 'unsupported'
+        };
         await this.device.sendCommand({
             label: 'InitiateCapture',
             opcode: _ptpdatacode.OpCode.InitiateCapture,
@@ -27732,7 +27011,10 @@ class TethrPTPUSB extends _tethr.Tethr {
             ]
         });
         const objectAddedEvent = await this.device.waitEvent(_ptpdatacode.EventCode.ObjectAdded);
-        if (!download) return null;
+        if (!download) return {
+            status: 'ok',
+            value: []
+        };
         const objectID = objectAddedEvent.parameters[0];
         const objectInfo = await this.getObjectInfo(objectID);
         const objectBuffer = await this.getObject(objectID);
@@ -27744,18 +27026,22 @@ class TethrPTPUSB extends _tethr.Tethr {
                 type: 'image/jpeg'
             })
         };
-        return [
-            tethrObject
-        ];
+        return {
+            status: 'ok',
+            value: [
+                tethrObject
+            ]
+        };
     }
     async startLiveview() {
-        return null;
+        return {
+            status: 'unsupported'
+        };
     }
     async stopLiveview() {
-        return;
-    }
-    get liveviewing() {
-        return false;
+        return {
+            status: 'unsupported'
+        };
     }
     async getObjectInfo(id) {
         const { data  } = await this.device.receiveData({
@@ -27828,48 +27114,14 @@ class TethrPTPUSB extends _tethr.Tethr {
         };
     }
     getConfigNameFromCode(devicePropCode) {
-        return this.devicePropTable.get(devicePropCode) ?? null;
+        return _configs.ConfigForDevicePropTable.get(devicePropCode) ?? null;
     }
     getObjectFormat(code) {
         return _ptpdatacode.ObjectFormatCode[code].toLowerCase();
     }
 }
 
-},{"bim":"gfJhS","lodash":"f4H2C","../configs":"2uyxY","../PTPDatacode":"gzikr","../PTPDataView":"6vBdq","../PTPEnum":"62MVh","../Tethr":"kne57","../util":"kykCo","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"62MVh":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "PTPStorageType", ()=>PTPStorageType
-);
-parcelHelpers.export(exports, "PTPFilesystemType", ()=>PTPFilesystemType
-);
-parcelHelpers.export(exports, "PTPAccessCapability", ()=>PTPAccessCapability
-);
-var PTPStorageType;
-(function(PTPStorageType1) {
-    PTPStorageType1[PTPStorageType1["Undefined"] = 0] = "Undefined";
-    PTPStorageType1[PTPStorageType1["FixedROM"] = 1] = "FixedROM";
-    PTPStorageType1[PTPStorageType1["RemovableROM"] = 2] = "RemovableROM";
-    PTPStorageType1[PTPStorageType1["FixedRAM"] = 3] = "FixedRAM";
-    PTPStorageType1[PTPStorageType1["RemovableRAM"] = 4] = "RemovableRAM";
-})(PTPStorageType || (PTPStorageType = {
-}));
-var PTPFilesystemType;
-(function(PTPFilesystemType1) {
-    PTPFilesystemType1[PTPFilesystemType1["Undefined"] = 0] = "Undefined";
-    PTPFilesystemType1[PTPFilesystemType1["GenericFlat"] = 1] = "GenericFlat";
-    PTPFilesystemType1[PTPFilesystemType1["GenericHierarchical"] = 2] = "GenericHierarchical";
-    PTPFilesystemType1[PTPFilesystemType1["DCF"] = 3] = "DCF";
-})(PTPFilesystemType || (PTPFilesystemType = {
-}));
-var PTPAccessCapability;
-(function(PTPAccessCapability1) {
-    PTPAccessCapability1[PTPAccessCapability1["ReadWrite"] = 0] = "ReadWrite";
-    PTPAccessCapability1[PTPAccessCapability1["ReadOnlyWithoutObjectDeletion"] = 1] = "ReadOnlyWithoutObjectDeletion";
-    PTPAccessCapability1[PTPAccessCapability1["ReadOnlyWithObjectDeletion"] = 2] = "ReadOnlyWithObjectDeletion";
-})(PTPAccessCapability || (PTPAccessCapability = {
-}));
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"kne57":[function(require,module,exports) {
+},{"lodash":"4nfxA","../configs":"6m2W9","../PTPDatacode":"dzGjw","../PTPDataView":"2SXC8","../Tethr":"cDt1x","../util":"id2fi","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"cDt1x":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Tethr", ()=>Tethr
@@ -27882,20 +27134,20 @@ class Tethr extends _eventemitter3Default.default {
     }
 }
 
-},{"eventemitter3":"gTdcb","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"dU2Xp":[function(require,module,exports) {
+},{"eventemitter3":"5J6rp","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"4nPBX":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TethrRicohTheta", ()=>TethrRicohTheta
 );
 var _bim = require("bim");
 var _lodash = require("lodash");
-var _lodashDefault = parcelHelpers.interopDefault(_lodash);
+var _configs = require("../configs");
 var _ptpdatacode = require("../PTPDatacode");
 var _tethrPTPUSB = require("./TethrPTPUSB");
 var DevicePropCodeRicohTheta;
-(function(DevicePropCodeRicohTheta1) {
-    DevicePropCodeRicohTheta1[DevicePropCodeRicohTheta1["ShutterSpeed"] = 53263] = "ShutterSpeed";
-    DevicePropCodeRicohTheta1[DevicePropCodeRicohTheta1["ColorTemperature"] = 55315] = "ColorTemperature";
+(function(DevicePropCodeRicohTheta) {
+    DevicePropCodeRicohTheta[DevicePropCodeRicohTheta["ShutterSpeed"] = 53263] = "ShutterSpeed";
+    DevicePropCodeRicohTheta[DevicePropCodeRicohTheta["ColorTemperature"] = 55315] = "ColorTemperature";
 })(DevicePropCodeRicohTheta || (DevicePropCodeRicohTheta = {
 }));
 class TethrRicohTheta extends _tethrPTPUSB.TethrPTPUSB {
@@ -27911,70 +27163,103 @@ class TethrRicohTheta extends _tethrPTPUSB.TethrPTPUSB {
         super(...args);
         this.devicePropScheme = (()=>{
             const devicePropScheme = {
-                ...super.devicePropScheme,
+                ...this.devicePropScheme,
                 shutterSpeed: {
                     devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
                     dataType: _ptpdatacode.DatatypeCode.Uint64,
                     encode: function(str) {
                         let fraction, denominator;
-                        if (str.endsWith('"')) {
-                            const secs = parseFloat(str.slice(0, -1));
-                            denominator = secs % 1 > 0 ? 10 : 1;
-                            fraction = Math.round(secs * denominator);
-                        } else {
+                        if (str.includes('/')) {
                             const [fractionStr, denominatorStr] = str.split('/');
                             fraction = parseInt(fractionStr);
                             denominator = parseInt(denominatorStr);
+                        } else {
+                            const secs = parseFloat(str);
+                            denominator = secs % 1 > 0 ? 10 : 1;
+                            fraction = Math.round(secs * denominator);
                         }
                         return BigInt(denominator) << BigInt(32) | BigInt(fraction);
                     },
                     decode: function(num) {
                         const denominator = Number(num >> BigInt(32));
                         const fraction = Number(num & BigInt(4294967295));
-                        if (denominator === 1 || denominator === 10) return fraction / denominator + '"';
+                        if (denominator === 1 || denominator === 10) return (fraction / denominator).toString();
                         return fraction + '/' + denominator;
                     }
                 },
                 colorTemperature: {
                     devicePropCode: DevicePropCodeRicohTheta.ColorTemperature,
                     dataType: _ptpdatacode.DatatypeCode.Uint16,
-                    decode: _lodashDefault.default.identity,
-                    encode: _lodashDefault.default.identity
+                    decode: _lodash.identity,
+                    encode: _lodash.identity
                 }
             };
             return devicePropScheme;
         })();
-        this.exposureModeTable = (()=>{
-            const table = new _bim.BiMap(super.exposureModeTable.entries());
-            table.set(32771, 'vendor iso-priority');
-            return table;
-        })();
-        this.WhiteBalanceTable = (()=>{
-            const table = new _bim.BiMap(super.whiteBalanceTable.entries());
-            table.set(32769, 'shade');
-            table.set(4, 'daylight');
-            table.set(6, 'incandescent');
-            table.set(32770, 'cloud');
-            table.set(32800, 'vendor incandescent 2');
-            table.set(32771, 'vendor fluorescent daylight');
-            table.set(32772, 'vendor fluorescent natural white');
-            table.set(32773, 'vendor fluorescent white');
-            table.set(32774, 'tungsten');
-            table.set(32775, 'manual');
-            table.set(32776, 'underwater');
-            return table;
-        })();
+        this.exposureModeTable = new _bim.BiMap([
+            ..._configs.ExposureModeTable.entries(),
+            [
+                32771,
+                'vendor iso-priority'
+            ], 
+        ]);
+        this.WhiteBalanceTable = new _bim.BiMap([
+            ..._configs.WhiteBalanceTable.entries(),
+            [
+                32769,
+                'shade'
+            ],
+            [
+                4,
+                'daylight'
+            ],
+            [
+                6,
+                'incandescent'
+            ],
+            [
+                32770,
+                'cloud'
+            ],
+            [
+                32800,
+                'vendor incandescent 2'
+            ],
+            [
+                32771,
+                'vendor fluorescent daylight'
+            ],
+            [
+                32772,
+                'vendor fluorescent natural white'
+            ],
+            [
+                32773,
+                'vendor fluorescent white'
+            ],
+            [
+                32774,
+                'tungsten'
+            ],
+            [
+                32775,
+                'manual'
+            ],
+            [
+                32776,
+                'underwater'
+            ], 
+        ]);
     }
 }
 
-},{"bim":"gfJhS","lodash":"f4H2C","../PTPDatacode":"gzikr","./TethrPTPUSB":"7yZjY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"aoRyW":[function(require,module,exports) {
+},{"bim":"fiCRV","lodash":"4nfxA","../configs":"6m2W9","../PTPDatacode":"dzGjw","./TethrPTPUSB":"anSbZ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"ilHr2":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TethrSigma", ()=>TethrSigma
 );
 var _bim = require("bim");
 var _lodash = require("lodash");
-var _lodashDefault = parcelHelpers.interopDefault(_lodash);
 var _sleepPromise = require("sleep-promise");
 var _sleepPromiseDefault = parcelHelpers.interopDefault(_sleepPromise);
 var _configs = require("../configs");
@@ -27984,78 +27269,78 @@ var _ptpdataView = require("../PTPDataView");
 var _util = require("../util");
 var _ = require(".");
 var OpCodeSigma;
-(function(OpCodeSigma1) {
-    OpCodeSigma1[OpCodeSigma1["GetCamConfig"] = 36880] = "GetCamConfig";
-    OpCodeSigma1[OpCodeSigma1["GetCamStatus"] = 36881] = "GetCamStatus";
-    OpCodeSigma1[OpCodeSigma1["GetCamDataGroup1"] = 36882] = "GetCamDataGroup1";
-    OpCodeSigma1[OpCodeSigma1["GetCamDataGroup2"] = 36883] = "GetCamDataGroup2";
-    OpCodeSigma1[OpCodeSigma1["GetCamDataGroup3"] = 36884] = "GetCamDataGroup3";
-    OpCodeSigma1[OpCodeSigma1["GetCamCaptStatus"] = 36885] = "GetCamCaptStatus";
-    OpCodeSigma1[OpCodeSigma1["SetCamDataGroup1"] = 36886] = "SetCamDataGroup1";
-    OpCodeSigma1[OpCodeSigma1["SetCamDataGroup2"] = 36887] = "SetCamDataGroup2";
-    OpCodeSigma1[OpCodeSigma1["SetCamDataGroup3"] = 36888] = "SetCamDataGroup3";
-    OpCodeSigma1[OpCodeSigma1["SetCamClockAdj"] = 36889] = "SetCamClockAdj";
-    OpCodeSigma1[OpCodeSigma1["GetCamCanSetInfo"] = 36890] = "GetCamCanSetInfo";
-    OpCodeSigma1[OpCodeSigma1["SnapCommand"] = 36891] = "SnapCommand";
-    OpCodeSigma1[OpCodeSigma1["ClearImageDBSingle"] = 36892] = "ClearImageDBSingle";
-    OpCodeSigma1[OpCodeSigma1["ClearImageDBAll"] = 36893] = "ClearImageDBAll";
-    OpCodeSigma1[OpCodeSigma1["GetPictFileInfo"] = 36896] = "GetPictFileInfo";
-    OpCodeSigma1[OpCodeSigma1["GetPartialPictFile"] = 36897] = "GetPartialPictFile";
-    OpCodeSigma1[OpCodeSigma1["GetBigPartialPictFile"] = 36898] = "GetBigPartialPictFile";
-    OpCodeSigma1[OpCodeSigma1["GetCamDataGroup4"] = 36899] = "GetCamDataGroup4";
-    OpCodeSigma1[OpCodeSigma1["SetCamDataGroup4"] = 36900] = "SetCamDataGroup4";
-    OpCodeSigma1[OpCodeSigma1["GetCamCanSetInfo2"] = 36901] = "GetCamCanSetInfo2";
-    OpCodeSigma1[OpCodeSigma1["GetCamCanSetInfo3"] = 36902] = "GetCamCanSetInfo3";
-    OpCodeSigma1[OpCodeSigma1["GetCamDataGroup5"] = 36903] = "GetCamDataGroup5";
-    OpCodeSigma1[OpCodeSigma1["SetCamDataGroup5"] = 36904] = "SetCamDataGroup5";
-    OpCodeSigma1[OpCodeSigma1["GetCamDataGroup6"] = 36905] = "GetCamDataGroup6";
-    OpCodeSigma1[OpCodeSigma1["SetCamDataGroup6"] = 36906] = "SetCamDataGroup6";
-    OpCodeSigma1[OpCodeSigma1["GetViewFrame"] = 36907] = "GetViewFrame";
-    OpCodeSigma1[OpCodeSigma1["GetCamCanSetInfo4"] = 36910] = "GetCamCanSetInfo4";
-    OpCodeSigma1[OpCodeSigma1["GetCamStatus2"] = 36908] = "GetCamStatus2";
-    OpCodeSigma1[OpCodeSigma1["GetPictFileInfo2"] = 36909] = "GetPictFileInfo2";
-    OpCodeSigma1[OpCodeSigma1["CloseApplication"] = 36911] = "CloseApplication";
-    OpCodeSigma1[OpCodeSigma1["GetCamCanSetInfo5"] = 36912] = "GetCamCanSetInfo5";
-    OpCodeSigma1[OpCodeSigma1["GetCamDataGroupFocus"] = 36913] = "GetCamDataGroupFocus";
-    OpCodeSigma1[OpCodeSigma1["SetCamDataGroupFocus"] = 36914] = "SetCamDataGroupFocus";
-    OpCodeSigma1[OpCodeSigma1["GetCamDataGroupMovie"] = 36915] = "GetCamDataGroupMovie";
-    OpCodeSigma1[OpCodeSigma1["SetCamDataGroupMovie"] = 36916] = "SetCamDataGroupMovie";
-    OpCodeSigma1[OpCodeSigma1["ConfigApi"] = 36917] = "ConfigApi";
-    OpCodeSigma1[OpCodeSigma1["GetMovieFileInfo"] = 36918] = "GetMovieFileInfo";
-    OpCodeSigma1[OpCodeSigma1["GetPartialMovieFile"] = 36919] = "GetPartialMovieFile";
+(function(OpCodeSigma) {
+    OpCodeSigma[OpCodeSigma["GetCamConfig"] = 36880] = "GetCamConfig";
+    OpCodeSigma[OpCodeSigma["GetCamStatus"] = 36881] = "GetCamStatus";
+    OpCodeSigma[OpCodeSigma["GetCamDataGroup1"] = 36882] = "GetCamDataGroup1";
+    OpCodeSigma[OpCodeSigma["GetCamDataGroup2"] = 36883] = "GetCamDataGroup2";
+    OpCodeSigma[OpCodeSigma["GetCamDataGroup3"] = 36884] = "GetCamDataGroup3";
+    OpCodeSigma[OpCodeSigma["GetCamCaptStatus"] = 36885] = "GetCamCaptStatus";
+    OpCodeSigma[OpCodeSigma["SetCamDataGroup1"] = 36886] = "SetCamDataGroup1";
+    OpCodeSigma[OpCodeSigma["SetCamDataGroup2"] = 36887] = "SetCamDataGroup2";
+    OpCodeSigma[OpCodeSigma["SetCamDataGroup3"] = 36888] = "SetCamDataGroup3";
+    OpCodeSigma[OpCodeSigma["SetCamClockAdj"] = 36889] = "SetCamClockAdj";
+    OpCodeSigma[OpCodeSigma["GetCamCanSetInfo"] = 36890] = "GetCamCanSetInfo";
+    OpCodeSigma[OpCodeSigma["SnapCommand"] = 36891] = "SnapCommand";
+    OpCodeSigma[OpCodeSigma["ClearImageDBSingle"] = 36892] = "ClearImageDBSingle";
+    OpCodeSigma[OpCodeSigma["ClearImageDBAll"] = 36893] = "ClearImageDBAll";
+    OpCodeSigma[OpCodeSigma["GetPictFileInfo"] = 36896] = "GetPictFileInfo";
+    OpCodeSigma[OpCodeSigma["GetPartialPictFile"] = 36897] = "GetPartialPictFile";
+    OpCodeSigma[OpCodeSigma["GetBigPartialPictFile"] = 36898] = "GetBigPartialPictFile";
+    OpCodeSigma[OpCodeSigma["GetCamDataGroup4"] = 36899] = "GetCamDataGroup4";
+    OpCodeSigma[OpCodeSigma["SetCamDataGroup4"] = 36900] = "SetCamDataGroup4";
+    OpCodeSigma[OpCodeSigma["GetCamCanSetInfo2"] = 36901] = "GetCamCanSetInfo2";
+    OpCodeSigma[OpCodeSigma["GetCamCanSetInfo3"] = 36902] = "GetCamCanSetInfo3";
+    OpCodeSigma[OpCodeSigma["GetCamDataGroup5"] = 36903] = "GetCamDataGroup5";
+    OpCodeSigma[OpCodeSigma["SetCamDataGroup5"] = 36904] = "SetCamDataGroup5";
+    OpCodeSigma[OpCodeSigma["GetCamDataGroup6"] = 36905] = "GetCamDataGroup6";
+    OpCodeSigma[OpCodeSigma["SetCamDataGroup6"] = 36906] = "SetCamDataGroup6";
+    OpCodeSigma[OpCodeSigma["GetViewFrame"] = 36907] = "GetViewFrame";
+    OpCodeSigma[OpCodeSigma["GetCamCanSetInfo4"] = 36910] = "GetCamCanSetInfo4";
+    OpCodeSigma[OpCodeSigma["GetCamStatus2"] = 36908] = "GetCamStatus2";
+    OpCodeSigma[OpCodeSigma["GetPictFileInfo2"] = 36909] = "GetPictFileInfo2";
+    OpCodeSigma[OpCodeSigma["CloseApplication"] = 36911] = "CloseApplication";
+    OpCodeSigma[OpCodeSigma["GetCamCanSetInfo5"] = 36912] = "GetCamCanSetInfo5";
+    OpCodeSigma[OpCodeSigma["GetCamDataGroupFocus"] = 36913] = "GetCamDataGroupFocus";
+    OpCodeSigma[OpCodeSigma["SetCamDataGroupFocus"] = 36914] = "SetCamDataGroupFocus";
+    OpCodeSigma[OpCodeSigma["GetCamDataGroupMovie"] = 36915] = "GetCamDataGroupMovie";
+    OpCodeSigma[OpCodeSigma["SetCamDataGroupMovie"] = 36916] = "SetCamDataGroupMovie";
+    OpCodeSigma[OpCodeSigma["ConfigApi"] = 36917] = "ConfigApi";
+    OpCodeSigma[OpCodeSigma["GetMovieFileInfo"] = 36918] = "GetMovieFileInfo";
+    OpCodeSigma[OpCodeSigma["GetPartialMovieFile"] = 36919] = "GetPartialMovieFile";
 })(OpCodeSigma || (OpCodeSigma = {
 }));
 var CaptStatus;
-(function(CaptStatus1) {
-    CaptStatus1[CaptStatus1["runSnap"] = 1] = "runSnap";
-    CaptStatus1[CaptStatus1["compSnap"] = 2] = "compSnap";
-    CaptStatus1[CaptStatus1["runImageCreate"] = 4] = "runImageCreate";
-    CaptStatus1[CaptStatus1["compImageCreate"] = 5] = "compImageCreate";
-    CaptStatus1[CaptStatus1["compMovieStopStandby"] = 6] = "compMovieStopStandby";
-    CaptStatus1[CaptStatus1["compMovieCreate"] = 7] = "compMovieCreate";
-    CaptStatus1[CaptStatus1["okAf"] = 32769] = "okAf";
-    CaptStatus1[CaptStatus1["okCwb"] = 32770] = "okCwb";
-    CaptStatus1[CaptStatus1["okImageSave"] = 32771] = "okImageSave";
-    CaptStatus1[CaptStatus1["okNoerrorEtc"] = 32772] = "okNoerrorEtc";
-    CaptStatus1[CaptStatus1["ngAf"] = 24577] = "ngAf";
-    CaptStatus1[CaptStatus1["ngBaffaFull"] = 24578] = "ngBaffaFull";
-    CaptStatus1[CaptStatus1["ngCwb"] = 24579] = "ngCwb";
-    CaptStatus1[CaptStatus1["ngImageCreate"] = 24580] = "ngImageCreate";
-    CaptStatus1[CaptStatus1["ngGeneral"] = 24581] = "ngGeneral";
+(function(CaptStatus) {
+    CaptStatus[CaptStatus["runSnap"] = 1] = "runSnap";
+    CaptStatus[CaptStatus["compSnap"] = 2] = "compSnap";
+    CaptStatus[CaptStatus["runImageCreate"] = 4] = "runImageCreate";
+    CaptStatus[CaptStatus["compImageCreate"] = 5] = "compImageCreate";
+    CaptStatus[CaptStatus["compMovieStopStandby"] = 6] = "compMovieStopStandby";
+    CaptStatus[CaptStatus["compMovieCreate"] = 7] = "compMovieCreate";
+    CaptStatus[CaptStatus["okAf"] = 32769] = "okAf";
+    CaptStatus[CaptStatus["okCwb"] = 32770] = "okCwb";
+    CaptStatus[CaptStatus["okImageSave"] = 32771] = "okImageSave";
+    CaptStatus[CaptStatus["okNoerrorEtc"] = 32772] = "okNoerrorEtc";
+    CaptStatus[CaptStatus["ngAf"] = 24577] = "ngAf";
+    CaptStatus[CaptStatus["ngBaffaFull"] = 24578] = "ngBaffaFull";
+    CaptStatus[CaptStatus["ngCwb"] = 24579] = "ngCwb";
+    CaptStatus[CaptStatus["ngImageCreate"] = 24580] = "ngImageCreate";
+    CaptStatus[CaptStatus["ngGeneral"] = 24581] = "ngGeneral";
 })(CaptStatus || (CaptStatus = {
 }));
 var SnapCaptureMode;
-(function(SnapCaptureMode1) {
-    SnapCaptureMode1[SnapCaptureMode1["GeneralCapture"] = 1] = "GeneralCapture";
-    SnapCaptureMode1[SnapCaptureMode1["NonAFCapture"] = 2] = "NonAFCapture";
-    SnapCaptureMode1[SnapCaptureMode1["AFDriveOnly"] = 3] = "AFDriveOnly";
-    SnapCaptureMode1[SnapCaptureMode1["StartAF"] = 4] = "StartAF";
-    SnapCaptureMode1[SnapCaptureMode1["StopAF"] = 5] = "StopAF";
-    SnapCaptureMode1[SnapCaptureMode1["StartCapture"] = 6] = "StartCapture";
-    SnapCaptureMode1[SnapCaptureMode1["StopCapture"] = 7] = "StopCapture";
-    SnapCaptureMode1[SnapCaptureMode1["StartRecordingMovieWithAF"] = 16] = "StartRecordingMovieWithAF";
-    SnapCaptureMode1[SnapCaptureMode1["StartRecordingMovieWithoutAF"] = 32] = "StartRecordingMovieWithoutAF";
-    SnapCaptureMode1[SnapCaptureMode1["StopRecordingMovie"] = 48] = "StopRecordingMovie";
+(function(SnapCaptureMode) {
+    SnapCaptureMode[SnapCaptureMode["GeneralCapture"] = 1] = "GeneralCapture";
+    SnapCaptureMode[SnapCaptureMode["NonAFCapture"] = 2] = "NonAFCapture";
+    SnapCaptureMode[SnapCaptureMode["AFDriveOnly"] = 3] = "AFDriveOnly";
+    SnapCaptureMode[SnapCaptureMode["StartAF"] = 4] = "StartAF";
+    SnapCaptureMode[SnapCaptureMode["StopAF"] = 5] = "StopAF";
+    SnapCaptureMode[SnapCaptureMode["StartCapture"] = 6] = "StartCapture";
+    SnapCaptureMode[SnapCaptureMode["StopCapture"] = 7] = "StopCapture";
+    SnapCaptureMode[SnapCaptureMode["StartRecordingMovieWithAF"] = 16] = "StartRecordingMovieWithAF";
+    SnapCaptureMode[SnapCaptureMode["StartRecordingMovieWithoutAF"] = 32] = "StartRecordingMovieWithoutAF";
+    SnapCaptureMode[SnapCaptureMode["StopRecordingMovie"] = 48] = "StopRecordingMovie";
 })(SnapCaptureMode || (SnapCaptureMode = {
 }));
 class TethrSigma extends _.TethrPTPUSB {
@@ -28073,16 +27358,8 @@ class TethrSigma extends _.TethrPTPUSB {
             'imageAspect',
             'imageSize',
             'imageQuality',
+            'liveviewEnabled',
             'liveviewMagnifyRatio', 
-        ];
-    }
-    async listActions() {
-        return [
-            ...await super.listActions(),
-            'takePicture',
-            'runAutoFocus',
-            'startLiveview',
-            'stopLiveview', 
         ];
     }
     async set(name, value) {
@@ -28127,7 +27404,7 @@ class TethrSigma extends _.TethrPTPUSB {
             default:
                 status = 'unsupported';
         }
-        for (const config of await this.listConfigs()){
+        for (const config of (await this.listConfigs())){
             const desc = await this.getDesc(config);
             this.emit(`${config}Changed`, desc);
         }
@@ -28166,8 +27443,18 @@ class TethrSigma extends _.TethrPTPUSB {
                 return this.getImageSizeDesc();
             case 'imageQuality':
                 return this.getImageQualityDesc();
+            case 'liveviewEnabled':
+                return this.getLiveviewEnabledDesc();
             case 'liveviewMagnifyRatio':
                 return this.getLiveviewMagnifyLevelRatioDesc();
+            case 'canTakePicture':
+            case 'canRunAutoFocus':
+            case 'canStartLiveview':
+                return {
+                    writable: false,
+                    value: true,
+                    options: []
+                };
         }
         return super.getDesc(name);
     }
@@ -28184,7 +27471,7 @@ class TethrSigma extends _.TethrPTPUSB {
         return {
             writable: false,
             value,
-            options: _lodashDefault.default.range(min, max, 1)
+            options: _lodash.range(min, max, 1)
         };
     }
     async getAperture() {
@@ -28193,9 +27480,9 @@ class TethrSigma extends _.TethrPTPUSB {
         return (this.apertureOneThirdTable.get(aperture) ?? this.apertureHalfTable.get(aperture)) ?? null;
     }
     async setAperture(aperture) {
-        if (aperture === 'auto') return 'invalid';
+        if (aperture === 'auto') return 'invalid parameter';
         const byte = this.apertureOneThirdTable.getKey(aperture);
-        if (!byte) return 'invalid';
+        if (!byte) return 'invalid parameter';
         return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte);
     }
     async getShutterSpeed() {
@@ -28218,9 +27505,9 @@ class TethrSigma extends _.TethrPTPUSB {
         );
         const ssMinRaw = 1 / 2 ** tvMin;
         const ssMaxRaw = 1 / 2 ** tvMax;
-        const ssMinEntry = _lodashDefault.default.minBy(shutterSpeeds, (e)=>Math.abs(_configs.computeShutterSpeedSeconds(e[1]) - ssMinRaw)
+        const ssMinEntry = _lodash.minBy(shutterSpeeds, (e)=>Math.abs(_configs.computeShutterSpeedSeconds(e[1]) - ssMinRaw)
         );
-        const ssMaxEntry = _lodashDefault.default.minBy(shutterSpeeds, (e)=>Math.abs(_configs.computeShutterSpeedSeconds(e[1]) - ssMaxRaw)
+        const ssMaxEntry = _lodash.minBy(shutterSpeeds, (e)=>Math.abs(_configs.computeShutterSpeedSeconds(e[1]) - ssMaxRaw)
         );
         if (!ssMinEntry || !ssMaxEntry) throw new Error();
         const ssMinIndex = ssMinEntry[0];
@@ -28236,7 +27523,7 @@ class TethrSigma extends _.TethrPTPUSB {
     }
     async setShutterSpeed(ss) {
         const byte = this.shutterSpeedOneThirdTable.getKey(ss);
-        if (!byte) return 'invalid';
+        if (!byte) return 'invalid parameter';
         return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte);
     }
     async getISO() {
@@ -28247,11 +27534,11 @@ class TethrSigma extends _.TethrPTPUSB {
     async setISO(iso) {
         if (iso === 'auto') return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 1);
         const id = this.isoTable.getKey(iso);
-        if (!id) return 'invalid';
+        if (!id) return 'invalid parameter';
         const setISOAutoResult = await this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0);
         const setISOValueResult = await this.setCamData(OpCodeSigma.SetCamDataGroup1, 4, id);
         if (setISOAutoResult === 'ok' && setISOValueResult === 'ok') return 'ok';
-        else return 'invalid';
+        else return 'invalid parameter';
     }
     async getISODesc() {
         const { isoManual  } = await this.getCamCanSetInfo5();
@@ -28277,7 +27564,7 @@ class TethrSigma extends _.TethrPTPUSB {
     }
     async setWhiteBalance(wb) {
         const id = this.whiteBalanceTable.getKey(wb);
-        if (!id) return 'invalid';
+        if (!id) return 'invalid parameter';
         return await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, id);
     }
     async getWhiteBalanceDesc() {
@@ -28312,7 +27599,7 @@ class TethrSigma extends _.TethrPTPUSB {
         return {
             writable: true,
             value,
-            options: _lodashDefault.default.range(min, max, step)
+            options: _lodash.range(min, max, step)
         };
     }
     async getExposureMode() {
@@ -28321,7 +27608,7 @@ class TethrSigma extends _.TethrPTPUSB {
     }
     async setExposureMode(exposureMode) {
         const id = this.exposureModeTable.getKey(exposureMode);
-        if (!id) return 'invalid';
+        if (!id) return 'invalid parameter';
         return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, id);
     }
     async getExposureModeDesc() {
@@ -28341,7 +27628,7 @@ class TethrSigma extends _.TethrPTPUSB {
     }
     async setExposureComp(value) {
         const id = this.compensationOneThirdTable.getKey(value);
-        if (id === undefined) return 'invalid';
+        if (id === undefined) return 'invalid parameter';
         return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, id);
     }
     async getExposureCompDesc() {
@@ -28389,7 +27676,7 @@ class TethrSigma extends _.TethrPTPUSB {
     }
     async setColorMode(colorMode) {
         const id = this.colorModeTable.getKey(colorMode);
-        if (id === undefined) return 'invalid';
+        if (id === undefined) return 'invalid parameter';
         return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id);
     }
     async getColorModeDesc() {
@@ -28406,7 +27693,7 @@ class TethrSigma extends _.TethrPTPUSB {
     }
     async setImageAspect(imageAspect) {
         const id = this.imageAspectTableIFD.getKey(imageAspect);
-        if (id === undefined) return 'invalid';
+        if (id === undefined) return 'invalid parameter';
         return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id);
     }
     async getImageAspectDesc() {
@@ -28424,7 +27711,7 @@ class TethrSigma extends _.TethrPTPUSB {
     }
     async setImageSize(imageSize) {
         const id = this.imageSizeTable.getKey(imageSize);
-        if (id === undefined) return 'invalid';
+        if (id === undefined) return 'invalid parameter';
         return this.setCamData(OpCodeSigma.SetCamDataGroup2, 14, id);
     }
     async getImageSizeDesc() {
@@ -28470,20 +27757,20 @@ class TethrSigma extends _.TethrPTPUSB {
                 imageQualityID = 8;
                 break;
             default:
-                return 'invalid';
+                return 'invalid parameter';
         }
         imageQualityID |= dngBitDepth === null ? 0 : 16;
         const setImageQualityResult = await this.setCamData(OpCodeSigma.SetCamDataGroup2, 15, imageQualityID);
         let setDngBitDepthResult = 'ok';
         if (dngBitDepth !== null) setDngBitDepthResult = await this.setCamData(OpCodeSigma.SetCamDataGroup4, 9, dngBitDepth);
         if (setImageQualityResult === 'ok' && setDngBitDepthResult === 'ok') return 'ok';
-        else return 'invalid';
+        else return 'invalid parameter';
     }
     async getImageQualityDesc() {
         const imageQuality = await (async ()=>{
-            const { imageQuality: imageQuality1  } = await this.getCamDataGroup2();
+            const { imageQuality  } = await this.getCamDataGroup2();
             let jpegQuality = null;
-            switch(imageQuality1 & 15){
+            switch(imageQuality & 15){
                 case 2:
                     jpegQuality = 'fine';
                     break;
@@ -28494,7 +27781,7 @@ class TethrSigma extends _.TethrPTPUSB {
                     jpegQuality = 'low';
                     break;
             }
-            const hasDNG = !!(imageQuality1 & 16);
+            const hasDNG = !!(imageQuality & 16);
             return {
                 jpegQuality,
                 hasDNG
@@ -28504,12 +27791,12 @@ class TethrSigma extends _.TethrPTPUSB {
             const { dngImageQuality  } = await this.getCamDataGroup4();
             return dngImageQuality + 'bit';
         })();
-        function stringifyImageQuality(quality, dngBitDepth1 = '') {
+        function stringifyImageQuality(quality, dngBitDepth = '') {
             if (quality.hasDNG) {
                 if (quality.jpegQuality) {
-                    return `DNG ${dngBitDepth1} + ${quality.jpegQuality}`;
+                    return `DNG ${dngBitDepth} + ${quality.jpegQuality}`;
                 } else {
-                    return `DNG ${dngBitDepth1}`;
+                    return `DNG ${dngBitDepth}`;
                 }
             } else {
                 if (quality.jpegQuality) {
@@ -28534,9 +27821,16 @@ class TethrSigma extends _.TethrPTPUSB {
             ]
         };
     }
+    async getLiveviewEnabledDesc() {
+        return {
+            writable: false,
+            value: this.liveviewEnabled,
+            options: []
+        };
+    }
     async setLiveviewMagnifyLevelRatio(value) {
         const id = this.liveviewMagnifyRatioTable.getKey(value);
-        if (!id) return 'invalid';
+        if (!id) return 'invalid parameter';
         return this.setCamData(OpCodeSigma.SetCamDataGroup4, 5, id);
     }
     async getLiveviewMagnifyLevelRatioDesc() {
@@ -28561,8 +27855,13 @@ class TethrSigma extends _.TethrPTPUSB {
     async takePicture({ download =true  } = {
     }) {
         const captId = await this.executeSnapCommand(SnapCaptureMode.NonAFCapture, 2);
-        if (captId === null) return null;
-        if (!download) return null;
+        if (captId === null) return {
+            status: 'general error'
+        };
+        if (!download) return {
+            status: 'ok',
+            value: []
+        };
         const pictInfo = await this.getPictFileInfo();
         // Get file buffer
         const { data: pictFileData  } = await this.device.receiveData({
@@ -28587,24 +27886,34 @@ class TethrSigma extends _.TethrPTPUSB {
             format: 'jpeg',
             blob
         };
-        return [
-            jpegTethrObject
-        ];
+        return {
+            status: 'ok',
+            value: [
+                jpegTethrObject
+            ]
+        };
     }
     async runAutoFocus() {
         const captId = await this.executeSnapCommand(SnapCaptureMode.StartAF);
         if (captId !== null) {
             await this.clearImageDBSingle(captId);
-            return true;
-        } else return false;
+            return {
+                status: 'ok'
+            };
+        } else return {
+            status: 'general error'
+        };
     }
     async startLiveview() {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        if (!ctx) return null;
-        this._liveviewing = true;
+        if (!ctx) return {
+            status: 'general error'
+        };
+        this.liveviewEnabled = true;
+        this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'));
         const updateFrame = async ()=>{
-            if (!this._liveviewing) return;
+            if (!this.liveviewEnabled) return;
             try {
                 const { resCode , data  } = await this.device.receiveData({
                     label: 'SigmaFP GetViewFrame',
@@ -28636,13 +27945,17 @@ class TethrSigma extends _.TethrPTPUSB {
         };
         updateFrame();
         const stream = canvas.captureStream(60);
-        return stream;
+        return {
+            status: 'ok',
+            value: stream
+        };
     }
     async stopLiveview() {
-        this._liveviewing = false;
-    }
-    get liveviewing() {
-        return this._liveviewing;
+        this.liveviewEnabled = false;
+        this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'));
+        return {
+            status: 'ok'
+        };
     }
     async getCamDataGroup1() {
         const { data  } = await this.device.receiveData({
@@ -28878,7 +28191,7 @@ class TethrSigma extends _.TethrPTPUSB {
                 data
             });
         } catch (err) {
-            return 'invalid';
+            return 'invalid parameter';
         }
         return 'ok';
     }
@@ -28970,7 +28283,7 @@ class TethrSigma extends _.TethrPTPUSB {
     }
     constructor(...args){
         super(...args);
-        this._liveviewing = false;
+        this.liveviewEnabled = false;
         this.open = async ()=>{
             await super.open();
             await this.device.receiveData({
@@ -28996,9 +28309,9 @@ class TethrSigma extends _.TethrPTPUSB {
             const apertures = Array.from(table.values());
             const fMinRaw = Math.sqrt(2 ** svMin);
             const fMaxRaw = Math.sqrt(2 ** svMax);
-            const fMin = _lodashDefault.default.minBy(apertures, (a)=>Math.abs(a - fMinRaw)
+            const fMin = _lodash.minBy(apertures, (a)=>Math.abs(a - fMinRaw)
             );
-            const fMax = _lodashDefault.default.minBy(apertures, (a)=>Math.abs(a - fMaxRaw)
+            const fMax = _lodash.minBy(apertures, (a)=>Math.abs(a - fMaxRaw)
             );
             if (!fMin || !fMax) throw new Error();
             const options = apertures.filter((a)=>fMin <= a && a <= fMax
@@ -30217,7 +29530,7 @@ class TethrSigma extends _.TethrPTPUSB {
                 null
             ], 
         ]);
-        this.whiteBalanceTableTable = new _bim.BiMap([
+        this.whiteBalanceTable = new _bim.BiMap([
             [
                 1,
                 'auto'
@@ -30321,24 +29634,24 @@ class TethrSigma extends _.TethrPTPUSB {
     }
 }
 
-},{"bim":"gfJhS","lodash":"f4H2C","sleep-promise":"8dIiK","../configs":"2uyxY","../IFD":"9fLFP","../PTPDatacode":"gzikr","../PTPDataView":"6vBdq","../util":"kykCo",".":"CiLrY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"8dIiK":[function(require,module,exports) {
+},{"bim":"fiCRV","lodash":"4nfxA","sleep-promise":"9oSTN","../configs":"6m2W9","../IFD":"c37rf","../PTPDatacode":"dzGjw","../PTPDataView":"2SXC8","../util":"id2fi",".":"afXnW","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"9oSTN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var e = setTimeout;
-function t(t1, n) {
+function t(t, n) {
     var u = n.useCachedSetTimeout ? e : setTimeout;
-    return new Promise(function(e1) {
-        u(e1, t1);
+    return new Promise(function(e) {
+        u(e, t);
     });
 }
-function n(e1) {
-    var n1 = arguments.length > 1 && (void 0) !== arguments[1] ? arguments[1] : {
-    }, u = n1.useCachedSetTimeout, r = t(e1, {
+function n(e) {
+    var n = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {
+    }, u = n.useCachedSetTimeout, r = t(e, {
         useCachedSetTimeout: u
     });
-    function o(e2) {
+    function o(e) {
         return r.then(function() {
-            return e2;
+            return e;
         });
     }
     return o.then = function() {
@@ -30347,7 +29660,7 @@ function n(e1) {
 }
 exports.default = n;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"9fLFP":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"c37rf":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IFDType", ()=>IFDType
@@ -30355,18 +29668,17 @@ parcelHelpers.export(exports, "IFDType", ()=>IFDType
 parcelHelpers.export(exports, "decodeIFD", ()=>decodeIFD
 );
 var _lodash = require("lodash");
-var _lodashDefault = parcelHelpers.interopDefault(_lodash);
 var IFDType;
-(function(IFDType1) {
-    IFDType1[IFDType1["Byte"] = 1] = "Byte";
-    IFDType1[IFDType1["Ascii"] = 2] = "Ascii";
-    IFDType1[IFDType1["Short"] = 3] = "Short";
-    IFDType1[IFDType1["Long"] = 4] = "Long";
-    IFDType1[IFDType1["Rational"] = 5] = "Rational";
-    IFDType1[IFDType1["Undefined"] = 7] = "Undefined";
-    IFDType1[IFDType1["SignedShort"] = 8] = "SignedShort";
-    IFDType1[IFDType1["Slong"] = 9] = "Slong";
-    IFDType1[IFDType1["Srational"] = 10] = "Srational";
+(function(IFDType) {
+    IFDType[IFDType["Byte"] = 1] = "Byte";
+    IFDType[IFDType["Ascii"] = 2] = "Ascii";
+    IFDType[IFDType["Short"] = 3] = "Short";
+    IFDType[IFDType["Long"] = 4] = "Long";
+    IFDType[IFDType["Rational"] = 5] = "Rational";
+    IFDType[IFDType["Undefined"] = 7] = "Undefined";
+    IFDType[IFDType["SignedShort"] = 8] = "SignedShort";
+    IFDType[IFDType["Slong"] = 9] = "Slong";
+    IFDType[IFDType["Srational"] = 10] = "Srational";
 })(IFDType || (IFDType = {
 }));
 function decodeIFD(data, scheme) {
@@ -30430,9 +29742,9 @@ function decodeIFD(data, scheme) {
                 {
                     // Signed SHORT
                     const off = count > 2 ? valueOffset : offset;
-                    value = _lodashDefault.default.times(count, (i1)=>{
-                        const f = dataView.getUint8(off + i1 * 2);
-                        const d = dataView.getInt8(off + i1 * 2 + 1);
+                    value = _lodash.times(count, (i)=>{
+                        const f = dataView.getUint8(off + i * 2);
+                        const d = dataView.getInt8(off + i * 2 + 1);
                         return d + f / 256;
                     });
                     break;
@@ -30445,7 +29757,7 @@ function decodeIFD(data, scheme) {
     return result;
 }
 
-},{"lodash":"f4H2C","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"6dNCk":[function(require,module,exports) {
+},{"lodash":"4nfxA","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"4lCec":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "initTethrWebcam", ()=>initTethrWebcam
@@ -30475,11 +29787,13 @@ class TethrWebcam extends _tethr.Tethr {
     }
     async listConfigs() {
         return [
-            'model'
+            'model',
+            'liveviewEnabled',
+            'canTakePicture',
+            'canRunAutoFocus',
+            'canRunManualFocus',
+            'canStartLiveview', 
         ];
-    }
-    async listActions() {
-        return [];
     }
     async set() {
         return {
@@ -30487,11 +29801,29 @@ class TethrWebcam extends _tethr.Tethr {
         };
     }
     async getDesc(name) {
-        if (name === 'model') return {
-            writable: false,
-            value: 'Webcam',
-            options: []
-        };
+        switch(name){
+            case 'model':
+                return {
+                    writable: false,
+                    value: 'Webcam',
+                    options: []
+                };
+            case 'liveviewEnabled':
+                return {
+                    writable: false,
+                    value: true,
+                    options: []
+                };
+            case 'canTakePicture':
+            case 'canRunAutoFocus':
+            case 'canRunManualFocus':
+            case 'canStartLiveview':
+                return {
+                    writable: false,
+                    value: true,
+                    options: []
+                };
+        }
         return {
             writable: false,
             value: null,
@@ -30500,14 +29832,21 @@ class TethrWebcam extends _tethr.Tethr {
     }
     // Actions
     async runAutoFocus() {
-        return false;
+        return {
+            status: 'unsupported'
+        };
     }
     async runManualFocus() {
-        return false;
+        return {
+            status: 'unsupported'
+        };
     }
     async takePicture({ download =true  } = {
     }) {
-        if (!download) return null;
+        if (!download) return {
+            status: 'ok',
+            value: []
+        };
         const blob = await this.imageCapture.takePhoto();
         const now = new Date();
         const tethrObject = {
@@ -30527,19 +29866,27 @@ class TethrWebcam extends _tethr.Tethr {
             modificationDate: now,
             blob
         };
-        return [
-            tethrObject
-        ];
+        return {
+            status: 'ok',
+            value: [
+                tethrObject
+            ]
+        };
     }
     async startLiveview() {
-        return this.media;
+        return {
+            status: 'ok',
+            value: this.media
+        };
     }
     async stopLiveview() {
-        return;
+        return {
+            status: 'ok'
+        };
     }
 }
 
-},{"./Tethr":"kne57","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"eapFv":[function(require,module,exports) {
+},{"./Tethr":"cDt1x","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"dFXd9":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 let script;
@@ -30552,18 +29899,9 @@ let initialize = ()=>{
     script.__file = "/Users/baku/Sites/tethr/demo/TethrConfig.vue";
 };
 initialize();
-if (module.hot) {
-    script.__hmrId = '328722-hmr';
-    module.hot.accept(()=>{
-        setTimeout(()=>{
-            initialize();
-            if (!__VUE_HMR_RUNTIME__.createRecord('328722-hmr', script)) __VUE_HMR_RUNTIME__.reload('328722-hmr', script);
-        }, 0);
-    });
-}
 exports.default = script;
 
-},{"script:./TethrConfig.vue":"2Rn7p","template:./TethrConfig.vue":"252Di","custom:./TethrConfig.vue":"1z1o2","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"2Rn7p":[function(require,module,exports) {
+},{"script:./TethrConfig.vue":"6T5oE","template:./TethrConfig.vue":"cenPQ","custom:./TethrConfig.vue":"gcQ43","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"6T5oE":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _vue = require("vue");
@@ -30595,7 +29933,7 @@ exports.default = _vue.defineComponent({
     }
 });
 
-},{"vue":"eg0LR","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"252Di":[function(require,module,exports) {
+},{"vue":"h7dRr","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"cenPQ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "render", ()=>render
@@ -30621,7 +29959,7 @@ function render(_ctx, _cache) {
     return _ctx.config.value !== null ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
         key: 0
     }, [
-        _vue.createElementVNode("dt", null, _vue.toDisplayString(_ctx.label), 1 /* TEXT */ ),
+        _vue.createElementVNode("dt", null, _vue.toDisplayString(_ctx.label), 1),
         _vue.createElementVNode("dd", _hoisted_1, [
             _ctx.config.writable ? (_vue.openBlock(), _vue.createElementBlock("select", {
                 key: 0,
@@ -30637,21 +29975,18 @@ function render(_ctx, _cache) {
                         label: v,
                         value: i,
                         "data-index": i
-                    }, _vue.toDisplayString(v), 9 /* TEXT, PROPS */ , _hoisted_3);
-                }), 128 /* KEYED_FRAGMENT */ ))
-            ], 40 /* PROPS, HYDRATE_EVENTS */ , _hoisted_2)) : (_vue.openBlock(), _vue.createElementBlock("input", {
+                    }, _vue.toDisplayString(v), 9, _hoisted_3);
+                }), 128))
+            ], 40, _hoisted_2)) : (_vue.openBlock(), _vue.createElementBlock("input", {
                 key: 1,
                 value: _ctx.config.value,
                 disabled: ""
-            }, null, 8 /* PROPS */ , _hoisted_4))
+            }, null, 8, _hoisted_4))
         ])
-    ], 64 /* STABLE_FRAGMENT */ )) : _vue.createCommentVNode("v-if", true);
+    ], 64)) : _vue.createCommentVNode("", true);
 }
-if (module.hot) module.hot.accept(()=>{
-    __VUE_HMR_RUNTIME__.rerender('328722-hmr', render);
-});
 
-},{"vue":"eg0LR","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"1z1o2":[function(require,module,exports) {
+},{"vue":"h7dRr","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"gcQ43":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 let NOOP = ()=>{
@@ -30659,7 +29994,7 @@ let NOOP = ()=>{
 exports.default = (script)=>{
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"c5z27":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"6vloM":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "render", ()=>render
@@ -30674,14 +30009,22 @@ const _hoisted_2 = [
 const _hoisted_3 = [
     "src"
 ];
-const _hoisted_4 = /*#__PURE__*/ _vue.createElementVNode("h2", null, "Actions", -1 /* HOISTED */ );
+const _hoisted_4 = /*#__PURE__*/ _vue.createElementVNode("h2", null, "Actions", -1);
 const _hoisted_5 = {
     key: 0
 };
-const _hoisted_6 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "takePicture", -1 /* HOISTED */ );
-const _hoisted_7 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "liveview", -1 /* HOISTED */ );
-const _hoisted_8 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "autoFocus", -1 /* HOISTED */ );
-const _hoisted_9 = /*#__PURE__*/ _vue.createElementVNode("h2", null, "Configs", -1 /* HOISTED */ );
+const _hoisted_6 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "takePicture", -1);
+const _hoisted_7 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "autoFocus", -1);
+const _hoisted_8 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "manualFocus", -1);
+const _hoisted_9 = {
+    style: {
+        "display": "grid",
+        "grid-template-rows": "1fr 1fr",
+        "grid-auto-flow": "column"
+    }
+};
+const _hoisted_10 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "liveview", -1);
+const _hoisted_11 = /*#__PURE__*/ _vue.createElementVNode("h2", null, "Configs", -1);
 function render(_ctx, _cache) {
     const _component_TethrConfig = _vue.resolveComponent("TethrConfig");
     return _vue.openBlock(), _vue.createElementBlock("div", _hoisted_1, [
@@ -30690,43 +30033,92 @@ function render(_ctx, _cache) {
                 class: "view lv",
                 ".srcObject": _ctx.liveviewMediaStream,
                 autoplay: ""
-            }, null, 8 /* PROPS */ , _hoisted_2),
+            }, null, 8, _hoisted_2),
             _vue.createElementVNode("img", {
                 class: "view picture",
                 src: _ctx.lastPictureURL
-            }, null, 8 /* PROPS */ , _hoisted_3)
+            }, null, 8, _hoisted_3)
         ]),
         _vue.createElementVNode("aside", null, [
             _vue.createElementVNode("button", {
                 onClick: _cache[0] || (_cache[0] = (...args)=>_ctx.toggleCameraConnection && _ctx.toggleCameraConnection(...args)
                 )
-            }, _vue.toDisplayString(_ctx.camera ? 'Disconnect' : 'Connect'), 1 /* TEXT */ ),
+            }, _vue.toDisplayString(_ctx.camera ? 'Disconnect' : 'Connect'), 1),
             _hoisted_4,
             _ctx.camera ? (_vue.openBlock(), _vue.createElementBlock("dl", _hoisted_5, [
-                _hoisted_6,
-                _vue.createElementVNode("dd", null, [
-                    _vue.createElementVNode("button", {
-                        class: "red",
-                        onClick: _cache[1] || (_cache[1] = (...args)=>_ctx.takePicture && _ctx.takePicture(...args)
-                        )
-                    }, "Shutter")
-                ]),
-                _hoisted_7,
-                _vue.createElementVNode("dd", null, [
-                    _vue.createElementVNode("button", {
-                        onClick: _cache[2] || (_cache[2] = (...args)=>_ctx.toggleLiveview && _ctx.toggleLiveview(...args)
-                        )
-                    }, _vue.toDisplayString(_ctx.liveviewing ? 'Stop' : 'Start'), 1 /* TEXT */ )
-                ]),
-                _hoisted_8,
-                _vue.createElementVNode("dd", null, [
-                    _vue.createElementVNode("button", {
-                        onClick: _cache[3] || (_cache[3] = (...args)=>_ctx.runAutoFocus && _ctx.runAutoFocus(...args)
-                        )
-                    }, "Run")
-                ])
-            ])) : _vue.createCommentVNode("v-if", true),
-            _hoisted_9,
+                _ctx.configs.canTakePicture.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
+                    key: 0
+                }, [
+                    _hoisted_6,
+                    _vue.createElementVNode("dd", null, [
+                        _vue.createElementVNode("button", {
+                            class: "red",
+                            onClick: _cache[1] || (_cache[1] = (...args)=>_ctx.takePicture && _ctx.takePicture(...args)
+                            )
+                        }, "Shutter")
+                    ])
+                ], 64)) : _vue.createCommentVNode("", true),
+                _ctx.configs.canRunAutoFocus.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
+                    key: 1
+                }, [
+                    _hoisted_7,
+                    _vue.createElementVNode("dd", null, [
+                        _vue.createElementVNode("button", {
+                            onClick: _cache[2] || (_cache[2] = (...args)=>_ctx.runAutoFocus && _ctx.runAutoFocus(...args)
+                            )
+                        }, "Run")
+                    ])
+                ], 64)) : _vue.createCommentVNode("", true),
+                _ctx.configs.canRunManualFocus.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
+                    key: 2
+                }, [
+                    _hoisted_8,
+                    _vue.createElementVNode("dd", _hoisted_9, [
+                        _ctx.configs.manualFocusOptions.value.includes('far:1') ? (_vue.openBlock(), _vue.createElementBlock("button", {
+                            key: 0,
+                            onClick: _cache[3] || (_cache[3] = ($event)=>_ctx.camera.runManualFocus('far:1')
+                            )
+                        }, " ↑ ")) : _vue.createCommentVNode("", true),
+                        _ctx.configs.manualFocusOptions.value.includes('near:1') ? (_vue.openBlock(), _vue.createElementBlock("button", {
+                            key: 1,
+                            onClick: _cache[4] || (_cache[4] = ($event)=>_ctx.camera.runManualFocus('near:1')
+                            )
+                        }, " ↓ ")) : _vue.createCommentVNode("", true),
+                        _ctx.configs.manualFocusOptions.value.includes('far:2') ? (_vue.openBlock(), _vue.createElementBlock("button", {
+                            key: 2,
+                            onClick: _cache[5] || (_cache[5] = ($event)=>_ctx.camera.runManualFocus('far:2')
+                            )
+                        }, " ↑↑ ")) : _vue.createCommentVNode("", true),
+                        _ctx.configs.manualFocusOptions.value.includes('near:2') ? (_vue.openBlock(), _vue.createElementBlock("button", {
+                            key: 3,
+                            onClick: _cache[6] || (_cache[6] = ($event)=>_ctx.camera.runManualFocus('near:2')
+                            )
+                        }, " ↓↓ ")) : _vue.createCommentVNode("", true),
+                        _ctx.configs.manualFocusOptions.value.includes('far:3') ? (_vue.openBlock(), _vue.createElementBlock("button", {
+                            key: 4,
+                            onClick: _cache[7] || (_cache[7] = ($event)=>_ctx.camera.runManualFocus('far:3')
+                            )
+                        }, " ↑↑↑ ")) : _vue.createCommentVNode("", true),
+                        _ctx.configs.manualFocusOptions.value.includes('near:3') ? (_vue.openBlock(), _vue.createElementBlock("button", {
+                            key: 5,
+                            onClick: _cache[8] || (_cache[8] = ($event)=>_ctx.camera.runManualFocus('near:3')
+                            )
+                        }, " ↓↓↓ ")) : _vue.createCommentVNode("", true)
+                    ])
+                ], 64)) : _vue.createCommentVNode("", true),
+                _ctx.configs.canStartLiveview.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
+                    key: 3
+                }, [
+                    _hoisted_10,
+                    _vue.createElementVNode("dd", null, [
+                        _vue.createElementVNode("button", {
+                            onClick: _cache[9] || (_cache[9] = (...args)=>_ctx.toggleLiveview && _ctx.toggleLiveview(...args)
+                            )
+                        }, _vue.toDisplayString(_ctx.configs.liveviewEnabled.value ? 'Stop' : 'Start'), 1)
+                    ])
+                ], 64)) : _vue.createCommentVNode("", true)
+            ])) : _vue.createCommentVNode("", true),
+            _hoisted_11,
             _vue.createElementVNode("dl", null, [
                 (_vue.openBlock(true), _vue.createElementBlock(_vue.Fragment, null, _vue.renderList(_ctx.configs, (config, name)=>{
                     return _vue.openBlock(), _vue.createBlock(_component_TethrConfig, {
@@ -30734,20 +30126,17 @@ function render(_ctx, _cache) {
                         key: name,
                         label: name,
                         config: config
-                    }, null, 8 /* PROPS */ , [
+                    }, null, 8, [
                         "label",
                         "config"
                     ]);
-                }), 128 /* KEYED_FRAGMENT */ ))
+                }), 128))
             ])
         ])
     ]);
 }
-if (module.hot) module.hot.accept(()=>{
-    __VUE_HMR_RUNTIME__.rerender('848d49-hmr', render);
-});
 
-},{"vue":"eg0LR","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"kWNV3":[function(require,module,exports) {
+},{"vue":"h7dRr","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"gjUnI":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 let NOOP = ()=>{
@@ -30755,6 +30144,5 @@ let NOOP = ()=>{
 exports.default = (script)=>{
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}]},["boNp0","bxQVA"], "bxQVA", "parcelRequirebc09")
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}]},["2emZo"], "2emZo", "parcelRequirebc09")
 
-//# sourceMappingURL=index.dc1c7f13.js.map

@@ -73,10 +73,16 @@ dt {
   height: 2em;
   line-height: 2em;
 }
+dd {
+  display: flex;
+  width: 10em;
+  gap: 0.2em;
+}
 dd input,
 dd select,
 dd button {
-  width: 8em;
+  flex-grow: 1;
+  width: 100%;
 }
 .view {
   display: block;
@@ -88,4 +94,3 @@ dd button {
   object-fit: contain;
 }
 
-/*# sourceMappingURL=index.ef10a57d.css.map */
