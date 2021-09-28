@@ -6,6 +6,7 @@ import {
 	Aperture,
 	BatteryLevel,
 	computeShutterSpeedSeconds,
+	ConfigName,
 	ConfigType,
 	ExposureMode,
 	ISO,
@@ -114,7 +115,7 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 	}
 
-	public async listConfigs(): Promise<(keyof ConfigType)[]> {
+	public async listConfigs(): Promise<ConfigName[]> {
 		return [
 			...(await super.listConfigs()),
 			'exposureMode',
@@ -133,7 +134,7 @@ export class TethrSigma extends TethrPTPUSB {
 		]
 	}
 
-	public async set<K extends keyof ConfigType>(
+	public async set<K extends ConfigName>(
 		name: K,
 		value: ConfigType[K]
 	): Promise<OperationResult<void>> {
@@ -190,13 +191,13 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async get<N extends keyof ConfigType>(
+	public async get<N extends ConfigName>(
 		name: N
 	): Promise<ConfigType[N] | null> {
 		return (await this.getDesc(name)).value
 	}
 
-	public async getDesc<N extends keyof ConfigType, T extends ConfigType[N]>(
+	public async getDesc<N extends ConfigName, T extends ConfigType[N]>(
 		name: N
 	): Promise<ConfigDesc<T>> {
 		type ReturnType = Promise<ConfigDesc<T>>

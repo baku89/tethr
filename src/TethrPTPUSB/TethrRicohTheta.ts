@@ -1,7 +1,12 @@
 import {BiMap} from 'bim'
 import {identity} from 'lodash'
 
-import {ConfigType, ExposureModeTable, WhiteBalanceTable} from '../configs'
+import {
+	ConfigName,
+	ConfigType,
+	ExposureModeTable,
+	WhiteBalanceTable,
+} from '../configs'
 import {DatatypeCode} from '../PTPDatacode'
 import {ConfigDesc} from '../Tethr'
 import {DevicePropScheme, TethrPTPUSB} from './TethrPTPUSB'
@@ -12,8 +17,8 @@ enum DevicePropCodeRicohTheta {
 }
 
 export class TethrRicohTheta extends TethrPTPUSB {
-	public async getDesc<K extends keyof ConfigType, T extends ConfigType[K]>(
-		name: K
+	public async getDesc<N extends ConfigName, T extends ConfigType[N]>(
+		name: N
 	): Promise<ConfigDesc<T>> {
 		if (name === 'focalLength') {
 			return {

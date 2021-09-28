@@ -3,6 +3,7 @@ import {identity, times} from 'lodash'
 
 import {
 	Aperture,
+	ConfigName,
 	ConfigType,
 	ExposureMode,
 	ISO,
@@ -93,11 +94,11 @@ enum ObjectFormatCodePanasonic {
 }
 
 type DevicePropSchemePanasonic = {
-	[Name in keyof ConfigType]?: {
+	[N in ConfigName]?: {
 		getCode: number
 		setCode?: number
-		decode: (value: number) => ConfigType[Name] | null
-		encode?: (value: ConfigType[Name]) => number | null
+		decode: (value: number) => ConfigType[N] | null
+		encode?: (value: ConfigType[N]) => number | null
 		valueSize: 1 | 2 | 4
 	}
 }
@@ -308,7 +309,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		await super.open()
 	}
 
-	public async listConfigs(): Promise<(keyof ConfigType)[]> {
+	public async listConfigs(): Promise<ConfigName[]> {
 		return [
 			...(await super.listConfigs()),
 			'exposureMode',
@@ -326,7 +327,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		]
 	}
 
-	public async set<N extends keyof ConfigType>(
+	public async set<N extends ConfigName>(
 		name: N,
 		value: ConfigType[N]
 	): Promise<OperationResult<void>> {
@@ -343,7 +344,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return super.set(name, value)
 	}
 
-	private async setDevicePropPanasonic<N extends keyof ConfigType>(
+	private async setDevicePropPanasonic<N extends ConfigName>(
 		name: N,
 		scheme: NonNullable<DevicePropSchemePanasonic[N]>,
 		value: ConfigType[N]
@@ -387,7 +388,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	public async getDesc<N extends keyof ConfigType>(
+	public async getDesc<N extends ConfigName>(
 		name: N
 	): Promise<ConfigDesc<ConfigType[N]>> {
 		const scheme = this.devicePropSchemePanasonic[name] ?? null
@@ -425,7 +426,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return super.getDesc(name)
 	}
 
-	private async getDevicePropDescPanasonic<N extends keyof ConfigType>(
+	private async getDevicePropDescPanasonic<N extends ConfigName>(
 		scheme: NonNullable<DevicePropSchemePanasonic[N]>
 	): Promise<ConfigDesc<ConfigType[N]>> {
 		const getCode = scheme.getCode
@@ -805,7 +806,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 	protected onDevicePropChanged = async (ev: PTPEvent) => {
 		const devicdPropCode = ev.parameters[0]
 
-		let configs: (keyof ConfigType)[]
+		let configs: ConfigName[]
 
 		switch (devicdPropCode) {
 			case DevicePropCodePanasonic.CameraMode:

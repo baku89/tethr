@@ -1,12 +1,10 @@
 import EventEmitter from 'eventemitter3'
 
-import {ConfigType, ManualFocusOption} from './configs'
+import {ConfigName, ConfigType, ManualFocusOption} from './configs'
 import {TethrObject} from './TethrObject'
 
-type ConfigName = keyof ConfigType
-
 export type ITethrEventTypes = {
-	[Name in keyof ConfigType as `${Name}Changed`]: ConfigDesc<ConfigType[Name]>
+	[N in ConfigName as `${N}Changed`]: ConfigDesc<ConfigType[N]>
 } & {
 	disconnect: void
 }

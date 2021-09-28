@@ -2,6 +2,7 @@ import {identity, range, times} from 'lodash'
 
 import {
 	ConfigForDevicePropTable,
+	ConfigName,
 	ConfigType,
 	DriveModeTable,
 	ExposureModeTable,
@@ -26,28 +27,28 @@ import {ConfigDesc, OperationResult, TakePictureOption, Tethr} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
 
-type DevicePropSchemeEntry<Name extends keyof ConfigType> = {
+type DevicePropSchemeEntry<N extends ConfigName> = {
 	devicePropCode: number
 } & (
 	| {
 			dataType: DatatypeCode.Uint64
-			decode: (data: bigint) => ConfigType[Name] | null
-			encode: (value: ConfigType[Name]) => bigint | null
+			decode: (data: bigint) => ConfigType[N] | null
+			encode: (value: ConfigType[N]) => bigint | null
 	  }
 	| {
 			dataType: DatatypeCode.String
-			decode: (data: string) => ConfigType[Name] | null
-			encode: (value: ConfigType[Name]) => string | null
+			decode: (data: string) => ConfigType[N] | null
+			encode: (value: ConfigType[N]) => string | null
 	  }
 	| {
 			dataType: DatatypeCode
-			decode: (data: number) => ConfigType[Name] | null
-			encode: (value: ConfigType[Name]) => number | null
+			decode: (data: number) => ConfigType[N] | null
+			encode: (value: ConfigType[N]) => number | null
 	  }
 )
 
 export type DevicePropScheme = {
-	[Name in keyof ConfigType]?: DevicePropSchemeEntry<Name>
+	[N in ConfigName]?: DevicePropSchemeEntry<N>
 }
 
 export class TethrPTPUSB extends Tethr {
@@ -144,14 +145,14 @@ export class TethrPTPUSB extends Tethr {
 			...deviceInfos,
 			...deviceProps,
 			...actionSupportedFlags,
-		] as (keyof ConfigType)[]
+		] as ConfigName[]
 
 		function getConfigNameByDevicePropCode(code: number) {
 			return DevicePropCode[code] ?? toHexString(code, 4)
 		}
 	}
 
-	public async set<K extends keyof ConfigType>(
+	public async set<K extends ConfigName>(
 		name: K,
 		value: ConfigType[K]
 	): Promise<OperationResult<void>> {
@@ -225,7 +226,7 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
-	public async getDesc<K extends keyof ConfigType, T extends ConfigType[K]>(
+	public async getDesc<K extends ConfigName, T extends ConfigType[K]>(
 		name: K
 	): Promise<ConfigDesc<T>> {
 		const scheme = this.devicePropScheme[name]
@@ -269,7 +270,7 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
-	private async getDevicePropDesc<Name extends keyof ConfigType>(
+	private async getDevicePropDesc<Name extends ConfigName>(
 		scheme: DevicePropSchemeEntry<Name>
 	) {
 		// Check if the deviceProps is supported
@@ -509,9 +510,7 @@ export class TethrPTPUSB extends Tethr {
 		this.emit(`${name}Changed`, desc)
 	}
 
-	protected getConfigNameFromCode(
-		devicePropCode: number
-	): keyof ConfigType | null {
+	protected getConfigNameFromCode(devicePropCode: number): ConfigName | null {
 		return ConfigForDevicePropTable.get(devicePropCode) ?? null
 	}
 

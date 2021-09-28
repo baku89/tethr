@@ -1,4 +1,4 @@
-import {ConfigType} from './configs'
+import {ConfigName, ConfigType} from './configs'
 import {ConfigDesc, OperationResult, TakePictureOption, Tethr} from './Tethr'
 import {TethrObject} from './TethrObject'
 
@@ -29,7 +29,7 @@ export class TethrWebcam extends Tethr {
 		return this._opened
 	}
 
-	public async listConfigs(): Promise<(keyof ConfigType)[]> {
+	public async listConfigs(): Promise<ConfigName[]> {
 		return [
 			'model',
 			'liveviewEnabled',
@@ -45,7 +45,7 @@ export class TethrWebcam extends Tethr {
 			status: 'unsupported',
 		}
 	}
-	public async getDesc<N extends keyof ConfigType>(
+	public async getDesc<N extends ConfigName>(
 		name: N
 	): Promise<ConfigDesc<ConfigType[N]>> {
 		switch (name) {

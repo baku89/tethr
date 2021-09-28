@@ -105,8 +105,10 @@ export type ConfigType = {
 	[v: `0x${string}`]: any
 }
 
+export type ConfigName = keyof ConfigType
+
 // Table
-export const ConfigForDevicePropTable = new BiMap<number, keyof ConfigType>([
+export const ConfigForDevicePropTable = new BiMap<number, ConfigName>([
 	[0x5001, 'batteryLevel'],
 	[0x5005, 'whiteBalance'],
 	[0x5007, 'aperture'],

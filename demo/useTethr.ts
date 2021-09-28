@@ -2,18 +2,19 @@ import {saveAs} from 'file-saver'
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 import {ConfigDesc, ConfigType, detectTethr, Tethr} from '~/src'
+import {ConfigName} from '~/src/configs'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 
-export interface TethrConfig<T extends ConfigType[keyof ConfigType]> {
+export interface TethrConfig<T extends ConfigType[ConfigName]> {
 	writable: boolean
 	value: T | null
 	update: (value: T) => void
 	options: T[]
 }
 
-export function useTethrConfig<Name extends keyof ConfigType>(
+export function useTethrConfig<Name extends ConfigName>(
 	camera: Ref<Tethr | null>,
 	name: Name
 ) {
