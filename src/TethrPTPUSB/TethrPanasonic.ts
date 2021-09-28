@@ -1,5 +1,5 @@
 import {BiMap} from 'bim'
-import {identity} from 'lodash'
+import {identity, times} from 'lodash'
 
 import {ActionName} from '../actions'
 import {
@@ -622,7 +622,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		const settingsNum = dataView.readUint16()
 		/*const structSize =*/ dataView.readUint16()
 
-		const settings = _.times(settingsNum, () => {
+		const settings = times(settingsNum, () => {
 			return {
 				height: dataView.readUint16(),
 				width: dataView.readUint16(),
