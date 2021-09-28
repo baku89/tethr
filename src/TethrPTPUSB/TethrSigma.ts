@@ -854,16 +854,16 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
-		null | TethrObject[]
+		OperationResult<TethrObject[]>
 	> {
 		const captId = await this.executeSnapCommand(
 			SnapCaptureMode.NonAFCapture,
 			2
 		)
 
-		if (captId === null) return null
+		if (captId === null) return {status: 'general error'}
 
-		if (!download) return null
+		if (!download) return {status: 'ok', value: []}
 
 		const pictInfo = await this.getPictFileInfo()
 
@@ -886,24 +886,24 @@ export class TethrSigma extends TethrPTPUSB {
 			blob,
 		} as TethrObject
 
-		return [jpegTethrObject]
+		return {status: 'ok', value: [jpegTethrObject]}
 	}
 
-	public async runAutoFocus(): Promise<boolean> {
+	public async runAutoFocus(): Promise<OperationResult<void>> {
 		const captId = await this.executeSnapCommand(SnapCaptureMode.StartAF)
 
 		if (captId !== null) {
 			await this.clearImageDBSingle(captId)
-			return true
+			return {status: 'ok'}
 		} else {
-			return false
+			return {status: 'general error'}
 		}
 	}
 
-	public async startLiveview(): Promise<null | MediaStream> {
+	public async startLiveview(): Promise<OperationResult<MediaStream>> {
 		const canvas = document.createElement('canvas')
 		const ctx = canvas.getContext('2d')
-		if (!ctx) return null
+		if (!ctx) return {status: 'general error'}
 
 		this._liveviewing = true
 
@@ -942,11 +942,12 @@ export class TethrSigma extends TethrPTPUSB {
 		updateFrame()
 
 		const stream = canvas.captureStream(60)
-		return stream
+		return {status: 'ok', value: stream}
 	}
 
-	public async stopLiveview(): Promise<void> {
+	public async stopLiveview(): Promise<OperationResult<void>> {
 		this._liveviewing = false
+		return {status: 'ok'}
 	}
 
 	public get liveviewing(): boolean {

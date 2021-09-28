@@ -62,18 +62,18 @@ export class TethrWebcam extends Tethr {
 
 	// Actions
 
-	public async runAutoFocus() {
-		return false
+	public async runAutoFocus(): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
 	}
 
-	public async runManualFocus() {
-		return false
+	public async runManualFocus(): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
 	}
 
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
-		null | TethrObject[]
+		OperationResult<TethrObject[]>
 	> {
-		if (!download) return null
+		if (!download) return {status: 'ok', value: []}
 
 		const blob = await this.imageCapture.takePhoto()
 
@@ -97,14 +97,17 @@ export class TethrWebcam extends Tethr {
 			blob,
 		}
 
-		return [tethrObject]
+		return {status: 'ok', value: [tethrObject]}
 	}
 
-	public async startLiveview(): Promise<null | MediaStream> {
-		return this.media
+	public async startLiveview(): Promise<OperationResult<MediaStream>> {
+		return {
+			status: 'ok',
+			value: this.media,
+		}
 	}
 
-	public async stopLiveview(): Promise<void> {
-		return
+	public async stopLiveview(): Promise<OperationResult<void>> {
+		return {status: 'ok'}
 	}
 }

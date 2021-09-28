@@ -347,18 +347,25 @@ export class TethrPTPUSB extends Tethr {
 		return devicePropsSupported.includes(code)
 	}
 
-	public async runAutoFocus(): Promise<boolean> {
-		return false
+	public async runAutoFocus(): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	public async runManualFocus(option: RunManualFocusOption) {
-		return false
+	public async runManualFocus(
+		option: RunManualFocusOption
+	): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
 	}
 
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
-		null | TethrObject[]
+		OperationResult<TethrObject[]>
 	> {
+		const {operationsSupported} = await this.getDeviceInfo()
+		if (!operationsSupported.includes(OpCode.InitiateCapture)) {
+			return {status: 'unsupported'}
+		}
+
 		await this.device.sendCommand({
 			label: 'InitiateCapture',
 			opcode: OpCode.InitiateCapture,
@@ -367,7 +374,7 @@ export class TethrPTPUSB extends Tethr {
 
 		const objectAddedEvent = await this.device.waitEvent(EventCode.ObjectAdded)
 
-		if (!download) return null
+		if (!download) return {status: 'ok', value: []}
 
 		const objectID = objectAddedEvent.parameters[0]
 		const objectInfo = await this.getObjectInfo(objectID)
@@ -378,15 +385,15 @@ export class TethrPTPUSB extends Tethr {
 			blob: new Blob([objectBuffer], {type: 'image/jpeg'}),
 		}
 
-		return [tethrObject]
+		return {status: 'ok', value: [tethrObject]}
 	}
 
-	public async startLiveview(): Promise<null | MediaStream> {
-		return null
+	public async startLiveview(): Promise<OperationResult<MediaStream>> {
+		return {status: 'unsupported'}
 	}
 
-	public async stopLiveview(): Promise<void> {
-		return
+	public async stopLiveview(): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
 	}
 
 	public get liveviewing(): boolean {

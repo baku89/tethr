@@ -462,7 +462,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 	}
 
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
-		null | TethrObject[]
+		OperationResult<TethrObject[]>
 	> {
 		const quality = await this.get('imageQuality')
 		let restNumPhotos = quality?.includes('+') ? 2 : 1
@@ -505,7 +505,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 
 		if (!download) {
-			return null
+			return {status: 'ok', value: []}
 		}
 
 		const objects: TethrObject[] = []
@@ -519,13 +519,13 @@ export class TethrPanasonic extends TethrPTPUSB {
 			objects.push({...info, blob})
 		}
 
-		return objects
+		return {status: 'ok', value: objects}
 	}
 
-	public async startLiveview(): Promise<null | MediaStream> {
+	public async startLiveview(): Promise<OperationResult<MediaStream>> {
 		const canvas = document.createElement('canvas')
 		const ctx = canvas.getContext('2d')
-		if (!ctx) return null
+		if (!ctx) return {status: 'general error'}
 
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
@@ -561,10 +561,10 @@ export class TethrPanasonic extends TethrPTPUSB {
 		updateFrame()
 
 		const stream = canvas.captureStream(60)
-		return stream
+		return {status: 'ok', value: stream}
 	}
 
-	public async stopLiveview(): Promise<void> {
+	public async stopLiveview(): Promise<OperationResult<void>> {
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
 			opcode: OpCodePanasonic.Liveview,
@@ -572,6 +572,8 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 
 		this._liveviewing = false
+
+		return {status: 'ok'}
 	}
 
 	private async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
@@ -739,7 +741,9 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return image
 	}
 
-	public async runManualFocus(option: RunManualFocusOption) {
+	public async runManualFocus(
+		option: RunManualFocusOption
+	): Promise<OperationResult<void>> {
 		const {direction, speed} = option
 
 		let mode = 0
@@ -771,17 +775,17 @@ export class TethrPanasonic extends TethrPTPUSB {
 			data: dataView.toBuffer(),
 		})
 
-		return true
+		return {status: 'ok'}
 	}
 
-	public async runAutoFocus(): Promise<boolean> {
+	public async runAutoFocus(): Promise<OperationResult<void>> {
 		await this.device.sendCommand({
 			label: 'Panasonic Ctrl Liveview',
 			opcode: OpCodePanasonic.CtrlLiveview,
 			parameters: [0x03000024],
 		})
 
-		return true
+		return {status: 'ok'}
 	}
 
 	protected onDevicePropChanged = async (ev: PTPEvent) => {

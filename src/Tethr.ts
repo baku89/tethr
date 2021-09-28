@@ -12,14 +12,21 @@ export type ITethrEventTypes = {
 	disconnect: void
 }
 
-export type OperationResultStatus = 'ok' | 'unsupported' | 'invalid' | 'busy'
+export type OperationResultStatus =
+	| 'ok'
+	| 'unsupported'
+	| 'invalid'
+	| 'busy'
+	| 'general error'
 
 export type OperationResult<T> = T extends void
 	? {status: OperationResultStatus}
-	: {
-			status: OperationResultStatus
-			value: T
-	  }
+	:
+			| {status: Exclude<OperationResultStatus, 'ok'>}
+			| {
+					status: 'ok'
+					value: T
+			  }
 
 export type ConfigDesc<T> = {
 	value: T | null
@@ -55,11 +62,13 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 	): Promise<ConfigDesc<ConfigType[N]>>
 
 	// Actions
-	public abstract runAutoFocus(): Promise<boolean>
-	public abstract runManualFocus(option: RunManualFocusOption): Promise<boolean>
+	public abstract runAutoFocus(): Promise<OperationResult<void>>
+	public abstract runManualFocus(
+		option: RunManualFocusOption
+	): Promise<OperationResult<void>>
 	public abstract takePicture(
 		options?: TakePictureOption
-	): Promise<null | TethrObject[]>
-	public abstract startLiveview(): Promise<null | MediaStream>
-	public abstract stopLiveview(): Promise<void>
+	): Promise<OperationResult<TethrObject[]>>
+	public abstract startLiveview(): Promise<OperationResult<MediaStream>>
+	public abstract stopLiveview(): Promise<OperationResult<void>>
 }
