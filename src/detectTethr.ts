@@ -55,7 +55,7 @@ export async function detectTethr({
 	}
 
 	async function detectTethrWebcam() {
-		if ('navigator' in globalThis) return []
+		if (!('navigator' in globalThis)) return []
 		if (!navigator.mediaDevices?.getUserMedia) return []
 
 		const media = await navigator.mediaDevices.getUserMedia({video: true})
