@@ -1,5 +1,5 @@
 import {BiMap} from 'bim'
-import _ from 'lodash'
+import {identity} from 'lodash'
 
 import {ActionName} from '../actions'
 import {
@@ -245,8 +245,8 @@ export class TethrPanasonic extends TethrPTPUSB {
 		colorTemperature: {
 			getCode: DevicePropCodePanasonic.WhiteBalance_KSet,
 			setCode: DevicePropCodePanasonic.WhiteBalance_KSet,
-			decode: _.identity,
-			encode: _.identity,
+			decode: identity,
+			encode: identity,
 			valueSize: 2,
 		},
 		colorMode: {

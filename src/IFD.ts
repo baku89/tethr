@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import {times} from 'lodash'
 
 export enum IFDType {
 	Byte = 0x1,
@@ -90,7 +90,7 @@ export function decodeIFD<Scheme extends IFDScheme>(
 			case IFDType.SignedShort: {
 				// Signed SHORT
 				const off = count > 2 ? valueOffset : offset
-				value = _.times(count, i => {
+				value = times(count, i => {
 					const f = dataView.getUint8(off + i * 2)
 					const d = dataView.getInt8(off + i * 2 + 1)
 

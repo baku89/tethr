@@ -1,5 +1,5 @@
 import {BiMap} from 'bim'
-import _ from 'lodash'
+import {minBy, range} from 'lodash'
 import sleep from 'sleep-promise'
 
 import {ActionName} from '../actions'
@@ -258,7 +258,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: false,
 			value,
-			options: _.range(min, max, 1),
+			options: range(min, max, 1),
 		}
 
 		function decodeFocalLength(byte: number) {
@@ -315,8 +315,8 @@ export class TethrSigma extends TethrPTPUSB {
 		const fMinRaw = Math.sqrt(2 ** svMin)
 		const fMaxRaw = Math.sqrt(2 ** svMax)
 
-		const fMin = _.minBy(apertures, a => Math.abs(a - fMinRaw))
-		const fMax = _.minBy(apertures, a => Math.abs(a - fMaxRaw))
+		const fMin = minBy(apertures, a => Math.abs(a - fMinRaw))
+		const fMax = minBy(apertures, a => Math.abs(a - fMaxRaw))
 
 		if (!fMin || !fMax) throw new Error()
 
@@ -365,10 +365,10 @@ export class TethrSigma extends TethrPTPUSB {
 		const ssMinRaw = 1 / 2 ** tvMin
 		const ssMaxRaw = 1 / 2 ** tvMax
 
-		const ssMinEntry = _.minBy(shutterSpeeds, e =>
+		const ssMinEntry = minBy(shutterSpeeds, e =>
 			Math.abs(computeShutterSpeedSeconds(e[1]) - ssMinRaw)
 		)
-		const ssMaxEntry = _.minBy(shutterSpeeds, e =>
+		const ssMaxEntry = minBy(shutterSpeeds, e =>
 			Math.abs(computeShutterSpeedSeconds(e[1]) - ssMaxRaw)
 		)
 
@@ -511,7 +511,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: true,
 			value,
-			options: _.range(min, max, step),
+			options: range(min, max, step),
 		}
 	}
 

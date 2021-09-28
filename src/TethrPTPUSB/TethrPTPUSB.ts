@@ -1,5 +1,5 @@
 import {BiMap} from 'bim'
-import _ from 'lodash'
+import {identity, range, times} from 'lodash'
 
 import {ActionName} from '../actions'
 import {
@@ -322,13 +322,13 @@ export class TethrPTPUSB extends Tethr {
 				) {
 					throw new Error(`Cannot enumerate supported values of device config`)
 				}
-				options = _.range(min, max, step) as ConfigType[Name][]
+				options = range(min, max, step) as ConfigType[Name][]
 				break
 			}
 			case 0x02: {
 				// Enumeration
 				const length = dataView.readUint16()
-				options = _.times(length, readValue).map(decode)
+				options = times(length, readValue).map(decode)
 				break
 			}
 			default:
@@ -596,8 +596,8 @@ export class TethrPTPUSB extends Tethr {
 		captureDelay: {
 			devicePropCode: DevicePropCode.CaptureDelay,
 			dataType: DatatypeCode.Uint32,
-			decode: _.identity,
-			encode: _.identity,
+			decode: identity,
+			encode: identity,
 		},
 		driveMode: {
 			devicePropCode: DevicePropCode.StillCaptureMode,
@@ -612,26 +612,26 @@ export class TethrPTPUSB extends Tethr {
 		imageSize: {
 			devicePropCode: DevicePropCode.ImageSize,
 			dataType: DatatypeCode.String,
-			decode: _.identity,
-			encode: _.identity,
+			decode: identity,
+			encode: identity,
 		},
 		timelapseNumber: {
 			devicePropCode: DevicePropCode.TimelapseNumber,
 			dataType: DatatypeCode.Uint16,
-			decode: _.identity,
-			encode: _.identity,
+			decode: identity,
+			encode: identity,
 		},
 		timelapseInterval: {
 			devicePropCode: DevicePropCode.TimelapseInterval,
 			dataType: DatatypeCode.Uint32,
-			decode: _.identity,
-			encode: _.identity,
+			decode: identity,
+			encode: identity,
 		},
 		batteryLevel: {
 			devicePropCode: DevicePropCode.BatteryLevel,
 			dataType: DatatypeCode.Uint8,
-			decode: _.identity,
-			encode: _.identity,
+			decode: identity,
+			encode: identity,
 		},
 	}
 

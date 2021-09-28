@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import {padStart} from 'lodash'
 
 export function toHexString(
 	data: number | ArrayBuffer,
@@ -14,10 +14,10 @@ export function toHexString(
 			length = bytes
 		}
 
-		return '0x' + _.padStart(hex, length, '0')
+		return '0x' + padStart(hex, length, '0')
 	} else {
 		const arr = [...new Uint8Array(data)]
-		return arr.map(byte => _.padStart(byte.toString(16), 2, '0')).join(' ')
+		return arr.map(byte => padStart(byte.toString(16), 2, '0')).join(' ')
 	}
 }
 

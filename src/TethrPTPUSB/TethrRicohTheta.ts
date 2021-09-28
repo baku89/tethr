@@ -1,5 +1,5 @@
 import {BiMap} from 'bim'
-import _ from 'lodash'
+import {identity} from 'lodash'
 
 import {ConfigType} from '../configs'
 import {DatatypeCode} from '../PTPDatacode'
@@ -60,8 +60,8 @@ export class TethrRicohTheta extends TethrPTPUSB {
 			colorTemperature: {
 				devicePropCode: DevicePropCodeRicohTheta.ColorTemperature,
 				dataType: DatatypeCode.Uint16,
-				decode: _.identity,
-				encode: _.identity,
+				decode: identity,
+				encode: identity,
 			},
 		}
 

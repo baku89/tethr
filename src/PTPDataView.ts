@@ -1,5 +1,5 @@
 import {parse as parseTimestamp} from 'date-format-parse'
-import _ from 'lodash'
+import {times} from 'lodash'
 
 const DEFAULT_BUFFER_SIZE = 2048
 
@@ -150,7 +150,7 @@ export class PTPDataView {
 
 	private readArray = (getFunc: () => number) => {
 		const length = this.readUint32()
-		return _.times(length, getFunc.bind(this))
+		return times(length, getFunc.bind(this))
 	}
 
 	// Write methods
