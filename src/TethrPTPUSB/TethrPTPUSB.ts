@@ -207,11 +207,7 @@ export class TethrPTPUSB extends Tethr {
 				}
 		}
 
-		return {
-			writable: false,
-			value: null,
-			options: [],
-		}
+		return super.getDesc(name)
 	}
 
 	private async getDevicePropDesc<Name extends ConfigName>(
