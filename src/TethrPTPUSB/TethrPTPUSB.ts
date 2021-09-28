@@ -129,29 +129,6 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
-	public async listConfigs() {
-		const {devicePropsSupported} = await this.getDeviceInfo()
-
-		const deviceInfos = ['model']
-		const deviceProps = devicePropsSupported.map(getConfigNameByDevicePropCode)
-		const actionSupportedFlags = [
-			'canTakePicture',
-			'canRunAutoFocus',
-			'canRunManualFocus',
-			'canStartLiveview',
-		]
-
-		return [
-			...deviceInfos,
-			...deviceProps,
-			...actionSupportedFlags,
-		] as ConfigName[]
-
-		function getConfigNameByDevicePropCode(code: number) {
-			return DevicePropCode[code] ?? toHexString(code, 4)
-		}
-	}
-
 	public async set<K extends ConfigName>(
 		name: K,
 		value: ConfigType[K]

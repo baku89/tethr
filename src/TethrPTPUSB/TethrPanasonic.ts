@@ -309,24 +309,6 @@ export class TethrPanasonic extends TethrPTPUSB {
 		await super.open()
 	}
 
-	public async listConfigs(): Promise<ConfigName[]> {
-		return [
-			...(await super.listConfigs()),
-			'exposureMode',
-			'aperture',
-			'shutterSpeed',
-			'iso',
-			'exposureComp',
-			'whiteBalance',
-			'colorTemperature',
-			'colorMode',
-			'imageAspect',
-			'imageQuality',
-			'liveviewEnabled',
-			'liveviewSize',
-		]
-	}
-
 	public async set<N extends ConfigName>(
 		name: N,
 		value: ConfigType[N]

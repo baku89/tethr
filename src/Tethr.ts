@@ -42,8 +42,6 @@ export abstract class Tethr extends EventEmitter<ITethrEventTypes> {
 
 	public abstract get opened(): boolean
 
-	public abstract listConfigs(): Promise<ConfigName[]>
-
 	public async get<N extends ConfigName>(
 		name: N
 	): Promise<ConfigType[N] | null> {

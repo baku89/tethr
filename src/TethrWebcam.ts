@@ -29,17 +29,6 @@ export class TethrWebcam extends Tethr {
 		return this._opened
 	}
 
-	public async listConfigs(): Promise<ConfigName[]> {
-		return [
-			'model',
-			'liveviewEnabled',
-			'canTakePicture',
-			'canRunAutoFocus',
-			'canRunManualFocus',
-			'canStartLiveview',
-		]
-	}
-
 	public async set(): Promise<OperationResult<void>> {
 		return {
 			status: 'unsupported',

@@ -102,6 +102,22 @@ enum SnapCaptureMode {
 	StopRecordingMovie = 0x30,
 }
 
+const ConfigListSigma: ConfigName[] = [
+	'exposureMode',
+	'aperture',
+	'shutterSpeed',
+	'iso',
+	'exposureComp',
+	'whiteBalance',
+	'colorTemperature',
+	'colorMode',
+	'imageAspect',
+	'imageSize',
+	'imageQuality',
+	'liveviewEnabled',
+	'liveviewMagnifyRatio',
+]
+
 export class TethrSigma extends TethrPTPUSB {
 	private liveviewEnabled = false
 
@@ -113,25 +129,6 @@ export class TethrSigma extends TethrPTPUSB {
 			opcode: OpCodeSigma.ConfigApi,
 			parameters: [0x0],
 		})
-	}
-
-	public async listConfigs(): Promise<ConfigName[]> {
-		return [
-			...(await super.listConfigs()),
-			'exposureMode',
-			'aperture',
-			'shutterSpeed',
-			'iso',
-			'exposureComp',
-			'whiteBalance',
-			'colorTemperature',
-			'colorMode',
-			'imageAspect',
-			'imageSize',
-			'imageQuality',
-			'liveviewEnabled',
-			'liveviewMagnifyRatio',
-		]
 	}
 
 	public async set<K extends ConfigName>(
@@ -181,7 +178,7 @@ export class TethrSigma extends TethrPTPUSB {
 				status = 'unsupported'
 		}
 
-		for (const config of await this.listConfigs()) {
+		for (const config of ConfigListSigma) {
 			const desc = await this.getDesc(config)
 			this.emit(`${config}Changed`, desc)
 		}
