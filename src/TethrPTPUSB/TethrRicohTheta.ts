@@ -1,7 +1,7 @@
 import {BiMap} from 'bim'
 import {identity} from 'lodash'
 
-import {ConfigType} from '../configs'
+import {ConfigType, ExposureModeTable, WhiteBalanceTable} from '../configs'
 import {DatatypeCode} from '../PTPDatacode'
 import {ConfigDesc} from '../Tethr'
 import {DevicePropScheme, TethrPTPUSB} from './TethrPTPUSB'
@@ -68,25 +68,23 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		return devicePropScheme
 	})()
 
-	protected exposureModeTable = (() => {
-		const table = new BiMap(super.exposureModeTable.entries())
-		table.set(0x8003, 'vendor iso-priority')
-		return table
-	})()
+	protected exposureModeTable = new BiMap([
+		...ExposureModeTable.entries(),
+		[0x8003, 'vendor iso-priority'],
+	])
 
-	protected WhiteBalanceTable = (() => {
-		const table = new BiMap(super.whiteBalanceTable.entries())
-		table.set(0x8001, 'shade')
-		table.set(0x0004, 'daylight')
-		table.set(0x0006, 'incandescent')
-		table.set(0x8002, 'cloud')
-		table.set(0x8020, 'vendor incandescent 2')
-		table.set(0x8003, 'vendor fluorescent daylight')
-		table.set(0x8004, 'vendor fluorescent natural white')
-		table.set(0x8005, 'vendor fluorescent white')
-		table.set(0x8006, 'tungsten')
-		table.set(0x8007, 'manual')
-		table.set(0x8008, 'underwater')
-		return table
-	})()
+	protected WhiteBalanceTable = new BiMap([
+		...WhiteBalanceTable.entries(),
+		[0x8001, 'shade'],
+		[0x0004, 'daylight'],
+		[0x0006, 'incandescent'],
+		[0x8002, 'cloud'],
+		[0x8020, 'vendor incandescent 2'],
+		[0x8003, 'vendor fluorescent daylight'],
+		[0x8004, 'vendor fluorescent natural white'],
+		[0x8005, 'vendor fluorescent white'],
+		[0x8006, 'tungsten'],
+		[0x8007, 'manual'],
+		[0x8008, 'underwater'],
+	])
 }

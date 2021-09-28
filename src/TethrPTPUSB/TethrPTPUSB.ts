@@ -1,12 +1,12 @@
-import {BiMap} from 'bim'
 import {identity, range, times} from 'lodash'
 
 import {
+	ConfigForDevicePropTable,
 	ConfigType,
-	DriveMode,
-	ExposureMode,
+	DriveModeTable,
+	ExposureModeTable,
 	ManualFocusOption,
-	WhiteBalance,
+	WhiteBalanceTable,
 } from '../configs'
 import {DeviceInfo} from '../DeviceInfo'
 import {
@@ -15,15 +15,13 @@ import {
 	EventCode,
 	ObjectFormatCode,
 	OpCode,
+	PTPAccessCapabilityCode,
+	PTPFilesystemTypeCode,
+	PTPStorageTypeCode,
 	ResCode,
 } from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPDevice, PTPEvent} from '../PTPDevice'
-import {
-	PTPAccessCapability,
-	PTPFilesystemType,
-	PTPStorageType,
-} from '../PTPEnum'
 import {ConfigDesc, OperationResult, TakePictureOption, Tethr} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {toHexString} from '../util'
@@ -118,9 +116,9 @@ export class TethrPTPUSB extends Tethr {
 			const storageInfo = new PTPDataView(data)
 
 			const info = {
-				storageType: PTPStorageType[storageInfo.readUint16()],
-				filesystemType: PTPFilesystemType[storageInfo.readUint16()],
-				accessCapability: PTPAccessCapability[storageInfo.readUint16()],
+				storageType: PTPStorageTypeCode[storageInfo.readUint16()],
+				filesystemType: PTPFilesystemTypeCode[storageInfo.readUint16()],
+				accessCapability: PTPAccessCapabilityCode[storageInfo.readUint16()],
 				maxCapability: storageInfo.readUint64(),
 				freeSpaceInBytes: storageInfo.readUint64(),
 				freeSpaceInImages: storageInfo.readUint32(),
@@ -376,8 +374,8 @@ export class TethrPTPUSB extends Tethr {
 		return {status: 'unsupported'}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public async runManualFocus(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		option: ManualFocusOption
 	): Promise<OperationResult<void>> {
 		return {status: 'unsupported'}
@@ -514,7 +512,7 @@ export class TethrPTPUSB extends Tethr {
 	protected getConfigNameFromCode(
 		devicePropCode: number
 	): keyof ConfigType | null {
-		return this.devicePropTable.get(devicePropCode) ?? null
+		return ConfigForDevicePropTable.get(devicePropCode) ?? null
 	}
 
 	protected getObjectFormat(code: number) {
@@ -526,13 +524,11 @@ export class TethrPTPUSB extends Tethr {
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			dataType: DatatypeCode.Uint16,
 			decode: data => {
-				return (
-					this.exposureModeTable.get(data) ?? `vendor ${toHexString(data, 4)}`
-				)
+				return ExposureModeTable.get(data) ?? `vendor ${toHexString(data, 4)}`
 			},
 			encode: value => {
 				return (
-					this.exposureModeTable.getKey(value) ??
+					ExposureModeTable.getKey(value) ??
 					parseInt(value.replace('vendor ', ''), 16)
 				)
 			},
@@ -598,13 +594,11 @@ export class TethrPTPUSB extends Tethr {
 			devicePropCode: DevicePropCode.WhiteBalance,
 			dataType: DatatypeCode.Uint16,
 			decode: data => {
-				return (
-					this.whiteBalanceTable.get(data) ?? `vendor ${toHexString(data, 4)}`
-				)
+				return WhiteBalanceTable.get(data) ?? `vendor ${toHexString(data, 4)}`
 			},
 			encode: value => {
 				return (
-					this.whiteBalanceTable.getKey(value) ??
+					WhiteBalanceTable.getKey(value) ??
 					parseInt(value.replace(/^vendor /, ''), 16)
 				)
 			},
@@ -631,10 +625,10 @@ export class TethrPTPUSB extends Tethr {
 			devicePropCode: DevicePropCode.StillCaptureMode,
 			dataType: DatatypeCode.Uint16,
 			decode: data => {
-				return this.driveModeTable.get(data) ?? 'normal'
+				return DriveModeTable.get(data) ?? 'normal'
 			},
 			encode: value => {
-				return this.driveModeTable.getKey(value) ?? 0x0
+				return DriveModeTable.getKey(value) ?? 0x0
 			},
 		},
 		imageSize: {
@@ -662,46 +656,4 @@ export class TethrPTPUSB extends Tethr {
 			encode: identity,
 		},
 	}
-
-	protected devicePropTable = new BiMap<number, keyof ConfigType>([
-		[0x5001, 'batteryLevel'],
-		[0x5005, 'whiteBalance'],
-		[0x5007, 'aperture'],
-		[0x5008, 'focalLength'],
-		[0x5009, 'focusDistance'],
-		[0x500d, 'shutterSpeed'],
-		[0x500e, 'exposureMode'],
-		[0x500f, 'iso'],
-		[0x5010, 'exposureComp'],
-		[0x5012, 'captureDelay'],
-		[0x5013, 'driveMode'],
-		[0x5017, 'colorMode'],
-		[0x501a, 'timelapseNumber'],
-		[0x501b, 'timelapseInterval'],
-	])
-
-	protected exposureModeTable = new BiMap<number, ExposureMode>([
-		[0x1, 'M'],
-		[0x2, 'P'],
-		[0x3, 'A'],
-		[0x4, 'S'],
-		[0x5, 'creative'],
-		[0x6, 'action'],
-		[0x7, 'portrait'],
-	])
-
-	protected whiteBalanceTable = new BiMap<number, WhiteBalance>([
-		[0x1, 'manual'],
-		[0x2, 'auto'],
-		[0x3, 'custom'],
-		[0x4, 'daylight'],
-		[0x5, 'fluorescent'],
-		[0x6, 'tungsten'],
-	])
-
-	protected driveModeTable = new BiMap<number, DriveMode>([
-		[0x1, 'normal'],
-		[0x2, 'burst'],
-		[0x3, 'timelapse'],
-	])
 }

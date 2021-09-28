@@ -1586,7 +1586,7 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x0c, null],
 	])
 
-	private whiteBalanceTableTable = new BiMap<number, WhiteBalance>([
+	private whiteBalanceTable = new BiMap<number, WhiteBalance>([
 		[0x01, 'auto'],
 		[0x02, 'daylight'], // Sunlight
 		[0x03, 'shade'],
