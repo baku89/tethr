@@ -4,7 +4,45 @@ export type Aperture = 'auto' | number
 
 export type BatteryLevel = 'ac' | 'low' | number
 
+export type DriveMode = 'normal' | 'burst' | 'timelapse'
+
+export type ExposureMeteringMode =
+	| 'average'
+	| 'center-weighted-average'
+	| 'multi-spot'
+	| 'center-spot'
+
+export type ExposureMode =
+	| 'P'
+	| 'A'
+	| 'S'
+	| 'M'
+	| 'creative'
+	| 'action'
+	| 'portrait'
+	| 'video'
+	| `C${1 | 2 | 3}`
+	| `vendor ${string}`
+
+export type FlashMode =
+	| 'auto'
+	| 'off'
+	| 'fill'
+	| 'red eye auto'
+	| 'red eye fill'
+	| 'external sync'
+
+export type FocusMode = 'af' | 'mf'
+
+export type FunctionalMode = 'standard' | 'sleep'
+
+export type FocusMeteringMode = 'center-spot' | 'multi-spot'
+
+export type FocalLength = number | 'spherical'
+
 export type ISO = 'auto' | number
+
+export type ManualFocusOption = `${'near' | 'far'}:${1 | 2 | 3}`
 
 export type WhiteBalance =
 	| 'auto'
@@ -23,97 +61,46 @@ export type WhiteBalance =
 	| `custom${'' | 2 | 3 | 4}`
 	| `vendor ${string}`
 
-export type FunctionalMode = 'standard' | 'sleep'
-
-export type FocusMode = 'af' | 'mf'
-
-export type FlashMode =
-	| 'auto'
-	| 'off'
-	| 'fill'
-	| 'red eye auto'
-	| 'red eye fill'
-	| 'external sync'
-
-export type ExposureMode =
-	| 'P'
-	| 'A'
-	| 'S'
-	| 'M'
-	| 'creative'
-	| 'action'
-	| 'portrait'
-	| 'video'
-	| `C${1 | 2 | 3}`
-	| `vendor ${string}`
-
-export type ExposureMeteringMode =
-	| 'average'
-	| 'center-weighted-average'
-	| 'multi-spot'
-	| 'center-spot'
-
-export type DriveMode = 'normal' | 'burst' | 'timelapse'
-
-export type FocusMeteringMode = 'center-spot' | 'multi-spot'
-
-export type FocalLength = number | 'spherical'
-
-export type ManualFocusOption = `${'near' | 'far'}:${1 | 2 | 3}`
-
 export type ConfigType = {
-	model: string
-
-	batteryLevel: BatteryLevel
-	functionalMode: FunctionalMode
-	compressionSetting: number
-
-	imageSize: string // e.g. L, M, S, 1024x768...
-	imageQuality: string // Added e.g. JPEG, JPEG+RAW...
-	imageAspect: string // Added e.g. 16:9, 3:2...
-
-	whiteBalance: WhiteBalance
-	rgbGain: [number, number, number]
-	colorTemperature: number // Added
 	aperture: number // fNumber
-	focalLength: FocalLength
-	focusDistance: number
-	focusMode: FocusMode
-	exposureMeteringMode: ExposureMeteringMode
-	flashMode: FlashMode
-	// exposureTime: number
-	shutterSpeed: string
-	exposureMode: ExposureMode // exposureProgramMode
-	// exposureIndex: 0x500f
-	exposureComp: string // exposureBiasCompensation
-	dateTime: Date
-	captureDelay: number
-	driveMode: DriveMode // stillCaptureMode
-	contrast: number
-	sharpness: number
-	digitalZoom: number
-	colorMode: string
-	burstNumber: number
+	batteryLevel: BatteryLevel
 	burstInterval: number
-	timelapseNumber: number
-	timelapseInterval: number
-	focusMeteringMode: FocusMeteringMode
-	uploadURL: string
-	artist: string
-	copyrightInfo: string
-	iso: ISO // added
-
-	// Actions
-	canTakePicture: boolean
+	burstNumber: number
 	canRunAutoFocus: boolean
 	canRunManualFocus: boolean
 	canStartLiveview: boolean
-
-	manualFocusOptions: ManualFocusOption[] // added for runManualFocus
-
+	canTakePicture: boolean
+	captureDelay: number
+	colorMode: string
+	colorTemperature: number // Added
+	compressionSetting: number
+	contrast: number
+	dateTime: Date
+	digitalZoom: number
+	driveMode: DriveMode // stillCaptureMode
+	exposureComp: string // exposureBiasCompensation
+	exposureMeteringMode: ExposureMeteringMode
+	exposureMode: ExposureMode // exposureProgramMode
+	flashMode: FlashMode
+	focalLength: FocalLength
+	focusDistance: number
+	focusMeteringMode: FocusMeteringMode
+	focusMode: FocusMode
+	functionalMode: FunctionalMode
+	imageAspect: string // Added e.g. 16:9, 3:2...
+	imageQuality: string // Added e.g. JPEG, JPEG+RAW...
+	imageSize: string // e.g. L, M, S, 1024x768...
+	iso: ISO // added
 	liveviewEnabled: boolean // added
 	liveviewMagnifyRatio: number // added
 	liveviewSize: string // ad
+	manualFocusOptions: ManualFocusOption[]
+	model: string
+	sharpness: number
+	shutterSpeed: string
+	timelapseInterval: number
+	timelapseNumber: number
+	whiteBalance: WhiteBalance
 
 	[v: `0x${string}`]: any
 }
