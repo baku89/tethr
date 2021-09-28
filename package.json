@@ -6,7 +6,7 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
-		"dev": "parcel demo/index.html --no-cache --public-url . --dist-dir public",
+		"dev": "parcel demo/index.html --no-cache --public-url / --dist-dir public",
 		"lint": "eslint --fix --ext .ts --ignore-path .gitignore .",
 		"format": "prettier --write src demo",
 		"fix": "npm run format && npm run lint",
