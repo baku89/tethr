@@ -391,10 +391,6 @@ export class TethrPTPUSB extends Tethr {
 		return {status: 'unsupported'}
 	}
 
-	public get liveviewing(): boolean {
-		return false
-	}
-
 	protected getDeviceInfo = async (): Promise<DeviceInfo> => {
 		return await TethrPTPUSB.getDeviceInfo(this.device)
 	}

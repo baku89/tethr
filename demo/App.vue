@@ -17,7 +17,7 @@
 				<dt>liveview</dt>
 				<dd>
 					<button @click="toggleLiveview">
-						{{ liveviewing ? 'Stop' : 'Start' }}
+						{{ configs.liveviewEnabled?.value ? 'Stop' : 'Start' }}
 					</button>
 				</dd>
 				<dt>autoFocus</dt>

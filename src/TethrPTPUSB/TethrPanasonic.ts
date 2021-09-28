@@ -110,7 +110,7 @@ interface LiveviewSetting {
 }
 
 export class TethrPanasonic extends TethrPTPUSB {
-	private _liveviewing = false
+	private liveviewEnabled = false
 
 	private devicePropSchemePanasonic: DevicePropSchemePanasonic = {
 		exposureMode: {
@@ -321,6 +321,8 @@ export class TethrPanasonic extends TethrPTPUSB {
 			'colorMode',
 			'imageAspect',
 			'imageQuality',
+			'liveviewEnabled',
+			'liveviewSize',
 		]
 	}
 
@@ -385,7 +387,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	public getDesc<N extends keyof ConfigType>(
+	public async getDesc<N extends keyof ConfigType>(
 		name: N
 	): Promise<ConfigDesc<ConfigType[N]>> {
 		const scheme = this.devicePropSchemePanasonic[name] ?? null
@@ -394,8 +396,15 @@ export class TethrPanasonic extends TethrPTPUSB {
 			return this.getDevicePropDescPanasonic(scheme)
 		}
 
-		if (name === 'liveviewSize') {
-			return this.getLiveviewSizeDesc() as Promise<ConfigDesc<ConfigType[N]>>
+		switch (name) {
+			case 'liveviewSize':
+				return this.getLiveviewSizeDesc() as Promise<ConfigDesc<ConfigType[N]>>
+			case 'liveviewEnabled':
+				return {
+					writable: false,
+					value: this.liveviewEnabled as ConfigType[N],
+					options: [],
+				}
 		}
 
 		return super.getDesc(name)
@@ -521,10 +530,11 @@ export class TethrPanasonic extends TethrPTPUSB {
 			parameters: [0x0d000010],
 		})
 
-		this._liveviewing = true
+		this.liveviewEnabled = true
+		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		const updateFrame = async () => {
-			if (!this._liveviewing) return
+			if (!this.liveviewEnabled) return
 			try {
 				const image = await this.getLiveview()
 
@@ -559,7 +569,8 @@ export class TethrPanasonic extends TethrPTPUSB {
 			parameters: [0x0d000011],
 		})
 
-		this._liveviewing = false
+		this.liveviewEnabled = false
+		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		return {status: 'ok'}
 	}

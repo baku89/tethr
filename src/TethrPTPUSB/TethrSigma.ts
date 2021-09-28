@@ -102,7 +102,7 @@ enum SnapCaptureMode {
 }
 
 export class TethrSigma extends TethrPTPUSB {
-	private _liveviewing = false
+	private liveviewEnabled = false
 
 	public open = async (): Promise<void> => {
 		await super.open()
@@ -128,6 +128,7 @@ export class TethrSigma extends TethrPTPUSB {
 			'imageAspect',
 			'imageSize',
 			'imageQuality',
+			'liveviewEnabled',
 			'liveviewMagnifyRatio',
 		]
 	}
@@ -227,6 +228,8 @@ export class TethrSigma extends TethrPTPUSB {
 				return this.getImageSizeDesc() as ReturnType
 			case 'imageQuality':
 				return this.getImageQualityDesc() as ReturnType
+			case 'liveviewEnabled':
+				return this.getLiveviewEnabledDesc() as ReturnType
 			case 'liveviewMagnifyRatio':
 				return this.getLiveviewMagnifyLevelRatioDesc() as ReturnType
 		}
@@ -807,6 +810,14 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	private async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
+		return {
+			writable: false,
+			value: this.liveviewEnabled,
+			options: [],
+		}
+	}
+
 	private async setLiveviewMagnifyLevelRatio(
 		value: number
 	): Promise<OperationResultStatus> {
@@ -894,10 +905,11 @@ export class TethrSigma extends TethrPTPUSB {
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return {status: 'general error'}
 
-		this._liveviewing = true
+		this.liveviewEnabled = true
+		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		const updateFrame = async () => {
-			if (!this._liveviewing) return
+			if (!this.liveviewEnabled) return
 
 			try {
 				const {resCode, data} = await this.device.receiveData({
@@ -935,12 +947,10 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	public async stopLiveview(): Promise<OperationResult<void>> {
-		this._liveviewing = false
-		return {status: 'ok'}
-	}
+		this.liveviewEnabled = false
+		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
-	public get liveviewing(): boolean {
-		return this._liveviewing
+		return {status: 'ok'}
 	}
 
 	private async getCamDataGroup1() {

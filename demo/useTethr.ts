@@ -114,24 +114,19 @@ export function useTethr() {
 		}
 	}
 
-	const liveviewing = ref(false)
-	watch(camera, cam => {
-		if (!cam) liveviewing.value = false
-	})
-
 	async function toggleLiveview() {
-		liveviewing.value = !liveviewing.value
-
 		if (!camera.value) return
 
-		if (liveviewing.value) {
+		const enabled = await camera.value.get('liveviewEnabled')
+
+		if (enabled) {
+			await camera.value.stopLiveview()
+			liveviewMediaStream.value = null
+		} else {
 			const result = await camera.value.startLiveview()
 			if (result.status === 'ok') {
 				liveviewMediaStream.value = result.value
 			}
-		} else {
-			await camera.value.stopLiveview()
-			liveviewMediaStream.value = null
 		}
 	}
 
@@ -158,12 +153,12 @@ export function useTethr() {
 			timelapseInterval: useTethrConfig(camera, 'timelapseInterval'),
 			focalLength: useTethrConfig(camera, 'focalLength'),
 			liveviewMagnifyRatio: useTethrConfig(camera, 'liveviewMagnifyRatio'),
+			liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),
 			liveviewSize: useTethrConfig(camera, 'liveviewSize'),
 			batteryLevel: useTethrConfig(camera, 'batteryLevel'),
 		},
 
 		liveviewMediaStream,
-		liveviewing: readonly(liveviewing),
 		lastPictureURL,
 		runAutoFocus,
 		toggleCameraConnection,
