@@ -2,6 +2,8 @@ import {BiMap} from 'bim'
 
 export type Aperture = 'auto' | number
 
+export type BatteryLevel = 'ac' | 'low' | number
+
 export type ISO = 'auto' | number
 
 export type WhiteBalance =
