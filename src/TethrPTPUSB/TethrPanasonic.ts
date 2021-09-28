@@ -365,7 +365,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		if (encodedValue === null) {
 			return {
-				status: 'invalid',
+				status: 'invalid parameter',
 			}
 		}
 
@@ -383,7 +383,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 
 		return {
-			status: succeed ? 'ok' : 'invalid',
+			status: succeed ? 'ok' : 'invalid parameter',
 		}
 	}
 
@@ -616,7 +616,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		const setting = settings.find(s => s.width === width && s.height === height)
 
 		if (!setting) {
-			return {status: 'invalid'}
+			return {status: 'invalid parameter'}
 		}
 
 		await this.setLiveviewSetting(setting)
@@ -771,7 +771,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 
 		if (!mode) {
-			return {status: 'invalid'}
+			return {status: 'invalid parameter'}
 		}
 
 		const devicePropCode = 0x03010011

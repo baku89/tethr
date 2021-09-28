@@ -21,8 +21,6 @@ export type WhiteBalance =
 	| `custom${'' | 2 | 3 | 4}`
 	| `vendor ${string}`
 
-export type BatteryLevel = 'ac' | 'low' | number
-
 export type FunctionalMode = 'standard' | 'sleep'
 
 export type FocusMode = 'af' | 'mf'

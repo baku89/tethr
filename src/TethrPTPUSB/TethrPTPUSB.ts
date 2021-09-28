@@ -174,7 +174,7 @@ export class TethrPTPUSB extends Tethr {
 
 		if (devicePropData === null) {
 			return {
-				status: 'invalid',
+				status: 'invalid parameter',
 			}
 		}
 

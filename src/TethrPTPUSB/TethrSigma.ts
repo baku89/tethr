@@ -282,10 +282,10 @@ export class TethrSigma extends TethrPTPUSB {
 	private async setAperture(
 		aperture: Aperture
 	): Promise<OperationResultStatus> {
-		if (aperture === 'auto') return 'invalid'
+		if (aperture === 'auto') return 'invalid parameter'
 
 		const byte = this.apertureOneThirdTable.getKey(aperture)
-		if (!byte) return 'invalid'
+		if (!byte) return 'invalid parameter'
 
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
@@ -390,7 +390,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	private async setShutterSpeed(ss: string): Promise<OperationResultStatus> {
 		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
-		if (!byte) return 'invalid'
+		if (!byte) return 'invalid parameter'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
 	}
@@ -410,7 +410,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 
 		const id = this.isoTable.getKey(iso)
-		if (!id) return 'invalid'
+		if (!id) return 'invalid parameter'
 
 		const setISOAutoResult = await this.setCamData(
 			OpCodeSigma.SetCamDataGroup1,
@@ -426,7 +426,7 @@ export class TethrSigma extends TethrPTPUSB {
 		if (setISOAutoResult === 'ok' && setISOValueResult === 'ok') {
 			return 'ok'
 		} else {
-			return 'invalid'
+			return 'invalid parameter'
 		}
 	}
 
@@ -460,7 +460,7 @@ export class TethrSigma extends TethrPTPUSB {
 		wb: WhiteBalance
 	): Promise<OperationResultStatus> {
 		const id = this.whiteBalanceTable.getKey(wb)
-		if (!id) return 'invalid'
+		if (!id) return 'invalid parameter'
 		return await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, id)
 	}
 
@@ -524,7 +524,7 @@ export class TethrSigma extends TethrPTPUSB {
 		exposureMode: ExposureMode
 	): Promise<OperationResultStatus> {
 		const id = this.exposureModeTable.getKey(exposureMode)
-		if (!id) return 'invalid'
+		if (!id) return 'invalid parameter'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, id)
 	}
@@ -551,7 +551,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	private async setExposureComp(value: string): Promise<OperationResultStatus> {
 		const id = this.compensationOneThirdTable.getKey(value)
-		if (id === undefined) return 'invalid'
+		if (id === undefined) return 'invalid parameter'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, id)
 	}
@@ -615,7 +615,7 @@ export class TethrSigma extends TethrPTPUSB {
 		colorMode: string
 	): Promise<OperationResultStatus> {
 		const id = this.colorModeTable.getKey(colorMode)
-		if (id === undefined) return 'invalid'
+		if (id === undefined) return 'invalid parameter'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
 	}
@@ -639,7 +639,7 @@ export class TethrSigma extends TethrPTPUSB {
 		imageAspect: string
 	): Promise<OperationResultStatus> {
 		const id = this.imageAspectTableIFD.getKey(imageAspect)
-		if (id === undefined) return 'invalid'
+		if (id === undefined) return 'invalid parameter'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
 	}
@@ -665,7 +665,7 @@ export class TethrSigma extends TethrPTPUSB {
 		imageSize: string
 	): Promise<OperationResultStatus> {
 		const id = this.imageSizeTable.getKey(imageSize)
-		if (id === undefined) return 'invalid'
+		if (id === undefined) return 'invalid parameter'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 14, id)
 	}
@@ -722,7 +722,7 @@ export class TethrSigma extends TethrPTPUSB {
 				imageQualityID = 0x08
 				break
 			default:
-				return 'invalid'
+				return 'invalid parameter'
 		}
 		imageQualityID |= dngBitDepth === null ? 0x00 : 0x10
 
@@ -744,7 +744,7 @@ export class TethrSigma extends TethrPTPUSB {
 		if (setImageQualityResult === 'ok' && setDngBitDepthResult === 'ok') {
 			return 'ok'
 		} else {
-			return 'invalid'
+			return 'invalid parameter'
 		}
 	}
 
@@ -830,7 +830,7 @@ export class TethrSigma extends TethrPTPUSB {
 		value: number
 	): Promise<OperationResultStatus> {
 		const id = this.liveviewMagnifyRatioTable.getKey(value)
-		if (!id) return 'invalid'
+		if (!id) return 'invalid parameter'
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup4, 5, id)
 	}
@@ -1139,7 +1139,7 @@ export class TethrSigma extends TethrPTPUSB {
 				data,
 			})
 		} catch (err) {
-			return 'invalid'
+			return 'invalid parameter'
 		}
 
 		return 'ok'

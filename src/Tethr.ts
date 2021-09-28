@@ -14,7 +14,7 @@ export type ITethrEventTypes = {
 export type OperationResultStatus =
 	| 'ok'
 	| 'unsupported'
-	| 'invalid'
+	| 'invalid parameter'
 	| 'busy'
 	| 'general error'
 
