@@ -103,8 +103,6 @@ export type ConfigType = {
 	timelapseInterval: number
 	timelapseNumber: number
 	whiteBalance: WhiteBalance
-
-	[v: `0x${string}`]: any
 }
 
 export type ConfigName = keyof ConfigType
