@@ -1,5 +1,7 @@
 import {BiMap} from 'bim'
 
+import {ConfigDesc} from './Tethr'
+
 export type Aperture = 'auto' | number
 
 export type BatteryLevel = 'ac' | 'low' | number
@@ -106,6 +108,14 @@ export type ConfigType = {
 }
 
 export type ConfigName = keyof ConfigType
+
+export function generateUnsupportedConfigDesc(): ConfigDesc<any> {
+	return {
+		writable: false,
+		value: null,
+		options: [],
+	}
+}
 
 // Table
 export const ConfigForDevicePropTable = new BiMap<number, ConfigName>([
