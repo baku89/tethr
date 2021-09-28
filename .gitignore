@@ -1,6 +1,6 @@
 .DS_Store
 .cache
-.parcel*
+.parcel-cache
 node_modules
 
 dist
