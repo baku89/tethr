@@ -64,7 +64,7 @@ export type WhiteBalance =
 	| `vendor ${string}`
 
 export type ConfigType = {
-	aperture: number // fNumber
+	aperture: Aperture // fNumber
 	batteryLevel: BatteryLevel
 	burstInterval: number
 	burstNumber: number
