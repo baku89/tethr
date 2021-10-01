@@ -13,7 +13,6 @@ import {
 	FocusMeteringMode,
 	FocusMode,
 	FunctionalMode,
-	generateUnsupportedConfigDesc,
 	ISO,
 	ManualFocusOption,
 	WhiteBalance,
@@ -47,13 +46,41 @@ export interface TakePictureOption {
 	download?: boolean
 }
 
-type TethrEventTypes = {
+type EventTypes = {
 	[N in ConfigName as `${N}Changed`]: ConfigDesc<ConfigType[N]>
 } & {
 	disconnect: void
 }
 
-export abstract class Tethr extends EventEmitter<TethrEventTypes> {
+type ConfigGetters = {
+	[N in ConfigName as `get${Capitalize<N>}`]: () => Promise<
+		ConfigType[N] | null
+	>
+}
+
+type ConfigSetters = {
+	[N in ConfigName as `set${Capitalize<N>}`]: (
+		value: ConfigType[N]
+	) => Promise<OperationResult<void>>
+}
+
+type ConfigDescGetters = {
+	[N in ConfigName as `get${Capitalize<N>}Desc`]: () => Promise<
+		ConfigDesc<ConfigType[N]>
+	>
+}
+function generateUnsupportedConfigDesc() {
+	return {
+		writable: false,
+		value: null,
+		options: [],
+	}
+}
+
+export abstract class Tethr
+	extends EventEmitter<EventTypes>
+	implements ConfigGetters, ConfigSetters, ConfigDescGetters
+{
 	public abstract open(): Promise<void>
 	public abstract close(): Promise<void>
 
@@ -72,83 +99,81 @@ export abstract class Tethr extends EventEmitter<TethrEventTypes> {
 	): Promise<OperationResult<void>> {
 		switch (name) {
 			case 'aperture':
-				return this.setAperture(value as any)
+				return this.setAperture(value as Aperture)
 			case 'batteryLevel':
-				return this.setBatteryLevel(value as any)
+				return this.setBatteryLevel(value as BatteryLevel)
 			case 'burstInterval':
-				return this.setBurstInterval(value as any)
+				return this.setBurstInterval(value as number)
 			case 'burstNumber':
-				return this.setBurstNumber(value as any)
+				return this.setBurstNumber(value as number)
 			case 'canRunAutoFocus':
-				return this.setCanRunAutoFocus(value as any)
+				return this.setCanRunAutoFocus(value as boolean)
 			case 'canRunManualFocus':
-				return this.setCanRunManualFocus(value as any)
+				return this.setCanRunManualFocus(value as boolean)
 			case 'canStartLiveview':
-				return this.setCanStartLiveview(value as any)
+				return this.setCanStartLiveview(value as boolean)
 			case 'canTakePicture':
-				return this.setCanTakePicture(value as any)
+				return this.setCanTakePicture(value as boolean)
 			case 'captureDelay':
-				return this.setCaptureDelay(value as any)
+				return this.setCaptureDelay(value as number)
 			case 'colorMode':
-				return this.setColorMode(value as any)
+				return this.setColorMode(value as string)
 			case 'colorTemperature':
-				return this.setColorTemperature(value as any)
-			case 'compressionSetting':
-				return this.setCompressionSetting(value as any)
+				return this.setColorTemperature(value as number)
 			case 'contrast':
-				return this.setContrast(value as any)
+				return this.setContrast(value as number)
 			case 'dateTime':
-				return this.setDateTime(value as any)
+				return this.setDateTime(value as Date)
 			case 'digitalZoom':
-				return this.setDigitalZoom(value as any)
+				return this.setDigitalZoom(value as number)
 			case 'driveMode':
-				return this.setDriveMode(value as any)
+				return this.setDriveMode(value as DriveMode)
 			case 'exposureComp':
-				return this.setExposureComp(value as any)
+				return this.setExposureComp(value as string)
 			case 'exposureMeteringMode':
-				return this.setExposureMeteringMode(value as any)
+				return this.setExposureMeteringMode(value as ExposureMeteringMode)
 			case 'exposureMode':
-				return this.setExposureMode(value as any)
+				return this.setExposureMode(value as ExposureMode)
 			case 'flashMode':
-				return this.setFlashMode(value as any)
+				return this.setFlashMode(value as FlashMode)
 			case 'focalLength':
-				return this.setFocalLength(value as any)
+				return this.setFocalLength(value as FocalLength)
 			case 'focusDistance':
-				return this.setFocusDistance(value as any)
+				return this.setFocusDistance(value as number)
 			case 'focusMeteringMode':
-				return this.setFocusMeteringMode(value as any)
+				return this.setFocusMeteringMode(value as FocusMeteringMode)
 			case 'focusMode':
-				return this.setFocusMode(value as any)
+				return this.setFocusMode(value as FocusMode)
 			case 'functionalMode':
-				return this.setFunctionalMode(value as any)
+				return this.setFunctionalMode(value as FunctionalMode)
 			case 'imageAspect':
-				return this.setImageAspect(value as any)
+				return this.setImageAspect(value as string)
 			case 'imageQuality':
-				return this.setImageQuality(value as any)
+				return this.setImageQuality(value as string)
 			case 'imageSize':
-				return this.setImageSize(value as any)
+				return this.setImageSize(value as string)
 			case 'iso':
-				return this.setIso(value as any)
+				return this.setIso(value as ISO)
 			case 'liveviewEnabled':
-				return this.setLiveviewEnabled(value as any)
+				return this.setLiveviewEnabled(value as boolean)
 			case 'liveviewMagnifyRatio':
-				return this.setLiveviewMagnifyRatio(value as any)
+				return this.setLiveviewMagnifyRatio(value as number)
 			case 'liveviewSize':
-				return this.setLiveviewSize(value as any)
+				return this.setLiveviewSize(value as string)
 			case 'manualFocusOptions':
-				return this.setManualFocusOptions(value as any)
+				return this.setManualFocusOptions(value as ManualFocusOption[])
 			case 'model':
-				return this.setModel(value as any)
+				return this.setModel(value as string)
 			case 'sharpness':
-				return this.setSharpness(value as any)
+				return this.setSharpness(value as number)
 			case 'shutterSpeed':
-				return this.setShutterSpeed(value as any)
+				return this.setShutterSpeed(value as string)
 			case 'timelapseInterval':
-				return this.setTimelapseInterval(value as any)
+				return this.setTimelapseInterval(value as number)
 			case 'timelapseNumber':
-				return this.setTimelapseNumber(value as any)
+				return this.setTimelapseNumber(value as number)
 			case 'whiteBalance':
-				return this.setWhiteBalance(value as any)
+				return this.setWhiteBalance(value as WhiteBalance)
 		}
 
 		return {status: 'unsupported'}
@@ -183,8 +208,6 @@ export abstract class Tethr extends EventEmitter<TethrEventTypes> {
 				return this.getColorModeDesc() as ReturnType
 			case 'colorTemperature':
 				return this.getColorTemperatureDesc() as ReturnType
-			case 'compressionSetting':
-				return this.getCompressionSettingDesc() as ReturnType
 			case 'contrast':
 				return this.getContrastDesc() as ReturnType
 			case 'dateTime':
@@ -469,7 +492,7 @@ export abstract class Tethr extends EventEmitter<TethrEventTypes> {
 		return generateUnsupportedConfigDesc()
 	}
 
-	public async getExposureMeteringMode(): Promise<string | null> {
+	public async getExposureMeteringMode(): Promise<ExposureMeteringMode | null> {
 		return (await this.getExposureMeteringModeDesc()).value
 	}
 	public async setExposureMeteringMode(
@@ -673,7 +696,7 @@ export abstract class Tethr extends EventEmitter<TethrEventTypes> {
 	}
 	public async setManualFocusOptions(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: ManualFocusOption
+		value: ManualFocusOption[]
 	): Promise<OperationResult<void>> {
 		return {status: 'unsupported'}
 	}
