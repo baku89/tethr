@@ -102,25 +102,25 @@ enum SnapCaptureMode {
 }
 
 const ConfigListSigma: ConfigName[] = [
-	'exposureMode',
 	'aperture',
-	'shutterSpeed',
 	'iso',
-	'exposureComp',
-	'whiteBalance',
 	'colorTemperature',
 	'colorMode',
+	'exposureComp',
+	'exposureMode',
 	'imageAspect',
-	'imageSize',
 	'imageQuality',
+	'imageSize',
 	'liveviewEnabled',
 	'liveviewMagnifyRatio',
+	'shutterSpeed',
+	'whiteBalance',
 ]
 
 export class TethrSigma extends TethrPTPUSB {
 	private liveviewEnabled = false
 
-	public open = async (): Promise<void> => {
+	public async open() {
 		await super.open()
 
 		await this.device.receiveData({
@@ -130,31 +130,7 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 	}
 
-	public async getFocalLengthDesc(): Promise<ConfigDesc<number>> {
-		const {currentLensFocalLength} = await this.getCamDataGroup1()
-		const value = decodeFocalLength(currentLensFocalLength)
-
-		const {lensWideFocalLength, lensTeleFocalLength} =
-			await this.getCamDataGroup3()
-
-		const min = decodeFocalLength(lensWideFocalLength)
-		const max = decodeFocalLength(lensTeleFocalLength)
-
-		return {
-			writable: false,
-			value,
-			options: range(min, max, 1),
-		}
-
-		function decodeFocalLength(byte: number) {
-			const integer = byte >> 4,
-				fractional = byte & 0b1111
-
-			return integer + fractional / 10
-		}
-	}
-
-	public async getAperture() {
+	public async getAperture(): Promise<Aperture | null> {
 		const {aperture} = await this.getCamDataGroup1()
 		if (aperture === 0x0) return 'auto'
 		return (
@@ -173,7 +149,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
 
-	public async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
+	public async getApertureDesc() {
 		const fValue = (await this.getCamCanSetInfo5()).fValue
 		const value = await this.getAperture()
 
@@ -212,153 +188,60 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getShutterSpeed() {
-		const {shutterSpeed} = await this.getCamDataGroup1()
-		if (shutterSpeed === 0x0) return 'auto'
-		return (
-			this.shutterSpeedOneThirdTable.get(shutterSpeed) ??
-			this.shutterSpeedHalfTable.get(shutterSpeed) ??
-			null
-		)
-	}
-
-	public async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
-		const range = (await this.getCamCanSetInfo5()).shutterSpeed
-		const value = await this.getShutterSpeed()
-
-		if (range.length < 3) {
-			return {
-				writable: false,
-				value,
-				options: [],
-			}
-		}
-
-		const [tvMin, tvMax, step] = range
-
-		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
-		const table = isStepOneThird
-			? this.shutterSpeedOneThirdTable
-			: this.shutterSpeedHalfTable
-
-		const shutterSpeeds = Array.from(table.entries()).filter(
-			e => e[1] !== 'sync' && e[1] !== 'bulb'
-		)
-
-		const ssMinRaw = 1 / 2 ** tvMin
-		const ssMaxRaw = 1 / 2 ** tvMax
-
-		const ssMinEntry = minBy(shutterSpeeds, e =>
-			Math.abs(computeShutterSpeedSeconds(e[1]) - ssMinRaw)
-		)
-		const ssMaxEntry = minBy(shutterSpeeds, e =>
-			Math.abs(computeShutterSpeedSeconds(e[1]) - ssMaxRaw)
-		)
-
-		if (!ssMinEntry || !ssMaxEntry) throw new Error()
-
-		const ssMinIndex = ssMinEntry[0]
-		const ssMaxIndex = ssMaxEntry[0]
-
-		const options = shutterSpeeds
-			.filter(e => ssMinIndex <= e[0] && e[0] <= ssMaxIndex)
-			.map(e => e[1])
+	public async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
+		const {batteryLevel} = await this.getCamDataGroup1()
+		const value = this.batteryLevelTable.get(batteryLevel) ?? null
 
 		return {
-			writable: options.length > 0,
+			writable: false,
 			value,
-			options,
+			options: [],
 		}
 	}
 
-	public async setShutterSpeed(ss: string): Promise<OperationResult<void>> {
-		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
-		if (!byte) return {status: 'invalid parameter'}
-
-		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
-	}
-
-	public async getIso() {
-		const {isoAuto, isoSpeed} = await this.getCamDataGroup1()
-		if (isoAuto === 0x01) {
-			return 'auto'
-		} else {
-			return this.isoTable.get(isoSpeed) ?? null
+	public async getCanTakePictureDesc() {
+		return {
+			writable: false,
+			value: true,
+			options: [],
 		}
 	}
 
-	public async setIso(iso: ISO): Promise<OperationResult<void>> {
-		if (iso === 'auto') {
-			return this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
-		}
-
-		const id = this.isoTable.getKey(iso)
-		if (!id) return {status: 'invalid parameter'}
-
-		const setISOAutoResult = await this.setCamData(
-			OpCodeSigma.SetCamDataGroup1,
-			3,
-			0x0
-		)
-		const setISOValueResult = await this.setCamData(
-			OpCodeSigma.SetCamDataGroup1,
-			4,
-			id
-		)
-
-		if (setISOAutoResult.status === 'ok' && setISOValueResult.status === 'ok') {
-			return {status: 'ok'}
-		} else {
-			return {status: 'invalid parameter'}
+	public async getCanRunAutoFocusDesc() {
+		return {
+			writable: false,
+			value: true,
+			options: [],
 		}
 	}
 
-	public async getIsoDesc(): Promise<ConfigDesc<ISO>> {
-		const {isoManual} = await this.getCamCanSetInfo5()
-		const value = await this.getIso()
+	public async getCanStartLiveviewDesc() {
+		return {
+			writable: false,
+			value: true,
+			options: [],
+		}
+	}
 
-		const [svMin, svMax] = isoManual
+	public async setColorMode(colorMode: string): Promise<OperationResult<void>> {
+		const id = this.colorModeTable.getKey(colorMode)
+		if (id === undefined) return {status: 'invalid parameter'}
 
-		const isoMin = Math.round(3.125 * 2 ** svMin)
-		const isoMax = Math.round(3.125 * 2 ** svMax)
+		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
+	}
 
-		const isos = [...this.isoTable.values()]
-		const options = isos.filter(a => isoMin <= a && a <= isoMax)
+	public async getColorModeDesc(): Promise<ConfigDesc<string>> {
+		const decodeColorMode = (id: number) => {
+			return this.colorModeTable.get(id) ?? 'Unknown'
+		}
 
-		options.unshift('auto')
+		const {colorMode} = await this.getCamDataGroup3()
+		const {colorMode: colorModeOptions} = await this.getCamCanSetInfo5()
 
 		return {
-			writable: true,
-			value,
-			options,
-		}
-	}
-
-	public async getWhiteBalance() {
-		const {whiteBalance} = await this.getCamDataGroup2()
-		return this.whiteBalanceTable.get(whiteBalance) ?? null
-	}
-
-	public async setWhiteBalance(
-		wb: WhiteBalance
-	): Promise<OperationResult<void>> {
-		const id = this.whiteBalanceTable.getKey(wb)
-		if (!id) return {status: 'invalid parameter'}
-		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, id)
-	}
-
-	public async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
-		const {whiteBalance} = await this.getCamCanSetInfo5()
-		const value = await this.getWhiteBalance()
-
-		const options = whiteBalance
-			.map(v => this.whiteBalanceTableIFD.get(v))
-			.filter(isntNil)
-
-		return {
-			writable: options.length > 0,
-			value,
-			options,
+			writable: colorModeOptions.length > 0,
+			value: decodeColorMode(colorMode),
+			options: colorModeOptions.map(decodeColorMode),
 		}
 	}
 
@@ -380,7 +263,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status}
 	}
 
-	public async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
+	public async getColorTemperatureDesc() {
 		const {colorTemerature} = await this.getCamCanSetInfo5()
 		const value = await this.getColorTemperature()
 
@@ -498,25 +381,27 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async setColorMode(colorMode: string): Promise<OperationResult<void>> {
-		const id = this.colorModeTable.getKey(colorMode)
-		if (id === undefined) return {status: 'invalid parameter'}
+	public async getFocalLengthDesc() {
+		const {currentLensFocalLength} = await this.getCamDataGroup1()
+		const value = decodeFocalLength(currentLensFocalLength)
 
-		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
-	}
+		const {lensWideFocalLength, lensTeleFocalLength} =
+			await this.getCamDataGroup3()
 
-	public async getColorModeDesc(): Promise<ConfigDesc<string>> {
-		const decodeColorMode = (id: number) => {
-			return this.colorModeTable.get(id) ?? 'Unknown'
-		}
-
-		const {colorMode} = await this.getCamDataGroup3()
-		const {colorMode: colorModeOptions} = await this.getCamCanSetInfo5()
+		const min = decodeFocalLength(lensWideFocalLength)
+		const max = decodeFocalLength(lensTeleFocalLength)
 
 		return {
-			writable: colorModeOptions.length > 0,
-			value: decodeColorMode(colorMode),
-			options: colorModeOptions.map(decodeColorMode),
+			writable: false,
+			value,
+			options: range(min, max, 1),
+		}
+
+		function decodeFocalLength(byte: number) {
+			const integer = byte >> 4,
+				fractional = byte & 0b1111
+
+			return integer + fractional / 10
 		}
 	}
 
@@ -543,33 +428,6 @@ export class TethrSigma extends TethrPTPUSB {
 			writable: imageAspectOptions.length > 0,
 			value: decodeImageAspectIFD(imageAspectIfdID),
 			options: imageAspectOptions.map(decodeImageAspectIFD),
-		}
-	}
-
-	public async setImageSize(imageSize: string): Promise<OperationResult<void>> {
-		const id = this.imageSizeTable.getKey(imageSize)
-		if (id === undefined) return {status: 'invalid parameter'}
-
-		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 14, id)
-	}
-
-	public async getImageSizeDesc(): Promise<ConfigDesc<string>> {
-		const {resolution} = await this.getCamDataGroup2()
-
-		const value = this.imageSizeTable.get(resolution)
-
-		if (!value) {
-			return {
-				writable: false,
-				value: null,
-				options: [],
-			}
-		}
-
-		return {
-			writable: true,
-			value,
-			options: ['low', 'medium', 'high'],
 		}
 	}
 
@@ -627,7 +485,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getImageQualityDesc(): Promise<ConfigDesc<string>> {
+	public async getImageQualityDesc() {
 		type ImageQualityConfig = {
 			jpegQuality: string | null
 			hasDNG: boolean
@@ -697,6 +555,89 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	public async setImageSize(imageSize: string): Promise<OperationResult<void>> {
+		const id = this.imageSizeTable.getKey(imageSize)
+		if (id === undefined) return {status: 'invalid parameter'}
+
+		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 14, id)
+	}
+
+	public async getImageSizeDesc(): Promise<ConfigDesc<string>> {
+		const {resolution} = await this.getCamDataGroup2()
+
+		const value = this.imageSizeTable.get(resolution)
+
+		if (!value) {
+			return {
+				writable: false,
+				value: null,
+				options: [],
+			}
+		}
+
+		return {
+			writable: true,
+			value,
+			options: ['low', 'medium', 'high'],
+		}
+	}
+
+	public async getIso() {
+		const {isoAuto, isoSpeed} = await this.getCamDataGroup1()
+		if (isoAuto === 0x01) {
+			return 'auto'
+		} else {
+			return this.isoTable.get(isoSpeed) ?? null
+		}
+	}
+
+	public async setIso(iso: ISO): Promise<OperationResult<void>> {
+		if (iso === 'auto') {
+			return this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
+		}
+
+		const id = this.isoTable.getKey(iso)
+		if (!id) return {status: 'invalid parameter'}
+
+		const setISOAutoResult = await this.setCamData(
+			OpCodeSigma.SetCamDataGroup1,
+			3,
+			0x0
+		)
+		const setISOValueResult = await this.setCamData(
+			OpCodeSigma.SetCamDataGroup1,
+			4,
+			id
+		)
+
+		if (setISOAutoResult.status === 'ok' && setISOValueResult.status === 'ok') {
+			return {status: 'ok'}
+		} else {
+			return {status: 'invalid parameter'}
+		}
+	}
+
+	public async getIsoDesc(): Promise<ConfigDesc<ISO>> {
+		const {isoManual} = await this.getCamCanSetInfo5()
+		const value = await this.getIso()
+
+		const [svMin, svMax] = isoManual
+
+		const isoMin = Math.round(3.125 * 2 ** svMin)
+		const isoMax = Math.round(3.125 * 2 ** svMax)
+
+		const isos = [...this.isoTable.values()]
+		const options = isos.filter(a => isoMin <= a && a <= isoMax)
+
+		options.unshift('auto')
+
+		return {
+			writable: true,
+			value,
+			options,
+		}
+	}
+
 	public async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
 		return {
 			writable: false,
@@ -714,7 +655,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup4, 5, id)
 	}
 
-	public async getLiveviewMagnifyLevelRatioDesc(): Promise<ConfigDesc<number>> {
+	public async getLiveviewMagnifyLevelRatioDesc() {
 		const {lvMagnifyRatio} = await this.getCamDataGroup4()
 		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
 
@@ -727,16 +668,101 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
-		const {batteryLevel} = await this.getCamDataGroup1()
-		const value = this.batteryLevelTable.get(batteryLevel) ?? null
+	public async getShutterSpeed() {
+		const {shutterSpeed} = await this.getCamDataGroup1()
+		if (shutterSpeed === 0x0) return 'auto'
+		return (
+			this.shutterSpeedOneThirdTable.get(shutterSpeed) ??
+			this.shutterSpeedHalfTable.get(shutterSpeed) ??
+			null
+		)
+	}
+
+	public async setShutterSpeed(ss: string): Promise<OperationResult<void>> {
+		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
+		if (!byte) return {status: 'invalid parameter'}
+
+		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
+	}
+
+	public async getShutterSpeedDesc() {
+		const range = (await this.getCamCanSetInfo5()).shutterSpeed
+		const value = await this.getShutterSpeed()
+
+		if (range.length < 3) {
+			return {
+				writable: false,
+				value,
+				options: [],
+			}
+		}
+
+		const [tvMin, tvMax, step] = range
+
+		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
+		const table = isStepOneThird
+			? this.shutterSpeedOneThirdTable
+			: this.shutterSpeedHalfTable
+
+		const shutterSpeeds = Array.from(table.entries()).filter(
+			e => e[1] !== 'sync' && e[1] !== 'bulb'
+		)
+
+		const ssMinRaw = 1 / 2 ** tvMin
+		const ssMaxRaw = 1 / 2 ** tvMax
+
+		const ssMinEntry = minBy(shutterSpeeds, e =>
+			Math.abs(computeShutterSpeedSeconds(e[1]) - ssMinRaw)
+		)
+		const ssMaxEntry = minBy(shutterSpeeds, e =>
+			Math.abs(computeShutterSpeedSeconds(e[1]) - ssMaxRaw)
+		)
+
+		if (!ssMinEntry || !ssMaxEntry) throw new Error()
+
+		const ssMinIndex = ssMinEntry[0]
+		const ssMaxIndex = ssMaxEntry[0]
+
+		const options = shutterSpeeds
+			.filter(e => ssMinIndex <= e[0] && e[0] <= ssMaxIndex)
+			.map(e => e[1])
 
 		return {
-			writable: false,
+			writable: options.length > 0,
 			value,
-			options: [],
+			options,
 		}
 	}
+
+	public async getWhiteBalance() {
+		const {whiteBalance} = await this.getCamDataGroup2()
+		return this.whiteBalanceTable.get(whiteBalance) ?? null
+	}
+
+	public async setWhiteBalance(
+		wb: WhiteBalance
+	): Promise<OperationResult<void>> {
+		const id = this.whiteBalanceTable.getKey(wb)
+		if (!id) return {status: 'invalid parameter'}
+		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, id)
+	}
+
+	public async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
+		const {whiteBalance} = await this.getCamCanSetInfo5()
+		const value = await this.getWhiteBalance()
+
+		const options = whiteBalance
+			.map(v => this.whiteBalanceTableIFD.get(v))
+			.filter(isntNil)
+
+		return {
+			writable: options.length > 0,
+			value,
+			options,
+		}
+	}
+
+	// Actions
 
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
 		OperationResult<TethrObject[]>
@@ -1103,6 +1129,13 @@ export class TethrSigma extends TethrPTPUSB {
 			},
 			folderName: dataView.readAsciiString(),
 			fileName: dataView.readAsciiString(),
+		}
+	}
+
+	private async emitAllConfigChangedEvents() {
+		for await (const config of ConfigListSigma) {
+			const desc = await this.getDesc(config)
+			this.emit(`${config}Changed`, desc)
 		}
 	}
 
