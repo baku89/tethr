@@ -1,5 +1,4 @@
-import {ConfigName, ConfigType} from './configs'
-import {ConfigDesc, OperationResult, TakePictureOption, Tethr} from './Tethr'
+import {OperationResult, TakePictureOption, Tethr} from './Tethr'
 import {TethrObject} from './TethrObject'
 
 export function initTethrWebcam(media: MediaStream) {
@@ -7,6 +6,7 @@ export function initTethrWebcam(media: MediaStream) {
 }
 
 export class TethrWebcam extends Tethr {
+	private liveviewEnabled = false
 	private _opened = false
 	private imageCapture!: ImageCapture
 
@@ -29,45 +29,38 @@ export class TethrWebcam extends Tethr {
 		return this._opened
 	}
 
-	public async set(): Promise<OperationResult<void>> {
-		return {
-			status: 'unsupported',
-		}
-	}
-	public async getDesc<N extends ConfigName>(
-		name: N
-	): Promise<ConfigDesc<ConfigType[N]>> {
-		switch (name) {
-			case 'model':
-				return {
-					writable: false,
-					value: 'Webcam' as ConfigType[N],
-					options: [],
-				}
-			case 'liveviewEnabled':
-				return {
-					writable: false,
-					value: true as ConfigType[N],
-					options: [],
-				}
-			case 'canTakePicture':
-			case 'canRunAutoFocus':
-			case 'canRunManualFocus':
-			case 'canStartLiveview':
-				return {
-					writable: false,
-					value: true as ConfigType[N],
-					options: [],
-				}
-		}
-
+	// Configs
+	public async getCanStartLiveviewDesc() {
 		return {
 			writable: false,
-			value: null,
+			value: true,
 			options: [],
 		}
 	}
 
+	public async getCanTakePictureDesc() {
+		return {
+			writable: false,
+			value: true,
+			options: [],
+		}
+	}
+
+	public async getModelDesc() {
+		return {
+			writable: false,
+			value: 'Generic webcam',
+			options: [],
+		}
+	}
+
+	public async getLiveviewEnabledDesc() {
+		return {
+			writable: false,
+			value: this.liveviewEnabled,
+			options: [],
+		}
+	}
 	// Actions
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
 		OperationResult<TethrObject[]>
@@ -100,6 +93,7 @@ export class TethrWebcam extends Tethr {
 	}
 
 	public async startLiveview(): Promise<OperationResult<MediaStream>> {
+		this.liveviewEnabled = true
 		return {
 			status: 'ok',
 			value: this.media,
@@ -107,6 +101,7 @@ export class TethrWebcam extends Tethr {
 	}
 
 	public async stopLiveview(): Promise<OperationResult<void>> {
+		this.liveviewEnabled = false
 		return {status: 'ok'}
 	}
 }
