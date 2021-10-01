@@ -1,11 +1,14 @@
-import {identity, range, times} from 'lodash'
+import {range, times} from 'lodash'
 
 import {
+	Aperture,
 	ConfigForDevicePropTable,
-	ConfigName,
-	ConfigType,
+	DriveMode,
 	DriveModeTable,
+	ExposureMode,
 	ExposureModeTable,
+	ISO,
+	WhiteBalance,
 	WhiteBalanceTable,
 } from '../configs'
 import {DeviceInfo} from '../DeviceInfo'
@@ -24,32 +27,27 @@ import {PTPDataView} from '../PTPDataView'
 import {PTPDevice, PTPEvent} from '../PTPDevice'
 import {ConfigDesc, OperationResult, TakePictureOption, Tethr} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
-import {toHexString} from '../util'
+import {isntNil, toHexString} from '../util'
 
-type DevicePropSchemeEntry<N extends ConfigName> = {
+type DeviceProp<T, D extends DatatypeCode> = {
 	devicePropCode: number
-} & (
-	| {
-			dataType: DatatypeCode.Uint64
-			decode: (data: bigint) => ConfigType[N] | null
-			encode: (value: ConfigType[N]) => bigint | null
-	  }
-	| {
-			dataType: DatatypeCode.String
-			decode: (data: string) => ConfigType[N] | null
-			encode: (value: ConfigType[N]) => string | null
-	  }
-	| {
-			dataType: DatatypeCode
-			decode: (data: number) => ConfigType[N] | null
-			encode: (value: ConfigType[N]) => number | null
-	  }
-)
-
-export type DevicePropScheme = {
-	[N in ConfigName]?: DevicePropSchemeEntry<N>
+	datatypeCode: D
+	decode: (data: DataViewTypeForDatatypeCode<D>) => T | null
+	encode: (value: T) => DataViewTypeForDatatypeCode<D> | null
 }
 
+type DataViewTypeForDatatypeCode<D extends DatatypeCode> =
+	D extends DatatypeCode.String
+		? string
+		: D extends DatatypeCode.Uint64
+		? bigint
+		: D extends DatatypeCode.Int64
+		? bigint
+		: D extends DatatypeCode.Uint128
+		? bigint
+		: D extends DatatypeCode.Int128
+		? bigint
+		: number
 export class TethrPTPUSB extends Tethr {
 	protected _opened = false
 
@@ -96,25 +94,297 @@ export class TethrPTPUSB extends Tethr {
 		await this.device.close()
 	}
 
-	public async set<K extends ConfigName>(
-		name: K,
-		value: ConfigType[K]
-	): Promise<OperationResult<void>> {
-		const scheme = this.devicePropScheme[name]
+	// Configs
 
-		if (!scheme) {
-			return {
-				status: 'unsupported',
-			}
+	public setAperture(value: Aperture) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.FNumber,
+			datatypeCode: DatatypeCode.Uint16,
+			encode(value) {
+				if (value === 'auto') return null
+				return Math.round(value * 100)
+			},
+			value,
+		})
+	}
+
+	public getApertureDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.FNumber,
+			datatypeCode: DatatypeCode.Uint16,
+			decode(data) {
+				return data / 100
+			},
+		})
+	}
+
+	public getBatteryLevelDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.BatteryLevel,
+			datatypeCode: DatatypeCode.Uint8,
+			decode: data => data,
+		})
+	}
+
+	public async getCanTakePictureDesc() {
+		const {operationsSupported} = await this.getDeviceInfo()
+		const value = operationsSupported.includes(OpCode.InitiateCapture)
+		return {
+			writable: false,
+			value,
+			options: [],
 		}
+	}
 
-		if (!(await this.isDevicePropSupported(scheme.devicePropCode))) {
-			return {
-				status: 'unsupported',
-			}
+	public setCaptureDelay(value: number) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.CaptureDelay,
+			datatypeCode: DatatypeCode.Uint32,
+			encode: data => data,
+			value,
+		})
+	}
+
+	public getCaptureDelayDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.CaptureDelay,
+			datatypeCode: DatatypeCode.Uint32,
+			decode: data => data,
+		})
+	}
+
+	public setDriveMode(value: DriveMode) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.StillCaptureMode,
+			datatypeCode: DatatypeCode.Uint16,
+			encode(value) {
+				return DriveModeTable.getKey(value) ?? 0x0
+			},
+			value,
+		})
+	}
+
+	public getDriveModeDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.StillCaptureMode,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: data => {
+				return DriveModeTable.get(data) ?? 'normal'
+			},
+		})
+	}
+
+	public setExposureComp(value: string) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.ExposureBiasCompensation,
+			datatypeCode: DatatypeCode.Int16,
+			encode(str) {
+				if (str === '0') return 0
+
+				const match = str.match(/^([+-]?)([0-9]+)?\s?(1\/2|1\/3|2\/3)?$/)
+
+				if (!match) return null
+
+				const [, signStr, integerStr, fractionStr] = match
+
+				const sign = signStr === '-' ? -1 : +1
+				const integer = parseInt(integerStr)
+				let fracMills = 0
+				switch (fractionStr) {
+					case '1/3':
+						fracMills = 300
+						break
+					case '1/2':
+						fracMills = 500
+						break
+					case '2/3':
+						fracMills = 700
+						break
+				}
+
+				return sign * (integer * 1000 + fracMills)
+			},
+			value,
+		})
+	}
+
+	public getExposureCompDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.ExposureBiasCompensation,
+			datatypeCode: DatatypeCode.Int16,
+			decode(mills) {
+				if (mills === 0) return '0'
+
+				const millsAbs = Math.abs(mills)
+
+				const sign = mills > 0 ? '+' : '-'
+				const integer = Math.floor(millsAbs / 1000)
+				const fracMills = millsAbs % 1000
+
+				let fraction = ''
+
+				switch (fracMills) {
+					case 300:
+						fraction = '1/3'
+						break
+					case 500:
+						fraction = '1/2'
+						break
+					case 700:
+						fraction = '2/3'
+						break
+				}
+
+				if (integer === 0) return `${sign}${fraction}`
+				if (fraction === '') return `${sign}${integer}`
+				return `${sign}${integer} ${fraction}`
+			},
+		})
+	}
+
+	public async setExposureMode(value: ExposureMode) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.ExposureProgramMode,
+			datatypeCode: DatatypeCode.Uint16,
+			encode: value => {
+				return (
+					ExposureModeTable.getKey(value) ??
+					parseInt(value.replace('vendor ', ''), 16)
+				)
+			},
+			value,
+		})
+	}
+
+	public async getExposureModeDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.ExposureProgramMode,
+			datatypeCode: DatatypeCode.Uint16,
+			decode(data) {
+				return (
+					ExposureModeTable.get(data) ??
+					(`vendor ${toHexString(data, 4)}` as ExposureMode)
+				)
+			},
+		})
+	}
+
+	public setImageSizeValue(value: string) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.ImageSize,
+			datatypeCode: DatatypeCode.String,
+			encode: data => data,
+			value,
+		})
+	}
+	public getImageSizeDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.ImageSize,
+			datatypeCode: DatatypeCode.String,
+			decode: data => data,
+		})
+	}
+
+	public setIso(value: ISO) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.ExposureIndex,
+			datatypeCode: DatatypeCode.Uint16,
+			encode(iso) {
+				if (iso === 'auto') return 0xffff
+				return iso
+			},
+			value,
+		})
+	}
+
+	public getIsoDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.ExposureIndex,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: data => {
+				if (data === 0xffff) return 'auto'
+				return data
+			},
+		})
+	}
+
+	public async getModelDesc() {
+		return {
+			writable: false,
+			value: (await this.getDeviceInfo()).model,
+			options: [],
 		}
+	}
 
-		const encode = scheme.encode as (value: ConfigType[K]) => number
+	public setWhiteBalance(value: WhiteBalance) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.WhiteBalance,
+			datatypeCode: DatatypeCode.Uint16,
+			encode(value) {
+				return (
+					WhiteBalanceTable.getKey(value) ??
+					parseInt(value.replace(/^vendor /, ''), 16)
+				)
+			},
+			value,
+		})
+	}
+
+	public getWhiteBalanceDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.WhiteBalance,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: data => {
+				return (
+					WhiteBalanceTable.get(data) ??
+					(`vendor ${toHexString(data, 4)}` as WhiteBalance)
+				)
+			},
+		})
+	}
+
+	public setTimelapseNumber(value: number) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.TimelapseNumber,
+			datatypeCode: DatatypeCode.Uint32,
+			encode: data => data,
+			value,
+		})
+	}
+
+	public getTimelapseNumberDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.TimelapseNumber,
+			datatypeCode: DatatypeCode.Uint32,
+			decode: data => data,
+		})
+	}
+
+	public setTimelapseInterval(value: number) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.TimelapseInterval,
+			datatypeCode: DatatypeCode.Uint32,
+			encode: data => data,
+			value,
+		})
+	}
+
+	public getTimelapseIntervalDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.TimelapseInterval,
+			datatypeCode: DatatypeCode.Uint32,
+			decode: data => data,
+		})
+	}
+
+	protected async setDevicePropValue<T, D extends DatatypeCode>({
+		devicePropCode,
+		datatypeCode,
+		encode,
+		value,
+	}: Omit<DeviceProp<T, D>, 'decode'> & {value: T}): Promise<
+		OperationResult<void>
+	> {
 		const devicePropData = encode(value)
 
 		if (devicePropData === null) {
@@ -124,33 +394,33 @@ export class TethrPTPUSB extends Tethr {
 		}
 
 		const dataView = new PTPDataView()
-		switch (scheme.dataType) {
+		switch (datatypeCode) {
 			case DatatypeCode.Uint8:
-				dataView.writeUint8(devicePropData)
+				dataView.writeUint8(devicePropData as number)
 				break
 			case DatatypeCode.Int8:
-				dataView.writeInt8(devicePropData)
+				dataView.writeInt8(devicePropData as number)
 				break
 			case DatatypeCode.Uint16:
-				dataView.writeUint16(devicePropData)
+				dataView.writeUint16(devicePropData as number)
 				break
 			case DatatypeCode.Int16:
-				dataView.writeInt16(devicePropData)
+				dataView.writeInt16(devicePropData as number)
 				break
 			case DatatypeCode.Uint32:
-				dataView.writeUint32(devicePropData)
+				dataView.writeUint32(devicePropData as number)
 				break
 			case DatatypeCode.Int32:
-				dataView.writeInt32(devicePropData)
+				dataView.writeInt32(devicePropData as number)
 				break
 			case DatatypeCode.Uint64:
-				dataView.writeBigUint64(BigInt(devicePropData))
+				dataView.writeBigUint64(devicePropData as bigint)
 				break
 			case DatatypeCode.String:
-				dataView.writeBigUint64(BigInt(devicePropData))
+				dataView.writeBigUint64(devicePropData as bigint)
 				break
 			default: {
-				const label = DatatypeCode[scheme.dataType] ?? toHexString(16)
+				const label = DatatypeCode[datatypeCode] ?? toHexString(16)
 				throw new Error(
 					`DevicePropDesc of datatype ${label} is not yet supported`
 				)
@@ -160,7 +430,7 @@ export class TethrPTPUSB extends Tethr {
 		const {resCode} = await this.device.sendData({
 			label: 'SetDevicePropValue',
 			opcode: OpCode.SetDevicePropValue,
-			parameters: [scheme.devicePropCode],
+			parameters: [devicePropCode],
 			data: dataView.toBuffer(),
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 		})
@@ -170,51 +440,13 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
-	public async getDesc<K extends ConfigName, T extends ConfigType[K]>(
-		name: K
-	): Promise<ConfigDesc<T>> {
-		const scheme = this.devicePropScheme[name]
-		if (scheme) {
-			return await this.getDevicePropDesc(scheme)
-		}
-
-		switch (name) {
-			case 'model': {
-				const value = (await this.getDeviceInfo()).model
-				return {
-					writable: false,
-					value: value as T,
-					options: [],
-				}
-			}
-			case 'canTakePicture': {
-				const {operationsSupported} = await this.getDeviceInfo()
-				const can = operationsSupported.includes(OpCode.InitiateCapture)
-				return {
-					writable: false,
-					value: can as T,
-					options: [],
-				}
-			}
-
-			case 'canRunAutoFocus':
-			case 'canRunManualFocus':
-			case 'canStartLiveview':
-				return {
-					writable: false,
-					value: false as T,
-					options: [],
-				}
-		}
-
-		return super.getDesc(name)
-	}
-
-	private async getDevicePropDesc<Name extends ConfigName>(
-		scheme: DevicePropSchemeEntry<Name>
-	) {
+	protected async getDevicePropDesc<T, D extends DatatypeCode>({
+		devicePropCode,
+		datatypeCode,
+		decode,
+	}: Omit<DeviceProp<T, D>, 'encode'>): Promise<ConfigDesc<T>> {
 		// Check if the deviceProps is supported
-		if (!(await this.isDevicePropSupported(scheme.devicePropCode))) {
+		if (!(await this.isDevicePropSupported(devicePropCode))) {
 			return {
 				writable: false,
 				value: null,
@@ -225,38 +457,36 @@ export class TethrPTPUSB extends Tethr {
 		const {data} = await this.device.receiveData({
 			label: 'GetDevicePropDesc',
 			opcode: OpCode.GetDevicePropDesc,
-			parameters: [scheme.devicePropCode],
+			parameters: [devicePropCode],
 		})
 
-		const decode = scheme.decode as (data: number) => any
-
 		const dataView = new PTPDataView(data.slice(2))
-		const dataType = dataView.readUint16()
+		/*const dataType =*/ dataView.readUint16()
 		const writable = dataView.readUint8() === 0x01 // Get/Set
 
-		let readValue: () => any
+		let readValue: () => DataViewTypeForDatatypeCode<D>
 
-		switch (dataType) {
+		switch (datatypeCode) {
 			case DatatypeCode.Uint8:
-				readValue = dataView.readUint8
+				readValue = dataView.readUint8 as any
 				break
 			case DatatypeCode.Uint16:
-				readValue = dataView.readUint16
+				readValue = dataView.readUint16 as any
 				break
 			case DatatypeCode.Int16:
-				readValue = dataView.readInt16
+				readValue = dataView.readInt16 as any
 				break
 			case DatatypeCode.Uint32:
-				readValue = dataView.readUint32
+				readValue = dataView.readUint32 as any
 				break
 			case DatatypeCode.Uint64:
-				readValue = dataView.readUint64
+				readValue = dataView.readUint64 as any
 				break
 			case DatatypeCode.String:
-				readValue = dataView.readUTF16StringNT
+				readValue = dataView.readUTF16StringNT as any
 				break
 			default: {
-				const label = DatatypeCode[dataType] ?? toHexString(16)
+				const label = DatatypeCode[datatypeCode] ?? toHexString(16)
 				throw new Error(`PropDesc of datatype ${label} is not yet supported`)
 			}
 		}
@@ -267,7 +497,7 @@ export class TethrPTPUSB extends Tethr {
 		// Read options
 		const formFlag = dataView.readUint8()
 
-		let options: ConfigType[Name][]
+		let options: T[]
 
 		switch (formFlag) {
 			case 0x00:
@@ -286,13 +516,13 @@ export class TethrPTPUSB extends Tethr {
 				) {
 					throw new Error(`Cannot enumerate supported values of device config`)
 				}
-				options = range(min, max, step) as ConfigType[Name][]
+				options = range(min, max, step) as any
 				break
 			}
 			case 0x02: {
 				// Enumeration
 				const length = dataView.readUint16()
-				options = times(length, readValue).map(decode)
+				options = times(length, readValue).map(decode).filter(isntNil)
 				break
 			}
 			default:
@@ -443,144 +673,6 @@ export class TethrPTPUSB extends Tethr {
 
 	protected getObjectFormatNameByCode(code: number) {
 		return ObjectFormatCode[code].toLowerCase()
-	}
-
-	protected devicePropScheme: DevicePropScheme = {
-		exposureMode: {
-			devicePropCode: DevicePropCode.ExposureProgramMode,
-			dataType: DatatypeCode.Uint16,
-			decode: data => {
-				return ExposureModeTable.get(data) ?? `vendor ${toHexString(data, 4)}`
-			},
-			encode: value => {
-				return (
-					ExposureModeTable.getKey(value) ??
-					parseInt(value.replace('vendor ', ''), 16)
-				)
-			},
-		},
-		exposureComp: {
-			devicePropCode: DevicePropCode.ExposureBiasCompensation,
-			dataType: DatatypeCode.Int16,
-			decode: mills => {
-				if (mills === 0) return '0'
-
-				const millsAbs = Math.abs(mills)
-
-				const sign = mills > 0 ? '+' : '-'
-				const integer = Math.floor(millsAbs / 1000)
-				const fracMills = millsAbs % 1000
-
-				let fraction = ''
-
-				switch (fracMills) {
-					case 300:
-						fraction = '1/3'
-						break
-					case 500:
-						fraction = '1/2'
-						break
-					case 700:
-						fraction = '2/3'
-						break
-				}
-
-				if (integer === 0) return `${sign}${fraction}`
-				if (fraction === '') return `${sign}${integer}`
-				return `${sign}${integer} ${fraction}`
-			},
-			encode: str => {
-				if (str === '0') return 0
-
-				const match = str.match(/^([+-]?)([0-9]+)?\s?(1\/2|1\/3|2\/3)?$/)
-
-				if (!match) return null
-
-				const [, signStr, integerStr, fractionStr] = match
-
-				const sign = signStr === '-' ? -1 : +1
-				const integer = parseInt(integerStr)
-				let fracMills = 0
-				switch (fractionStr) {
-					case '1/3':
-						fracMills = 300
-						break
-					case '1/2':
-						fracMills = 500
-						break
-					case '2/3':
-						fracMills = 700
-						break
-				}
-
-				return sign * (integer * 1000 + fracMills)
-			},
-		},
-		whiteBalance: {
-			devicePropCode: DevicePropCode.WhiteBalance,
-			dataType: DatatypeCode.Uint16,
-			decode: data => {
-				return WhiteBalanceTable.get(data) ?? `vendor ${toHexString(data, 4)}`
-			},
-			encode: value => {
-				return (
-					WhiteBalanceTable.getKey(value) ??
-					parseInt(value.replace(/^vendor /, ''), 16)
-				)
-			},
-		},
-		iso: {
-			devicePropCode: DevicePropCode.ExposureIndex,
-			dataType: DatatypeCode.Uint16,
-			decode: data => {
-				if (data === 0xffff) return 'auto'
-				return data
-			},
-			encode: iso => {
-				if (iso === 'auto') return 0xffff
-				return iso
-			},
-		},
-		captureDelay: {
-			devicePropCode: DevicePropCode.CaptureDelay,
-			dataType: DatatypeCode.Uint32,
-			decode: identity,
-			encode: identity,
-		},
-		driveMode: {
-			devicePropCode: DevicePropCode.StillCaptureMode,
-			dataType: DatatypeCode.Uint16,
-			decode: data => {
-				return DriveModeTable.get(data) ?? 'normal'
-			},
-			encode: value => {
-				return DriveModeTable.getKey(value) ?? 0x0
-			},
-		},
-		imageSize: {
-			devicePropCode: DevicePropCode.ImageSize,
-			dataType: DatatypeCode.String,
-			decode: identity,
-			encode: identity,
-		},
-		timelapseNumber: {
-			devicePropCode: DevicePropCode.TimelapseNumber,
-			dataType: DatatypeCode.Uint16,
-			decode: identity,
-			encode: identity,
-		},
-		timelapseInterval: {
-			devicePropCode: DevicePropCode.TimelapseInterval,
-			dataType: DatatypeCode.Uint32,
-			decode: identity,
-			encode: identity,
-		},
-		batteryLevel: {
-			devicePropCode: DevicePropCode.BatteryLevel,
-			dataType: DatatypeCode.Uint8,
-			decode: identity,
-			encode: identity,
-		},
 	}
 
 	public static async getDeviceInfo(device: PTPDevice): Promise<DeviceInfo> {
