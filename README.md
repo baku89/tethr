@@ -17,3 +17,47 @@ cd tethr
 yarn install
 yarn dev # Then open https://localhost:1234 with a browser
 ```
+
+## Sample Code
+
+This project is on very early stage of development and not yet documented. Here is the sample code for you to grasp how to use the library:
+
+```ts
+import {detectTethr} from 'tethr'
+
+const cameras = await detectTethr()
+
+const cam = cameras[0]
+
+await cam.init()
+
+await cam.get('model') // 'Lumix S5'
+await cam.getModel()
+
+await cam.set('shutterSpeed', '1/1000')
+await cam.setShutterSpeed('1/1000')
+
+const exposureModeDesc = await cam.getDesc('exposureMode')
+console.log(exposureModeDesc)
+/* -> {
+	value: 'M',
+	writable: false // Because this can be set by physical dial on a camera
+	options: ['M', 'S', 'A', 'P']
+} */
+
+const autoFocusResult = await cam.runAutoFocus()
+
+if (!autoFocusResult.status !== 'ok') {
+	console.warn('AF failed')
+}
+
+const takePictureResult = await cam.takePicture({download: true})
+
+if (takePictureResult.status === 'ok') {
+	const url = URL.createURLObject(pictures[0].blob)
+	$img.src = url
+}
+
+await cam.close()
+
+```
