@@ -12,8 +12,13 @@ import {
 } from '../configs'
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
-import {PTPEvent} from '../PTPDevice'
-import {ConfigDesc, OperationResult, TakePictureOption} from '../Tethr'
+import {PTPDevice, PTPEvent} from '../PTPDevice'
+import {
+	ConfigDesc,
+	createReadonlyConfigDesc,
+	OperationResult,
+	TakePictureOption,
+} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil} from '../util'
 import {TethrPTPUSB} from './TethrPTPUSB'
@@ -103,6 +108,14 @@ type DevicePropSchemePanasonic = {
 	}
 }
 
+interface _DevicePropSchemePanasonic<T> {
+	getCode: number
+	setCode?: number
+	decode: (value: number) => T | null
+	encode: (value: T) => number | null
+	valueSize: 1 | 2 | 4
+}
+
 interface LiveviewSetting {
 	width: number
 	height: number
@@ -112,6 +125,10 @@ interface LiveviewSetting {
 
 export class TethrPanasonic extends TethrPTPUSB {
 	private liveviewEnabled = false
+
+	public constructor(device: PTPDevice) {
+		super(device)
+	}
 
 	private devicePropSchemePanasonic: DevicePropSchemePanasonic = {
 		exposureMode: {
@@ -309,21 +326,18 @@ export class TethrPanasonic extends TethrPTPUSB {
 		await super.open()
 	}
 
-	public async set<N extends ConfigName>(
-		name: N,
-		value: ConfigType[N]
-	): Promise<OperationResult<void>> {
-		const scheme = this.devicePropSchemePanasonic[name] ?? null
+	// Config
 
-		if (scheme) {
-			return this.setDevicePropPanasonic(name, scheme, value)
-		}
+	public async getCanTakePictureDesc() {
+		return createReadonlyConfigDesc(true)
+	}
 
-		if (name === 'liveviewSize') {
-			this.setLiveviewSize(value)
-		}
+	public async getCanRunAutoFocusDesc() {
+		return createReadonlyConfigDesc(true)
+	}
 
-		return super.set(name, value)
+	public async getCanStartLiveviewDesc() {
+		return createReadonlyConfigDesc(true)
 	}
 
 	private async setDevicePropPanasonic<N extends ConfigName>(
@@ -368,44 +382,6 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return {
 			status: succeed ? 'ok' : 'invalid parameter',
 		}
-	}
-
-	public async getDesc<N extends ConfigName>(
-		name: N
-	): Promise<ConfigDesc<ConfigType[N]>> {
-		const scheme = this.devicePropSchemePanasonic[name] ?? null
-
-		if (scheme) {
-			return this.getDevicePropDescPanasonic(scheme)
-		}
-
-		switch (name) {
-			case 'canTakePicture':
-			case 'canRunAutoFocus':
-			case 'canRunManualFocus':
-			case 'canStartLiveview':
-				return {
-					writable: false,
-					value: true as ConfigType[N],
-					options: [],
-				}
-			case 'liveviewSize':
-				return this.getLiveviewSizeDesc() as Promise<ConfigDesc<ConfigType[N]>>
-			case 'liveviewEnabled':
-				return {
-					writable: false,
-					value: this.liveviewEnabled as ConfigType[N],
-					options: [],
-				}
-			case 'manualFocusOptions':
-				return {
-					writable: false,
-					value: ['near:2', 'near:1', 'far:1', 'far:2'] as ConfigType[N],
-					options: [],
-				}
-		}
-
-		return super.getDesc(name)
 	}
 
 	private async getDevicePropDescPanasonic<N extends ConfigName>(
@@ -455,6 +431,8 @@ export class TethrPanasonic extends TethrPTPUSB {
 			options,
 		}
 	}
+
+	// Actions
 
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
 		OperationResult<TethrObject[]>
@@ -573,7 +551,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	private async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
+	public async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
 		const setting = await this.getLiveviewSetting()
 		const settingOptions = await this.getLiveviewRecommendedSettings()
 
@@ -591,7 +569,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	private async setLiveviewSize(value: string): Promise<OperationResult<void>> {
+	public async setLiveviewSize(value: string): Promise<OperationResult<void>> {
 		const [width, height] = value.split('x').map(parseInt)
 
 		const settings = await this.getLiveviewRecommendedSettings()

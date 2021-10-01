@@ -1,4 +1,9 @@
-import {OperationResult, TakePictureOption, Tethr} from './Tethr'
+import {
+	createReadonlyConfigDesc,
+	OperationResult,
+	TakePictureOption,
+	Tethr,
+} from './Tethr'
 import {TethrObject} from './TethrObject'
 
 export function initTethrWebcam(media: MediaStream) {
@@ -31,27 +36,15 @@ export class TethrWebcam extends Tethr {
 
 	// Configs
 	public async getCanStartLiveviewDesc() {
-		return {
-			writable: false,
-			value: true,
-			options: [],
-		}
+		return createReadonlyConfigDesc(true)
 	}
 
 	public async getCanTakePictureDesc() {
-		return {
-			writable: false,
-			value: true,
-			options: [],
-		}
+		return createReadonlyConfigDesc(true)
 	}
 
 	public async getModelDesc() {
-		return {
-			writable: false,
-			value: 'Generic webcam',
-			options: [],
-		}
+		return createReadonlyConfigDesc('Generic webcam')
 	}
 
 	public async getLiveviewEnabledDesc() {
@@ -61,6 +54,7 @@ export class TethrWebcam extends Tethr {
 			options: [],
 		}
 	}
+
 	// Actions
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
 		OperationResult<TethrObject[]>

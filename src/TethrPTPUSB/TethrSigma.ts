@@ -16,6 +16,7 @@ import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {
 	ConfigDesc,
+	createReadonlyConfigDesc,
 	OperationResult,
 	OperationResultStatus,
 	TakePictureOption,
@@ -200,27 +201,15 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	public async getCanTakePictureDesc() {
-		return {
-			writable: false,
-			value: true,
-			options: [],
-		}
+		return createReadonlyConfigDesc(true)
 	}
 
 	public async getCanRunAutoFocusDesc() {
-		return {
-			writable: false,
-			value: true,
-			options: [],
-		}
+		return createReadonlyConfigDesc(true)
 	}
 
 	public async getCanStartLiveviewDesc() {
-		return {
-			writable: false,
-			value: true,
-			options: [],
-		}
+		return createReadonlyConfigDesc(true)
 	}
 
 	public async setColorMode(colorMode: string): Promise<OperationResult<void>> {
