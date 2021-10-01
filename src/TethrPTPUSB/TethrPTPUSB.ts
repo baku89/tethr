@@ -2,6 +2,7 @@ import {range, times} from 'lodash'
 
 import {
 	Aperture,
+	BatteryLevel,
 	ConfigForDevicePropTable,
 	DriveMode,
 	DriveModeTable,
@@ -29,7 +30,7 @@ import {ConfigDesc, OperationResult, TakePictureOption, Tethr} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil, toHexString} from '../util'
 
-type DeviceProp<T, D extends DatatypeCode> = {
+type DevicePropScheme<T, D extends DatatypeCode> = {
 	devicePropCode: number
 	datatypeCode: D
 	decode: (data: DataViewTypeForDatatypeCode<D>) => T | null
@@ -113,7 +114,7 @@ export class TethrPTPUSB extends Tethr {
 			devicePropCode: DevicePropCode.FNumber,
 			datatypeCode: DatatypeCode.Uint16,
 			decode(data) {
-				return data / 100
+				return (data / 100) as Aperture
 			},
 		})
 	}
@@ -122,7 +123,7 @@ export class TethrPTPUSB extends Tethr {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.BatteryLevel,
 			datatypeCode: DatatypeCode.Uint8,
-			decode: data => data,
+			decode: data => data as BatteryLevel,
 		})
 	}
 
@@ -377,12 +378,45 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
+	// Actions
+
+	public async takePicture({download = true}: TakePictureOption = {}): Promise<
+		OperationResult<TethrObject[]>
+	> {
+		const {operationsSupported} = await this.getDeviceInfo()
+		if (!operationsSupported.includes(OpCode.InitiateCapture)) {
+			return {status: 'unsupported'}
+		}
+
+		await this.device.sendCommand({
+			label: 'InitiateCapture',
+			opcode: OpCode.InitiateCapture,
+			parameters: [0x0],
+		})
+
+		const objectAddedEvent = await this.device.waitEvent(EventCode.ObjectAdded)
+
+		if (!download) return {status: 'ok', value: []}
+
+		const objectID = objectAddedEvent.parameters[0]
+		const objectInfo = await this.getObjectInfo(objectID)
+		const objectBuffer = await this.getObject(objectID)
+
+		const tethrObject: TethrObject = {
+			...objectInfo,
+			blob: new Blob([objectBuffer], {type: 'image/jpeg'}),
+		}
+
+		return {status: 'ok', value: [tethrObject]}
+	}
+
+	// Utility functions
 	protected async setDevicePropValue<T, D extends DatatypeCode>({
 		devicePropCode,
 		datatypeCode,
 		encode,
 		value,
-	}: Omit<DeviceProp<T, D>, 'decode'> & {value: T}): Promise<
+	}: Omit<DevicePropScheme<T, D>, 'decode'> & {value: T}): Promise<
 		OperationResult<void>
 	> {
 		const devicePropData = encode(value)
@@ -444,7 +478,7 @@ export class TethrPTPUSB extends Tethr {
 		devicePropCode,
 		datatypeCode,
 		decode,
-	}: Omit<DeviceProp<T, D>, 'encode'>): Promise<ConfigDesc<T>> {
+	}: Omit<DevicePropScheme<T, D>, 'encode'>): Promise<ConfigDesc<T>> {
 		// Check if the deviceProps is supported
 		if (!(await this.isDevicePropSupported(devicePropCode))) {
 			return {
@@ -539,36 +573,6 @@ export class TethrPTPUSB extends Tethr {
 	private async isDevicePropSupported(code: number): Promise<boolean> {
 		const {devicePropsSupported} = await this.getDeviceInfo()
 		return devicePropsSupported.includes(code)
-	}
-
-	public async takePicture({download = true}: TakePictureOption = {}): Promise<
-		OperationResult<TethrObject[]>
-	> {
-		const {operationsSupported} = await this.getDeviceInfo()
-		if (!operationsSupported.includes(OpCode.InitiateCapture)) {
-			return {status: 'unsupported'}
-		}
-
-		await this.device.sendCommand({
-			label: 'InitiateCapture',
-			opcode: OpCode.InitiateCapture,
-			parameters: [0x0],
-		})
-
-		const objectAddedEvent = await this.device.waitEvent(EventCode.ObjectAdded)
-
-		if (!download) return {status: 'ok', value: []}
-
-		const objectID = objectAddedEvent.parameters[0]
-		const objectInfo = await this.getObjectInfo(objectID)
-		const objectBuffer = await this.getObject(objectID)
-
-		const tethrObject: TethrObject = {
-			...objectInfo,
-			blob: new Blob([objectBuffer], {type: 'image/jpeg'}),
-		}
-
-		return {status: 'ok', value: [tethrObject]}
 	}
 
 	protected getDeviceInfo = async (): Promise<DeviceInfo> => {
