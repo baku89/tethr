@@ -1,10 +1,9 @@
 import {BiMap} from 'bim'
-import {identity, times} from 'lodash'
+import {times} from 'lodash'
 
 import {
 	Aperture,
 	ConfigName,
-	ConfigType,
 	ExposureMode,
 	ISO,
 	ManualFocusOption,
@@ -98,19 +97,8 @@ enum ObjectFormatCodePanasonic {
 	Raw = 0x3800,
 }
 
-type DevicePropSchemePanasonic = {
-	[N in ConfigName]?: {
-		getCode: number
-		setCode?: number
-		decode: (value: number) => ConfigType[N] | null
-		encode?: (value: ConfigType[N]) => number | null
-		valueSize: 1 | 2 | 4
-	}
-}
-
-interface _DevicePropSchemePanasonic<T> {
-	getCode: number
-	setCode?: number
+interface DevicePropSchemePanasonic<T> {
+	devicePropCode: number
 	decode: (value: number) => T | null
 	encode: (value: T) => number | null
 	valueSize: 1 | 2 | 4
@@ -128,177 +116,6 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 	public constructor(device: PTPDevice) {
 		super(device)
-	}
-
-	private devicePropSchemePanasonic: DevicePropSchemePanasonic = {
-		exposureMode: {
-			getCode: DevicePropCodePanasonic.CameraMode_ModePos,
-			valueSize: 2,
-			decode: (value: number) => {
-				return this.exposureModeTable.get(value) ?? null
-			},
-		},
-		aperture: {
-			getCode: DevicePropCodePanasonic.Aperture,
-			setCode: DevicePropCodePanasonic.Aperture_Param,
-			decode: (value: number) => {
-				return value / 10
-			},
-			encode: (value: Aperture) => {
-				return value === 'auto' ? 0 : Math.round(value * 10)
-			},
-			valueSize: 2,
-		},
-		shutterSpeed: {
-			getCode: DevicePropCodePanasonic.ShutterSpeed,
-			setCode: DevicePropCodePanasonic.ShutterSpeed_Param,
-			decode: (value: number) => {
-				switch (value) {
-					case 0xffffffff:
-						return 'bulb'
-					case 0x0fffffff:
-						return 'auto'
-					case 0x0ffffffe:
-						return null
-				}
-				if ((value & 0x80000000) === 0x00000000) {
-					return '1/' + value / 1000
-				} else {
-					return ((value & 0x7fffffff) / 1000).toString()
-				}
-			},
-			encode: (value: string) => {
-				if (value === 'bulb') return 0xffffffff
-				if (value === 'auto') return 0x0ffffffe
-
-				if (value.startsWith('1/')) {
-					const denominator = parseInt(value.replace(/^1\//, ''))
-					return denominator * 1000
-				}
-
-				// Seconds
-				const seconds = parseFloat(value)
-				if (!isNaN(seconds)) {
-					return Math.round(seconds * 1000) | 0x80000000
-				}
-
-				return null
-			},
-			valueSize: 4,
-		},
-		iso: {
-			getCode: DevicePropCodePanasonic.ISO,
-			setCode: DevicePropCodePanasonic.ISO_Param,
-			decode: (value: number) => {
-				if (value === 0xffffffff) return 'auto'
-				if (value === 0xfffffffe) return 'auto' // i-ISO
-				return value
-			},
-			encode: (value: ISO) => {
-				return value === 'auto' ? 0xffffffff : value
-			},
-			valueSize: 4,
-		},
-		exposureComp: {
-			getCode: DevicePropCodePanasonic.Exposure,
-			setCode: DevicePropCodePanasonic.Exposure_Param,
-			decode: v => {
-				if (v === 0x0) return '0'
-
-				const steps = v & 0xf
-				const digits = Math.floor(steps / 3)
-				const thirds = steps % 3
-				const negative = v & 0x8000
-
-				const sign = negative ? '-' : '+'
-				const thirdsSymbol = thirds === 1 ? '1/3' : thirds === 2 ? '2/3' : ''
-
-				if (digits === 0) return sign + thirdsSymbol
-				if (thirds === 0) return sign + digits
-
-				return sign + digits + ' ' + thirdsSymbol
-			},
-			encode: v => {
-				if (v === '0') return 0x0
-
-				let negative = false,
-					digits = 0,
-					thirds = 0
-
-				const match1 = v.match(/^([+-]?)([0-9]+)( 1\/3| 2\/3)?$/)
-
-				if (match1) {
-					negative = match1[1] === '-'
-					digits = parseInt(match1[2])
-					thirds = !match1[3] ? 0 : match1[3] === ' 1/3' ? 1 : 2
-				}
-
-				const match2 = match1 && v.match(/^([+-]?)(1\/3|2\/3)$/)
-
-				if (match2) {
-					negative = match2[1] === '-'
-					thirds = match2[2] === '1/3' ? 1 : 2
-				}
-
-				if (!match1 && !match2) return null
-
-				const steps = digits * 3 + thirds
-
-				return (negative ? 0x8000 : 0x0000) | steps
-			},
-			valueSize: 2,
-		},
-		whiteBalance: {
-			getCode: DevicePropCodePanasonic.WhiteBalance,
-			setCode: DevicePropCodePanasonic.WhiteBalance_Param,
-			decode: (value: number) => {
-				return this.whiteBalanceTable.get(value) ?? null
-			},
-			encode: (value: WhiteBalance) => {
-				return this.whiteBalanceTable.getKey(value) ?? null
-			},
-			valueSize: 2,
-		},
-		colorTemperature: {
-			getCode: DevicePropCodePanasonic.WhiteBalance_KSet,
-			setCode: DevicePropCodePanasonic.WhiteBalance_KSet,
-			decode: identity,
-			encode: identity,
-			valueSize: 2,
-		},
-		colorMode: {
-			getCode: DevicePropCodePanasonic.PhotoStyle,
-			setCode: DevicePropCodePanasonic.PhotoStyle_Param,
-			decode: (value: number) => {
-				return this.colorModeTable.get(value) ?? null
-			},
-			encode: (value: string) => {
-				return this.colorModeTable.getKey(value) ?? null
-			},
-			valueSize: 2,
-		},
-		imageAspect: {
-			getCode: DevicePropCodePanasonic.ImageMode_ImageAspect,
-			setCode: DevicePropCodePanasonic.ImageMode_ImageAspect,
-			decode: (value: number) => {
-				return this.imageAspectTable.get(value) ?? null
-			},
-			encode: (value: string) => {
-				return this.imageAspectTable.getKey(value) ?? null
-			},
-			valueSize: 2,
-		},
-		imageQuality: {
-			getCode: DevicePropCodePanasonic.ImageMode_Quality,
-			setCode: DevicePropCodePanasonic.ImageMode_Quality,
-			decode: (value: number) => {
-				return this.imageQualityTable.get(value) ?? null
-			},
-			encode: (value: string) => {
-				return this.imageQualityTable.getKey(value) ?? null
-			},
-			valueSize: 2,
-		},
 	}
 
 	public async open(): Promise<void> {
@@ -328,6 +145,127 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 	// Config
 
+	public setAperture(value: Aperture) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.Aperture_Param,
+			encode: (value: Aperture) => {
+				return value === 'auto' ? 0 : Math.round(value * 10)
+			},
+			valueSize: 2,
+			value,
+		})
+	}
+
+	public getApertureDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.Aperture,
+			decode: (value: number) => {
+				return value / 10
+			},
+			valueSize: 2,
+		})
+	}
+
+	public setColorModeDesc(value: string) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.PhotoStyle_Param,
+
+			encode: (value: string) => {
+				return this.colorModeTable.getKey(value) ?? null
+			},
+			valueSize: 2,
+			value,
+		})
+	}
+
+	public getColorModeDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.PhotoStyle,
+			decode: (value: number) => {
+				return this.colorModeTable.get(value) ?? null
+			},
+			valueSize: 2,
+		})
+	}
+
+	public getExposureModeDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.CameraMode_ModePos,
+			decode: (value: number) => {
+				return this.exposureModeTable.get(value) ?? null
+			},
+			valueSize: 2,
+		})
+	}
+
+	public setExposureComp(value: string) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.Exposure_Param,
+			encode: v => {
+				if (v === '0') return 0x0
+
+				let negative = false,
+					digits = 0,
+					thirds = 0
+
+				const match1 = v.match(/^([+-]?)([0-9]+)( 1\/3| 2\/3)?$/)
+
+				if (match1) {
+					negative = match1[1] === '-'
+					digits = parseInt(match1[2])
+					thirds = !match1[3] ? 0 : match1[3] === ' 1/3' ? 1 : 2
+				}
+
+				const match2 = match1 && v.match(/^([+-]?)(1\/3|2\/3)$/)
+
+				if (match2) {
+					negative = match2[1] === '-'
+					thirds = match2[2] === '1/3' ? 1 : 2
+				}
+
+				if (!match1 && !match2) return null
+
+				const steps = digits * 3 + thirds
+
+				return (negative ? 0x8000 : 0x0000) | steps
+			},
+			valueSize: 2,
+			value,
+		})
+	}
+
+	public getExposureCompDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.Exposure,
+			decode: v => {
+				if (v === 0x0) return '0'
+
+				const steps = v & 0xf
+				const digits = Math.floor(steps / 3)
+				const thirds = steps % 3
+				const negative = v & 0x8000
+
+				const sign = negative ? '-' : '+'
+				const thirdsSymbol = thirds === 1 ? '1/3' : thirds === 2 ? '2/3' : ''
+
+				if (digits === 0) return sign + thirdsSymbol
+				if (thirds === 0) return sign + digits
+
+				return sign + digits + ' ' + thirdsSymbol
+			},
+			valueSize: 2,
+		})
+	}
+
+	public async getManualFocusOptionsDesc() {
+		return createReadonlyConfigDesc([
+			'near:2',
+			'near:1',
+			'far:1',
+			'far:2',
+		] as ManualFocusOption[])
+	}
+
 	public async getCanTakePictureDesc() {
 		return createReadonlyConfigDesc(true)
 	}
@@ -336,27 +274,125 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return createReadonlyConfigDesc(true)
 	}
 
+	public async getCanRunManualFocusDesc() {
+		return createReadonlyConfigDesc(true)
+	}
+
 	public async getCanStartLiveviewDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
-	private async setDevicePropPanasonic<N extends ConfigName>(
-		name: N,
-		scheme: NonNullable<DevicePropSchemePanasonic[N]>,
-		value: ConfigType[N]
-	): Promise<OperationResult<void>> {
-		const setCode = scheme.setCode
-		const encode = scheme.encode as (value: ConfigType[N]) => number | null
-		const valueSize = scheme.valueSize
+	public async setColorTemperature(value: number) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.WhiteBalance_KSet,
+			encode: value => value,
+			valueSize: 2,
+			value,
+		})
+	}
 
-		const desc = await this.getDesc(name)
+	public async getColorTemperatureDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.WhiteBalance_KSet,
+			decode: data => data,
+			valueSize: 2,
+		})
+	}
 
-		if (!(setCode && encode && desc.writable)) {
-			return {
-				status: 'unsupported',
-			}
-		}
+	public setImageAspect(value: string) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.ImageMode_ImageAspect,
+			encode: (value: string) => {
+				return this.imageAspectTable.getKey(value) ?? null
+			},
+			valueSize: 2,
+			value,
+		})
+	}
 
+	public getImageAspectDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.ImageMode_ImageAspect,
+			decode: (value: number) => {
+				return this.imageAspectTable.get(value) ?? null
+			},
+			valueSize: 2,
+		})
+	}
+
+	public setImageQuality(value: string) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.ImageMode_Quality,
+			encode: (value: string) => {
+				return this.imageQualityTable.getKey(value) ?? null
+			},
+			valueSize: 2,
+			value,
+		})
+	}
+
+	public getImageQualityDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.ImageMode_Quality,
+			decode: (value: number) => {
+				return this.imageQualityTable.get(value) ?? null
+			},
+			valueSize: 2,
+		})
+	}
+
+	public setIso(value: ISO) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.ISO_Param,
+			encode: value => {
+				return value === 'auto' ? 0xffffffff : value
+			},
+			valueSize: 4,
+			value,
+		})
+	}
+
+	public getIsoDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.ISO,
+			decode: (value: number) => {
+				if (value === 0xffffffff) return 'auto'
+				if (value === 0xfffffffe) return 'auto' // i-ISO
+				return value
+			},
+			valueSize: 4,
+		})
+	}
+
+	public setWhiteBalance(value: WhiteBalance) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.WhiteBalance_Param,
+			encode: (value: WhiteBalance) => {
+				return this.whiteBalanceTable.getKey(value) ?? null
+			},
+			valueSize: 2,
+			value,
+		})
+	}
+
+	public getWhiteBalanceDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.WhiteBalance,
+			decode: (value: number) => {
+				return this.whiteBalanceTable.get(value) ?? null
+			},
+			valueSize: 2,
+		})
+	}
+
+	private async setDevicePropValuePanasonic<T>({
+		value,
+		valueSize,
+		encode,
+		devicePropCode,
+	}: Omit<DevicePropSchemePanasonic<T>, 'decode'> & {value: T}): Promise<
+		OperationResult<void>
+	> {
 		const dataView = new PTPDataView()
 		const encodedValue = encode(value)
 
@@ -366,7 +402,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			}
 		}
 
-		dataView.writeUint32(setCode)
+		dataView.writeUint32(devicePropCode)
 		dataView.writeUint32(valueSize)
 		if (valueSize === 1) dataView.writeUint8(encodedValue)
 		if (valueSize === 2) dataView.writeUint16(encodedValue)
@@ -375,7 +411,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		const succeed = await this.device.sendData({
 			label: 'Panasonic SetDevicePropValue',
 			opcode: OpCodePanasonic.SetDevicePropValue,
-			parameters: [setCode],
+			parameters: [devicePropCode],
 			data: dataView.toBuffer(),
 		})
 
@@ -384,17 +420,15 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	private async getDevicePropDescPanasonic<N extends ConfigName>(
-		scheme: NonNullable<DevicePropSchemePanasonic[N]>
-	): Promise<ConfigDesc<ConfigType[N]>> {
-		const getCode = scheme.getCode
-		const decode = scheme.decode as (data: number) => ConfigType[N]
-		const valueSize = scheme.valueSize
-
+	private async getDevicePropDescPanasonic<T>({
+		devicePropCode,
+		decode,
+		valueSize,
+	}: Omit<DevicePropSchemePanasonic<T>, 'encode'>): Promise<ConfigDesc<T>> {
 		const {data} = await this.device.receiveData({
 			label: 'Panasonic GetDevicePropDesc',
 			opcode: OpCodePanasonic.GetDevicePropDesc,
-			parameters: [getCode],
+			parameters: [devicePropCode],
 		})
 
 		const dataView = new PTPDataView(data)
@@ -430,6 +464,52 @@ export class TethrPanasonic extends TethrPTPUSB {
 			value,
 			options,
 		}
+	}
+
+	public setShutterSpeed(value: string) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.ShutterSpeed_Param,
+			encode: (value: string) => {
+				if (value === 'bulb') return 0xffffffff
+				if (value === 'auto') return 0x0ffffffe
+
+				if (value.startsWith('1/')) {
+					const denominator = parseInt(value.replace(/^1\//, ''))
+					return denominator * 1000
+				}
+
+				// Seconds
+				const seconds = parseFloat(value)
+				if (!isNaN(seconds)) {
+					return Math.round(seconds * 1000) | 0x80000000
+				}
+
+				return null
+			},
+			valueSize: 4,
+			value,
+		})
+	}
+	public getShutterSpeedDesc() {
+		return this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.ShutterSpeed,
+			decode: (value: number) => {
+				switch (value) {
+					case 0xffffffff:
+						return 'bulb'
+					case 0x0fffffff:
+						return 'auto'
+					case 0x0ffffffe:
+						return null
+				}
+				if ((value & 0x80000000) === 0x00000000) {
+					return '1/' + value / 1000
+				} else {
+					return ((value & 0x7fffffff) / 1000).toString()
+				}
+			},
+			valueSize: 4,
+		})
 	}
 
 	// Actions
