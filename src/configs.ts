@@ -75,7 +75,6 @@ export type ConfigType = {
 	captureDelay: number
 	colorMode: string
 	colorTemperature: number // Added
-	compressionSetting: number
 	contrast: number
 	dateTime: Date
 	digitalZoom: number
