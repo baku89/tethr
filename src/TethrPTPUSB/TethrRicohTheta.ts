@@ -1,15 +1,14 @@
 import {BiMap} from 'bim'
-import {identity} from 'lodash'
 
 import {
-	ConfigName,
-	ConfigType,
+	ExposureMode,
 	ExposureModeTable,
+	FocalLength,
+	WhiteBalance,
 	WhiteBalanceTable,
 } from '../configs'
-import {DatatypeCode} from '../PTPDatacode'
-import {ConfigDesc} from '../Tethr'
-import {DevicePropScheme, TethrPTPUSB} from './TethrPTPUSB'
+import {DatatypeCode, DevicePropCode} from '../PTPDatacode'
+import {TethrPTPUSB} from './TethrPTPUSB'
 
 enum DevicePropCodeRicohTheta {
 	ShutterSpeed = 0xd00f,
@@ -17,68 +16,122 @@ enum DevicePropCodeRicohTheta {
 }
 
 export class TethrRicohTheta extends TethrPTPUSB {
-	public async getDesc<N extends ConfigName, T extends ConfigType[N]>(
-		name: N
-	): Promise<ConfigDesc<T>> {
-		if (name === 'focalLength') {
-			return {
-				writable: false,
-				value: 'spherical' as T,
-				options: [],
-			}
-		}
-		return super.getDesc(name)
+	// PTP extension specs here: https://api.ricoh/docs/theta-usb-api/
+
+	// Configs
+
+	public setColorTemperature(value: number) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCodeRicohTheta.ColorTemperature,
+			datatypeCode: DatatypeCode.Uint16,
+			encode: value => value,
+			value,
+		})
+	}
+	public getColorTemperatureDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCodeRicohTheta.ColorTemperature,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: data => data,
+		})
 	}
 
-	protected devicePropScheme = (() => {
-		const devicePropScheme: DevicePropScheme = {
-			...this.devicePropScheme,
-			shutterSpeed: {
-				devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
-				dataType: DatatypeCode.Uint64,
-				encode: function (str: string) {
-					let fraction, denominator: number
-
-					if (str.includes('/')) {
-						const [fractionStr, denominatorStr] = str.split('/')
-						fraction = parseInt(fractionStr)
-						denominator = parseInt(denominatorStr)
-					} else {
-						const secs = parseFloat(str)
-						denominator = secs % 1 > 0 ? 10 : 1
-						fraction = Math.round(secs * denominator)
-					}
-
-					return (BigInt(denominator) << BigInt(32)) | BigInt(fraction)
-				},
-				decode: function (num: bigint) {
-					const denominator = Number(num >> BigInt(32))
-					const fraction = Number(num & BigInt(0xffffffff))
-
-					if (denominator === 1 || denominator === 10) {
-						return (fraction / denominator).toString()
-					}
-
-					return fraction + '/' + denominator
-				},
+	public setExposureMode(value: ExposureMode) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.ExposureProgramMode,
+			datatypeCode: DatatypeCode.Uint16,
+			encode: value => {
+				return this.exposureModeTable.getKey(value) ?? null
 			},
-			colorTemperature: {
-				devicePropCode: DevicePropCodeRicohTheta.ColorTemperature,
-				dataType: DatatypeCode.Uint16,
-				decode: identity,
-				encode: identity,
+			value,
+		})
+	}
+
+	public getExposureModeDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.ExposureProgramMode,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: data => {
+				return this.exposureModeTable.get(data) ?? null
 			},
+		})
+	}
+
+	public async getFocalLengthDesc() {
+		return {
+			writable: false,
+			value: 'spherical' as FocalLength,
+			options: [],
 		}
+	}
 
-		return devicePropScheme
-	})()
+	public setShutterSpeed(value: string) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
+			datatypeCode: DatatypeCode.Uint64,
+			encode(str: string) {
+				let fraction, denominator: number
 
-	protected exposureModeTable = new BiMap([
+				if (str.includes('/')) {
+					const [fractionStr, denominatorStr] = str.split('/')
+					fraction = parseInt(fractionStr)
+					denominator = parseInt(denominatorStr)
+				} else {
+					const secs = parseFloat(str)
+					denominator = secs % 1 > 0 ? 10 : 1
+					fraction = Math.round(secs * denominator)
+				}
+
+				return (BigInt(denominator) << BigInt(32)) | BigInt(fraction)
+			},
+			value,
+		})
+	}
+
+	public getShutterSpeedDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
+			datatypeCode: DatatypeCode.Uint64,
+			decode(num: bigint) {
+				const denominator = Number(num >> BigInt(32))
+				const fraction = Number(num & BigInt(0xffffffff))
+
+				if (denominator === 1 || denominator === 10) {
+					return (fraction / denominator).toString()
+				}
+
+				return fraction + '/' + denominator
+			},
+		})
+	}
+
+	public setWhiteBalance(value: WhiteBalance) {
+		return this.setDevicePropValue({
+			devicePropCode: DevicePropCode.WhiteBalance,
+			datatypeCode: DatatypeCode.Uint16,
+			encode: value => {
+				return this.WhiteBalanceTable.getKey(value) ?? null
+			},
+			value,
+		})
+	}
+
+	public getWhiteBalanceDesc() {
+		return this.getDevicePropDesc({
+			devicePropCode: DevicePropCode.ExposureProgramMode,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: data => {
+				return this.WhiteBalanceTable.get(data) ?? null
+			},
+		})
+	}
+
+	private exposureModeTable = new BiMap<number, ExposureMode>([
 		...ExposureModeTable.entries(),
 		[0x8003, 'vendor iso-priority'],
 	])
 
-	protected WhiteBalanceTable = new BiMap([
+	private WhiteBalanceTable = new BiMap<number, WhiteBalance>([
 		...WhiteBalanceTable.entries(),
 		[0x8001, 'shade'],
 		[0x0004, 'daylight'],
