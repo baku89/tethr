@@ -14,7 +14,18 @@ html {
   background: #16160e;
   color: #f7fcfe;
   font-size: 15px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Fira Code', monospace;
+}
+h1,
+h2,
+h3 {
+  font-weight: normal;
+}
+h1 {
+  margin-bottom: 0.5em;
+}
+a {
+  color: #a0d8ef;
 }
 input,
 select,
@@ -52,12 +63,16 @@ button[disabled] {
   height: 100vh;
   grid-template-columns: 1fr 25em;
 }
+@media (max-width: 700px) {
+  .app {
+    display: block;
+  }
+}
 .app > * {
   padding: 1em;
 }
 aside {
   overflow-y: scroll;
-  height: 100%;
   border-left: 2px solid #2b2b2b;
 }
 h2 {
@@ -94,3 +109,4 @@ dd button {
   object-fit: contain;
 }
 
+/*# sourceMappingURL=index.ef10a57d.css.map */
