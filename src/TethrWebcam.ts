@@ -51,7 +51,6 @@ export class TethrWebcam extends Tethr {
 		return {
 			writable: false,
 			value: this.liveviewEnabled,
-			options: [],
 		}
 	}
 

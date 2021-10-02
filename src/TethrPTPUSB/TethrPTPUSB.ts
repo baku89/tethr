@@ -1,4 +1,4 @@
-import {range, times} from 'lodash'
+import {times} from 'lodash'
 
 import {
 	Aperture,
@@ -26,7 +26,13 @@ import {
 } from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPDevice, PTPEvent} from '../PTPDevice'
-import {ConfigDesc, OperationResult, TakePictureOption, Tethr} from '../Tethr'
+import {
+	ConfigDesc,
+	createReadonlyConfigDesc,
+	OperationResult,
+	TakePictureOption,
+	Tethr,
+} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil, toHexString} from '../util'
 
@@ -130,11 +136,7 @@ export class TethrPTPUSB extends Tethr {
 	public async getCanTakePictureDesc() {
 		const {operationsSupported} = await this.getDeviceInfo()
 		const value = operationsSupported.includes(OpCode.InitiateCapture)
-		return {
-			writable: false,
-			value,
-			options: [],
-		}
+		return createReadonlyConfigDesc(value)
 	}
 
 	public setCaptureDelay(value: number) {
@@ -313,7 +315,6 @@ export class TethrPTPUSB extends Tethr {
 		return {
 			writable: false,
 			value: (await this.getDeviceInfo()).model,
-			options: [],
 		}
 	}
 
@@ -484,7 +485,6 @@ export class TethrPTPUSB extends Tethr {
 			return {
 				writable: false,
 				value: null,
-				options: [],
 			}
 		}
 
@@ -531,12 +531,12 @@ export class TethrPTPUSB extends Tethr {
 		// Read options
 		const formFlag = dataView.readUint8()
 
-		let options: T[]
+		let option: ConfigDesc<T>['option']
 
 		switch (formFlag) {
 			case 0x00:
 				// None
-				options = []
+				option = undefined
 				break
 			case 0x01: {
 				// Range
@@ -550,13 +550,21 @@ export class TethrPTPUSB extends Tethr {
 				) {
 					throw new Error(`Cannot enumerate supported values of device config`)
 				}
-				options = range(min, max, step) as any
+				option = {
+					type: 'range',
+					min,
+					max,
+					step,
+				}
 				break
 			}
 			case 0x02: {
 				// Enumeration
 				const length = dataView.readUint16()
-				options = times(length, readValue).map(decode).filter(isntNil)
+				option = {
+					type: 'enum',
+					values: times(length, readValue).map(decode).filter(isntNil),
+				}
 				break
 			}
 			default:
@@ -564,9 +572,9 @@ export class TethrPTPUSB extends Tethr {
 		}
 
 		return {
-			writable: writable && options.length > 1,
+			writable,
 			value,
-			options,
+			option,
 		}
 	}
 

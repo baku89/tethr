@@ -1,7 +1,8 @@
 import {BiMap} from 'bim'
-import {minBy, range} from 'lodash'
+import {minBy} from 'lodash'
 import sleep from 'sleep-promise'
 
+import {FocalLength} from '..'
 import {
 	Aperture,
 	BatteryLevel,
@@ -159,7 +160,6 @@ export class TethrSigma extends TethrPTPUSB {
 			return {
 				writable: false,
 				value,
-				options: [],
 			}
 		}
 
@@ -180,13 +180,16 @@ export class TethrSigma extends TethrPTPUSB {
 
 		if (!fMin || !fMax) throw new Error()
 
-		const options = apertures.filter(a => fMin <= a && a <= fMax)
+		const values = apertures.filter(a => fMin <= a && a <= fMax)
 
 		return {
 			writable: true,
 			value,
-			options,
-		}
+			option: {
+				type: 'enum',
+				values,
+			},
+		} as ConfigDesc<Aperture>
 	}
 
 	public async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
@@ -196,7 +199,6 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: false,
 			value,
-			options: [],
 		}
 	}
 
@@ -230,7 +232,10 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: colorModeOptions.length > 0,
 			value: decodeColorMode(colorMode),
-			options: colorModeOptions.map(decodeColorMode),
+			option: {
+				type: 'enum',
+				values: colorModeOptions.map(decodeColorMode),
+			},
 		}
 	}
 
@@ -261,7 +266,6 @@ export class TethrSigma extends TethrPTPUSB {
 			return {
 				writable: false,
 				value,
-				options: [],
 			}
 		}
 
@@ -270,8 +274,13 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: true,
 			value,
-			options: range(min, max, step),
-		}
+			option: {
+				type: 'range',
+				min,
+				max,
+				step,
+			},
+		} as ConfigDesc<number>
 	}
 
 	public async getExposureMode() {
@@ -292,14 +301,17 @@ export class TethrSigma extends TethrPTPUSB {
 		const {exposureMode} = await this.getCamCanSetInfo5()
 		const value = await this.getExposureMode()
 
-		const options = exposureMode
+		const values = exposureMode
 			.map(n => this.exposureModeTable.get(n))
 			.filter(isntNil)
 
 		return {
-			writable: options.length > 0,
+			writable: values.length > 0,
 			value,
-			options,
+			option: {
+				type: 'enum',
+				values,
+			},
 		}
 	}
 
@@ -323,14 +335,13 @@ export class TethrSigma extends TethrPTPUSB {
 			return {
 				writable: false,
 				value,
-				options: [],
 			}
 		}
 
 		const [min, max] = exposureComp
 
 		const allValues = [...this.compensationOneThirdTable.values()]
-		const options = allValues
+		const values = allValues
 			.map(v => [v, decodeExposureComp(v)] as [string, number])
 			.sort((a, b) => a[1] - b[1])
 			.filter(([, n]) => min - 1e-4 <= n && n <= max + 1e-4)
@@ -339,7 +350,10 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: exposureComp.length > 0,
 			value,
-			options,
+			option: {
+				type: 'enum',
+				values,
+			},
 		}
 
 		function decodeExposureComp(v: string) {
@@ -383,8 +397,13 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: false,
 			value,
-			options: range(min, max, 1),
-		}
+			option: {
+				type: 'range',
+				min,
+				max,
+				step: 0,
+			},
+		} as ConfigDesc<FocalLength>
 
 		function decodeFocalLength(byte: number) {
 			const integer = byte >> 4,
@@ -416,7 +435,10 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: imageAspectOptions.length > 0,
 			value: decodeImageAspectIFD(imageAspectIfdID),
-			options: imageAspectOptions.map(decodeImageAspectIFD),
+			option: {
+				type: 'enum',
+				values: imageAspectOptions.map(decodeImageAspectIFD),
+			},
 		}
 	}
 
@@ -512,17 +534,20 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: true,
 			value: stringifyImageQuality(imageQuality, dngBitDepth),
-			options: [
-				// NOTE: Hard-coded so this might not work for some cases
-				'low',
-				'standard',
-				'fine',
-				'raw 12bit + fine',
-				'raw 14bit + fine',
-				'raw 12bit',
-				'raw 14bit',
-			],
-		}
+			option: {
+				type: 'enum',
+				values: [
+					// NOTE: Hard-coded so this might not work for some cases
+					'low',
+					'standard',
+					'fine',
+					'raw 12bit + fine',
+					'raw 14bit + fine',
+					'raw 12bit',
+					'raw 14bit',
+				],
+			},
+		} as ConfigDesc<string>
 
 		function stringifyImageQuality(
 			quality: ImageQualityConfig,
@@ -560,14 +585,16 @@ export class TethrSigma extends TethrPTPUSB {
 			return {
 				writable: false,
 				value: null,
-				options: [],
 			}
 		}
 
 		return {
 			writable: true,
 			value,
-			options: ['low', 'medium', 'high'],
+			option: {
+				type: 'enum',
+				values: ['low', 'medium', 'high'],
+			},
 		}
 	}
 
@@ -616,14 +643,17 @@ export class TethrSigma extends TethrPTPUSB {
 		const isoMax = Math.round(3.125 * 2 ** svMax)
 
 		const isos = [...this.isoTable.values()]
-		const options = isos.filter(a => isoMin <= a && a <= isoMax)
+		const values = isos.filter(a => isoMin <= a && a <= isoMax)
 
-		options.unshift('auto')
+		values.unshift('auto')
 
 		return {
 			writable: true,
 			value,
-			options,
+			option: {
+				type: 'enum',
+				values,
+			},
 		}
 	}
 
@@ -631,7 +661,6 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: false,
 			value: this.liveviewEnabled,
-			options: [],
 		}
 	}
 
@@ -648,12 +677,15 @@ export class TethrSigma extends TethrPTPUSB {
 		const {lvMagnifyRatio} = await this.getCamDataGroup4()
 		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
 
-		const {lvMagnifyRatio: options} = await this.getCamCanSetInfo5()
+		const {lvMagnifyRatio: values} = await this.getCamCanSetInfo5()
 
 		return {
-			writable: options.length > 0,
+			writable: values.length > 0,
 			value,
-			options,
+			option: {
+				type: 'enum',
+				values,
+			},
 		}
 	}
 
@@ -682,7 +714,6 @@ export class TethrSigma extends TethrPTPUSB {
 			return {
 				writable: false,
 				value,
-				options: [],
 			}
 		}
 
@@ -712,15 +743,18 @@ export class TethrSigma extends TethrPTPUSB {
 		const ssMinIndex = ssMinEntry[0]
 		const ssMaxIndex = ssMaxEntry[0]
 
-		const options = shutterSpeeds
+		const values = shutterSpeeds
 			.filter(e => ssMinIndex <= e[0] && e[0] <= ssMaxIndex)
 			.map(e => e[1])
 
 		return {
-			writable: options.length > 0,
+			writable: values.length > 0,
 			value,
-			options,
-		}
+			option: {
+				type: 'enum',
+				values,
+			},
+		} as ConfigDesc<string>
 	}
 
 	public async getWhiteBalance() {
@@ -740,14 +774,17 @@ export class TethrSigma extends TethrPTPUSB {
 		const {whiteBalance} = await this.getCamCanSetInfo5()
 		const value = await this.getWhiteBalance()
 
-		const options = whiteBalance
+		const values = whiteBalance
 			.map(v => this.whiteBalanceTableIFD.get(v))
 			.filter(isntNil)
 
 		return {
-			writable: options.length > 0,
+			writable: values.length > 0,
 			value,
-			options,
+			option: {
+				type: 'enum',
+				values,
+			},
 		}
 	}
 

@@ -61,7 +61,6 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		return {
 			writable: false,
 			value: 'spherical' as FocalLength,
-			options: [],
 		}
 	}
 

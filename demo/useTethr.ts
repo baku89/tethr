@@ -11,7 +11,7 @@ export interface TethrConfig<T extends ConfigType[ConfigName]> {
 	writable: boolean
 	value: T | null
 	update: (value: T) => void
-	options: T[]
+	option: ConfigDesc<T>['option']
 }
 
 export function useTethrConfig<Name extends ConfigName>(
@@ -22,7 +22,7 @@ export function useTethrConfig<Name extends ConfigName>(
 		writable: false,
 		value: null,
 		update: () => null,
-		options: [],
+		option: undefined,
 	}) as TethrConfig<ConfigType[Name]>
 
 	watch(
@@ -31,7 +31,7 @@ export function useTethrConfig<Name extends ConfigName>(
 			if (!cam) {
 				config.writable = false
 				config.value = null
-				config.options = []
+				config.option = undefined
 				return
 			}
 
@@ -39,7 +39,7 @@ export function useTethrConfig<Name extends ConfigName>(
 
 			config.writable = desc.writable
 			config.value = desc.value
-			config.options = desc.options
+			config.option = desc.option
 
 			config.update = async (value: any) => {
 				cam.set(name, value)
@@ -48,7 +48,7 @@ export function useTethrConfig<Name extends ConfigName>(
 			cam.on(`${name}Changed` as any, (desc: ConfigDesc<ConfigType[Name]>) => {
 				config.value = desc.value
 				config.writable = desc.writable
-				config.options = desc.options
+				config.option = desc.option
 			})
 		},
 		{immediate: true}

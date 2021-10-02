@@ -58,7 +58,10 @@ console.log(exposureModeDesc)
 /* -> {
 	value: 'M',
 	writable: false // Because this can be set by physical dial on a camera
-	options: ['M', 'S', 'A', 'P']
+	option: {
+		type: 'enum',
+		values: ['M', 'S', 'A', 'P']
+	}
 } */
 
 const autoFocusResult = await cam.runAutoFocus()
@@ -151,7 +154,9 @@ If you also want to know an information of config such as writability and valid 
 interface ConfigDesc<ConfigType> {
 	writable: boolean
 	value: ConfigType | null
-	options: ConfigType[]
+	option?:
+		| {type: 'enum'; values: ConfigType[]}
+		| {type: 'range'; min: ConfigType; max: ConfigType; step: ConfigType}
 }
 ```
 

@@ -457,12 +457,15 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		const value = decode(getValue())
 
-		const options = [...getArray()].map(decode).filter(isntNil)
+		const values = [...getArray()].map(decode).filter(isntNil)
 
 		return {
-			writable: options.length > 0,
+			writable: values.length > 0,
 			value,
-			options,
+			option: {
+				type: 'enum',
+				values,
+			},
 		}
 	}
 
@@ -636,12 +639,15 @@ export class TethrPanasonic extends TethrPTPUSB {
 		const settingOptions = await this.getLiveviewRecommendedSettings()
 
 		const value = getSizeStringFromSetting(setting)
-		const options = settingOptions.map(getSizeStringFromSetting)
+		const values = settingOptions.map(getSizeStringFromSetting)
 
 		return {
-			writable: options.length > 0,
+			writable: values.length > 0,
 			value,
-			options,
+			option: {
+				type: 'enum',
+				values,
+			},
 		}
 
 		function getSizeStringFromSetting(setting: LiveviewSetting) {

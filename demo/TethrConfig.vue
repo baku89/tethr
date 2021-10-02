@@ -3,17 +3,27 @@
 		<dt>{{ label }}</dt>
 		<dd style="font-family: monospace">
 			<template v-if="config.writable">
-				<select :value="valueIndex" @change.prevent="update">
-					<option
-						v-for="(v, i) in config.options"
-						:key="i"
-						:label="v"
-						:value="i"
-						:data-index="i"
-					>
-						{{ v }}
-					</option>
-				</select>
+				<template v-if="config.option.type === 'enum'">
+					<select :value="valueIndex" @change.prevent="update">
+						<option
+							v-for="(v, i) in config.option.values"
+							:key="i"
+							:label="v"
+							:value="i"
+							:data-index="i"
+						>
+							{{ v }}
+						</option>
+					</select>
+				</template>
+				<template v-if="config.option.type === 'range'">
+					<input
+						type="number"
+						:min="config.option.min"
+						:max="config.option.max"
+						:step="config.option.step"
+					/>
+				</template>
 			</template>
 			<input v-else :value="config.value" disabled />
 		</dd>

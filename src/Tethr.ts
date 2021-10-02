@@ -37,9 +37,10 @@ export type OperationResult<T> = T extends void
 
 export type ConfigDesc<T> = {
 	value: T | null
-	defaultValue?: T
 	writable: boolean
-	options: T[]
+	option?:
+		| {type: 'enum'; values: T[]}
+		| {type: 'range'; min: T; max: T; step: T}
 }
 
 export interface TakePictureOption {
@@ -70,19 +71,17 @@ type ConfigDescGetters = {
 	>
 }
 
-export function createUnsupportedConfigDesc<T>() {
+export function createUnsupportedConfigDesc<T>(): ConfigDesc<T> {
 	return {
 		writable: false,
 		value: null,
-		options: [] as T[],
 	}
 }
 
-export function createReadonlyConfigDesc<T>(value: T) {
+export function createReadonlyConfigDesc<T>(value: T): ConfigDesc<T> {
 	return {
 		writable: false,
 		value,
-		options: [],
 	}
 }
 
@@ -276,7 +275,6 @@ export abstract class Tethr
 		return {
 			writable: false,
 			value: null,
-			options: [],
 		}
 	}
 
@@ -807,7 +805,7 @@ export abstract class Tethr
 
 	public async takePicture(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		options?: TakePictureOption
+		option?: TakePictureOption
 	): Promise<OperationResult<TethrObject[]>> {
 		return {status: 'unsupported'}
 	}
