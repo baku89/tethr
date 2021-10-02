@@ -1,6 +1,8 @@
 <template>
 	<div class="app">
 		<main>
+			<h1>Tethr Demo</h1>
+			<a href="https://github.com/baku89/tethr">Fork Me on GitHub</a>
 			<video class="view lv" :srcObject.prop="liveviewMediaStream" autoplay />
 			<img class="view picture" :src="lastPictureURL" />
 		</main>
