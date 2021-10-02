@@ -80,6 +80,7 @@ export type ConfigType = {
 	exposureComp: string // exposureBiasCompensation
 	exposureMeteringMode: ExposureMeteringMode
 	exposureMode: ExposureMode // exposureProgramMode
+	facingMode: string
 	flashMode: FlashMode
 	focalLength: FocalLength
 	focusDistance: number

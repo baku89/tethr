@@ -155,6 +155,7 @@ export function useTethr() {
 			captureDelay: useTethrConfig(camera, 'captureDelay'),
 			timelapseNumber: useTethrConfig(camera, 'timelapseNumber'),
 			timelapseInterval: useTethrConfig(camera, 'timelapseInterval'),
+			facingMode: useTethrConfig(camera, 'facingMode'),
 			focalLength: useTethrConfig(camera, 'focalLength'),
 			liveviewMagnifyRatio: useTethrConfig(camera, 'liveviewMagnifyRatio'),
 			liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),

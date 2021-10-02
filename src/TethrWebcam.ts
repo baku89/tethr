@@ -1,5 +1,7 @@
+import {ConfigDesc} from '.'
 import {
 	createReadonlyConfigDesc,
+	createUnsupportedConfigDesc,
 	OperationResult,
 	TakePictureOption,
 	Tethr,
@@ -9,9 +11,9 @@ import {TethrObject} from './TethrObject'
 export function initTethrWebcam(media: MediaStream) {
 	return new TethrWebcam(media)
 }
-
 export class TethrWebcam extends Tethr {
 	private liveviewEnabled = false
+	private videoTrack!: MediaStreamTrack
 	private _opened = false
 	private imageCapture!: ImageCapture
 
@@ -41,6 +43,44 @@ export class TethrWebcam extends Tethr {
 
 	public async getCanTakePictureDesc() {
 		return createReadonlyConfigDesc(true)
+	}
+
+	public async setFacingMode(value: string) {
+		const desc = await this.getFacingModeDesc()
+		if (desc.value === null) {
+			return {status: 'unsupported'} as OperationResult<void>
+		}
+
+		if (!(desc.option?.type === 'enum' && desc.option.values.includes(value))) {
+			return {status: 'invalid parameter'} as OperationResult<void>
+		}
+
+		await this.videoTrack.applyConstraints({
+			facingMode: value,
+		})
+
+		return {status: 'ok'} as OperationResult<void>
+	}
+
+	public async getFacingModeDesc() {
+		const settings = this.videoTrack.getSettings()
+		const capabilities = this.videoTrack.getCapabilities()
+
+		const value = settings.facingMode
+		const values = capabilities.facingMode
+
+		if (!value || !values) {
+			return createUnsupportedConfigDesc<string>()
+		}
+
+		return {
+			writable: true,
+			value,
+			option: {
+				type: 'enum',
+				values,
+			},
+		} as ConfigDesc<string>
 	}
 
 	public async getModelDesc() {

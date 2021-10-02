@@ -230,6 +230,8 @@ export abstract class Tethr
 				return this.getExposureMeteringModeDesc() as ReturnType
 			case 'exposureMode':
 				return this.getExposureModeDesc() as ReturnType
+			case 'facingMode':
+				return this.getFacingModeDesc() as ReturnType
 			case 'flashMode':
 				return this.getFlashModeDesc() as ReturnType
 			case 'focalLength':
@@ -524,6 +526,19 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
+		return createUnsupportedConfigDesc()
+	}
+
+	public async getFacingMode(): Promise<string | null> {
+		return (await this.getFacingModeDesc()).value
+	}
+	public async setFacingMode(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		value: string
+	): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
+	}
+	public async getFacingModeDesc(): Promise<ConfigDesc<string>> {
 		return createUnsupportedConfigDesc()
 	}
 

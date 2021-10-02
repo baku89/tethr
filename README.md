@@ -104,6 +104,7 @@ This is a list of ConfigName and its value type:
 | exposureComp         | `string`               | `'-1 1/3'` `'-1/2'`, `'0'`, `'+2 1/3'`                      |
 | exposureMeteringMode | `ExposureMeteringMode` | `'average'`, '`multi-spot'`, `'center-spot'`...             |
 | exposureMode         | `ExposureMode`         | `'P'`, `'A'`, `'S'`, `'M'`                                  |
+| facingMode           | `string`               | `'user'`, `'environemnt'`... (Webcam fallback only)         |
 | flashMode            | `FlashMode`            | `'auto'`, `'off'`, `'fill'`...                              |
 | focalLength          | `FocalLength`          | `35`, `55`, `105`, `'spherical'` (= Theta S, Insta360)      |
 | focusDistance        | `number`               |                                                             |
