@@ -142,6 +142,8 @@ export abstract class Tethr
 				return this.setExposureMeteringMode(value as ExposureMeteringMode)
 			case 'exposureMode':
 				return this.setExposureMode(value as ExposureMode)
+			case 'facingMode':
+				return this.setFacingMode(value as string)
 			case 'flashMode':
 				return this.setFlashMode(value as FlashMode)
 			case 'focalLength':
