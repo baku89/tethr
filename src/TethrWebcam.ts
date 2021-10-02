@@ -88,6 +88,7 @@ export class TethrWebcam extends Tethr {
 
 	public async startLiveview(): Promise<OperationResult<MediaStream>> {
 		this.liveviewEnabled = true
+		this.emit('liveviewEnabledChanged', createReadonlyConfigDesc(true))
 		return {
 			status: 'ok',
 			value: this.media,
@@ -96,6 +97,7 @@ export class TethrWebcam extends Tethr {
 
 	public async stopLiveview(): Promise<OperationResult<void>> {
 		this.liveviewEnabled = false
+		this.emit('liveviewEnabledChanged', createReadonlyConfigDesc(false))
 		return {status: 'ok'}
 	}
 }
