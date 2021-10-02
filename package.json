@@ -47,6 +47,7 @@
 		"eslint-plugin-simple-import-sort": "^7.0.0",
 		"eslint-plugin-unused-imports": "^1.1.2",
 		"file-saver": "^2.0.5",
+		"get-user-media-promise": "^1.1.4",
 		"gh-pages": "^3.2.3",
 		"parcel": "^2.0.0-nightly.843",
 		"prettier": "^2.3.2",
