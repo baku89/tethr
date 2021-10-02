@@ -15,13 +15,18 @@ export async function detectTethr({
 }: DetectTethrOption = {}) {
 	const tethrs: Tethr[] = []
 
-	tethrs.push(...(await detectPairedTethrPTPUSB()))
+	const shouldDetectUSB =
+		strategy === 'first' && !navigator.userAgent.match(/android/i)
 
-	if (strategy === 'first' && tethrs.length > 0) return tethrs
+	if (shouldDetectUSB) {
+		tethrs.push(...(await detectPairedTethrPTPUSB()))
 
-	tethrs.push(...(await requestTethrPTPUSB()))
+		if (strategy === 'first' && tethrs.length > 0) return tethrs
 
-	if (strategy === 'first' && tethrs.length > 0) return tethrs
+		tethrs.push(...(await requestTethrPTPUSB()))
+
+		if (strategy === 'first' && tethrs.length > 0) return tethrs
+	}
 
 	tethrs.push(...(await detectTethrWebcam()))
 
