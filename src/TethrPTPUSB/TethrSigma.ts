@@ -1034,6 +1034,8 @@ export class TethrSigma extends TethrPTPUSB {
 			return {status: 'invalid parameter'}
 		}
 
+		await this.emitAllConfigChangedEvents()
+
 		return {status: 'ok'}
 	}
 
