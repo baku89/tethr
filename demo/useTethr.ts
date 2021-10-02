@@ -75,6 +75,9 @@ export function useTethr() {
 
 			try {
 				cams = await detectTethr()
+				if (cams.length === 0) {
+					throw new Error('No camera detected')
+				}
 			} catch (err) {
 				if (err instanceof Error) {
 					alert(err.message)
