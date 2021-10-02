@@ -46,17 +46,25 @@ export default defineComponent({
 	setup(props) {
 		const valueIndex = computed(() => {
 			const {config} = props
-			if (config.options) {
-				return config.options.indexOf(config.value)
+			if (config.option?.type === 'enum') {
+				return config.option.values.indexOf(config.value)
 			}
 			return 0
 		})
 
 		function update(e: InputEvent) {
-			if (!props.config.options) return
-			const index = parseInt((e.target as HTMLSelectElement).value)
-			const value = props.config.options[index]
-			props.config.update(value)
+			if (!props.config.option) return
+
+			const str = (e.target as HTMLSelectElement).value
+
+			if (props.config.option.type === 'enum') {
+				const index = parseInt(str)
+				const value = props.config.option.values[index]
+				props.config.update(value)
+			} else {
+				const value = parseInt(str)
+				props.config.update(value)
+			}
 		}
 
 		return {
