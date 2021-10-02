@@ -448,7 +448,7 @@ export class TethrSigma extends TethrPTPUSB {
 		let jpegQuality: string | null = null
 		let dngBitDepth: number | null = null
 
-		const hasDngMatch = imageQuality.match(/^DNG (12|14)bit(?: \+ ([a-z]+))?/i)
+		const hasDngMatch = imageQuality.match(/^DNG (12|14)bit(?:,([a-z]+))?/i)
 
 		if (hasDngMatch) {
 			const [, dngBitDepthStr, jpegQualityStr] = hasDngMatch
@@ -534,20 +534,17 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: true,
 			value: stringifyImageQuality(imageQuality, dngBitDepth),
-			option: {
-				type: 'enum',
-				values: [
-					// NOTE: Hard-coded so this might not work for some cases
-					'low',
-					'standard',
-					'fine',
-					'raw 12bit + fine',
-					'raw 14bit + fine',
-					'raw 12bit',
-					'raw 14bit',
-				],
-			},
-		} as ConfigDesc<string>
+			options: [
+				// NOTE: Hard-coded so this might not work for some cases
+				'low',
+				'standard',
+				'fine',
+				'raw 12bit,fine',
+				'raw 14bit,fine',
+				'raw 12bit',
+				'raw 14bit',
+			],
+		}
 
 		function stringifyImageQuality(
 			quality: ImageQualityConfig,
@@ -555,9 +552,9 @@ export class TethrSigma extends TethrPTPUSB {
 		) {
 			if (quality.hasDNG) {
 				if (quality.jpegQuality) {
-					return `DNG ${dngBitDepth} + ${quality.jpegQuality}`
+					return `raw ${dngBitDepth}bit,${quality.jpegQuality}`
 				} else {
-					return `DNG ${dngBitDepth}`
+					return `raw ${dngBitDepth}bit`
 				}
 			} else {
 				if (quality.jpegQuality) {

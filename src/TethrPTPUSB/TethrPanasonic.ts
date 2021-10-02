@@ -963,7 +963,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		[0, 'fine'],
 		[1, 'standard'],
 		[2, 'raw'],
-		[3, 'raw + fine'],
-		[4, 'raw + standard'],
+		[3, 'raw,fine'],
+		[4, 'raw,standard'],
 	])
 }
