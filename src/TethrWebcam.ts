@@ -11,17 +11,53 @@ import {TethrObject} from './TethrObject'
 export function initTethrWebcam(media: MediaStream) {
 	return new TethrWebcam(media)
 }
+
+type CaptureHandler =
+	| {type: 'imageCapture'; imageCapture: ImageCapture}
+	| {
+			type: 'canvas'
+			canvas: HTMLCanvasElement
+			context: CanvasRenderingContext2D
+			video: HTMLVideoElement
+	  }
+
 export class TethrWebcam extends Tethr {
 	private liveviewEnabled = false
 	private videoTrack!: MediaStreamTrack
 	private _opened = false
-	private imageCapture!: ImageCapture
+	private captureHandler: CaptureHandler | null = null
 
 	public constructor(private media: MediaStream) {
 		super()
 
-		const videoTrack = this.media.getVideoTracks()[0]
-		this.imageCapture = new ImageCapture(videoTrack)
+		this.videoTrack = this.media.getVideoTracks()[0]
+
+		if ('ImageCapture' in globalThis && 1 > 2) {
+			this.captureHandler = {
+				type: 'imageCapture',
+				imageCapture: new ImageCapture(this.videoTrack),
+			}
+		} else {
+			const canvas = document.createElement('canvas')
+			const context = canvas.getContext('2d')
+			const video = document.createElement('video')
+
+			video.srcObject = this.media
+			video.autoplay = true
+			video.play()
+			video.style.display = 'none'
+
+			document.body.appendChild(video)
+
+			if (context) {
+				this.captureHandler = {
+					type: 'canvas',
+					canvas,
+					context,
+					video,
+				}
+			}
+		}
 	}
 
 	public async open() {
@@ -42,7 +78,7 @@ export class TethrWebcam extends Tethr {
 	}
 
 	public async getCanTakePictureDesc() {
-		return createReadonlyConfigDesc(true)
+		return createReadonlyConfigDesc(this.captureHandler !== null)
 	}
 
 	public async setFacingMode(value: string) {
@@ -63,6 +99,7 @@ export class TethrWebcam extends Tethr {
 	}
 
 	public async getFacingModeDesc() {
+		console.log(this.videoTrack)
 		const settings = this.videoTrack.getSettings()
 		const capabilities = this.videoTrack.getCapabilities()
 
@@ -98,9 +135,34 @@ export class TethrWebcam extends Tethr {
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
+		if (!this.captureHandler) return {status: 'unsupported'}
 		if (!download) return {status: 'ok', value: []}
 
-		const blob = await this.imageCapture.takePhoto()
+		let blob: Blob
+
+		if (this.captureHandler.type === 'imageCapture') {
+			blob = await this.captureHandler.imageCapture.takePhoto()
+		} else {
+			const {width, height} = {
+				width: 640,
+				height: 480,
+				...this.videoTrack.getSettings(),
+			}
+			const {canvas, context, video} = this.captureHandler
+
+			canvas.width = width
+			canvas.height = height
+
+			context.drawImage(video, 0, 0, width, height)
+
+			const blobOrNull = await new Promise<Blob | null>(resolve => {
+				canvas.toBlob(resolve)
+			})
+
+			if (!blobOrNull) return {status: 'general error'}
+
+			blob = blobOrNull
+		}
 
 		const now = new Date()
 
@@ -121,6 +183,8 @@ export class TethrWebcam extends Tethr {
 			modificationDate: now,
 			blob,
 		}
+
+		console.log(tethrObject)
 
 		return {status: 'ok', value: [tethrObject]}
 	}
