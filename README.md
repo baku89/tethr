@@ -3,6 +3,9 @@
   <br>
   <br>
   <h1>Tethr</h1>
+	<a href="https://baku89.github.io/tethr/">Demo</a>
+	<br>
+	<br>
 </div>
   
 Tethr is a JavaScript/TypeScript library for controlling USB-connected digital cameras from browsers.
@@ -154,7 +157,7 @@ interface ConfigDesc<ConfigType> {
 
 ### Watching Config Changes
 
-Whenever a value of configuration is changed, correspoinding `${configName}Changed` event will be fired. And since Tethr class inherits from [EventEmitter](), ou can monitor the value change as follows:
+Whenever a value of configuration is changed, correspoinding `${configName}Changed` event will be fired. And since Tethr class inherits from [EventEmitter](https://github.com/primus/eventemitter3), you can monitor the value change as follows:
 
 ```ts
 function callback(desc: ConfigDesc<Aperture>) {
