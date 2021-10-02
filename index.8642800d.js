@@ -140,331 +140,14 @@
       this[globalName] = mainExports;
     }
   }
-})({"fTYqi":[function(require,module,exports) {
-var HMR_HOST = null;
-var HMR_PORT = null;
-var HMR_SECURE = true;
-var HMR_ENV_HASH = "69f74e7f31319ffd";
-module.bundle.HMR_BUNDLE_ID = "773997cfdc1c7f13";
-"use strict";
-function _createForOfIteratorHelper(o, allowArrayLike) {
-    var it;
-    if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
-        if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-            if (it) o = it;
-            var i = 0;
-            var F = function F() {
-            };
-            return {
-                s: F,
-                n: function n() {
-                    if (i >= o.length) return {
-                        done: true
-                    };
-                    return {
-                        done: false,
-                        value: o[i++]
-                    };
-                },
-                e: function e(_e) {
-                    throw _e;
-                },
-                f: F
-            };
-        }
-        throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-    var normalCompletion = true, didErr = false, err;
-    return {
-        s: function s() {
-            it = o[Symbol.iterator]();
-        },
-        n: function n() {
-            var step = it.next();
-            normalCompletion = step.done;
-            return step;
-        },
-        e: function e(_e2) {
-            didErr = true;
-            err = _e2;
-        },
-        f: function f() {
-            try {
-                if (!normalCompletion && it.return != null) it.return();
-            } finally{
-                if (didErr) throw err;
-            }
-        }
-    };
-}
-function _unsupportedIterableToArray(o, minLen) {
-    if (!o) return;
-    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-}
-function _arrayLikeToArray(arr, len) {
-    if (len == null || len > arr.length) len = arr.length;
-    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
-    return arr2;
-}
-/* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE */ /*::
-import type {
-  HMRAsset,
-  HMRMessage,
-} from '@parcel/reporter-dev-server/src/HMRServer.js';
-interface ParcelRequire {
-  (string): mixed;
-  cache: {|[string]: ParcelModule|};
-  hotData: mixed;
-  Module: any;
-  parent: ?ParcelRequire;
-  isParcelRequire: true;
-  modules: {|[string]: [Function, {|[string]: string|}]|};
-  HMR_BUNDLE_ID: string;
-  root: ParcelRequire;
-}
-interface ParcelModule {
-  hot: {|
-    data: mixed,
-    accept(cb: (Function) => void): void,
-    dispose(cb: (mixed) => void): void,
-    // accept(deps: Array<string> | string, cb: (Function) => void): void,
-    // decline(): void,
-    _acceptCallbacks: Array<(Function) => void>,
-    _disposeCallbacks: Array<(mixed) => void>,
-  |};
-}
-declare var module: {bundle: ParcelRequire, ...};
-declare var HMR_HOST: string;
-declare var HMR_PORT: string;
-declare var HMR_ENV_HASH: string;
-declare var HMR_SECURE: boolean;
-*/ var OVERLAY_ID = '__parcel__error__overlay__';
-var OldModule = module.bundle.Module;
-function Module(moduleName) {
-    OldModule.call(this, moduleName);
-    this.hot = {
-        data: module.bundle.hotData,
-        _acceptCallbacks: [],
-        _disposeCallbacks: [],
-        accept: function accept(fn) {
-            this._acceptCallbacks.push(fn || function() {
-            });
-        },
-        dispose: function dispose(fn) {
-            this._disposeCallbacks.push(fn);
-        }
-    };
-    module.bundle.hotData = undefined;
-}
-module.bundle.Module = Module;
-var checkedAssets, acceptedAssets, assetsToAccept;
-function getHostname() {
-    return HMR_HOST || (location.protocol.indexOf('http') === 0 ? location.hostname : 'localhost');
-}
-function getPort() {
-    return HMR_PORT || location.port;
-} // eslint-disable-next-line no-redeclare
-var parent = module.bundle.parent;
-if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
-    var hostname = getHostname();
-    var port = getPort();
-    var protocol = HMR_SECURE || location.protocol == 'https:' && !/localhost|127.0.0.1|0.0.0.0/.test(hostname) ? 'wss' : 'ws';
-    var ws = new WebSocket(protocol + '://' + hostname + (port ? ':' + port : '') + '/'); // $FlowFixMe
-    ws.onmessage = function(event) {
-        checkedAssets = {
-        };
-        acceptedAssets = {
-        };
-        assetsToAccept = [];
-        var data = JSON.parse(event.data);
-        if (data.type === 'update') {
-            // Remove error overlay if there is one
-            if (typeof document !== 'undefined') removeErrorOverlay();
-            var assets = data.assets.filter(function(asset) {
-                return asset.envHash === HMR_ENV_HASH;
-            }); // Handle HMR Update
-            var handled = assets.every(function(asset) {
-                return asset.type === 'css' || asset.type === 'js' && hmrAcceptCheck(module.bundle.root, asset.id, asset.depsByBundle);
-            });
-            if (handled) {
-                console.clear();
-                assets.forEach(function(asset) {
-                    hmrApply(module.bundle.root, asset);
-                });
-                for(var i = 0; i < assetsToAccept.length; i++){
-                    var id = assetsToAccept[i][1];
-                    if (!acceptedAssets[id]) hmrAcceptRun(assetsToAccept[i][0], id);
-                }
-            } else window.location.reload();
-        }
-        if (data.type === 'error') {
-            // Log parcel errors to console
-            var _iterator = _createForOfIteratorHelper(data.diagnostics.ansi), _step;
-            try {
-                for(_iterator.s(); !(_step = _iterator.n()).done;){
-                    var ansiDiagnostic = _step.value;
-                    var stack = ansiDiagnostic.codeframe ? ansiDiagnostic.codeframe : ansiDiagnostic.stack;
-                    console.error('🚨 [parcel]: ' + ansiDiagnostic.message + '\n' + stack + '\n\n' + ansiDiagnostic.hints.join('\n'));
-                }
-            } catch (err) {
-                _iterator.e(err);
-            } finally{
-                _iterator.f();
-            }
-            if (typeof document !== 'undefined') {
-                // Render the fancy html overlay
-                removeErrorOverlay();
-                var overlay = createErrorOverlay(data.diagnostics.html); // $FlowFixMe
-                document.body.appendChild(overlay);
-            }
-        }
-    };
-    ws.onerror = function(e) {
-        console.error(e.message);
-    };
-    ws.onclose = function() {
-        console.warn('[parcel] 🚨 Connection to the HMR server was lost');
-    };
-}
-function removeErrorOverlay() {
-    var overlay = document.getElementById(OVERLAY_ID);
-    if (overlay) {
-        overlay.remove();
-        console.log('[parcel] ✨ Error resolved');
-    }
-}
-function createErrorOverlay(diagnostics) {
-    var overlay = document.createElement('div');
-    overlay.id = OVERLAY_ID;
-    var errorHTML = '<div style="background: black; opacity: 0.85; font-size: 16px; color: white; position: fixed; height: 100%; width: 100%; top: 0px; left: 0px; padding: 30px; font-family: Menlo, Consolas, monospace; z-index: 9999;">';
-    var _iterator2 = _createForOfIteratorHelper(diagnostics), _step2;
-    try {
-        for(_iterator2.s(); !(_step2 = _iterator2.n()).done;){
-            var diagnostic = _step2.value;
-            var stack = diagnostic.codeframe ? diagnostic.codeframe : diagnostic.stack;
-            errorHTML += "\n      <div>\n        <div style=\"font-size: 18px; font-weight: bold; margin-top: 20px;\">\n          \uD83D\uDEA8 ".concat(diagnostic.message, "\n        </div>\n        <pre>").concat(stack, "</pre>\n        <div>\n          ").concat(diagnostic.hints.map(function(hint) {
-                return '<div>💡 ' + hint + '</div>';
-            }).join(''), "\n        </div>\n        ").concat(diagnostic.documentation ? "<div>\uD83D\uDCDD <a style=\"color: violet\" href=\"".concat(diagnostic.documentation, "\" target=\"_blank\">Learn more</a></div>") : '', "\n      </div>\n    ");
-        }
-    } catch (err) {
-        _iterator2.e(err);
-    } finally{
-        _iterator2.f();
-    }
-    errorHTML += '</div>';
-    overlay.innerHTML = errorHTML;
-    return overlay;
-}
-function getParents(bundle, id) /*: Array<[ParcelRequire, string]> */ {
-    var modules = bundle.modules;
-    if (!modules) return [];
-    var parents = [];
-    var k, d, dep;
-    for(k in modules)for(d in modules[k][1]){
-        dep = modules[k][1][d];
-        if (dep === id || Array.isArray(dep) && dep[dep.length - 1] === id) parents.push([
-            bundle,
-            k
-        ]);
-    }
-    if (bundle.parent) parents = parents.concat(getParents(bundle.parent, id));
-    return parents;
-}
-function updateLink(link) {
-    var newLink = link.cloneNode();
-    newLink.onload = function() {
-        if (link.parentNode !== null) // $FlowFixMe
-        link.parentNode.removeChild(link);
-    };
-    newLink.setAttribute('href', link.getAttribute('href').split('?')[0] + '?' + Date.now()); // $FlowFixMe
-    link.parentNode.insertBefore(newLink, link.nextSibling);
-}
-var cssTimeout = null;
-function reloadCSS() {
-    if (cssTimeout) return;
-    cssTimeout = setTimeout(function() {
-        var links = document.querySelectorAll('link[rel="stylesheet"]');
-        for(var i = 0; i < links.length; i++){
-            // $FlowFixMe[incompatible-type]
-            var href = links[i].getAttribute('href');
-            var hostname = getHostname();
-            var servedFromHMRServer = hostname === 'localhost' ? new RegExp('^(https?:\\/\\/(0.0.0.0|127.0.0.1)|localhost):' + getPort()).test(href) : href.indexOf(hostname + ':' + getPort());
-            var absolute = /^https?:\/\//i.test(href) && href.indexOf(window.location.origin) !== 0 && !servedFromHMRServer;
-            if (!absolute) updateLink(links[i]);
-        }
-        cssTimeout = null;
-    }, 50);
-}
-function hmrApply(bundle, asset) {
-    var modules = bundle.modules;
-    if (!modules) return;
-    if (asset.type === 'css') {
-        reloadCSS();
-        return;
-    }
-    var deps = asset.depsByBundle[bundle.HMR_BUNDLE_ID];
-    if (deps) {
-        var fn = new Function('require', 'module', 'exports', asset.output);
-        modules[asset.id] = [
-            fn,
-            deps
-        ];
-    } else if (bundle.parent) hmrApply(bundle.parent, asset);
-}
-function hmrAcceptCheck(bundle, id, depsByBundle) {
-    var modules = bundle.modules;
-    if (!modules) return;
-    if (depsByBundle && !depsByBundle[bundle.HMR_BUNDLE_ID]) {
-        // If we reached the root bundle without finding where the asset should go,
-        // there's nothing to do. Mark as "accepted" so we don't reload the page.
-        if (!bundle.parent) return true;
-        return hmrAcceptCheck(bundle.parent, id, depsByBundle);
-    }
-    if (checkedAssets[id]) return;
-    checkedAssets[id] = true;
-    var cached = bundle.cache[id];
-    assetsToAccept.push([
-        bundle,
-        id
-    ]);
-    if (cached && cached.hot && cached.hot._acceptCallbacks.length) return true;
-    return getParents(module.bundle.root, id).some(function(v) {
-        return hmrAcceptCheck(v[0], v[1], null);
-    });
-}
-function hmrAcceptRun(bundle, id) {
-    var cached = bundle.cache[id];
-    bundle.hotData = {
-    };
-    if (cached && cached.hot) cached.hot.data = bundle.hotData;
-    if (cached && cached.hot && cached.hot._disposeCallbacks.length) cached.hot._disposeCallbacks.forEach(function(cb) {
-        cb(bundle.hotData);
-    });
-    delete bundle.cache[id];
-    bundle(id);
-    cached = bundle.cache[id];
-    if (cached && cached.hot && cached.hot._acceptCallbacks.length) cached.hot._acceptCallbacks.forEach(function(cb) {
-        var assetsToAlsoAccept = cb(function() {
-            return getParents(module.bundle.root, id);
-        });
-        if (assetsToAlsoAccept && assetsToAccept.length) // $FlowFixMe[method-unbinding]
-        assetsToAccept.push.apply(assetsToAccept, assetsToAlsoAccept);
-    });
-    acceptedAssets[id] = true;
-}
-
-},{}],"bxQVA":[function(require,module,exports) {
+})({"2emZo":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _vue = require("vue");
 var _appVue = require("./App.vue");
 var _appVueDefault = parcelHelpers.interopDefault(_appVue);
 _vue.createApp(_appVueDefault.default).mount('#app');
 
-},{"vue":"eg0LR","./App.vue":"jyliN","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"eg0LR":[function(require,module,exports) {
+},{"vue":"h7dRr","./App.vue":"lJSMA","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"h7dRr":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "compile", ()=>compile
@@ -474,12 +157,10 @@ parcelHelpers.exportAll(_runtimeDom, exports);
 function initDev() {
     _runtimeDom.initCustomFormatter();
 }
-initDev();
 const compile = ()=>{
-    _runtimeDom.warn(`Runtime compilation is not supported in this build of Vue.` + ` Configure your bundler to alias "vue" to "vue/dist/vue.esm-bundler.js".`);
 };
 
-},{"@vue/runtime-dom":"i9SjY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"i9SjY":[function(require,module,exports) {
+},{"@vue/runtime-dom":"hwGpR","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"hwGpR":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Transition", ()=>Transition
@@ -730,7 +411,6 @@ prevChildren, parentComponent, parentSuspense, unmountChildren) {
     try {
         el[key] = value;
     } catch (e) {
-        _runtimeCore.warn(`Failed setting prop "${key}" on <${el.tagName.toLowerCase()}>: ` + `value ${value} is invalid.`, e);
     }
 }
 // Async edge case fix requires storing an event listener's attach timestamp.
@@ -904,12 +584,9 @@ class VueElement extends BaseClass {
         this._connected = false;
         this._resolved = false;
         if (this.shadowRoot && hydrate) hydrate(this._createVNode(), this.shadowRoot);
-        else {
-            if (this.shadowRoot) _runtimeCore.warn(`Custom element has pre-rendered declarative shadow root but is not ` + `defined as hydratable. Use \`defineSSRCustomElement\`.`);
-            this.attachShadow({
-                mode: 'open'
-            });
-        }
+        else this.attachShadow({
+            mode: 'open'
+        });
         // set initial attrs
         for(let i = 0; i < this.attributes.length; i++)this._setAttr(this.attributes[i].name);
         // watch future attr changes
@@ -989,22 +666,7 @@ class VueElement extends BaseClass {
         if (!this._instance) vnode.ce = (instance)=>{
             this._instance = instance;
             instance.isCE = true;
-            instance.ceReload = (newStyles)=>{
-                // alawys reset styles
-                if (this._styles) {
-                    this._styles.forEach((s)=>this.shadowRoot.removeChild(s)
-                    );
-                    this._styles.length = 0;
-                }
-                this._applyStyles(newStyles);
-                // if this is an async component, ceReload is called from the inner
-                // component so no need to reload the async wrapper
-                if (!this._def.__asyncLoader) {
-                    // reload
-                    this._instance = null;
-                    render(this._createVNode(), this.shadowRoot);
-                }
-            };
+            var newStyles, s;
             // intercept emit
             instance.emit = (event, ...args)=>{
                 this.dispatchEvent(new CustomEvent(event, {
@@ -1025,27 +687,17 @@ class VueElement extends BaseClass {
             const s = document.createElement('style');
             s.textContent = css;
             this.shadowRoot.appendChild(s);
-            (this._styles || (this._styles = [])).push(s);
         });
     }
 }
 function useCssModule(name = '$style') {
     /* istanbul ignore else */ {
         const instance = _runtimeCore.getCurrentInstance();
-        if (!instance) {
-            _runtimeCore.warn(`useCssModule must be called inside setup()`);
-            return _shared.EMPTY_OBJ;
-        }
+        if (!instance) return _shared.EMPTY_OBJ;
         const modules = instance.type.__cssModules;
-        if (!modules) {
-            _runtimeCore.warn(`Current instance does not have CSS modules injected.`);
-            return _shared.EMPTY_OBJ;
-        }
+        if (!modules) return _shared.EMPTY_OBJ;
         const mod = modules[name];
-        if (!mod) {
-            _runtimeCore.warn(`Current instance does not have CSS module named "${name}".`);
-            return _shared.EMPTY_OBJ;
-        }
+        if (!mod) return _shared.EMPTY_OBJ;
         return mod;
     }
 }
@@ -1054,10 +706,7 @@ function useCssModule(name = '$style') {
  * @private
  */ function useCssVars(getter) {
     const instance = _runtimeCore.getCurrentInstance();
-    /* istanbul ignore next */ if (!instance) {
-        _runtimeCore.warn(`useCssVars is called without current active component instance.`);
-        return;
-    }
+    /* istanbul ignore next */ if (!instance) return;
     const setVars = ()=>setVarsOnVNode(instance.subTree, getter(instance.proxy))
     ;
     _runtimeCore.watchPostEffect(setVars);
@@ -1250,7 +899,6 @@ function normalizeDuration(duration) {
 }
 function NumberOf(val) {
     const res = _shared.toNumber(val);
-    validateDuration(res);
     return res;
 }
 function validateDuration(val) {
@@ -1405,7 +1053,6 @@ const TransitionGroupImpl = {
             for(let i = 0; i < children.length; i++){
                 const child = children[i];
                 if (child.key != null) _runtimeCore.setTransitionHooks(child, _runtimeCore.resolveTransitionHooks(child, cssTransitionProps, state, instance));
-                else _runtimeCore.warn(`<TransitionGroup> children must be keyed.`);
             }
             if (prevChildren) for(let i1 = 0; i1 < prevChildren.length; i1++){
                 const child = prevChildren[i1];
@@ -1602,10 +1249,7 @@ const vModelSelect = {
 };
 function setSelected(el, value) {
     const isMultiple = el.multiple;
-    if (isMultiple && !_shared.isArray(value) && !_shared.isSet(value)) {
-        _runtimeCore.warn(`<select multiple v-model> expects an Array or Set value for its binding, ` + `but got ${Object.prototype.toString.call(value).slice(8, -1)}.`);
-        return;
-    }
+    if (isMultiple && !_shared.isArray(value) && !_shared.isSet(value)) return;
     for(let i = 0, l = el.options.length; i < l; i++){
         const option = el.options[i];
         const optionValue = getValue(option);
@@ -1780,8 +1424,6 @@ const hydrate1 = (...args)=>{
 };
 const createApp = (...args)=>{
     const app = ensureRenderer().createApp(...args);
-    injectNativeTagCheck(app);
-    injectCompilerOptionsCheck(app);
     const { mount  } = app;
     app.mount = (containerOrSelector)=>{
         const container = normalizeContainer(containerOrSelector);
@@ -1805,8 +1447,6 @@ const createApp = (...args)=>{
 };
 const createSSRApp = (...args)=>{
     const app = ensureHydrationRenderer().createApp(...args);
-    injectNativeTagCheck(app);
-    injectCompilerOptionsCheck(app);
     const { mount  } = app;
     app.mount = (containerOrSelector)=>{
         const container = normalizeContainer(containerOrSelector);
@@ -1851,14 +1491,12 @@ function injectCompilerOptionsCheck(app) {
 function normalizeContainer(container) {
     if (_shared.isString(container)) {
         const res = document.querySelector(container);
-        if (!res) _runtimeCore.warn(`Failed to mount app: mount target selector "${container}" returned null.`);
         return res;
     }
-    if (window.ShadowRoot && container instanceof window.ShadowRoot && container.mode === 'closed') _runtimeCore.warn(`mounting on a ShadowRoot with \`{mode: "closed"}\` may lead to unpredictable bugs`);
     return container;
 }
 
-},{"@vue/runtime-core":"6wrge","@vue/shared":"8bcX0","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"6wrge":[function(require,module,exports) {
+},{"@vue/runtime-core":"fmy95","@vue/shared":"jjDCJ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"fmy95":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "EffectScope", ()=>_reactivity.EffectScope
@@ -2107,18 +1745,9 @@ parcelHelpers.export(exports, "withScopeId", ()=>withScopeId
 );
 var _reactivity = require("@vue/reactivity");
 var _shared = require("@vue/shared");
-var global = arguments[3];
 /* eslint-disable no-restricted-globals */ let isHmrUpdating = false;
 const hmrDirtyComponents = new Set();
-{
-    const globalObject = typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {
-    };
-    globalObject.__VUE_HMR_RUNTIME__ = {
-        createRecord: tryWrap(createRecord),
-        rerender: tryWrap(rerender),
-        reload: tryWrap(reload)
-    };
-}const map = new Map();
+const map = new Map();
 function registerHMR(instance) {
     const id = instance.type.__hmrId;
     let record = map.get(id);
@@ -2439,27 +2068,7 @@ const deprecationData = {
 const instanceWarned = Object.create(null);
 const warnCount = Object.create(null);
 function warnDeprecation(key, instance, ...args) {
-    instance = instance || getCurrentInstance();
-    // check user config
-    const config = getCompatConfigForKey(key, instance);
-    if (config === 'suppress-warning') return;
-    const dupKey = key + args.join('');
-    let compId = instance && formatComponentName(instance, instance.type);
-    if (compId === 'Anonymous' && instance) compId = instance.uid;
-    // skip if the same warning is emitted for the same component type
-    const componentDupKey = dupKey + compId;
-    if (componentDupKey in instanceWarned) return;
-    instanceWarned[componentDupKey] = true;
-    // same warning, but different component. skip the long message and just
-    // log the key and count.
-    if (dupKey in warnCount) {
-        warn(`(deprecation ${key}) (${++warnCount[dupKey] + 1})`);
-        return;
-    }
-    warnCount[dupKey] = 0;
-    const { message , link  } = deprecationData[key];
-    warn(`(deprecation ${key}) ${typeof message === 'function' ? message(...args) : message}${link ? `\n  Details: ${link}` : ``}`);
-    if (!isCompatEnabled(key, instance, true)) console.error(`^ The above deprecation's compat behavior is disabled and will likely ` + `lead to runtime errors.`);
+    return;
 }
 const globalCompatConfig = {
     MODE: 2
@@ -2480,20 +2089,6 @@ function isCompatEnabled(key, instance, enableForBuiltIn = false) {
 }
 function emit(instance, event, ...rawArgs) {
     const props = instance.vnode.props || _shared.EMPTY_OBJ;
-    {
-        const { emitsOptions , propsOptions: [propsOptions]  } = instance;
-        if (emitsOptions) {
-            if (!(event in emitsOptions) && true) {
-                if (!propsOptions || !(_shared.toHandlerKey(event) in propsOptions)) warn(`Component emitted event "${event}" but it is neither declared in ` + `the emits option nor as an "${_shared.toHandlerKey(event)}" prop.`);
-            } else {
-                const validator = emitsOptions[event];
-                if (_shared.isFunction(validator)) {
-                    const isValid = validator(...rawArgs);
-                    if (!isValid) warn(`Invalid event arguments: event validation failed for event "${event}".`);
-                }
-            }
-        }
-    }
     let args = rawArgs;
     const isModelListener = event.startsWith('update:');
     // for v-model update:xxx events, apply modifiers on args
@@ -2505,11 +2100,7 @@ function emit(instance, event, ...rawArgs) {
         );
         else if (number) args = rawArgs.map(_shared.toNumber);
     }
-    devtoolsComponentEmit(instance, event, args);
-    {
-        const lowerCaseEvent = event.toLowerCase();
-        if (lowerCaseEvent !== event && props[_shared.toHandlerKey(lowerCaseEvent)]) warn(`Event "${lowerCaseEvent}" is emitted in component ` + `${formatComponentName(instance, instance.type)} but the handler is registered for "${event}". ` + `Note that HTML attributes are case-insensitive and you cannot use ` + `v-on to listen to camelCase events when using in-DOM templates. ` + `You should probably use "${_shared.hyphenate(event)}" instead of "${event}".`);
-    }
+    if (__VUE_PROD_DEVTOOLS__) devtoolsComponentEmit(instance, event, args);
     let handlerName;
     let handler = props[handlerName = _shared.toHandlerKey(event)] || // also try camelCase event handler (#2249)
     props[handlerName = _shared.toHandlerKey(_shared.camelize(event))];
@@ -2622,7 +2213,7 @@ let currentScopeId = null;
         const res = fn(...args);
         setCurrentRenderingInstance(prevInstance);
         if (renderFnWithContext._d) setBlockTracking(1);
-        devtoolsComponentUpdated(ctx);
+        if (__VUE_PROD_DEVTOOLS__) devtoolsComponentUpdated(ctx);
         return res;
     };
     // mark normalized to avoid duplicated wrapping
@@ -2647,7 +2238,6 @@ function renderComponentRoot(instance) {
     const { type: Component , vnode , proxy , withProxy , props , propsOptions: [propsOptions] , slots , attrs , emit , render , renderCache , data , setupState , ctx , inheritAttrs  } = instance;
     let result;
     const prev = setCurrentRenderingInstance(instance);
-    accessedAttrs = false;
     try {
         let fallthroughAttrs;
         if (vnode.shapeFlag & 4 /* STATEFUL_COMPONENT */ ) {
@@ -2659,13 +2249,8 @@ function renderComponentRoot(instance) {
         } else {
             // functional
             const render = Component;
-            // in dev, mark attrs accessed if optional props (attrs === props)
-            if (attrs === props) markAttrsAccessed();
             result = normalizeVNode(render.length > 1 ? render(props, {
-                get attrs () {
-                    markAttrsAccessed();
-                    return attrs;
-                },
+                attrs,
                 slots,
                 emit
             }) : render(props, null));
@@ -2676,7 +2261,6 @@ function renderComponentRoot(instance) {
         // to have comments along side the root element which makes it a fragment
         let root = result;
         let setRoot = undefined;
-        if (result.patchFlag > 0 && result.patchFlag & 2048 /* DEV_ROOT_FRAGMENT */ ) [root, setRoot] = getChildRoot(result);
         if (fallthroughAttrs && inheritAttrs !== false) {
             const keys = Object.keys(fallthroughAttrs);
             const { shapeFlag  } = root;
@@ -2688,36 +2272,14 @@ function renderComponentRoot(instance) {
                     // related: #1543, #1643, #1989
                     fallthroughAttrs = filterModelListeners(fallthroughAttrs, propsOptions);
                     root = cloneVNode(root, fallthroughAttrs);
-                } else if (!accessedAttrs && root.type !== Comment) {
-                    const allAttrs = Object.keys(attrs);
-                    const eventAttrs = [];
-                    const extraAttrs = [];
-                    for(let i = 0, l = allAttrs.length; i < l; i++){
-                        const key = allAttrs[i];
-                        if (_shared.isOn(key)) // ignore v-model handlers when they fail to fallthrough
-                        {
-                            if (!_shared.isModelListener(key)) // remove `on`, lowercase first letter to reflect event casing
-                            // accurately
-                            eventAttrs.push(key[2].toLowerCase() + key.slice(3));
-                        } else extraAttrs.push(key);
-                    }
-                    if (extraAttrs.length) warn(`Extraneous non-props attributes (` + `${extraAttrs.join(', ')}) ` + `were passed to component but could not be automatically inherited ` + `because component renders fragment or text root nodes.`);
-                    if (eventAttrs.length) warn(`Extraneous non-emits event listeners (` + `${eventAttrs.join(', ')}) ` + `were passed to component but could not be automatically inherited ` + `because component renders fragment or text root nodes. ` + `If the listener is intended to be a component custom event listener only, ` + `declare it using the "emits" option.`);
                 }
             }
         }
         // inherit directives
-        if (vnode.dirs) {
-            if (!isElementRoot(root)) warn(`Runtime directive used on component with non-element root node. ` + `The directives will not function as intended.`);
-            root.dirs = root.dirs ? root.dirs.concat(vnode.dirs) : vnode.dirs;
-        }
+        if (vnode.dirs) root.dirs = root.dirs ? root.dirs.concat(vnode.dirs) : vnode.dirs;
         // inherit transition data
-        if (vnode.transition) {
-            if (!isElementRoot(root)) warn(`Component inside <Transition> renders non-element root node ` + `that cannot be animated.`);
-            root.transition = vnode.transition;
-        }
-        if (setRoot) setRoot(root);
-        else result = root;
+        if (vnode.transition) root.transition = vnode.transition;
+        result = root;
     } catch (err) {
         blockStack.length = 0;
         handleError(err, instance, 1 /* RENDER_FUNCTION */ );
@@ -2791,10 +2353,6 @@ function shouldUpdateComponent(prevVNode, nextVNode, optimized) {
     const { props: prevProps , children: prevChildren , component  } = prevVNode;
     const { props: nextProps , children: nextChildren , patchFlag  } = nextVNode;
     const emits = component.emitsOptions;
-    // Parent component's render function was hot-updated. Since this may have
-    // caused the child component's slots content to have changed, we need to
-    // force the child to update as well.
-    if ((prevChildren || nextChildren) && isHmrUpdating) return true;
     // force child update for runtime directive or transition on component vnode.
     if (nextVNode.dirs || nextVNode.transition) return true;
     if (optimized && patchFlag >= 0) {
@@ -2964,11 +2522,6 @@ function patchSuspense(n1, n2, container, anchor, parentComponent, isSVG, slotSc
 }
 let hasWarned = false;
 function createSuspenseBoundary(vnode, parent, parentComponent, container1, hiddenContainer, anchor1, isSVG, slotScopeIds, optimized, rendererInternals, isHydrating = false) {
-    /* istanbul ignore if */ if (!hasWarned) {
-        hasWarned = true;
-        // @ts-ignore `console.info` cannot be null error
-        console[console.info ? 'info' : 'log'](`<Suspense> is an experimental feature and its API will likely change.`);
-    }
     const { p: patch , m: move , um: unmount , n: next , o: { parentNode , remove  }  } = rendererInternals;
     const timeout = _shared.toNumber(vnode.props && vnode.props.timeout);
     const suspense = {
@@ -2989,8 +2542,6 @@ function createSuspenseBoundary(vnode, parent, parentComponent, container1, hidd
         isUnmounted: false,
         effects: [],
         resolve (resume = false) {
-            if (!resume && !suspense.pendingBranch) throw new Error(`suspense.resolve() is called without a pending branch.`);
-            if (suspense.isUnmounted) throw new Error(`suspense.resolve() is called on an already unmounted suspense boundary.`);
             const { vnode , activeBranch , pendingBranch , pendingId , effects , parentComponent , container  } = suspense;
             if (suspense.isHydrating) suspense.isHydrating = false;
             else if (!resume) {
@@ -3073,7 +2624,6 @@ function createSuspenseBoundary(vnode, parent, parentComponent, container1, hidd
                 // retry from this component
                 instance.asyncResolved = true;
                 const { vnode  } = instance;
-                pushWarningContext(vnode);
                 handleSetupResult(instance, asyncSetupResult, false);
                 if (hydratedEl) // vnode may have been replaced if an update happened before the
                 // async dep is resolved.
@@ -3087,7 +2637,6 @@ function createSuspenseBoundary(vnode, parent, parentComponent, container1, hidd
                 hydratedEl ? null : next(instance.subTree), suspense, isSVG, optimized);
                 if (placeholder) remove(placeholder);
                 updateHOCHostEl(instance, vnode.el);
-                popWarningContext();
                 // only decrease deps count if suspense is not already resolved
                 if (isInPendingSuspense && --suspense.deps === 0) suspense.resolve();
             });
@@ -3138,7 +2687,6 @@ function normalizeSuspenseSlot(s) {
     }
     if (_shared.isArray(s)) {
         const singleChild = filterSingleRoot(s);
-        if (!singleChild) warn(`<Suspense> slots expect a single root node.`);
         s = singleChild;
     }
     s = normalizeVNode(s);
@@ -3164,7 +2712,7 @@ function setActiveBranch(suspense, branch) {
     }
 }
 function provide(key, value) {
-    if (!currentInstance) warn(`provide() can only be used inside setup().`);
+    if (!currentInstance) ;
     else {
         let provides = currentInstance.provides;
         // by default an instance inherits its parent's provides object
@@ -3190,8 +2738,7 @@ function inject(key, defaultValue, treatDefaultAsFactory = false) {
         if (provides && key in provides) // TS doesn't allow symbol as index type
         return provides[key];
         else if (arguments.length > 1) return treatDefaultAsFactory && _shared.isFunction(defaultValue) ? defaultValue.call(instance.proxy) : defaultValue;
-        else warn(`injection "${String(key)}" not found.`);
-    } else warn(`inject() can only be used inside setup() or functional components.`);
+    }
 }
 function useTransitionState() {
     const state = {
@@ -3241,18 +2788,10 @@ const BaseTransitionImpl = {
         return ()=>{
             const children = slots.default && getTransitionRawChildren(slots.default(), true);
             if (!children || !children.length) return;
-            // warn multiple elements
-            if (children.length > 1) warn("<transition> can only be used on a single element or component. Use <transition-group> for lists.");
             // there's no need to track reactivity for these props so use the raw
             // props for a bit better perf
             const rawProps = _reactivity.toRaw(props);
             const { mode  } = rawProps;
-            // check mode
-            if (mode && ![
-                'in-out',
-                'out-in',
-                'default'
-            ].includes(mode)) warn(`invalid <transition> mode: ${mode}`);
             // at this point children has a guaranteed length of 1.
             const child = children[0];
             if (state.isLeaving) return emptyPlaceholder(child);
@@ -3481,10 +3020,8 @@ function defineAsyncComponent(source) {
             else throw err;
         }).then((comp)=>{
             if (thisRequest !== pendingRequest && pendingRequest) return pendingRequest;
-            if (!comp) warn(`Async component loader resolved to undefined. ` + `If you are using retry(), make sure to return its return value.`);
             // interop module default
             if (comp && (comp.__esModule || comp[Symbol.toStringTag] === 'Module')) comp = comp.default;
-            if (comp && !_shared.isObject(comp) && !_shared.isFunction(comp)) throw new Error(`Invalid async component load result: ${comp}`);
             resolvedComp = comp;
             return comp;
         }));
@@ -3591,7 +3128,7 @@ const KeepAliveImpl = {
         const cache = new Map();
         const keys = new Set();
         let current = null;
-        instance.__v_cache = cache;
+        if (__VUE_PROD_DEVTOOLS__) instance.__v_cache = cache;
         const parentSuspense = instance.suspense;
         const { renderer: { p: patch , m: move , um: _unmount , o: { createElement  }  }  } = sharedContext;
         const storageContainer = createElement('div');
@@ -3606,7 +3143,7 @@ const KeepAliveImpl = {
                 const vnodeHook = vnode.props && vnode.props.onVnodeMounted;
                 if (vnodeHook) invokeVNodeHook(vnodeHook, instance.parent, vnode);
             }, parentSuspense);
-            // Update components tree
+            if (__VUE_PROD_DEVTOOLS__) // Update components tree
             devtoolsComponentAdded(instance);
         };
         sharedContext.deactivate = (vnode)=>{
@@ -3618,7 +3155,7 @@ const KeepAliveImpl = {
                 if (vnodeHook) invokeVNodeHook(vnodeHook, instance.parent, vnode);
                 instance.isDeactivated = true;
             }, parentSuspense);
-            // Update components tree
+            if (__VUE_PROD_DEVTOOLS__) // Update components tree
             devtoolsComponentAdded(instance);
         };
         function unmount(vnode) {
@@ -3685,7 +3222,6 @@ const KeepAliveImpl = {
             const children = slots.default();
             const rawVNode = children[0];
             if (children.length > 1) {
-                warn(`KeepAlive should contain exactly one component child.`);
                 current = null;
                 return children;
             } else if (!isVNode(rawVNode) || !(rawVNode.shapeFlag & 4 /* STATEFUL_COMPONENT */ ) && !(rawVNode.shapeFlag & 128 /* SUSPENSE */ )) {
@@ -3822,9 +3358,6 @@ function injectHook(type, hook, target = currentInstance, prepend = false) {
         if (prepend) hooks.unshift(wrappedHook);
         else hooks.push(wrappedHook);
         return wrappedHook;
-    } else {
-        const apiName = _shared.toHandlerKey(ErrorTypeStrings[type].replace(/ hook$/, ''));
-        warn(`${apiName} is called when there is no active component instance to be ` + `associated with. ` + `Lifecycle injection APIs can only be used during execution of setup().` + (` If you are using async setup(), make sure to register lifecycle ` + `hooks before the first await statement.`));
     }
 }
 const createHook = (lifecycle)=>(hook, target = currentInstance)=>// post-create lifecycle registrations are noops during SSR (except for serverPrefetch)
@@ -3864,11 +3397,7 @@ function applyOptions(instance) {
     created , beforeMount , mounted , beforeUpdate , updated , activated , deactivated , beforeDestroy , beforeUnmount , destroyed , unmounted , render , renderTracked , renderTriggered , errorCaptured , serverPrefetch , // public API
     expose , inheritAttrs , // assets
     components , directives , filters  } = options;
-    const checkDuplicateProperties = createDuplicateChecker();
-    {
-        const [propsOptions] = instance.propsOptions;
-        if (propsOptions) for(const key in propsOptions)checkDuplicateProperties("Props" /* PROPS */ , key);
-    }
+    const checkDuplicateProperties = null;
     // options initialization order (to be consistent with Vue 2):
     // - props (already done outside of this function)
     // - inject
@@ -3879,45 +3408,19 @@ function applyOptions(instance) {
     if (injectOptions) resolveInjections(injectOptions, ctx, checkDuplicateProperties, instance.appContext.config.unwrapInjectedRef);
     if (methods) for(const key in methods){
         const methodHandler = methods[key];
-        if (_shared.isFunction(methodHandler)) {
-            Object.defineProperty(ctx, key, {
-                value: methodHandler.bind(publicThis),
-                configurable: true,
-                enumerable: true,
-                writable: true
-            });
-            checkDuplicateProperties("Methods" /* METHODS */ , key);
-        } else warn(`Method "${key}" has type "${typeof methodHandler}" in the component definition. ` + `Did you reference the function correctly?`);
+        if (_shared.isFunction(methodHandler)) ctx[key] = methodHandler.bind(publicThis);
     }
     if (dataOptions) {
-        if (!_shared.isFunction(dataOptions)) warn(`The data option must be a function. ` + `Plain object usage is no longer supported.`);
         const data = dataOptions.call(publicThis, publicThis);
-        if (_shared.isPromise(data)) warn(`data() returned a Promise - note data() cannot be async; If you ` + `intend to perform data fetching before component renders, use ` + `async setup() + <Suspense>.`);
-        if (!_shared.isObject(data)) warn(`data() should return an object.`);
-        else {
-            instance.data = _reactivity.reactive(data);
-            for(const key in data){
-                checkDuplicateProperties("Data" /* DATA */ , key);
-                // expose data on ctx during dev
-                if (key[0] !== '$' && key[0] !== '_') Object.defineProperty(ctx, key, {
-                    configurable: true,
-                    enumerable: true,
-                    get: ()=>data[key]
-                    ,
-                    set: _shared.NOOP
-                });
-            }
-        }
+        if (!_shared.isObject(data)) ;
+        else instance.data = _reactivity.reactive(data);
     }
     // state initialization complete at this point - start caching access
     shouldCacheAccess = true;
     if (computedOptions) for(const key1 in computedOptions){
         const opt = computedOptions[key1];
         const get = _shared.isFunction(opt) ? opt.bind(publicThis, publicThis) : _shared.isFunction(opt.get) ? opt.get.bind(publicThis, publicThis) : _shared.NOOP;
-        if (get === _shared.NOOP) warn(`Computed property "${key1}" has no getter.`);
-        const set = !_shared.isFunction(opt) && _shared.isFunction(opt.set) ? opt.set.bind(publicThis) : ()=>{
-            warn(`Write operation failed: computed property "${key1}" is readonly.`);
-        };
+        const set = !_shared.isFunction(opt) && _shared.isFunction(opt.set) ? opt.set.bind(publicThis) : _shared.NOOP;
         const c = _reactivity.computed({
             get,
             set
@@ -3929,7 +3432,6 @@ function applyOptions(instance) {
             ,
             set: (v)=>c.value = v
         });
-        checkDuplicateProperties("Computed" /* COMPUTED */ , key1);
     }
     if (watchOptions) for(const key2 in watchOptions)createWatcher(watchOptions[key2], ctx, publicThis, key2);
     if (provideOptions) {
@@ -3996,12 +3498,8 @@ function resolveInjections(injectOptions, ctx, checkDuplicateProperties = _share
                 ,
                 set: (v)=>injected.value = v
             });
-            else {
-                warn(`injected property "${key}" is a ref and will be auto-unwrapped ` + `and no longer needs \`.value\` in the next minor release. ` + `To opt-in to the new behavior now, ` + `set \`app.config.unwrapInjectedRef = true\` (this config is ` + `temporary and will not be needed in the future.)`);
-                ctx[key] = injected;
-            }
+            else ctx[key] = injected;
         } else ctx[key] = injected;
-        checkDuplicateProperties("Inject" /* INJECT */ , key);
     }
 }
 function callHook(hook, instance, type) {
@@ -4014,7 +3512,6 @@ function createWatcher(raw, ctx, publicThis, key) {
     if (_shared.isString(raw)) {
         const handler = ctx[raw];
         if (_shared.isFunction(handler)) watch(getter, handler);
-        else warn(`Invalid watch handler specified by key "${raw}"`, handler);
     } else if (_shared.isFunction(raw)) watch(getter, raw.bind(publicThis));
     else if (_shared.isObject(raw)) {
         if (_shared.isArray(raw)) raw.forEach((r)=>createWatcher(r, ctx, publicThis, key)
@@ -4022,9 +3519,8 @@ function createWatcher(raw, ctx, publicThis, key) {
         else {
             const handler = _shared.isFunction(raw.handler) ? raw.handler.bind(publicThis) : ctx[raw.handler];
             if (_shared.isFunction(handler)) watch(getter, handler, raw);
-            else warn(`Invalid watch handler specified by key "${raw.handler}"`, handler);
         }
-    } else warn(`Invalid watch option: "${key}"`, raw);
+    } else ;
 }
 /**
  * Resolve merged options and cache it on the component.
@@ -4053,10 +3549,12 @@ function mergeOptions(to, from, strats, asMixin = false) {
     if (extendsOptions) mergeOptions(to, extendsOptions, strats, true);
     if (mixins) mixins.forEach((m)=>mergeOptions(to, m, strats, true)
     );
-    for(const key in from)if (asMixin && key === 'expose') warn(`"expose" option is ignored when declared in mixins or extends. ` + `It should only be declared in the base component itself.`);
-    else {
-        const strat = internalOptionMergeStrats[key] || strats && strats[key];
-        to[key] = strat ? strat(to[key], from[key]) : from[key];
+    for(const key in from){
+        if (asMixin && key === 'expose') ;
+        else {
+            const strat = internalOptionMergeStrats[key] || strats && strats[key];
+            to[key] = strat ? strat(to[key], from[key]) : from[key];
+        }
     }
     return to;
 }
@@ -4135,8 +3633,6 @@ function initProps(instance, rawProps, isStateful, isSSR = false) {
     setFullProps(instance, rawProps, props, attrs);
     // ensure all declared prop keys are present
     for(const key in instance.propsOptions[0])if (!(key in props)) props[key] = undefined;
-    validateProps(rawProps || {
-    }, props, instance);
     if (isStateful) // stateful
     instance.props = isSSR ? props : _reactivity.shallowReactive(props);
     else if (!instance.type.props) // functional w/ optional props, props === attrs
@@ -4153,7 +3649,7 @@ function updateProps(instance, rawProps, rawPrevProps, optimized) {
     if (// always force full diff in dev
     // - #1942 if hmr is enabled with sfc component
     // - vite#872 non-sfc component used by sfc component
-    !(instance.type.__hmrId || instance.parent && instance.parent.type.__hmrId) && (optimized || patchFlag > 0) && !(patchFlag & 16 /* FULL_PROPS */ )) {
+    (optimized || patchFlag > 0) && !(patchFlag & 16 /* FULL_PROPS */ )) {
         if (patchFlag & 8 /* PROPS */ ) {
             // Compiler-generated props & no keys change, just set the updated
             // the props.
@@ -4203,8 +3699,6 @@ function updateProps(instance, rawProps, rawPrevProps, optimized) {
     }
     // trigger updates for $attrs in case it's used in component slots
     if (hasAttrsChanged) _reactivity.trigger(instance, "set" /* SET */ , '$attrs');
-    validateProps(rawProps || {
-    }, props, instance);
 }
 function setFullProps(instance, rawProps, props, attrs) {
     const [options, needCastKeys] = instance.propsOptions;
@@ -4289,27 +3783,23 @@ function normalizePropsOptions(comp, appContext, asMixin = false) {
         return _shared.EMPTY_ARR;
     }
     if (_shared.isArray(raw)) for(let i = 0; i < raw.length; i++){
-        if (!_shared.isString(raw[i])) warn(`props must be strings when using array syntax.`, raw[i]);
         const normalizedKey = _shared.camelize(raw[i]);
         if (validatePropName(normalizedKey)) normalized[normalizedKey] = _shared.EMPTY_OBJ;
     }
-    else if (raw) {
-        if (!_shared.isObject(raw)) warn(`invalid props options`, raw);
-        for(const key in raw){
-            const normalizedKey = _shared.camelize(key);
-            if (validatePropName(normalizedKey)) {
-                const opt = raw[key];
-                const prop = normalized[normalizedKey] = _shared.isArray(opt) || _shared.isFunction(opt) ? {
-                    type: opt
-                } : opt;
-                if (prop) {
-                    const booleanIndex = getTypeIndex(Boolean, prop.type);
-                    const stringIndex = getTypeIndex(String, prop.type);
-                    prop[0 /* shouldCast */ ] = booleanIndex > -1;
-                    prop[1 /* shouldCastTrue */ ] = stringIndex < 0 || booleanIndex < stringIndex;
-                    // if the prop needs boolean casting or default value
-                    if (booleanIndex > -1 || _shared.hasOwn(prop, 'default')) needCastKeys.push(normalizedKey);
-                }
+    else if (raw) for(const key in raw){
+        const normalizedKey = _shared.camelize(key);
+        if (validatePropName(normalizedKey)) {
+            const opt = raw[key];
+            const prop = normalized[normalizedKey] = _shared.isArray(opt) || _shared.isFunction(opt) ? {
+                type: opt
+            } : opt;
+            if (prop) {
+                const booleanIndex = getTypeIndex(Boolean, prop.type);
+                const stringIndex = getTypeIndex(String, prop.type);
+                prop[0 /* shouldCast */ ] = booleanIndex > -1;
+                prop[1 /* shouldCastTrue */ ] = stringIndex < 0 || booleanIndex < stringIndex;
+                // if the prop needs boolean casting or default value
+                if (booleanIndex > -1 || _shared.hasOwn(prop, 'default')) needCastKeys.push(normalizedKey);
             }
         }
     }
@@ -4322,7 +3812,6 @@ function normalizePropsOptions(comp, appContext, asMixin = false) {
 }
 function validatePropName(key) {
     if (key[0] !== '$') return true;
-    else warn(`Invalid prop name: "${key}" is a reserved property.`);
     return false;
 }
 // use function string name to check type constructors
@@ -4450,7 +3939,6 @@ const normalizeSlotValue = (value)=>_shared.isArray(value) ? value.map(normalize
 ;
 const normalizeSlot = (key, rawSlot, ctx)=>{
     const normalized = withCtx((...args)=>{
-        if (currentInstance) warn(`Slot "${key}" invoked outside of the render function: ` + `this will not track dependencies used in the slot. ` + `Invoke the slot function inside the render function instead.`);
         return normalizeSlotValue(rawSlot(...args));
     }, ctx);
     normalized._c = false;
@@ -4463,7 +3951,6 @@ const normalizeObjectSlots = (rawSlots, slots, instance)=>{
         const value = rawSlots[key];
         if (_shared.isFunction(value)) slots[key] = normalizeSlot(key, value, ctx);
         else if (value != null) {
-            warn(`Non-function value encountered for slot "${key}". ` + `Prefer function slots for better performance.`);
             const normalized = normalizeSlotValue(value);
             slots[key] = ()=>normalized
             ;
@@ -4471,7 +3958,6 @@ const normalizeObjectSlots = (rawSlots, slots, instance)=>{
     }
 };
 const normalizeVNodeSlots = (instance, children)=>{
-    if (!isKeepAlive(instance.vnode) && true) warn(`Non-function value encountered for default slot. ` + `Prefer function slots for better performance.`);
     const normalized = normalizeSlotValue(children);
     instance.slots.default = ()=>normalized
     ;
@@ -4501,11 +3987,7 @@ const updateSlots = (instance, children, optimized)=>{
     if (vnode.shapeFlag & 32 /* SLOTS_CHILDREN */ ) {
         const type = children._;
         if (type) {
-            // compiled slots.
-            if (isHmrUpdating) // Parent was HMR updated so slot content may have changed.
-            // force update slots and mark instance for hmr as well
-            _shared.extend(slots, children);
-            else if (optimized && type === 1 /* STABLE */ ) // compiled AND stable.
+            if (optimized && type === 1 /* STABLE */ ) // compiled AND stable.
             // no need to update, and skip stale slots removal.
             needDeletionCheck = false;
             else {
@@ -4554,10 +4036,7 @@ function validateDirectiveName(name) {
  * Adds directives to a VNode.
  */ function withDirectives(vnode, directives) {
     const internalInstance = currentRenderingInstance;
-    if (internalInstance === null) {
-        warn(`withDirectives can only be used inside render functions.`);
-        return vnode;
-    }
+    if (internalInstance === null) return vnode;
     const instance = internalInstance.proxy;
     const bindings = vnode.dirs || (vnode.dirs = []);
     for(let i = 0; i < directives.length; i++){
@@ -4628,10 +4107,7 @@ function createAppContext() {
 let uid = 0;
 function createAppAPI(render, hydrate) {
     return function createApp(rootComponent, rootProps = null) {
-        if (rootProps != null && !_shared.isObject(rootProps)) {
-            warn(`root props passed to app.mount() must be an object.`);
-            rootProps = null;
-        }
+        if (rootProps != null && !_shared.isObject(rootProps)) rootProps = null;
         const context = createAppContext();
         const installedPlugins = new Set();
         let isMounted = false;
@@ -4647,37 +4123,31 @@ function createAppAPI(render, hydrate) {
                 return context.config;
             },
             set config (v){
-                warn(`app.config cannot be replaced. Modify individual options instead.`);
             },
             use (plugin, ...options) {
-                if (installedPlugins.has(plugin)) warn(`Plugin has already been applied to target app.`);
+                if (installedPlugins.has(plugin)) ;
                 else if (plugin && _shared.isFunction(plugin.install)) {
                     installedPlugins.add(plugin);
                     plugin.install(app, ...options);
                 } else if (_shared.isFunction(plugin)) {
                     installedPlugins.add(plugin);
                     plugin(app, ...options);
-                } else warn(`A plugin must either be a function or an object with an "install" ` + `function.`);
+                }
                 return app;
             },
             mixin (mixin) {
                 if (__VUE_OPTIONS_API__) {
                     if (!context.mixins.includes(mixin)) context.mixins.push(mixin);
-                    else warn('Mixin has already been applied to target app' + (mixin.name ? `: ${mixin.name}` : ''));
-                } else warn('Mixins are only available in builds supporting Options API');
+                }
                 return app;
             },
             component (name, component) {
-                validateComponentName(name, context.config);
                 if (!component) return context.components[name];
-                if (context.components[name]) warn(`Component "${name}" has already been registered in target app.`);
                 context.components[name] = component;
                 return app;
             },
             directive (name, directive) {
-                validateDirectiveName(name);
                 if (!directive) return context.directives[name];
-                if (context.directives[name]) warn(`Directive "${name}" has already been registered in target app.`);
                 context.directives[name] = directive;
                 return app;
             },
@@ -4687,29 +4157,29 @@ function createAppAPI(render, hydrate) {
                     // store app context on the root VNode.
                     // this will be set on the root instance on initial mount.
                     vnode.appContext = context;
-                    context.reload = ()=>{
-                        render(cloneVNode(vnode), rootContainer, isSVG);
-                    };
                     if (isHydrate && hydrate) hydrate(vnode, rootContainer);
                     else render(vnode, rootContainer, isSVG);
                     isMounted = true;
                     app._container = rootContainer;
                     rootContainer.__vue_app__ = app;
-                    app._instance = vnode.component;
-                    devtoolsInitApp(app, version);
+                    if (__VUE_PROD_DEVTOOLS__) {
+                        app._instance = vnode.component;
+                        devtoolsInitApp(app, version);
+                    }
                     return vnode.component.proxy;
-                } else warn(`App has already been mounted.\n` + `If you want to remount the same app, move your app creation logic ` + `into a factory function and create fresh app instances for each ` + `mount - e.g. \`const createMyApp = () => createApp(App)\``);
+                }
             },
             unmount () {
                 if (isMounted) {
                     render(null, app._container);
-                    app._instance = null;
-                    devtoolsUnmountApp(app);
+                    if (__VUE_PROD_DEVTOOLS__) {
+                        app._instance = null;
+                        devtoolsUnmountApp(app);
+                    }
                     delete app._container.__vue_app__;
-                } else warn(`Cannot unmount an app that is not mounted.`);
+                }
             },
             provide (key, value) {
-                if (key in context.provides) warn(`App already provides property with key "${String(key)}". ` + `It will be overwritten with the new value.`);
                 // TypeScript doesn't allow symbols as index type
                 // https://github.com/Microsoft/TypeScript/issues/24587
                 context.provides[key] = value;
@@ -4733,7 +4203,6 @@ function createHydrationFunctions(rendererInternals) {
     const { mt: mountComponent , p: patch , o: { patchProp , nextSibling , parentNode , remove , insert , createComment  }  } = rendererInternals;
     const hydrate = (vnode, container)=>{
         if (!container.hasChildNodes()) {
-            warn(`Attempting to hydrate existing markup but container is empty. ` + `Performing full mount instead.`);
             patch(null, vnode, container);
             flushPostFlushCbs();
             return;
@@ -4758,7 +4227,6 @@ function createHydrationFunctions(rendererInternals) {
                 else {
                     if (node.data !== vnode.children) {
                         hasMismatch = true;
-                        warn(`Hydration text mismatch:` + `\n- Client: ${JSON.stringify(node.data)}` + `\n- Server: ${JSON.stringify(vnode.children)}`);
                         node.data = vnode.children;
                     }
                     nextNode = nextSibling(node);
@@ -4820,7 +4288,6 @@ function createHydrationFunctions(rendererInternals) {
                     if (domType !== 8 /* COMMENT */ ) nextNode = onMismatch();
                     else nextNode = vnode.type.hydrate(node, vnode, parentComponent, parentSuspense, slotScopeIds, optimized, rendererInternals, hydrateChildren);
                 } else if (shapeFlag & 128 /* SUSPENSE */ ) nextNode = vnode.type.hydrate(node, vnode, parentComponent, parentSuspense, isSVGContainer(parentNode(node)), slotScopeIds, optimized, rendererInternals, hydrateNode);
-                else warn('Invalid HostVNode type:', type, `(${typeof type})`);
         }
         if (ref != null) setRef(ref, null, parentSuspense, vnode);
         return nextNode;
@@ -4857,10 +4324,6 @@ function createHydrationFunctions(rendererInternals) {
                 let hasWarned = false;
                 while(next){
                     hasMismatch = true;
-                    if (!hasWarned) {
-                        warn(`Hydration children mismatch in <${vnode.type}>: ` + `server rendered element contains more child nodes than client vdom.`);
-                        hasWarned = true;
-                    }
                     // The SSRed DOM contains more nodes than it should. Remove them.
                     const cur = next;
                     next = next.nextSibling;
@@ -4869,7 +4332,6 @@ function createHydrationFunctions(rendererInternals) {
             } else if (shapeFlag & 8 /* TEXT_CHILDREN */ ) {
                 if (el.textContent !== vnode.children) {
                     hasMismatch = true;
-                    warn(`Hydration text content mismatch in <${vnode.type}>:\n` + `- Client: ${el.textContent}\n` + `- Server: ${vnode.children}`);
                     el.textContent = vnode.children;
                 }
             }
@@ -4887,10 +4349,6 @@ function createHydrationFunctions(rendererInternals) {
             else if (vnode.type === Text && !vnode.children) continue;
             else {
                 hasMismatch = true;
-                if (!hasWarned) {
-                    warn(`Hydration children mismatch in <${container.tagName.toLowerCase()}>: ` + `server rendered element contains fewer child nodes than client vdom.`);
-                    hasWarned = true;
-                }
                 // the SSRed DOM didn't contain enough nodes. Mount the missing ones.
                 patch(null, vnode, container, null, parentComponent, parentSuspense, isSVGContainer(container), slotScopeIds);
             }
@@ -4914,7 +4372,6 @@ function createHydrationFunctions(rendererInternals) {
     };
     const handleMismatch = (node, vnode, parentComponent, parentSuspense, slotScopeIds, isFragment)=>{
         hasMismatch = true;
-        warn(`Hydration node mismatch:\n- Client vnode:`, vnode.type, `\n- Server rendered DOM:`, node, node.nodeType === 3 /* TEXT */  ? `(text)` : isComment(node) && node.data === '[' ? `(start of fragment)` : ``);
         vnode.el = null;
         if (isFragment) {
             // remove excessive fragment nodes
@@ -4954,7 +4411,7 @@ let supported;
 let perf;
 function startMeasure(instance, type) {
     if (instance.appContext.config.performance && isSupported()) perf.mark(`vue-${type}-${instance.uid}`);
-    devtoolsPerfStart(instance, type, supported ? perf.now() : Date.now());
+    if (__VUE_PROD_DEVTOOLS__) devtoolsPerfStart(instance, type, supported ? perf.now() : Date.now());
 }
 function endMeasure(instance, type) {
     if (instance.appContext.config.performance && isSupported()) {
@@ -4965,7 +4422,7 @@ function endMeasure(instance, type) {
         perf.clearMarks(startTag);
         perf.clearMarks(endTag);
     }
-    devtoolsPerfEnd(instance, type, supported ? perf.now() : Date.now());
+    if (__VUE_PROD_DEVTOOLS__) devtoolsPerfEnd(instance, type, supported ? perf.now() : Date.now());
 }
 function isSupported() {
     if (supported !== undefined) return supported;
@@ -4991,7 +4448,6 @@ function isSupported() {
         needWarn = true;
         _shared.getGlobalThis().__VUE_PROD_DEVTOOLS__ = false;
     }
-    if (needWarn) console.warn(`You are running the esm-bundler build of Vue. It is recommended to ` + `configure your bundler to explicitly replace feature flag globals ` + `with boolean literals to get proper tree-shaking in the final bundle. ` + `See http://link.vuejs.org/feature-flags for more details.`);
 }
 const queuePostRenderEffect = queueEffectWithSuspense;
 /**
@@ -5020,7 +4476,7 @@ function createHydrationRenderer(options) {
 // implementation
 function baseCreateRenderer(options, createHydrationFns) {
     initFeatureFlags();
-    {
+    if (__VUE_PROD_DEVTOOLS__) {
         const target = _shared.getGlobalThis();
         target.__VUE__ = true;
         setDevtoolsHook(target.__VUE_DEVTOOLS_GLOBAL_HOOK__);
@@ -5028,7 +4484,7 @@ function baseCreateRenderer(options, createHydrationFns) {
     const { insert: hostInsert , remove: hostRemove , patchProp: hostPatchProp , createElement: hostCreateElement , createText: hostCreateText , createComment: hostCreateComment , setText: hostSetText , setElementText: hostSetElementText , parentNode: hostParentNode , nextSibling: hostNextSibling , setScopeId: hostSetScopeId = _shared.NOOP , cloneNode: hostCloneNode , insertStaticContent: hostInsertStaticContent  } = options;
     // Note: functions inside this closure should use `const xxx = () => {}`
     // style in order to prevent being inlined by minifiers.
-    const patch = (n1, n2, container, anchor = null, parentComponent = null, parentSuspense = null, isSVG = false, slotScopeIds = null, optimized = isHmrUpdating ? false : !!n2.dynamicChildren)=>{
+    const patch = (n1, n2, container, anchor = null, parentComponent = null, parentSuspense = null, isSVG = false, slotScopeIds = null, optimized = !!n2.dynamicChildren)=>{
         if (n1 === n2) return;
         // patching & not same type, unmount old tree
         if (n1 && !isSameVNodeType(n1, n2)) {
@@ -5050,7 +4506,6 @@ function baseCreateRenderer(options, createHydrationFns) {
                 break;
             case Static:
                 if (n1 == null) mountStaticNode(n2, container, anchor, isSVG);
-                else patchStaticNode(n1, n2, container, isSVG);
                 break;
             case Fragment:
                 processFragment(n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, slotScopeIds, optimized);
@@ -5060,7 +4515,6 @@ function baseCreateRenderer(options, createHydrationFns) {
                 else if (shapeFlag & 6 /* COMPONENT */ ) processComponent(n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, slotScopeIds, optimized);
                 else if (shapeFlag & 64 /* TELEPORT */ ) type.process(n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, slotScopeIds, optimized, internals);
                 else if (shapeFlag & 128 /* SUSPENSE */ ) type.process(n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, slotScopeIds, optimized, internals);
-                else warn('Invalid VNode type:', type, `(${typeof type})`);
         }
         // set ref
         if (ref != null && parentComponent) setRef(ref, n1 && n1.ref, parentSuspense, n2 || n1, !n2);
@@ -5121,16 +4575,22 @@ function baseCreateRenderer(options, createHydrationFns) {
         let el;
         let vnodeHook;
         const { type , props , shapeFlag , transition , patchFlag , dirs  } = vnode;
-        el = vnode.el = hostCreateElement(vnode.type, isSVG, props && props.is, props);
-        // mount children first, since some props may rely on child content
-        // being already rendered, e.g. `<select value>`
-        if (shapeFlag & 8 /* TEXT_CHILDREN */ ) hostSetElementText(el, vnode.children);
-        else if (shapeFlag & 16 /* ARRAY_CHILDREN */ ) mountChildren(vnode.children, el, null, parentComponent, parentSuspense, isSVG && type !== 'foreignObject', slotScopeIds, optimized);
-        if (dirs) invokeDirectiveHook(vnode, null, parentComponent, 'created');
-        // props
-        if (props) {
-            for(const key in props)if (key !== 'value' && !_shared.isReservedProp(key)) hostPatchProp(el, key, null, props[key], isSVG, vnode.children, parentComponent, parentSuspense, unmountChildren);
-            /**
+        if (vnode.el && hostCloneNode !== undefined && patchFlag === -1 /* HOISTED */ ) // If a vnode has non-null el, it means it's being reused.
+        // Only static vnodes can be reused, so its mounted DOM nodes should be
+        // exactly the same, and we can simply do a clone here.
+        // only do this in production since cloned trees cannot be HMR updated.
+        el = vnode.el = hostCloneNode(vnode.el);
+        else {
+            el = vnode.el = hostCreateElement(vnode.type, isSVG, props && props.is, props);
+            // mount children first, since some props may rely on child content
+            // being already rendered, e.g. `<select value>`
+            if (shapeFlag & 8 /* TEXT_CHILDREN */ ) hostSetElementText(el, vnode.children);
+            else if (shapeFlag & 16 /* ARRAY_CHILDREN */ ) mountChildren(vnode.children, el, null, parentComponent, parentSuspense, isSVG && type !== 'foreignObject', slotScopeIds, optimized);
+            if (dirs) invokeDirectiveHook(vnode, null, parentComponent, 'created');
+            // props
+            if (props) {
+                for(const key in props)if (key !== 'value' && !_shared.isReservedProp(key)) hostPatchProp(el, key, null, props[key], isSVG, vnode.children, parentComponent, parentSuspense, unmountChildren);
+                /**
                  * Special case for setting value on DOM elements:
                  * - it can be order-sensitive (e.g. should be set *after* min/max, #2325, #4024)
                  * - it needs to be forced (#1471)
@@ -5139,18 +4599,21 @@ function baseCreateRenderer(options, createHydrationFns) {
                  * here to reduce the complexity. (Special casing it also should not
                  * affect non-DOM renderers)
                  */ if ('value' in props) hostPatchProp(el, 'value', null, props.value);
-            if (vnodeHook = props.onVnodeBeforeMount) invokeVNodeHook(vnodeHook, parentComponent, vnode);
+                if (vnodeHook = props.onVnodeBeforeMount) invokeVNodeHook(vnodeHook, parentComponent, vnode);
+            }
+            // scopeId
+            setScopeId(el, vnode, vnode.scopeId, slotScopeIds, parentComponent);
         }
-        // scopeId
-        setScopeId(el, vnode, vnode.scopeId, slotScopeIds, parentComponent);
-        Object.defineProperty(el, '__vnode', {
-            value: vnode,
-            enumerable: false
-        });
-        Object.defineProperty(el, '__vueParentComponent', {
-            value: parentComponent,
-            enumerable: false
-        });
+        if (__VUE_PROD_DEVTOOLS__) {
+            Object.defineProperty(el, '__vnode', {
+                value: vnode,
+                enumerable: false
+            });
+            Object.defineProperty(el, '__vueParentComponent', {
+                value: parentComponent,
+                enumerable: false
+            });
+        }
         if (dirs) invokeDirectiveHook(vnode, null, parentComponent, 'beforeMount');
         // #1583 For inside suspense + suspense not resolved case, enter hook should call when suspense resolved
         // #1689 For inside suspense + suspense resolved case, just call it
@@ -5168,7 +4631,6 @@ function baseCreateRenderer(options, createHydrationFns) {
         if (slotScopeIds) for(let i = 0; i < slotScopeIds.length; i++)hostSetScopeId(el, slotScopeIds[i]);
         if (parentComponent) {
             let subTree = parentComponent.subTree;
-            if (subTree.patchFlag > 0 && subTree.patchFlag & 2048 /* DEV_ROOT_FRAGMENT */ ) subTree = filterSingleRoot(subTree.children) || subTree;
             if (vnode === subTree) {
                 const parentVNode = parentComponent.vnode;
                 setScopeId(el, parentVNode, parentVNode.scopeId, parentVNode.slotScopeIds, parentComponent.parent);
@@ -5192,17 +4654,9 @@ function baseCreateRenderer(options, createHydrationFns) {
         let vnodeHook;
         if (vnodeHook = newProps.onVnodeBeforeUpdate) invokeVNodeHook(vnodeHook, parentComponent, n2, n1);
         if (dirs) invokeDirectiveHook(n2, n1, parentComponent, 'beforeUpdate');
-        if (isHmrUpdating) {
-            // HMR updated, force full diff
-            patchFlag = 0;
-            optimized = false;
-            dynamicChildren = null;
-        }
         const areChildrenSVG = isSVG && n2.type !== 'foreignObject';
-        if (dynamicChildren) {
-            patchBlockChildren(n1.dynamicChildren, dynamicChildren, el, parentComponent, parentSuspense, areChildrenSVG, slotScopeIds);
-            if (parentComponent && parentComponent.type.__hmrId) traverseStaticChildren(n1, n2);
-        } else if (!optimized) // full diff
+        if (dynamicChildren) patchBlockChildren(n1.dynamicChildren, dynamicChildren, el, parentComponent, parentSuspense, areChildrenSVG, slotScopeIds);
+        else if (!optimized) // full diff
         patchChildren(n1, n2, el, null, parentComponent, parentSuspense, areChildrenSVG, slotScopeIds, false);
         if (patchFlag > 0) {
             // the presence of a patchFlag means this element's render code was
@@ -5286,12 +4740,6 @@ function baseCreateRenderer(options, createHydrationFns) {
         const fragmentStartAnchor = n2.el = n1 ? n1.el : hostCreateText('');
         const fragmentEndAnchor = n2.anchor = n1 ? n1.anchor : hostCreateText('');
         let { patchFlag , dynamicChildren , slotScopeIds: fragmentSlotScopeIds  } = n2;
-        if (isHmrUpdating) {
-            // HMR updated, force full diff
-            patchFlag = 0;
-            optimized = false;
-            dynamicChildren = null;
-        }
         // check if this is a slot fragment with :slotted scope ids
         if (fragmentSlotScopeIds) slotScopeIds = slotScopeIds ? slotScopeIds.concat(fragmentSlotScopeIds) : fragmentSlotScopeIds;
         if (n1 == null) {
@@ -5307,8 +4755,7 @@ function baseCreateRenderer(options, createHydrationFns) {
             // a stable fragment (template root or <template v-for>) doesn't need to
             // patch children order, but it may contain dynamicChildren.
             patchBlockChildren(n1.dynamicChildren, dynamicChildren, container, parentComponent, parentSuspense, isSVG, slotScopeIds);
-            if (parentComponent && parentComponent.type.__hmrId) traverseStaticChildren(n1, n2);
-            else if (// #2080 if the stable fragment has a key, it's a <template v-for> that may
+            if (// #2080 if the stable fragment has a key, it's a <template v-for> that may
             //  get moved around. Make sure all root level vnodes inherit el.
             // #2134 or if it's a component root, it may also get moved around
             // as the component is being moved.
@@ -5328,14 +4775,9 @@ function baseCreateRenderer(options, createHydrationFns) {
     };
     const mountComponent = (initialVNode, container, anchor, parentComponent, parentSuspense, isSVG, optimized)=>{
         const instance = initialVNode.component = createComponentInstance(initialVNode, parentComponent, parentSuspense);
-        if (instance.type.__hmrId) registerHMR(instance);
-        pushWarningContext(initialVNode);
-        startMeasure(instance, `mount`);
         // inject renderer internals for keepAlive
         if (isKeepAlive(initialVNode)) instance.ctx.renderer = internals;
-        startMeasure(instance, `init`);
         setupComponent(instance);
-        endMeasure(instance, `init`);
         // setup() is async. This component relies on async logic to be resolved
         // before proceeding
         if (instance.asyncDep) {
@@ -5349,16 +4791,12 @@ function baseCreateRenderer(options, createHydrationFns) {
             return;
         }
         setupRenderEffect(instance, initialVNode, container, anchor, parentSuspense, isSVG, optimized);
-        popWarningContext();
-        endMeasure(instance, `mount`);
     };
     const updateComponent = (n1, n2, optimized)=>{
         const instance = n2.component = n1.component;
         if (shouldUpdateComponent(n1, n2, optimized)) {
             if (instance.asyncDep && !instance.asyncResolved) {
-                pushWarningContext(n2);
                 updateComponentPreRender(instance, n2, optimized);
-                popWarningContext();
                 return;
             } else {
                 // normal update
@@ -5392,12 +4830,8 @@ function baseCreateRenderer(options, createHydrationFns) {
                 if (el && hydrateNode) {
                     // vnode has adopted host node - perform hydration instead of mount.
                     const hydrateSubTree = ()=>{
-                        startMeasure(instance, `render`);
                         instance.subTree = renderComponentRoot(instance);
-                        endMeasure(instance, `render`);
-                        startMeasure(instance, `hydrate`);
                         hydrateNode(el, instance.subTree, instance, parentSuspense, null);
-                        endMeasure(instance, `hydrate`);
                     };
                     if (isAsyncWrapperVNode) initialVNode.type.__asyncLoader().then(// note: we are moving the render call into an async callback,
                     // which means it won't track dependencies - but it's ok because
@@ -5407,12 +4841,8 @@ function baseCreateRenderer(options, createHydrationFns) {
                     );
                     else hydrateSubTree();
                 } else {
-                    startMeasure(instance, `render`);
                     const subTree = instance.subTree = renderComponentRoot(instance);
-                    endMeasure(instance, `render`);
-                    startMeasure(instance, `patch`);
                     patch(null, subTree, container, anchor, instance, parentSuspense, isSVG);
-                    endMeasure(instance, `patch`);
                     initialVNode.el = subTree.el;
                 }
                 // mounted hook
@@ -5428,7 +4858,7 @@ function baseCreateRenderer(options, createHydrationFns) {
                 // since the hook may be injected by a child keep-alive
                 if (initialVNode.shapeFlag & 256 /* COMPONENT_SHOULD_KEEP_ALIVE */ ) instance.a && queuePostRenderEffect(instance.a, parentSuspense);
                 instance.isMounted = true;
-                devtoolsComponentAdded(instance);
+                if (__VUE_PROD_DEVTOOLS__) devtoolsComponentAdded(instance);
                 // #2458: deference mount-only object parameters to prevent memleaks
                 initialVNode = container = anchor = null;
             } else {
@@ -5438,7 +4868,6 @@ function baseCreateRenderer(options, createHydrationFns) {
                 let { next , bu , u , parent , vnode  } = instance;
                 let originNext = next;
                 let vnodeHook;
-                pushWarningContext(next || instance.vnode);
                 // Disallow component effect recursion during pre-lifecycle hooks.
                 effect.allowRecurse = false;
                 if (next) {
@@ -5450,16 +4879,12 @@ function baseCreateRenderer(options, createHydrationFns) {
                 // onVnodeBeforeUpdate
                 if (vnodeHook = next.props && next.props.onVnodeBeforeUpdate) invokeVNodeHook(vnodeHook, parent, next, vnode);
                 effect.allowRecurse = true;
-                startMeasure(instance, `render`);
                 const nextTree = renderComponentRoot(instance);
-                endMeasure(instance, `render`);
                 const prevTree = instance.subTree;
                 instance.subTree = nextTree;
-                startMeasure(instance, `patch`);
                 patch(prevTree, nextTree, // parent may have changed if it's in a teleport
                 hostParentNode(prevTree.el), // anchor may have changed if it's in a fragment
                 getNextHostNode(prevTree), instance, parentSuspense, isSVG);
-                endMeasure(instance, `patch`);
                 next.el = nextTree.el;
                 if (originNext === null) // self-triggered update. In case of HOC, update parent component
                 // vnode el. HOC is indicated by parent instance's subTree pointing
@@ -5470,8 +4895,7 @@ function baseCreateRenderer(options, createHydrationFns) {
                 // onVnodeUpdated
                 if (vnodeHook = next.props && next.props.onVnodeUpdated) queuePostRenderEffect(()=>invokeVNodeHook(vnodeHook, parent, next, vnode)
                 , parentSuspense);
-                devtoolsComponentUpdated(instance);
-                popWarningContext();
+                if (__VUE_PROD_DEVTOOLS__) devtoolsComponentUpdated(instance);
             }
         };
         // create reactive effect for rendering
@@ -5483,12 +4907,7 @@ function baseCreateRenderer(options, createHydrationFns) {
         // allowRecurse
         // #1801, #2043 component render effects should allow recursive updates
         effect.allowRecurse = update.allowRecurse = true;
-        effect.onTrack = instance.rtc ? (e)=>_shared.invokeArrayFns(instance.rtc, e)
-         : void 0;
-        effect.onTrigger = instance.rtg ? (e)=>_shared.invokeArrayFns(instance.rtg, e)
-         : void 0;
-        // @ts-ignore (for scheduler)
-        update.ownerInstance = instance;
+        var e, e1;
         update();
     };
     const updateComponentPreRender = (instance, nextVNode, optimized)=>{
@@ -5611,10 +5030,7 @@ function baseCreateRenderer(options, createHydrationFns) {
             const keyToNewIndexMap = new Map();
             for(i = s2; i <= e2; i++){
                 const nextChild = c2[i] = optimized ? cloneIfMounted(c2[i]) : normalizeVNode(c2[i]);
-                if (nextChild.key != null) {
-                    if (keyToNewIndexMap.has(nextChild.key)) warn(`Duplicate keys found during update:`, JSON.stringify(nextChild.key), `Make sure keys are unique.`);
-                    keyToNewIndexMap.set(nextChild.key, i);
-                }
+                if (nextChild.key != null) keyToNewIndexMap.set(nextChild.key, i);
             }
             // 5.2 loop through old children left to be patched and try to patch
             // matching nodes & remove nodes that are no longer present
@@ -5788,7 +5204,6 @@ function baseCreateRenderer(options, createHydrationFns) {
         hostRemove(end);
     };
     const unmountComponent = (instance, parentSuspense, doRemove)=>{
-        if (instance.type.__hmrId) unregisterHMR(instance);
         const { bum , scope , update , subTree , um  } = instance;
         // beforeUnmount hook
         if (bum) _shared.invokeArrayFns(bum);
@@ -5813,7 +5228,7 @@ function baseCreateRenderer(options, createHydrationFns) {
             parentSuspense.deps--;
             if (parentSuspense.deps === 0) parentSuspense.resolve();
         }
-        devtoolsComponentRemoved(instance);
+        if (__VUE_PROD_DEVTOOLS__) devtoolsComponentRemoved(instance);
     };
     const unmountChildren = (children, parentComponent, parentSuspense, doRemove = false, optimized = false, start = 0)=>{
         for(let i = start; i < children.length; i++)unmount(children[i], parentComponent, parentSuspense, doRemove, optimized);
@@ -5863,10 +5278,6 @@ function setRef(rawRef, oldRawRef, parentSuspense, vnode, isUnmount = false) {
     const refValue = vnode.shapeFlag & 4 /* STATEFUL_COMPONENT */  ? getExposeProxy(vnode.component) || vnode.component.proxy : vnode.el;
     const value = isUnmount ? null : refValue;
     const { i: owner , r: ref  } = rawRef;
-    if (!owner) {
-        warn(`Missing ref owner context. ref cannot be used on hoisted vnodes. ` + `A vnode with ref must be created inside the render function.`);
-        return;
-    }
     const oldRef = oldRawRef && oldRawRef.r;
     const refs = owner.refs === _shared.EMPTY_OBJ ? owner.refs = {
     } : owner.refs;
@@ -5902,7 +5313,6 @@ function setRef(rawRef, oldRawRef, parentSuspense, vnode, isUnmount = false) {
         value,
         refs
     ]);
-    else warn('Invalid template ref type:', value, `(${typeof value})`);
 }
 function invokeVNodeHook(hook, instance, vnode, prevVNode = null) {
     callWithAsyncErrorHandling(hook, instance, 7 /* VNODE_HOOK */ , [
@@ -5935,9 +5345,6 @@ function invokeVNodeHook(hook, instance, vnode, prevVNode = null) {
             }
             if (!shallow) traverseStaticChildren(c1, c2);
         }
-        // also inherit for comment nodes, but not placeholders (e.g. v-if which
-        // would have received .el during block patch)
-        if (c2.type === Comment && !c2.el) c2.el = c1.el;
     }
 }
 // https://en.wikipedia.org/wiki/Longest_increasing_subsequence
@@ -5987,18 +5394,12 @@ const isTargetSVG = (target)=>typeof SVGElement !== 'undefined' && target instan
 const resolveTarget = (props, select)=>{
     const targetSelector = props && props.to;
     if (_shared.isString(targetSelector)) {
-        if (!select) {
-            warn(`Current renderer does not support string target for Teleports. ` + `(missing querySelector renderer option)`);
-            return null;
-        } else {
+        if (!select) return null;
+        else {
             const target = select(targetSelector);
-            if (!target) warn(`Failed to locate Teleport target with selector "${targetSelector}". ` + `Note the target element must exist before the component is mounted - ` + `i.e. the target cannot be rendered by the component itself, and ` + `ideally should be outside of the entire Vue component tree.`);
             return target;
         }
-    } else {
-        if (!targetSelector && !isTeleportDisabled(props)) warn(`Invalid Teleport target: ${targetSelector}`);
-        return targetSelector;
-    }
+    } else return targetSelector;
 };
 const TeleportImpl = {
     __isTeleport: true,
@@ -6006,16 +5407,10 @@ const TeleportImpl = {
         const { mc: mountChildren , pc: patchChildren , pbc: patchBlockChildren , o: { insert , querySelector , createText , createComment  }  } = internals;
         const disabled = isTeleportDisabled(n2.props);
         let { shapeFlag , children , dynamicChildren  } = n2;
-        // #3302
-        // HMR updated, force full diff
-        if (isHmrUpdating) {
-            optimized = false;
-            dynamicChildren = null;
-        }
         if (n1 == null) {
             // insert anchors in the main view
-            const placeholder = n2.el = createComment('teleport start');
-            const mainAnchor = n2.anchor = createComment('teleport end');
+            const placeholder = n2.el = createText('');
+            const mainAnchor = n2.anchor = createText('');
             insert(placeholder, container, anchor);
             insert(mainAnchor, container, anchor);
             const target = n2.target = resolveTarget(n2.props, querySelector);
@@ -6024,7 +5419,7 @@ const TeleportImpl = {
                 insert(targetAnchor, target);
                 // #2652 we could be teleporting from a non-SVG tree into an SVG tree
                 isSVG = isSVG || isTargetSVG(target);
-            } else if (!disabled) warn('Invalid Teleport target on mount:', target, `(${typeof target})`);
+            }
             const mount = (container, anchor)=>{
                 // Teleport *always* has Array children. This is enforced in both the
                 // compiler and vnode children normalization.
@@ -6059,7 +5454,6 @@ const TeleportImpl = {
                 if ((n2.props && n2.props.to) !== (n1.props && n1.props.to)) {
                     const nextTarget = n2.target = resolveTarget(n2.props, querySelector);
                     if (nextTarget) moveTeleport(n2, nextTarget, null, internals, 0 /* TARGET_CHANGE */ );
-                    else warn('Invalid Teleport target on update:', target, `(${typeof target})`);
                 } else if (wasDisabled) // disabled -> enabled
                 // move into teleport target
                 moveTeleport(n2, target, targetAnchor, internals, 1 /* TOGGLE */ );
@@ -6155,17 +5549,16 @@ function resolveAsset(type, name, warnMissing = true, maybeSelfReference = false
         resolve(instance.appContext[type], name);
         if (!res && maybeSelfReference) // fallback to implicit self-reference
         return Component;
-        if (warnMissing && !res) warn(`Failed to resolve ${type.slice(0, -1)}: ${name}`);
         return res;
-    } else warn(`resolve${_shared.capitalize(type.slice(0, -1))} ` + `can only be used in render() or setup().`);
+    }
 }
 function resolve(registry, name) {
     return registry && (registry[name] || registry[_shared.camelize(name)] || registry[_shared.capitalize(_shared.camelize(name))]);
 }
-const Fragment = Symbol('Fragment');
-const Text = Symbol('Text');
-const Comment = Symbol('Comment');
-const Static = Symbol('Static');
+const Fragment = Symbol(undefined);
+const Text = Symbol(undefined);
+const Comment = Symbol(undefined);
+const Static = Symbol(undefined);
 // Since v-if and v-for are the two possible ways node structure can dynamically
 // change, once we consider v-if branches and each v-for fragment a block, we
 // can divide a template into nested blocks, and within each block the node
@@ -6246,8 +5639,6 @@ function isVNode(value) {
     return value ? value.__v_isVNode === true : false;
 }
 function isSameVNodeType(n1, n2) {
-    if (n2.shapeFlag & 6 /* COMPONENT */  && hmrDirtyComponents.has(n2.type)) // HMR only: if the component has been hot-updated, force a reload.
-    return false;
     return n1.type === n2.type && n1.key === n2.key;
 }
 let vnodeArgsTransformer;
@@ -6306,8 +5697,6 @@ function createBaseVNode(type, props = null, children = null, patchFlag = 0, dyn
     } else if (children) // compiled element vnode - if children is passed, only possible types are
     // string or Array.
     vnode.shapeFlag |= _shared.isString(children) ? 8 /* TEXT_CHILDREN */  : 16 /* ARRAY_CHILDREN */ ;
-    // validate key
-    if (vnode.key !== vnode.key) warn(`VNode created with invalid key (NaN). VNode type:`, vnode.type);
     // track vnode for block tree
     if (isBlockTreeEnabled > 0 && // avoid a block node from tracking itself
     !isBlockNode && // has current parent block
@@ -6316,12 +5705,9 @@ function createBaseVNode(type, props = null, children = null, patchFlag = 0, dyn
     vnode.patchFlag !== 32 /* HYDRATE_EVENTS */ ) currentBlock.push(vnode);
     return vnode;
 }
-const createVNode = createVNodeWithArgsTransform;
+const createVNode = _createVNode;
 function _createVNode(type, props = null, children = null, patchFlag = 0, dynamicProps = null, isBlockNode = false) {
-    if (!type || type === NULL_DYNAMIC_COMPONENT) {
-        if (!type) warn(`Invalid vnode type when creating vnode: ${type}.`);
-        type = Comment;
-    }
+    if (!type || type === NULL_DYNAMIC_COMPONENT) type = Comment;
     if (isVNode(type)) {
         // createVNode receiving an existing vnode. This happens in cases like
         // <component :is="vnode"/>
@@ -6348,10 +5734,6 @@ function _createVNode(type, props = null, children = null, patchFlag = 0, dynami
     }
     // encode the vnode type information into a bitmap
     const shapeFlag = _shared.isString(type) ? 1 /* ELEMENT */  : isSuspense(type) ? 128 /* SUSPENSE */  : isTeleport(type) ? 64 /* TELEPORT */  : _shared.isObject(type) ? 4 /* STATEFUL_COMPONENT */  : _shared.isFunction(type) ? 2 /* FUNCTIONAL_COMPONENT */  : 0;
-    if (shapeFlag & 4 /* STATEFUL_COMPONENT */  && _reactivity.isProxy(type)) {
-        type = _reactivity.toRaw(type);
-        warn(`Vue received a Component which was made a reactive object. This can ` + `lead to unnecessary performance overhead, and should be avoided by ` + `marking the component with \`markRaw\` or using \`shallowRef\` ` + `instead of \`ref\`.`, `\nComponent that was made reactive: `, type);
-    }
     return createBaseVNode(type, props, children, patchFlag, dynamicProps, shapeFlag, isBlockNode, true);
 }
 function guardReactiveProps(props) {
@@ -6379,7 +5761,7 @@ function cloneVNode(vnode, extraProps, mergeRef = false) {
         ] : normalizeRef(extraProps) : ref,
         scopeId: vnode.scopeId,
         slotScopeIds: vnode.slotScopeIds,
-        children: patchFlag === -1 /* HOISTED */  && _shared.isArray(children) ? children.map(deepCloneVNode) : children,
+        children: children,
         target: vnode.target,
         targetAnchor: vnode.targetAnchor,
         staticCount: vnode.staticCount,
@@ -6535,10 +5917,6 @@ function mergeProps(...args) {
         ret = new Array(source.length);
         for(let i = 0, l = source.length; i < l; i++)ret[i] = renderItem(source[i], i, undefined, cached && cached[i]);
     } else if (typeof source === 'number') {
-        if (!Number.isInteger(source)) {
-            warn(`The v-for range expect an integer value but got ${source}.`);
-            return [];
-        }
         ret = new Array(source);
         for(let i = 0; i < source; i++)ret[i] = renderItem(i + 1, i, undefined, cached && cached[i]);
     } else if (_shared.isObject(source)) {
@@ -6580,11 +5958,6 @@ fallback, noSlotted) {
         name
     }, fallback && fallback());
     let slot = slots[name];
-    if (slot && slot.length > 1) {
-        warn(`SSR-optimized slot function detected in a non-SSR-optimized render ` + `function. You need to mark this component with $dynamic-slots in the ` + `parent template.`);
-        slot = ()=>[]
-        ;
-    }
     // a compiled slot disables block tracking by default to avoid manual
     // invocation interfering with template-based block tracking, but in
     // `renderSlot` we can be sure that it's template-based so we can force
@@ -6615,10 +5988,6 @@ function ensureValidVNode(vnodes) {
  */ function toHandlers(obj) {
     const ret = {
     };
-    if (!_shared.isObject(obj)) {
-        warn(`v-on with no argument expects an object value.`);
-        return ret;
-    }
     for(const key in obj)ret[_shared.toHandlerKey(key)] = obj[key];
     return ret;
 }
@@ -6638,13 +6007,13 @@ const publicPropertiesMap = _shared.extend(Object.create(null), {
     ,
     $data: (i)=>i.data
     ,
-    $props: (i)=>_reactivity.shallowReadonly(i.props)
+    $props: (i)=>i.props
     ,
-    $attrs: (i)=>_reactivity.shallowReadonly(i.attrs)
+    $attrs: (i)=>i.attrs
     ,
-    $slots: (i)=>_reactivity.shallowReadonly(i.slots)
+    $slots: (i)=>i.slots
     ,
-    $refs: (i)=>_reactivity.shallowReadonly(i.refs)
+    $refs: (i)=>i.refs
     ,
     $parent: (i)=>getPublicInstance(i.parent)
     ,
@@ -6663,13 +6032,6 @@ const publicPropertiesMap = _shared.extend(Object.create(null), {
 const PublicInstanceProxyHandlers = {
     get ({ _: instance  }, key) {
         const { ctx , setupState , data , props , accessCache , type , appContext  } = instance;
-        // for internal formatters to know that this is a Vue instance
-        if (key === '__isVue') return true;
-        // prioritize <script setup> bindings during dev.
-        // this allows even properties that start with _ or $ to be used - so that
-        // it aligns with the production behavior where the render fn is inlined and
-        // indeed has access to all declared variables.
-        if (setupState !== _shared.EMPTY_OBJ && setupState.__isScriptSetup && _shared.hasOwn(setupState, key)) return setupState[key];
         // data / props / ctx
         // This getter gets called for every property access on the render context
         // during render and is a major hotspot. The most expensive part of this
@@ -6709,10 +6071,7 @@ const PublicInstanceProxyHandlers = {
         let cssModule, globalProperties;
         // public $xxx properties
         if (publicGetter) {
-            if (key === '$attrs') {
-                _reactivity.track(instance, "get" /* GET */ , key);
-                markAttrsAccessed();
-            }
+            if (key === '$attrs') _reactivity.track(instance, "get" /* GET */ , key);
             return publicGetter(instance);
         } else if (// css module (injected by vue-loader)
         (cssModule = type.__cssModules) && (cssModule = cssModule[key])) return cssModule;
@@ -6721,29 +6080,13 @@ const PublicInstanceProxyHandlers = {
             accessCache[key] = 3 /* CONTEXT */ ;
             return ctx[key];
         } else if (globalProperties = appContext.config.globalProperties, _shared.hasOwn(globalProperties, key)) return globalProperties[key];
-        else if (currentRenderingInstance && (!_shared.isString(key) || // #1091 avoid internal isRef/isVNode checks on component instance leading
-        // to infinite warning loop
-        key.indexOf('__v') !== 0)) {
-            if (data !== _shared.EMPTY_OBJ && (key[0] === '$' || key[0] === '_') && _shared.hasOwn(data, key)) warn(`Property ${JSON.stringify(key)} must be accessed via $data because it starts with a reserved ` + `character ("$" or "_") and is not proxied on the render context.`);
-            else if (instance === currentRenderingInstance) warn(`Property ${JSON.stringify(key)} was accessed during render ` + `but is not defined on instance.`);
-        }
     },
     set ({ _: instance  }, key, value) {
         const { data , setupState , ctx  } = instance;
         if (setupState !== _shared.EMPTY_OBJ && _shared.hasOwn(setupState, key)) setupState[key] = value;
         else if (data !== _shared.EMPTY_OBJ && _shared.hasOwn(data, key)) data[key] = value;
-        else if (_shared.hasOwn(instance.props, key)) {
-            warn(`Attempting to mutate prop "${key}". Props are readonly.`, instance);
-            return false;
-        }
-        if (key[0] === '$' && key.slice(1) in instance) {
-            warn(`Attempting to mutate public property "${key}". ` + `Properties starting with $ are reserved and readonly.`, instance);
-            return false;
-        } else if (key in instance.appContext.config.globalProperties) Object.defineProperty(ctx, key, {
-            enumerable: true,
-            configurable: true,
-            value
-        });
+        else if (_shared.hasOwn(instance.props, key)) return false;
+        if (key[0] === '$' && key.slice(1) in instance) return false;
         else ctx[key] = value;
         return true;
     },
@@ -6752,10 +6095,7 @@ const PublicInstanceProxyHandlers = {
         return accessCache[key] !== undefined || data !== _shared.EMPTY_OBJ && _shared.hasOwn(data, key) || setupState !== _shared.EMPTY_OBJ && _shared.hasOwn(setupState, key) || (normalizedProps = propsOptions[0]) && _shared.hasOwn(normalizedProps, key) || _shared.hasOwn(ctx, key) || _shared.hasOwn(publicPropertiesMap, key) || _shared.hasOwn(appContext.config.globalProperties, key);
     }
 };
-PublicInstanceProxyHandlers.ownKeys = (target)=>{
-    warn(`Avoid app logic that relies on enumerating keys on a component instance. ` + `The keys will be empty in production mode to avoid performance overhead.`);
-    return Reflect.ownKeys(target);
-};
+var target1;
 const RuntimeCompiledPublicInstanceProxyHandlers = /*#__PURE__*/ _shared.extend({
 }, PublicInstanceProxyHandlers, {
     get (target, key) {
@@ -6765,7 +6105,6 @@ const RuntimeCompiledPublicInstanceProxyHandlers = /*#__PURE__*/ _shared.extend(
     },
     has (_, key) {
         const has = key[0] !== '_' && !_shared.isGloballyWhitelisted(key);
-        if (!has && PublicInstanceProxyHandlers.has(_, key)) warn(`Property ${JSON.stringify(key)} should not start with _ which is a reserved prefix for Vue internals.`);
         return has;
     }
 });
@@ -6898,7 +6237,9 @@ function createComponentInstance(vnode, parent, suspense) {
         ec: null,
         sp: null
     };
-    instance.ctx = createDevRenderContext(instance);
+    instance.ctx = {
+        _: instance
+    };
     instance.root = parent ? parent.root : instance;
     instance.emit = emit.bind(null, instance);
     // apply custom element special handling
@@ -6937,22 +6278,11 @@ function setupComponent(instance, isSSR = false) {
 }
 function setupStatefulComponent(instance, isSSR) {
     const Component = instance.type;
-    if (Component.name) validateComponentName(Component.name, instance.appContext.config);
-    if (Component.components) {
-        const names = Object.keys(Component.components);
-        for(let i = 0; i < names.length; i++)validateComponentName(names[i], instance.appContext.config);
-    }
-    if (Component.directives) {
-        const names = Object.keys(Component.directives);
-        for(let i = 0; i < names.length; i++)validateDirectiveName(names[i]);
-    }
-    if (Component.compilerOptions && isRuntimeOnly()) warn(`"compilerOptions" is only supported when using a build of Vue that ` + `includes the runtime compiler. Since you are using a runtime-only ` + `build, the options should be passed via your build tool config instead.`);
     // 0. create render proxy property access cache
     instance.accessCache = Object.create(null);
     // 1. create public instance / render proxy
     // also mark it raw so it's never observed
     instance.proxy = _reactivity.markRaw(new Proxy(instance.ctx, PublicInstanceProxyHandlers));
-    exposePropsOnRenderContext(instance);
     // 2. call setup()
     const { setup  } = Component;
     if (setup) {
@@ -6960,7 +6290,7 @@ function setupStatefulComponent(instance, isSSR) {
         setCurrentInstance(instance);
         _reactivity.pauseTracking();
         const setupResult = callWithErrorHandling(setup, instance, 0 /* SETUP_FUNCTION */ , [
-            _reactivity.shallowReadonly(instance.props),
+            instance.props,
             setupContext
         ]);
         _reactivity.resetTracking();
@@ -6982,11 +6312,11 @@ function setupStatefulComponent(instance, isSSR) {
 function handleSetupResult(instance, setupResult, isSSR) {
     if (_shared.isFunction(setupResult)) instance.render = setupResult;
     else if (_shared.isObject(setupResult)) {
-        if (isVNode(setupResult)) warn(`setup() should not return VNodes directly - ` + `return a render function instead.`);
-        instance.devtoolsRawSetupState = setupResult;
+        // setup returned bindings.
+        // assuming a render function compiled from template is present.
+        if (__VUE_PROD_DEVTOOLS__) instance.devtoolsRawSetupState = setupResult;
         instance.setupState = _reactivity.proxyRefs(setupResult);
-        exposeSetupStateOnRenderContext(instance);
-    } else if (setupResult !== undefined) warn(`setup() should return an object. Received: ${setupResult === null ? 'null' : typeof setupResult}`);
+    }
     finishComponentSetup(instance, isSSR);
 }
 let compile;
@@ -7011,7 +6341,6 @@ function finishComponentSetup(instance, isSSR, skipOptions) {
         if (compile && !Component.render) {
             const template = Component.template;
             if (template) {
-                startMeasure(instance, `compile`);
                 const { isCustomElement , compilerOptions  } = instance.appContext.config;
                 const { delimiters , compilerOptions: componentCompilerOptions  } = Component;
                 const finalCompilerOptions = _shared.extend(_shared.extend({
@@ -7019,7 +6348,6 @@ function finishComponentSetup(instance, isSSR, skipOptions) {
                     delimiters
                 }, compilerOptions), componentCompilerOptions);
                 Component.render = compile(template, finalCompilerOptions);
-                endMeasure(instance, `compile`);
             }
         }
         instance.render = Component.render || _shared.NOOP;
@@ -7036,52 +6364,30 @@ function finishComponentSetup(instance, isSSR, skipOptions) {
         _reactivity.resetTracking();
         unsetCurrentInstance();
     }
-    // warn missing template/render
-    // the runtime compilation of template in SSR is done by server-render
-    if (!Component.render && instance.render === _shared.NOOP && !isSSR) {
-        /* istanbul ignore if */ if (!compile && Component.template) warn(`Component provided template option but ` + `runtime compilation is not supported in this build of Vue.` + ` Configure your bundler to alias "vue" to "vue/dist/vue.esm-bundler.js".`);
-        else warn(`Component is missing template or render function.`);
-    }
 }
 function createAttrsProxy(instance) {
     return new Proxy(instance.attrs, {
         get (target, key) {
-            markAttrsAccessed();
             _reactivity.track(instance, "get" /* GET */ , '$attrs');
             return target[key];
-        },
-        set () {
-            warn(`setupContext.attrs is readonly.`);
-            return false;
-        },
-        deleteProperty () {
-            warn(`setupContext.attrs is readonly.`);
-            return false;
         }
     });
 }
 function createSetupContext(instance) {
     const expose = (exposed)=>{
-        if (instance.exposed) warn(`expose() should be called only once per setup().`);
         instance.exposed = exposed || {
         };
     };
     let attrs;
-    // We use getters in dev in case libs like test-utils overwrite instance
-    // properties (overwrites should not be done in prod)
-    return Object.freeze({
+    var event, args;
+    return {
         get attrs () {
             return attrs || (attrs = createAttrsProxy(instance));
         },
-        get slots () {
-            return _reactivity.shallowReadonly(instance.slots);
-        },
-        get emit () {
-            return (event, ...args)=>instance.emit(event, ...args)
-            ;
-        },
+        slots: instance.slots,
+        emit: instance.emit,
         expose
-    });
+    };
 }
 function getExposeProxy(instance) {
     if (instance.exposed) return instance.exposeProxy || (instance.exposeProxy = new Proxy(_reactivity.proxyRefs(_reactivity.markRaw(instance.exposed)), {
@@ -7286,7 +6592,7 @@ function handleError(err, instance, type, throwInDev = true) {
         // the exposed instance is the render proxy to keep it consistent with 2.x
         const exposedInstance = instance.proxy;
         // in production the hook receives only the error code
-        const errorInfo = ErrorTypeStrings[type];
+        const errorInfo = type;
         while(cur){
             const errorCapturedHooks = cur.ec;
             if (errorCapturedHooks) for(let i = 0; i < errorCapturedHooks.length; i++){
@@ -7308,15 +6614,8 @@ function handleError(err, instance, type, throwInDev = true) {
     logError(err, type, contextVNode, throwInDev);
 }
 function logError(err, type, contextVNode, throwInDev = true) {
-    {
-        const info = ErrorTypeStrings[type];
-        if (contextVNode) pushWarningContext(contextVNode);
-        warn(`Unhandled error${info ? ` during execution of ${info}` : ``}`);
-        if (contextVNode) popWarningContext();
-        // crash in dev by default so it's more noticeable
-        if (throwInDev) throw err;
-        else console.error(err);
-    }
+    // recover in prod to reduce the impact on end-user
+    console.error(err);
 }
 let isFlushing = false;
 let isFlushPending = false;
@@ -7396,11 +6695,7 @@ function flushPreFlushCbs(seen, parentJob = null) {
             ...new Set(pendingPreFlushCbs)
         ];
         pendingPreFlushCbs.length = 0;
-        seen = seen || new Map();
-        for(preFlushIndex = 0; preFlushIndex < activePreFlushCbs.length; preFlushIndex++){
-            if (checkRecursiveUpdates(seen, activePreFlushCbs[preFlushIndex])) continue;
-            activePreFlushCbs[preFlushIndex]();
-        }
+        for(preFlushIndex = 0; preFlushIndex < activePreFlushCbs.length; preFlushIndex++)activePreFlushCbs[preFlushIndex]();
         activePreFlushCbs = null;
         preFlushIndex = 0;
         currentPreFlushParentJob = null;
@@ -7420,13 +6715,9 @@ function flushPostFlushCbs(seen) {
             return;
         }
         activePostFlushCbs = deduped;
-        seen = seen || new Map();
         activePostFlushCbs.sort((a, b)=>getId(a) - getId(b)
         );
-        for(postFlushIndex = 0; postFlushIndex < activePostFlushCbs.length; postFlushIndex++){
-            if (checkRecursiveUpdates(seen, activePostFlushCbs[postFlushIndex])) continue;
-            activePostFlushCbs[postFlushIndex]();
-        }
+        for(postFlushIndex = 0; postFlushIndex < activePostFlushCbs.length; postFlushIndex++)activePostFlushCbs[postFlushIndex]();
         activePostFlushCbs = null;
         postFlushIndex = 0;
     }
@@ -7436,7 +6727,6 @@ const getId = (job)=>job.id == null ? Infinity : job.id
 function flushJobs(seen) {
     isFlushPending = false;
     isFlushing = true;
-    seen = seen || new Map();
     flushPreFlushCbs(seen);
     // Sort queue before flush.
     // This ensures that:
@@ -7450,11 +6740,8 @@ function flushJobs(seen) {
     try {
         for(flushIndex = 0; flushIndex < queue.length; flushIndex++){
             const job = queue[flushIndex];
-            if (job && job.active !== false) {
-                if (checkRecursiveUpdates(seen, job)) continue;
-                // console.log(`running:`, job.id)
-                callWithErrorHandling(job, null, 14 /* SCHEDULER */ );
-            }
+            if (job && job.active !== false) // console.log(`running:`, job.id)
+            callWithErrorHandling(job, null, 14 /* SCHEDULER */ );
         }
     } finally{
         flushIndex = 0;
@@ -7484,30 +6771,23 @@ function watchEffect(effect, options) {
     return doWatch(effect, null, options);
 }
 function watchPostEffect(effect, options) {
-    return doWatch(effect, null, Object.assign(options || {
-    }, {
+    return doWatch(effect, null, {
         flush: 'post'
-    }));
+    });
 }
 function watchSyncEffect(effect, options) {
-    return doWatch(effect, null, Object.assign(options || {
-    }, {
+    return doWatch(effect, null, {
         flush: 'sync'
-    }));
+    });
 }
 // initial value for watchers to trigger on undefined initial values
 const INITIAL_WATCHER_VALUE = {
 };
 // implementation
 function watch(source, cb, options) {
-    if (!_shared.isFunction(cb)) warn(`\`watch(fn, options?)\` signature has been moved to a separate API. ` + `Use \`watchEffect(fn, options?)\` instead. \`watch\` now only ` + `supports \`watch(source, cb, options?) signature.`);
     return doWatch(source, cb, options);
 }
 function doWatch(source, cb, { immediate , deep , flush , onTrack , onTrigger  } = _shared.EMPTY_OBJ) {
-    if (!cb) {
-        if (immediate !== undefined) warn(`watch() "immediate" option is only respected when using the ` + `watch(source, callback, options?) signature.`);
-        if (deep !== undefined) warn(`watch() "deep" option is only respected when using the ` + `watch(source, callback, options?) signature.`);
-    }
     const warnInvalidSource = (s)=>{
         warn(`Invalid watch source: `, s, `A watch source can only be a getter/effect function, a ref, ` + `a reactive object, or an array of these types.`);
     };
@@ -7530,7 +6810,6 @@ function doWatch(source, cb, { immediate , deep , flush , onTrack , onTrigger  }
                 if (_reactivity.isRef(s)) return s.value;
                 else if (_reactivity.isReactive(s)) return traverse(s);
                 else if (_shared.isFunction(s)) return callWithErrorHandling(s, instance, 2 /* WATCH_GETTER */ );
-                else warnInvalidSource(s);
             })
         ;
     } else if (_shared.isFunction(source)) {
@@ -7545,10 +6824,7 @@ function doWatch(source, cb, { immediate , deep , flush , onTrack , onTrigger  }
                 onInvalidate
             ]);
         };
-    } else {
-        getter = _shared.NOOP;
-        warnInvalidSource(source);
-    }
+    } else getter = _shared.NOOP;
     if (cb && deep) {
         const baseGetter = getter;
         getter = ()=>traverse(baseGetter())
@@ -7596,8 +6872,6 @@ function doWatch(source, cb, { immediate , deep , flush , onTrack , onTrigger  }
         job();
     };
     const effect = new _reactivity.ReactiveEffect(getter, scheduler);
-    effect.onTrack = onTrack;
-    effect.onTrigger = onTrigger;
     // initial run
     if (cb) {
         if (immediate) job();
@@ -7648,9 +6922,6 @@ function traverse(value, seen = new Set()) {
     else if (_shared.isPlainObject(value)) for(const key in value)traverse(value[key], seen);
     return value;
 }
-Object.freeze({
-});
-Object.freeze([]);
 const isFunction = (val)=>typeof val === 'function'
 ;
 const isObject = (val)=>val !== null && typeof val === 'object'
@@ -7663,12 +6934,10 @@ const warnRuntimeUsage = (method)=>warn(`${method}() is a compiler-hint helper t
 ;
 // implementation
 function defineProps() {
-    warnRuntimeUsage(`defineProps`);
     return null;
 }
 // implementation
 function defineEmits() {
-    warnRuntimeUsage(`defineEmits`);
     return null;
 }
 /**
@@ -7683,7 +6952,6 @@ function defineEmits() {
  * This is only usable inside `<script setup>`, is compiled away in the
  * output and should **not** be actually called at runtime.
  */ function defineExpose(exposed) {
-    warnRuntimeUsage(`defineExpose`);
 }
 /**
  * Vue `<script setup>` compiler macro for providing props default values when
@@ -7703,7 +6971,6 @@ function defineEmits() {
  * This is only usable inside `<script setup>`, is compiled away in the output
  * and should **not** be actually called at runtime.
  */ function withDefaults(props, defaults) {
-    warnRuntimeUsage(`withDefaults`);
     return null;
 }
 function useSlots() {
@@ -7714,7 +6981,6 @@ function useAttrs() {
 }
 function getContext() {
     const i = getCurrentInstance();
-    if (!i) warn(`useContext() called without active instance.`);
     return i.setupContext || (i.setupContext = createSetupContext(i));
 }
 /**
@@ -7729,7 +6995,6 @@ props, defaults) {
         else if (val === null) props[key] = {
             default: defaults[key]
         };
-        else warn(`props default key "${key}" has no corresponding declaration.`);
     }
     return props;
 }
@@ -7752,7 +7017,6 @@ props, defaults) {
  * @internal
  */ function withAsyncContext(getAwaitable) {
     const ctx = getCurrentInstance();
-    if (!ctx) warn(`withAsyncContext called without active current instance. ` + `This is likely a bug.`);
     let awaitable = getAwaitable();
     unsetCurrentInstance();
     if (isPromise(awaitable)) awaitable = awaitable.catch((e)=>{
@@ -7785,7 +7049,7 @@ function h(type, propsOrChildren, children) {
         return createVNode(type, propsOrChildren, children);
     }
 }
-const ssrContextKey = Symbol(`ssrContext`);
+const ssrContextKey = Symbol(``);
 const useSSRContext = ()=>{
     {
         const ctx = inject(ssrContextKey);
@@ -7794,92 +7058,25 @@ const useSSRContext = ()=>{
     }
 };
 function initCustomFormatter() {
-    /* eslint-disable no-restricted-globals */ if (typeof window === 'undefined') return;
-    const vueStyle = {
-        style: 'color:#3ba776'
-    };
-    const numberStyle = {
-        style: 'color:#0b1bc9'
-    };
-    const stringStyle = {
-        style: 'color:#b62e24'
-    };
-    const keywordStyle = {
-        style: 'color:#9d288c'
-    };
-    // custom formatter for Chrome
-    // https://www.mattzeunert.com/2016/02/19/custom-chrome-devtools-object-formatters.html
-    const formatter = {
-        header (obj) {
-            // TODO also format ComponentPublicInstance & ctx.slots/attrs in setup
-            if (!_shared.isObject(obj)) return null;
-            if (obj.__isVue) return [
-                'div',
-                vueStyle,
-                `VueInstance`
-            ];
-            else if (_reactivity.isRef(obj)) return [
-                'div',
-                {
-                },
-                [
-                    'span',
-                    vueStyle,
-                    genRefFlag(obj)
-                ],
-                '<',
-                formatValue(obj.value),
-                `>`
-            ];
-            else if (_reactivity.isReactive(obj)) return [
-                'div',
-                {
-                },
-                [
-                    'span',
-                    vueStyle,
-                    'Reactive'
-                ],
-                '<',
-                formatValue(obj),
-                `>${_reactivity.isReadonly(obj) ? ` (readonly)` : ``}`
-            ];
-            else if (_reactivity.isReadonly(obj)) return [
-                'div',
-                {
-                },
-                [
-                    'span',
-                    vueStyle,
-                    'Readonly'
-                ],
-                '<',
-                formatValue(obj),
-                '>'
-            ];
-            return null;
-        },
-        hasBody (obj) {
-            return obj && obj.__isVue;
-        },
-        body (obj) {
-            if (obj && obj.__isVue) return [
-                'div',
-                {
-                },
-                ...formatInstance(obj.$)
-            ];
-        }
-    };
     function formatInstance(instance) {
         const blocks = [];
-        if (instance.type.props && instance.props) blocks.push(createInstanceBlock('props', _reactivity.toRaw(instance.props)));
-        if (instance.setupState !== _shared.EMPTY_OBJ) blocks.push(createInstanceBlock('setup', instance.setupState));
-        if (instance.data !== _shared.EMPTY_OBJ) blocks.push(createInstanceBlock('data', _reactivity.toRaw(instance.data)));
+        if (instance.type.props && instance.props) {
+            blocks.push(createInstanceBlock('props', _reactivity.toRaw(instance.props)));
+        }
+        if (instance.setupState !== _shared.EMPTY_OBJ) {
+            blocks.push(createInstanceBlock('setup', instance.setupState));
+        }
+        if (instance.data !== _shared.EMPTY_OBJ) {
+            blocks.push(createInstanceBlock('data', _reactivity.toRaw(instance.data)));
+        }
         const computed = extractKeys(instance, 'computed');
-        if (computed) blocks.push(createInstanceBlock('computed', computed));
+        if (computed) {
+            blocks.push(createInstanceBlock('computed', computed));
+        }
         const injected = extractKeys(instance, 'inject');
-        if (injected) blocks.push(createInstanceBlock('injected', injected));
+        if (injected) {
+            blocks.push(createInstanceBlock('injected', injected));
+        }
         blocks.push([
             'div',
             {
@@ -7903,11 +7100,13 @@ function initCustomFormatter() {
     function createInstanceBlock(type, target) {
         target = _shared.extend({
         }, target);
-        if (!Object.keys(target).length) return [
-            'span',
-            {
-            }
-        ];
+        if (!Object.keys(target).length) {
+            return [
+                'span',
+                {
+                }
+            ];
+        }
         return [
             'div',
             {
@@ -7942,57 +7141,76 @@ function initCustomFormatter() {
         ];
     }
     function formatValue(v, asRaw = true) {
-        if (typeof v === 'number') return [
-            'span',
-            numberStyle,
-            v
-        ];
-        else if (typeof v === 'string') return [
-            'span',
-            stringStyle,
-            JSON.stringify(v)
-        ];
-        else if (typeof v === 'boolean') return [
-            'span',
-            keywordStyle,
-            v
-        ];
-        else if (_shared.isObject(v)) return [
-            'object',
-            {
-                object: asRaw ? _reactivity.toRaw(v) : v
-            }
-        ];
-        else return [
-            'span',
-            stringStyle,
-            String(v)
-        ];
+        if (typeof v === 'number') {
+            return [
+                'span',
+                numberStyle,
+                v
+            ];
+        } else if (typeof v === 'string') {
+            return [
+                'span',
+                stringStyle,
+                JSON.stringify(v)
+            ];
+        } else if (typeof v === 'boolean') {
+            return [
+                'span',
+                keywordStyle,
+                v
+            ];
+        } else if (_shared.isObject(v)) {
+            return [
+                'object',
+                {
+                    object: asRaw ? _reactivity.toRaw(v) : v
+                }
+            ];
+        } else {
+            return [
+                'span',
+                stringStyle,
+                String(v)
+            ];
+        }
     }
     function extractKeys(instance, type) {
         const Comp = instance.type;
-        if (_shared.isFunction(Comp)) return;
+        if (_shared.isFunction(Comp)) {
+            return;
+        }
         const extracted = {
         };
-        for(const key in instance.ctx)if (isKeyOfType(Comp, key, type)) extracted[key] = instance.ctx[key];
+        for(const key in instance.ctx){
+            if (isKeyOfType(Comp, key, type)) {
+                extracted[key] = instance.ctx[key];
+            }
+        }
         return extracted;
     }
     function isKeyOfType(Comp, key, type) {
         const opts = Comp[type];
-        if (_shared.isArray(opts) && opts.includes(key) || _shared.isObject(opts) && key in opts) return true;
-        if (Comp.extends && isKeyOfType(Comp.extends, key, type)) return true;
+        if (_shared.isArray(opts) && opts.includes(key) || _shared.isObject(opts) && key in opts) {
+            return true;
+        }
+        if (Comp.extends && isKeyOfType(Comp.extends, key, type)) {
+            return true;
+        }
         if (Comp.mixins && Comp.mixins.some((m)=>isKeyOfType(m, key, type)
-        )) return true;
+        )) {
+            return true;
+        }
     }
     function genRefFlag(v) {
-        if (v._shallow) return `ShallowRef`;
-        if (v.effect) return `ComputedRef`;
+        if (v._shallow) {
+            return `ShallowRef`;
+        }
+        if (v.effect) {
+            return `ComputedRef`;
+        }
         return `Ref`;
     }
-    if (window.devtoolsFormatters) window.devtoolsFormatters.push(formatter);
-    else window.devtoolsFormatters = [
-        formatter
-    ];
+    return;
 }
 function withMemo(memo, render, cache, index) {
     const cached = cache[index];
@@ -8033,7 +7251,7 @@ const _ssrUtils = {
  * @internal only exposed in compat builds.
  */ const compatUtils = null;
 
-},{"@vue/reactivity":"8HAvF","@vue/shared":"8bcX0","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"8HAvF":[function(require,module,exports) {
+},{"@vue/reactivity":"j9cvP","@vue/shared":"jjDCJ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"j9cvP":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "EffectScope", ()=>EffectScope
@@ -8125,7 +7343,6 @@ class EffectScope {
         } finally{
             this.off();
         }
-        else warn(`cannot run an inactive effect scope.`);
     }
     on() {
         if (this.active) {
@@ -8172,7 +7389,6 @@ function getCurrentScope() {
 }
 function onScopeDispose(fn) {
     if (activeEffectScope) activeEffectScope.cleanups.push(fn);
-    else warn(`onScopeDispose() is called when there is no active effect scope` + ` to be associated with.`);
 }
 const createDep = (effects)=>{
     const dep = new Set(effects);
@@ -8213,8 +7429,8 @@ let trackOpBit = 1;
  */ const maxMarkerBits = 30;
 const effectStack = [];
 let activeEffect;
-const ITERATE_KEY = Symbol('iterate');
-const MAP_KEY_ITERATE_KEY = Symbol('Map key iterate');
+const ITERATE_KEY = Symbol('');
+const MAP_KEY_ITERATE_KEY = Symbol('');
 class ReactiveEffect {
     constructor(fn, scheduler = null, scope){
         this.fn = fn;
@@ -8291,12 +7507,7 @@ function track(target, type, key) {
     if (!depsMap) targetMap.set(target, depsMap = new Map());
     let dep = depsMap.get(key);
     if (!dep) depsMap.set(key, dep = createDep());
-    const eventInfo = {
-        effect: activeEffect,
-        target,
-        type,
-        key
-    };
+    const eventInfo = undefined;
     trackEffects(dep, eventInfo);
 }
 function isTracking() {
@@ -8314,9 +7525,6 @@ function trackEffects(dep, debuggerEventExtraInfo) {
     if (shouldTrack) {
         dep.add(activeEffect);
         activeEffect.deps.push(dep);
-        if (activeEffect.onTrack) activeEffect.onTrack(Object.assign({
-            effect: activeEffect
-        }, debuggerEventExtraInfo));
     }
 }
 function trigger(target, type, key, newValue, oldValue, oldTarget) {
@@ -8355,20 +7563,13 @@ function trigger(target, type, key, newValue, oldValue, oldTarget) {
                 break;
         }
     }
-    const eventInfo = {
-        target,
-        type,
-        key,
-        newValue,
-        oldValue,
-        oldTarget
-    };
+    const eventInfo = undefined;
     if (deps.length === 1) {
-        if (deps[0]) triggerEffects(deps[0], eventInfo);
+        if (deps[0]) triggerEffects(deps[0]);
     } else {
         const effects = [];
         for (const dep of deps)if (dep) effects.push(...dep);
-        triggerEffects(createDep(effects), eventInfo);
+        triggerEffects(createDep(effects));
     }
 }
 function triggerEffects(dep, debuggerEventExtraInfo) {
@@ -8376,9 +7577,6 @@ function triggerEffects(dep, debuggerEventExtraInfo) {
     for (const effect of _shared.isArray(dep) ? dep : [
         ...dep
     ])if (effect !== activeEffect || effect.allowRecurse) {
-        if (effect.onTrigger) effect.onTrigger(_shared.extend({
-            effect
-        }, debuggerEventExtraInfo));
         if (effect.scheduler) effect.scheduler();
         else effect.run();
     }
@@ -8497,11 +7695,9 @@ const mutableHandlers = {
 const readonlyHandlers = {
     get: readonlyGet,
     set (target, key) {
-        console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
         return true;
     },
     deleteProperty (target, key) {
-        console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
         return true;
     }
 };
@@ -8573,7 +7769,7 @@ function set$1(key, value) {
     if (!hadKey) {
         key = toRaw(key);
         hadKey = has.call(target, key);
-    } else checkIdentityKeys(target, has, key);
+    }
     const oldValue = get.call(target, key);
     target.set(key, value);
     if (!hadKey) trigger(target, "add" /* ADD */ , key, value);
@@ -8587,7 +7783,7 @@ function deleteEntry(key) {
     if (!hadKey) {
         key = toRaw(key);
         hadKey = has.call(target, key);
-    } else checkIdentityKeys(target, has, key);
+    }
     const oldValue = get ? get.call(target, key) : undefined;
     // forward the operation before queueing reactions
     const result = target.delete(key);
@@ -8597,7 +7793,7 @@ function deleteEntry(key) {
 function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = _shared.isMap(target) ? new Map(target) : new Set(target);
+    const oldTarget = undefined;
     // forward the operation before queueing reactions
     const result = target.clear();
     if (hadItems) trigger(target, "clear" /* CLEAR */ , undefined, undefined, oldTarget);
@@ -8654,10 +7850,6 @@ function createIterableMethod(method, isReadonly, isShallow) {
 }
 function createReadonlyMethod(type) {
     return function(...args) {
-        {
-            const key = args[0] ? `on key "${args[0]}" ` : ``;
-            console.warn(`${_shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
-        }
         return type === "delete" /* DELETE */  ? false : this;
     };
 }
@@ -8818,10 +8010,7 @@ function reactive(target) {
     return createReactiveObject(target, true, shallowReadonlyHandlers, shallowReadonlyCollectionHandlers, shallowReadonlyMap);
 }
 function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
-    if (!_shared.isObject(target)) {
-        console.warn(`value cannot be made reactive: ${String(target)}`);
-        return target;
-    }
+    if (!_shared.isObject(target)) return target;
     // target is already a Proxy, return it.
     // exception: calling readonly() on a reactive object
     if (target["__v_raw" /* RAW */ ] && !(isReadonly && target["__v_isReactive" /* IS_REACTIVE */ ])) return target;
@@ -8857,21 +8046,12 @@ function trackRefValue(ref) {
     if (isTracking()) {
         ref = toRaw(ref);
         if (!ref.dep) ref.dep = createDep();
-        trackEffects(ref.dep, {
-            target: ref,
-            type: "get" /* GET */ ,
-            key: 'value'
-        });
+        trackEffects(ref.dep);
     }
 }
 function triggerRefValue(ref, newVal) {
     ref = toRaw(ref);
-    if (ref.dep) triggerEffects(ref.dep, {
-        target: ref,
-        type: "set" /* SET */ ,
-        key: 'value',
-        newValue: newVal
-    });
+    if (ref.dep) triggerEffects(ref.dep);
 }
 const convert = (val)=>_shared.isObject(val) ? reactive(val) : val
 ;
@@ -8910,7 +8090,7 @@ function createRef(rawValue, shallow) {
     return new RefImpl(rawValue, shallow);
 }
 function triggerRef(ref) {
-    triggerRefValue(ref, ref.value);
+    triggerRefValue(ref, void 0);
 }
 function unref(ref) {
     return isRef(ref) ? ref.value : ref;
@@ -8950,7 +8130,6 @@ function customRef(factory) {
     return new CustomRefImpl(factory);
 }
 function toRefs(object) {
-    if (!isProxy(object)) console.warn(`toRefs() expects a reactive object but received a plain one.`);
     const ret = _shared.isArray(object) ? new Array(object.length) : {
     };
     for(const key in object)ret[key] = toRef(object, key);
@@ -9006,18 +8185,12 @@ function computed(getterOrOptions, debugOptions) {
     let setter;
     if (_shared.isFunction(getterOrOptions)) {
         getter = getterOrOptions;
-        setter = ()=>{
-            console.warn('Write operation failed: computed value is readonly');
-        };
+        setter = _shared.NOOP;
     } else {
         getter = getterOrOptions.get;
         setter = getterOrOptions.set;
     }
     const cRef = new ComputedRefImpl(getter, setter, _shared.isFunction(getterOrOptions) || !getterOrOptions.set);
-    if (debugOptions) {
-        cRef.effect.onTrack = debugOptions.onTrack;
-        cRef.effect.onTrigger = debugOptions.onTrigger;
-    }
     return cRef;
 }
 var _a;
@@ -9086,7 +8259,7 @@ function deferredComputed(getter) {
     return new DeferredComputedRefImpl(getter);
 }
 
-},{"@vue/shared":"8bcX0","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"8bcX0":[function(require,module,exports) {
+},{"@vue/shared":"jjDCJ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"jjDCJ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "EMPTY_ARR", ()=>EMPTY_ARR
@@ -9515,9 +8688,9 @@ const replacer = (_key, val)=>{
     'optionalChaining',
     'nullishCoalescingOperator'
 ];
-const EMPTY_OBJ = Object.freeze({
-});
-const EMPTY_ARR = Object.freeze([]);
+const EMPTY_OBJ = {
+};
+const EMPTY_ARR = [];
 const NOOP = ()=>{
 };
 /**
@@ -9618,7 +8791,7 @@ const getGlobalThis = ()=>{
     });
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"JacNc":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"4N8i7":[function(require,module,exports) {
 exports.interopDefault = function(a) {
     return a && a.__esModule ? a : {
         default: a
@@ -9650,7 +8823,7 @@ exports.export = function(dest, destName, get) {
     });
 };
 
-},{}],"jyliN":[function(require,module,exports) {
+},{}],"lJSMA":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 let script;
@@ -9663,18 +8836,9 @@ let initialize = ()=>{
     script.__file = "/Users/baku/Sites/tethr/demo/App.vue";
 };
 initialize();
-if (module.hot) {
-    script.__hmrId = '848d49-hmr';
-    module.hot.accept(()=>{
-        setTimeout(()=>{
-            initialize();
-            if (!__VUE_HMR_RUNTIME__.createRecord('848d49-hmr', script)) __VUE_HMR_RUNTIME__.reload('848d49-hmr', script);
-        }, 0);
-    });
-}
 exports.default = script;
 
-},{"script:./App.vue":"dTiE1","template:./App.vue":"c5z27","custom:./App.vue":"kWNV3","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"dTiE1":[function(require,module,exports) {
+},{"script:./App.vue":"kLmZv","template:./App.vue":"6vloM","custom:./App.vue":"gjUnI","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"kLmZv":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _vue = require("vue");
@@ -9690,7 +8854,7 @@ exports.default = _vue.defineComponent({
     }
 });
 
-},{"vue":"eg0LR","./useTethr":"jETAO","./TethrConfig.vue":"eapFv","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"jETAO":[function(require,module,exports) {
+},{"vue":"h7dRr","./useTethr":"k7q4R","./TethrConfig.vue":"dFXd9","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"k7q4R":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "useTethrConfig", ()=>useTethrConfig
@@ -9827,7 +8991,7 @@ function useTethr() {
     };
 }
 
-},{"file-saver":"9od9o","vue":"eg0LR","~/src":"4aleK","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"9od9o":[function(require,module,exports) {
+},{"file-saver":"1oiUH","vue":"h7dRr","~/src":"7Dowi","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"1oiUH":[function(require,module,exports) {
 var global = arguments[3];
 (function(a, b) {
     if ("function" == typeof define && define.amd) define([], b);
@@ -9909,7 +9073,7 @@ var global = arguments[3];
     f.saveAs = g.saveAs = g, "undefined" != typeof module && (module.exports = g);
 });
 
-},{}],"4aleK":[function(require,module,exports) {
+},{}],"7Dowi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "detectTethr", ()=>_detectTethr.detectTethr
@@ -9957,7 +9121,7 @@ var _configs = require("../src/configs");
 var _detectTethr = require("./detectTethr");
 var _tethr = require("./Tethr");
 
-},{"../src/configs":"2uyxY","./detectTethr":"jnKtw","./Tethr":"kne57","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"2uyxY":[function(require,module,exports) {
+},{"../src/configs":"6m2W9","./detectTethr":"aaHzO","./Tethr":"cDt1x","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"6m2W9":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ConfigForDevicePropTable", ()=>ConfigForDevicePropTable
@@ -10109,7 +9273,7 @@ function computeShutterSpeedSeconds(ss) {
     return parseFloat(ss);
 }
 
-},{"bim":"gfJhS","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"gfJhS":[function(require,module,exports) {
+},{"bim":"fiCRV","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"fiCRV":[function(require,module,exports) {
 "use strict";
 var __importDefault = this && this.__importDefault || function(mod) {
     return mod && mod.__esModule ? mod : {
@@ -10135,7 +9299,7 @@ Object.defineProperty(exports, "WeakBiMap", {
     }
 });
 
-},{"./BiMap":"731Hr","./WeakBiMap":"2yWkl"}],"731Hr":[function(require,module,exports) {
+},{"./BiMap":"JYjTI","./WeakBiMap":"ghuQO"}],"JYjTI":[function(require,module,exports) {
 "use strict";
 var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
     if (kind === "m") throw new TypeError("Private method is not writable");
@@ -10227,7 +9391,7 @@ class BiMap {
 }
 exports.default = BiMap;
 
-},{}],"2yWkl":[function(require,module,exports) {
+},{}],"ghuQO":[function(require,module,exports) {
 "use strict";
 var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
     if (kind === "m") throw new TypeError("Private method is not writable");
@@ -10297,7 +9461,7 @@ class WeakBiMap {
 }
 exports.default = WeakBiMap;
 
-},{}],"jnKtw":[function(require,module,exports) {
+},{}],"aaHzO":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "detectTethr", ()=>detectTethr
@@ -10351,7 +9515,7 @@ async function detectTethr({ strategy ='first'  } = {
     return tethrs;
 }
 
-},{"./TethrPTPUSB":"CiLrY","./TethrWebcam":"6dNCk","./usb":"9G6Nl","./util":"kykCo","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"CiLrY":[function(require,module,exports) {
+},{"./TethrPTPUSB":"afXnW","./TethrWebcam":"4lCec","./usb":"deIMF","./util":"id2fi","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"afXnW":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "initTethrUSBPTP", ()=>initTethrUSBPTP
@@ -10387,7 +9551,7 @@ async function initTethrUSBPTP(usb) {
     return tethr;
 }
 
-},{"../PTPDevice":"9n0gz","./TethrPanasonic":"fvVqX","./TethrPTPUSB":"7yZjY","./TethrRicohTheta":"dU2Xp","./TethrSigma":"aoRyW","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"9n0gz":[function(require,module,exports) {
+},{"../PTPDevice":"l1a6P","./TethrPanasonic":"9JW6y","./TethrPTPUSB":"anSbZ","./TethrRicohTheta":"4nPBX","./TethrSigma":"ilHr2","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"l1a6P":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "PTPDevice", ()=>PTPDevice
@@ -10676,7 +9840,7 @@ class PTPDevice extends _eventemitter3Default.default {
     }
 }
 
-},{"eventemitter3":"gTdcb","promise-queue":"5c6R8","./PTPDatacode":"gzikr","./PTPDataView":"6vBdq","./usb":"9G6Nl","./util":"kykCo","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"gTdcb":[function(require,module,exports) {
+},{"eventemitter3":"5J6rp","promise-queue":"a5zvq","./PTPDatacode":"dzGjw","./PTPDataView":"2SXC8","./usb":"deIMF","./util":"id2fi","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"5J6rp":[function(require,module,exports) {
 'use strict';
 var has = Object.prototype.hasOwnProperty, prefix = '~';
 /**
@@ -10935,10 +10099,10 @@ EventEmitter.EventEmitter = EventEmitter;
 //
 if ('undefined' !== typeof module) module.exports = EventEmitter;
 
-},{}],"5c6R8":[function(require,module,exports) {
+},{}],"a5zvq":[function(require,module,exports) {
 module.exports = require('./lib');
 
-},{"./lib":"7DCF3"}],"7DCF3":[function(require,module,exports) {
+},{"./lib":"h2ZuS"}],"h2ZuS":[function(require,module,exports) {
 /* global define, Promise */ (function(root, factory) {
     if (typeof module === 'object' && module.exports && typeof require === 'function') // CommonJS
     module.exports = factory();
@@ -11084,7 +10248,7 @@ module.exports = require('./lib');
     return Queue;
 });
 
-},{}],"gzikr":[function(require,module,exports) {
+},{}],"dzGjw":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "OpCode", ()=>OpCode
@@ -11313,7 +10477,7 @@ var PTPAccessCapabilityCode;
 })(PTPAccessCapabilityCode || (PTPAccessCapabilityCode = {
 }));
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"6vBdq":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"2SXC8":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 /**
@@ -11486,7 +10650,7 @@ class PTPDataView {
     }
 }
 
-},{"date-format-parse":"ixf2Q","lodash":"f4H2C","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"ixf2Q":[function(require,module,exports) {
+},{"date-format-parse":"d61HT","lodash":"4nfxA","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"d61HT":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "format", ()=>_format.format
@@ -11505,7 +10669,7 @@ var _format = require("./format");
 var _parse = require("./parse");
 var _util = require("./util");
 
-},{"./format":"KlW1w","./parse":"d9X7h","./util":"fXRvy","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"KlW1w":[function(require,module,exports) {
+},{"./format":"ijs77","./parse":"6uLNN","./util":"lsbHV","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"ijs77":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "format", ()=>format
@@ -11685,7 +10849,7 @@ function format(val, str) {
     });
 }
 
-},{"./util":"fXRvy","./locale/en":"dbb2x","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"fXRvy":[function(require,module,exports) {
+},{"./util":"lsbHV","./locale/en":"ko4YV","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"lsbHV":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "isDate", ()=>isDate
@@ -11749,7 +10913,7 @@ function getWeek(value) {
     return Math.round(diff / 604800000) + 1;
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"dbb2x":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"ko4YV":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var locale = {
@@ -11813,7 +10977,7 @@ var locale = {
 };
 exports.default = locale;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"d9X7h":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"6uLNN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "parse", ()=>parse
@@ -12173,7 +11337,7 @@ function parse(str, format) {
     }
 }
 
-},{"./locale/en":"dbb2x","./util":"fXRvy","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"f4H2C":[function(require,module,exports) {
+},{"./locale/en":"ko4YV","./util":"lsbHV","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"4nfxA":[function(require,module,exports) {
 var global = arguments[3];
 (function() {
     /** Used as a safe reference for `undefined` in pre-ES5 environments. */ var undefined;
@@ -26438,7 +25602,7 @@ var global = arguments[3];
     root._ = _;
 }).call(this);
 
-},{}],"9G6Nl":[function(require,module,exports) {
+},{}],"deIMF":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "usb", ()=>usb
@@ -26450,7 +25614,7 @@ if ('navigator' in globalThis) {
 if ('process' in globalThis) _usb = eval('require')('webusb').usb;
 const usb = _usb;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"kykCo":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"id2fi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "toHexString", ()=>toHexString
@@ -26501,7 +25665,7 @@ function sliceJpegData(buffer) {
     return buffer.slice(start, end);
 }
 
-},{"lodash":"f4H2C","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"fvVqX":[function(require,module,exports) {
+},{"lodash":"4nfxA","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"9JW6y":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TethrPanasonic", ()=>TethrPanasonic
@@ -27495,7 +26659,7 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
     }
 }
 
-},{"bim":"gfJhS","lodash":"f4H2C","../configs":"2uyxY","../PTPDatacode":"gzikr","../PTPDataView":"6vBdq","../Tethr":"kne57","../util":"kykCo","./TethrPTPUSB":"7yZjY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"kne57":[function(require,module,exports) {
+},{"bim":"fiCRV","lodash":"4nfxA","../configs":"6m2W9","../PTPDatacode":"dzGjw","../PTPDataView":"2SXC8","../Tethr":"cDt1x","../util":"id2fi","./TethrPTPUSB":"anSbZ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"cDt1x":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "createUnsupportedConfigDesc", ()=>createUnsupportedConfigDesc
@@ -28205,7 +27369,7 @@ class Tethr extends _eventemitter3Default.default {
     }
 }
 
-},{"eventemitter3":"gTdcb","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"7yZjY":[function(require,module,exports) {
+},{"eventemitter3":"5J6rp","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"anSbZ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TethrPTPUSB", ()=>TethrPTPUSB
@@ -28790,7 +27954,7 @@ class TethrPTPUSB extends _tethr.Tethr {
     }
 }
 
-},{"lodash":"f4H2C","../configs":"2uyxY","../PTPDatacode":"gzikr","../PTPDataView":"6vBdq","../Tethr":"kne57","../util":"kykCo","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"dU2Xp":[function(require,module,exports) {
+},{"lodash":"4nfxA","../configs":"6m2W9","../PTPDatacode":"dzGjw","../PTPDataView":"2SXC8","../Tethr":"cDt1x","../util":"id2fi","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"4nPBX":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TethrRicohTheta", ()=>TethrRicohTheta
@@ -28959,7 +28123,7 @@ class TethrRicohTheta extends _tethrPTPUSB.TethrPTPUSB {
     }
 }
 
-},{"bim":"gfJhS","../configs":"2uyxY","../PTPDatacode":"gzikr","./TethrPTPUSB":"7yZjY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"aoRyW":[function(require,module,exports) {
+},{"bim":"fiCRV","../configs":"6m2W9","../PTPDatacode":"dzGjw","./TethrPTPUSB":"anSbZ","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"ilHr2":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TethrSigma", ()=>TethrSigma
@@ -31334,7 +30498,7 @@ class TethrSigma extends _.TethrPTPUSB {
     }
 }
 
-},{"bim":"gfJhS","lodash":"f4H2C","sleep-promise":"8dIiK","../configs":"2uyxY","../IFD":"9fLFP","../PTPDatacode":"gzikr","../PTPDataView":"6vBdq","../Tethr":"kne57","../util":"kykCo",".":"CiLrY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"8dIiK":[function(require,module,exports) {
+},{"bim":"fiCRV","lodash":"4nfxA","sleep-promise":"9oSTN","../configs":"6m2W9","../IFD":"c37rf","../PTPDatacode":"dzGjw","../PTPDataView":"2SXC8","../Tethr":"cDt1x","../util":"id2fi",".":"afXnW","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"9oSTN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var e = setTimeout;
@@ -31360,7 +30524,7 @@ function n(e) {
 }
 exports.default = n;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"9fLFP":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"c37rf":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IFDType", ()=>IFDType
@@ -31457,7 +30621,7 @@ function decodeIFD(data, scheme) {
     return result;
 }
 
-},{"lodash":"f4H2C","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"6dNCk":[function(require,module,exports) {
+},{"lodash":"4nfxA","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"4lCec":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "initTethrWebcam", ()=>initTethrWebcam
@@ -31687,7 +30851,7 @@ class TethrWebcam extends _tethr.Tethr {
     }
 }
 
-},{"./Tethr":"kne57","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc","bim":"gfJhS"}],"eapFv":[function(require,module,exports) {
+},{"bim":"fiCRV","./Tethr":"cDt1x","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"dFXd9":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 let script;
@@ -31700,18 +30864,9 @@ let initialize = ()=>{
     script.__file = "/Users/baku/Sites/tethr/demo/TethrConfig.vue";
 };
 initialize();
-if (module.hot) {
-    script.__hmrId = '328722-hmr';
-    module.hot.accept(()=>{
-        setTimeout(()=>{
-            initialize();
-            if (!__VUE_HMR_RUNTIME__.createRecord('328722-hmr', script)) __VUE_HMR_RUNTIME__.reload('328722-hmr', script);
-        }, 0);
-    });
-}
 exports.default = script;
 
-},{"script:./TethrConfig.vue":"2Rn7p","template:./TethrConfig.vue":"252Di","custom:./TethrConfig.vue":"1z1o2","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"2Rn7p":[function(require,module,exports) {
+},{"script:./TethrConfig.vue":"6T5oE","template:./TethrConfig.vue":"cenPQ","custom:./TethrConfig.vue":"gcQ43","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"6T5oE":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _vue = require("vue");
@@ -31749,7 +30904,7 @@ exports.default = _vue.defineComponent({
     }
 });
 
-},{"vue":"eg0LR","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"252Di":[function(require,module,exports) {
+},{"vue":"h7dRr","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"cenPQ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "render", ()=>render
@@ -31780,7 +30935,7 @@ function render(_ctx, _cache) {
     return _ctx.config.value !== null ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
         key: 0
     }, [
-        _vue.createElementVNode("dt", null, _vue.toDisplayString(_ctx.label), 1 /* TEXT */ ),
+        _vue.createElementVNode("dt", null, _vue.toDisplayString(_ctx.label), 1),
         _vue.createElementVNode("dd", _hoisted_1, [
             _ctx.config.writable ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
                 key: 0
@@ -31799,29 +30954,26 @@ function render(_ctx, _cache) {
                             label: v,
                             value: i,
                             "data-index": i
-                        }, _vue.toDisplayString(v), 9 /* TEXT, PROPS */ , _hoisted_3);
-                    }), 128 /* KEYED_FRAGMENT */ ))
-                ], 40 /* PROPS, HYDRATE_EVENTS */ , _hoisted_2)) : _vue.createCommentVNode("v-if", true),
+                        }, _vue.toDisplayString(v), 9, _hoisted_3);
+                    }), 128))
+                ], 40, _hoisted_2)) : _vue.createCommentVNode("", true),
                 _ctx.config.option.type === 'range' ? (_vue.openBlock(), _vue.createElementBlock("input", {
                     key: 1,
                     type: "number",
                     min: _ctx.config.option.min,
                     max: _ctx.config.option.max,
                     step: _ctx.config.option.step
-                }, null, 8 /* PROPS */ , _hoisted_4)) : _vue.createCommentVNode("v-if", true)
-            ], 64 /* STABLE_FRAGMENT */ )) : (_vue.openBlock(), _vue.createElementBlock("input", {
+                }, null, 8, _hoisted_4)) : _vue.createCommentVNode("", true)
+            ], 64)) : (_vue.openBlock(), _vue.createElementBlock("input", {
                 key: 1,
                 value: _ctx.config.value,
                 disabled: ""
-            }, null, 8 /* PROPS */ , _hoisted_5))
+            }, null, 8, _hoisted_5))
         ])
-    ], 64 /* STABLE_FRAGMENT */ )) : _vue.createCommentVNode("v-if", true);
+    ], 64)) : _vue.createCommentVNode("", true);
 }
-if (module.hot) module.hot.accept(()=>{
-    __VUE_HMR_RUNTIME__.rerender('328722-hmr', render);
-});
 
-},{"vue":"eg0LR","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"1z1o2":[function(require,module,exports) {
+},{"vue":"h7dRr","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"gcQ43":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 let NOOP = ()=>{
@@ -31829,7 +30981,7 @@ let NOOP = ()=>{
 exports.default = (script)=>{
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"c5z27":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"6vloM":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "render", ()=>render
@@ -31838,23 +30990,23 @@ var _vue = require("vue");
 const _hoisted_1 = {
     class: "app"
 };
-const _hoisted_2 = /*#__PURE__*/ _vue.createElementVNode("h1", null, "Tethr Demo", -1 /* HOISTED */ );
+const _hoisted_2 = /*#__PURE__*/ _vue.createElementVNode("h1", null, "Tethr Demo", -1);
 const _hoisted_3 = /*#__PURE__*/ _vue.createElementVNode("a", {
     href: "https://github.com/baku89/tethr"
-}, "Fork Me on GitHub", -1 /* HOISTED */ );
+}, "Fork Me on GitHub", -1);
 const _hoisted_4 = [
     ".srcObject"
 ];
 const _hoisted_5 = [
     "src"
 ];
-const _hoisted_6 = /*#__PURE__*/ _vue.createElementVNode("h2", null, "Actions", -1 /* HOISTED */ );
+const _hoisted_6 = /*#__PURE__*/ _vue.createElementVNode("h2", null, "Actions", -1);
 const _hoisted_7 = {
     key: 0
 };
-const _hoisted_8 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "takePicture", -1 /* HOISTED */ );
-const _hoisted_9 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "autoFocus", -1 /* HOISTED */ );
-const _hoisted_10 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "manualFocus", -1 /* HOISTED */ );
+const _hoisted_8 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "takePicture", -1);
+const _hoisted_9 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "autoFocus", -1);
+const _hoisted_10 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "manualFocus", -1);
 const _hoisted_11 = {
     style: {
         "display": "grid",
@@ -31862,8 +31014,8 @@ const _hoisted_11 = {
         "grid-auto-flow": "column"
     }
 };
-const _hoisted_12 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "liveview", -1 /* HOISTED */ );
-const _hoisted_13 = /*#__PURE__*/ _vue.createElementVNode("h2", null, "Configs", -1 /* HOISTED */ );
+const _hoisted_12 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "liveview", -1);
+const _hoisted_13 = /*#__PURE__*/ _vue.createElementVNode("h2", null, "Configs", -1);
 function render(_ctx, _cache) {
     const _component_TethrConfig = _vue.resolveComponent("TethrConfig");
     return _vue.openBlock(), _vue.createElementBlock("div", _hoisted_1, [
@@ -31874,17 +31026,17 @@ function render(_ctx, _cache) {
                 class: "view lv",
                 ".srcObject": _ctx.liveviewMediaStream,
                 autoplay: ""
-            }, null, 8 /* PROPS */ , _hoisted_4),
+            }, null, 8, _hoisted_4),
             _vue.createElementVNode("img", {
                 class: "view picture",
                 src: _ctx.lastPictureURL
-            }, null, 8 /* PROPS */ , _hoisted_5)
+            }, null, 8, _hoisted_5)
         ]),
         _vue.createElementVNode("aside", null, [
             _vue.createElementVNode("button", {
                 onClick: _cache[0] || (_cache[0] = (...args)=>_ctx.toggleCameraConnection && _ctx.toggleCameraConnection(...args)
                 )
-            }, _vue.toDisplayString(_ctx.camera ? 'Disconnect' : 'Connect'), 1 /* TEXT */ ),
+            }, _vue.toDisplayString(_ctx.camera ? 'Disconnect' : 'Connect'), 1),
             _hoisted_6,
             _ctx.camera ? (_vue.openBlock(), _vue.createElementBlock("dl", _hoisted_7, [
                 _ctx.configs.canTakePicture.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
@@ -31898,7 +31050,7 @@ function render(_ctx, _cache) {
                             )
                         }, "Shutter")
                     ])
-                ], 64 /* STABLE_FRAGMENT */ )) : _vue.createCommentVNode("v-if", true),
+                ], 64)) : _vue.createCommentVNode("", true),
                 _ctx.configs.canRunAutoFocus.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
                     key: 1
                 }, [
@@ -31909,7 +31061,7 @@ function render(_ctx, _cache) {
                             )
                         }, "Run")
                     ])
-                ], 64 /* STABLE_FRAGMENT */ )) : _vue.createCommentVNode("v-if", true),
+                ], 64)) : _vue.createCommentVNode("", true),
                 _ctx.configs.canRunManualFocus.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
                     key: 2
                 }, [
@@ -31919,34 +31071,34 @@ function render(_ctx, _cache) {
                             key: 0,
                             onClick: _cache[3] || (_cache[3] = ($event)=>_ctx.camera.runManualFocus('far:1')
                             )
-                        }, " ↑ ")) : _vue.createCommentVNode("v-if", true),
+                        }, " ↑ ")) : _vue.createCommentVNode("", true),
                         _ctx.configs.manualFocusOptions.value.includes('near:1') ? (_vue.openBlock(), _vue.createElementBlock("button", {
                             key: 1,
                             onClick: _cache[4] || (_cache[4] = ($event)=>_ctx.camera.runManualFocus('near:1')
                             )
-                        }, " ↓ ")) : _vue.createCommentVNode("v-if", true),
+                        }, " ↓ ")) : _vue.createCommentVNode("", true),
                         _ctx.configs.manualFocusOptions.value.includes('far:2') ? (_vue.openBlock(), _vue.createElementBlock("button", {
                             key: 2,
                             onClick: _cache[5] || (_cache[5] = ($event)=>_ctx.camera.runManualFocus('far:2')
                             )
-                        }, " ↑↑ ")) : _vue.createCommentVNode("v-if", true),
+                        }, " ↑↑ ")) : _vue.createCommentVNode("", true),
                         _ctx.configs.manualFocusOptions.value.includes('near:2') ? (_vue.openBlock(), _vue.createElementBlock("button", {
                             key: 3,
                             onClick: _cache[6] || (_cache[6] = ($event)=>_ctx.camera.runManualFocus('near:2')
                             )
-                        }, " ↓↓ ")) : _vue.createCommentVNode("v-if", true),
+                        }, " ↓↓ ")) : _vue.createCommentVNode("", true),
                         _ctx.configs.manualFocusOptions.value.includes('far:3') ? (_vue.openBlock(), _vue.createElementBlock("button", {
                             key: 4,
                             onClick: _cache[7] || (_cache[7] = ($event)=>_ctx.camera.runManualFocus('far:3')
                             )
-                        }, " ↑↑↑ ")) : _vue.createCommentVNode("v-if", true),
+                        }, " ↑↑↑ ")) : _vue.createCommentVNode("", true),
                         _ctx.configs.manualFocusOptions.value.includes('near:3') ? (_vue.openBlock(), _vue.createElementBlock("button", {
                             key: 5,
                             onClick: _cache[8] || (_cache[8] = ($event)=>_ctx.camera.runManualFocus('near:3')
                             )
-                        }, " ↓↓↓ ")) : _vue.createCommentVNode("v-if", true)
+                        }, " ↓↓↓ ")) : _vue.createCommentVNode("", true)
                     ])
-                ], 64 /* STABLE_FRAGMENT */ )) : _vue.createCommentVNode("v-if", true),
+                ], 64)) : _vue.createCommentVNode("", true),
                 _ctx.configs.canStartLiveview.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
                     key: 3
                 }, [
@@ -31955,10 +31107,10 @@ function render(_ctx, _cache) {
                         _vue.createElementVNode("button", {
                             onClick: _cache[9] || (_cache[9] = (...args)=>_ctx.toggleLiveview && _ctx.toggleLiveview(...args)
                             )
-                        }, _vue.toDisplayString(_ctx.configs.liveviewEnabled.value ? 'Stop' : 'Start'), 1 /* TEXT */ )
+                        }, _vue.toDisplayString(_ctx.configs.liveviewEnabled.value ? 'Stop' : 'Start'), 1)
                     ])
-                ], 64 /* STABLE_FRAGMENT */ )) : _vue.createCommentVNode("v-if", true)
-            ])) : _vue.createCommentVNode("v-if", true),
+                ], 64)) : _vue.createCommentVNode("", true)
+            ])) : _vue.createCommentVNode("", true),
             _hoisted_13,
             _vue.createElementVNode("dl", null, [
                 (_vue.openBlock(true), _vue.createElementBlock(_vue.Fragment, null, _vue.renderList(_ctx.configs, (config, name)=>{
@@ -31967,20 +31119,17 @@ function render(_ctx, _cache) {
                         key: name,
                         label: name,
                         config: config
-                    }, null, 8 /* PROPS */ , [
+                    }, null, 8, [
                         "label",
                         "config"
                     ]);
-                }), 128 /* KEYED_FRAGMENT */ ))
+                }), 128))
             ])
         ])
     ]);
 }
-if (module.hot) module.hot.accept(()=>{
-    __VUE_HMR_RUNTIME__.rerender('848d49-hmr', render);
-});
 
-},{"vue":"eg0LR","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"kWNV3":[function(require,module,exports) {
+},{"vue":"h7dRr","@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}],"gjUnI":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 let NOOP = ()=>{
@@ -31988,6 +31137,5 @@ let NOOP = ()=>{
 exports.default = (script)=>{
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}]},["fTYqi","bxQVA"], "bxQVA", "parcelRequirebc09")
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"4N8i7"}]},["2emZo"], "2emZo", "parcelRequirebc09")
 
-//# sourceMappingURL=index.dc1c7f13.js.map
