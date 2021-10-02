@@ -51,6 +51,7 @@ type EventTypes = {
 	[N in ConfigName as `${N}Changed`]: ConfigDesc<ConfigType[N]>
 } & {
 	disconnect: void
+	updateLiveviewStream: MediaStream
 }
 
 type ConfigGetters = {

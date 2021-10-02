@@ -93,6 +93,9 @@ export function useTethr() {
 			cam.on('disconnect', () => {
 				camera.value = null
 			})
+			cam.on('updateLiveviewStream', (ms: MediaStream | null) => {
+				liveviewMediaStream.value = ms
+			})
 		}
 
 		;(window as any).cam = camera.value
