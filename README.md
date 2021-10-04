@@ -180,7 +180,7 @@ tethr.once('shutterSpeedChanged', callback)
 tethr.off('apertureChanged', callback)
 ```
 
-The `${configName}Changed` is sent out in the case:
+A event `${configName}Changed` is sent out in the case:
 
 - When you manually set the value of config itself.
 - When you modify other configs which will affect the config value as a side effect  
