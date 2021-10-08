@@ -413,10 +413,16 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	public async getImageAspect() {
+		const {imageAspect} = await this.getCamDataGroup5()
+		const id = imageAspect - 245 // Magic number
+		return this.imageAspectTable.get(id) ?? null
+	}
+
 	public async setImageAspect(
 		imageAspect: string
 	): Promise<OperationResult<void>> {
-		const id = this.imageAspectTableIFD.getKey(imageAspect)
+		const id = this.imageAspectTable.getKey(imageAspect)
 		if (id === undefined) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
@@ -427,17 +433,15 @@ export class TethrSigma extends TethrPTPUSB {
 			return this.imageAspectTableIFD.get(id) ?? 'Unknown'
 		}
 
-		const {imageAspect} = await this.getCamDataGroup5()
-		const {imageAspect: imageAspectOptions} = await this.getCamCanSetInfo5()
-
-		const imageAspectIfdID = imageAspect - this.imageAspectDataGroupOffset
+		const {imageAspect: values} = await this.getCamCanSetInfo5()
+		const value = await this.getImageAspect()
 
 		return {
-			writable: imageAspectOptions.length > 0,
-			value: decodeImageAspectIFD(imageAspectIfdID),
+			writable: values.length > 0,
+			value,
 			option: {
 				type: 'enum',
-				values: imageAspectOptions.map(decodeImageAspectIFD),
+				values: values.map(decodeImageAspectIFD),
 			},
 		}
 	}
@@ -1208,7 +1212,16 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x0f, 'powder blue'],
 	])
 
-	// NOTE: This table should fix
+	private imageAspectTable = new BiMap<number, string>([
+		[1, '21:9'],
+		[2, '16:9'],
+		[3, '3:2'],
+		[4, '4:3'],
+		[5, '7:6'],
+		[6, '1:1'],
+		[7, 'a size'],
+	])
+
 	private imageAspectTableIFD = new BiMap<number, string>([
 		[1, '21:9'],
 		[2, '16:9'],
@@ -1218,8 +1231,6 @@ export class TethrSigma extends TethrPTPUSB {
 		[6, '7:6'],
 		[7, '1:1'],
 	])
-
-	private imageAspectDataGroupOffset = 245
 
 	private isoTable = new BiMap<number, ISO>([
 		[0b00000000, 6],
