@@ -16,7 +16,7 @@
 		"prepare": "npm run build"
 	},
 	"files": [
-		"build"
+		"dist"
 	],
 	"homepage": "https://baku89.github.io/tethr/",
 	"license": "MIT",
