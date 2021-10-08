@@ -583,8 +583,18 @@ export class TethrPTPUSB extends Tethr {
 		return devicePropsSupported.includes(code)
 	}
 
-	protected getDeviceInfo = async (): Promise<DeviceInfo> => {
+	protected async getDeviceInfo(): Promise<DeviceInfo> {
 		return await TethrPTPUSB.getDeviceInfo(this.device)
+	}
+
+	protected async getObjectHandles(storageId = 0xffffffff): Promise<number[]> {
+		const {data} = await this.device.receiveData({
+			label: 'GetObjectHandles',
+			opcode: OpCode.GetObjectHandles,
+			parameters: [storageId, 0xffffffff, 0x0],
+		})
+
+		return new PTPDataView(data).readUint32Array()
 	}
 
 	protected async getObjectInfo(id: number): Promise<TethrObjectInfo> {
@@ -657,6 +667,7 @@ export class TethrPTPUSB extends Tethr {
 			const storageInfo = new PTPDataView(data)
 
 			const info = {
+				storageId: id,
 				storageType: PTPStorageTypeCode[storageInfo.readUint16()],
 				filesystemType: PTPFilesystemTypeCode[storageInfo.readUint16()],
 				accessCapability: PTPAccessCapabilityCode[storageInfo.readUint16()],
