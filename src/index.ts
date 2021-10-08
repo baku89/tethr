@@ -14,7 +14,7 @@ import {
 	ISO,
 	ManualFocusOption,
 	WhiteBalance,
-} from '../src/configs'
+} from './configs'
 import {detectTethr} from './detectTethr'
 import {
 	ConfigDesc,
