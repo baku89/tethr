@@ -311,6 +311,13 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
+	public async getManufacturerDesc() {
+		return {
+			writable: false,
+			value: (await this.getDeviceInfo()).manufacturer,
+		}
+	}
+
 	public async getModelDesc() {
 		return {
 			writable: false,

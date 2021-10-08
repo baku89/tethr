@@ -173,6 +173,8 @@ export abstract class Tethr
 				return this.setLiveviewSize(value as string)
 			case 'manualFocusOptions':
 				return this.setManualFocusOptions(value as ManualFocusOption[])
+			case 'manufacturer':
+				return this.setManufacturer(value as string)
 			case 'model':
 				return this.setModel(value as string)
 			case 'sharpness':
@@ -263,6 +265,8 @@ export abstract class Tethr
 				return this.getLiveviewSizeDesc() as ReturnType
 			case 'manualFocusOptions':
 				return this.getManualFocusOptionsDesc() as ReturnType
+			case 'manufacturer':
+				return this.getManufacturerDesc() as ReturnType
 			case 'model':
 				return this.getModelDesc() as ReturnType
 			case 'sharpness':
@@ -728,6 +732,19 @@ export abstract class Tethr
 	public async getManualFocusOptionsDesc(): Promise<
 		ConfigDesc<ManualFocusOption[]>
 	> {
+		return createUnsupportedConfigDesc()
+	}
+
+	public async getManufacturer(): Promise<string | null> {
+		return (await this.getManufacturerDesc()).value
+	}
+	public async setManufacturer(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		value: string
+	): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
+	}
+	public async getManufacturerDesc(): Promise<ConfigDesc<string>> {
 		return createUnsupportedConfigDesc()
 	}
 

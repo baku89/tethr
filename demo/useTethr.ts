@@ -142,6 +142,7 @@ export function useTethr() {
 
 		// DPC
 		configs: {
+			manufacturer: useTethrConfig(camera, 'manufacturer'),
 			model: useTethrConfig(camera, 'model'),
 			exposureMode: useTethrConfig(camera, 'exposureMode'),
 			driveMode: useTethrConfig(camera, 'driveMode'),

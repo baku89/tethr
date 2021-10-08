@@ -95,6 +95,7 @@ export type ConfigType = {
 	liveviewMagnifyRatio: number // added
 	liveviewSize: string // ad
 	manualFocusOptions: ManualFocusOption[]
+	manufacturer: string
 	model: string
 	sharpness: number
 	shutterSpeed: string
