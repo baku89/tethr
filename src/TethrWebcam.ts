@@ -39,7 +39,11 @@ export class TethrWebcam extends Tethr {
 	public async open() {
 		this._opened = true
 
-		this.media = await navigator.mediaDevices.getUserMedia({video: true})
+		try {
+			this.media = await navigator.mediaDevices.getUserMedia({video: true})
+		} catch {
+			throw new Error('No available webcam is connected')
+		}
 		this.videoTrack = this.media.getVideoTracks()[0]
 
 		// Setup CaptureHandler
