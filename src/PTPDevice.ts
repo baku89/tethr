@@ -14,7 +14,7 @@ enum PTPType {
 }
 
 const PTPCommandMaxByteLength = 12 + 4 * 3
-const PTPDefaultTimeoutMs = 1000
+const PTPDefaultTimeoutMs = 5000
 
 interface PTPSendCommandOption {
 	label?: string
