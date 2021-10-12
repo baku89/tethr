@@ -452,7 +452,7 @@ export class TethrSigma extends TethrPTPUSB {
 		let jpegQuality: string | null = null
 		let dngBitDepth: number | null = null
 
-		const hasDngMatch = imageQuality.match(/^DNG (12|14)bit(?:,([a-z]+))?/i)
+		const hasDngMatch = imageQuality.match(/^raw (12|14)bit(?:,([a-z]+))?/i)
 
 		if (hasDngMatch) {
 			const [, dngBitDepthStr, jpegQualityStr] = hasDngMatch
@@ -532,7 +532,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const dngBitDepth = await (async () => {
 			const {dngImageQuality} = await this.getCamDataGroup4()
-			return dngImageQuality + 'bit'
+			return dngImageQuality
 		})()
 
 		return {
@@ -555,7 +555,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		function stringifyImageQuality(
 			quality: ImageQualityConfig,
-			dngBitDepth = ''
+			dngBitDepth: number
 		) {
 			if (quality.hasDNG) {
 				if (quality.jpegQuality) {
