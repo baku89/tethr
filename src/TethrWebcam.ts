@@ -26,10 +26,7 @@ type CaptureHandler =
 export class TethrWebcam extends Tethr {
 	private liveviewEnabled = false
 	private media: MediaStream | null = null
-	private videoTrack: MediaStreamTrack | null = null
-	private _opened = false
 	private captureHandler: CaptureHandler | null = null
-
 	private facingModeDict = new BiMap<string, string>()
 
 	public constructor() {
@@ -37,20 +34,18 @@ export class TethrWebcam extends Tethr {
 	}
 
 	public async open() {
-		this._opened = true
-
 		try {
 			this.media = await navigator.mediaDevices.getUserMedia({video: true})
 		} catch {
 			throw new Error('No available webcam is connected')
 		}
-		this.videoTrack = this.media.getVideoTracks()[0]
 
 		// Setup CaptureHandler
 		if ('ImageCapture' in globalThis) {
+			const videoTrack = this.media.getVideoTracks()[0]
 			this.captureHandler = {
 				type: 'imageCapture',
-				imageCapture: new ImageCapture(this.videoTrack),
+				imageCapture: new ImageCapture(videoTrack),
 			}
 		} else {
 			const canvas = document.createElement('canvas')
@@ -58,11 +53,14 @@ export class TethrWebcam extends Tethr {
 			const video = document.createElement('video')
 
 			video.autoplay = true
+			video.muted = true
 			video.style.display = 'none'
+			video.playsInline = true
+			video.play()
 			document.body.appendChild(video)
 
 			video.srcObject = this.media
-			video.play()
+			// video.play()
 
 			if (context) {
 				this.captureHandler = {
@@ -74,22 +72,23 @@ export class TethrWebcam extends Tethr {
 			}
 		}
 
-		// Retrieve deviceIDs for front/rear cameras
+		// Retrieve the camera's available facingModes
 		const devices = await navigator.mediaDevices.enumerateDevices()
 
-		const entries = devices
+		const facingModeEntries = devices
 			.filter(d => d.kind === 'videoinput')
 			.map(d => [d.deviceId, d.label] as [string, string])
 
-		this.facingModeDict = new BiMap(entries)
+		this.facingModeDict = new BiMap(facingModeEntries)
 	}
 
 	public async close() {
-		this._opened = false
+		this.media?.getTracks().forEach(t => t.stop())
+		this.media = null
 	}
 
 	public get opened() {
-		return this._opened
+		return !!this.media
 	}
 
 	// Configs
@@ -101,20 +100,20 @@ export class TethrWebcam extends Tethr {
 		return createReadonlyConfigDesc(this.captureHandler !== null)
 	}
 
-	public async setFacingMode(value: string) {
-		if (!this.media || !this.videoTrack || !this.captureHandler) {
-			return {status: 'unsupported'} as OperationResult<void>
+	public async setFacingMode(value: string): Promise<OperationResult<void>> {
+		if (!this.media || !this.captureHandler) {
+			return {status: 'unsupported'}
 		}
 
 		const desc = await this.getFacingModeDesc()
 		if (desc.value === null) {
-			return {status: 'unsupported'} as OperationResult<void>
+			return {status: 'unsupported'}
 		}
 
 		const deviceId = this.facingModeDict.getKey(value)
 
 		if (!deviceId) {
-			return {status: 'invalid parameter'} as OperationResult<void>
+			return {status: 'invalid parameter'}
 		}
 
 		// Stop all tracks at first
@@ -127,31 +126,26 @@ export class TethrWebcam extends Tethr {
 		this.emit('updateLiveviewStream', this.media)
 
 		// Setup other variables
-		this.videoTrack = this.media.getVideoTracks()[0]
+		const videoTrack = this.media.getVideoTracks()[0]
 
 		if (this.captureHandler.type === 'imageCapture') {
-			this.captureHandler.imageCapture = new ImageCapture(this.videoTrack)
+			this.captureHandler.imageCapture = new ImageCapture(videoTrack)
 		} else {
 			const {video} = this.captureHandler
 			video.srcObject = this.media
 			video.play()
 		}
 
-		/*
-		await this.videoTrack.applyConstraints({
-			facingMode: value,
-		})
-		*/
-
-		return {status: 'ok'} as OperationResult<void>
+		return {status: 'ok'}
 	}
 
 	public async getFacingModeDesc() {
-		if (!this.media || !this.videoTrack) {
+		if (!this.media) {
 			return createUnsupportedConfigDesc<string>()
 		}
 
-		const currentId = this.videoTrack.getSettings().deviceId ?? ''
+		const videoTrack = this.media.getVideoTracks()[0]
+		const currentId = videoTrack.getSettings().deviceId ?? ''
 		const value = this.facingModeDict.get(currentId) ?? null
 
 		return {
@@ -162,27 +156,6 @@ export class TethrWebcam extends Tethr {
 				values: [...this.facingModeDict.values()],
 			},
 		} as ConfigDesc<string>
-
-		/*
-		const settings = this.videoTrack.getSettings()
-		const capabilities = this.videoTrack.getCapabilities()
-
-		const value = settings.facingMode
-		const values = capabilities.facingMode
-
-		if (!value || !values) {
-			return createUnsupportedConfigDesc<string>()
-		}
-
-		return {
-			writable: true,
-			value,
-			option: {
-				type: 'enum',
-				values,
-			},
-		} as ConfigDesc<string>
-		*/
 	}
 
 	public async getModelDesc() {
@@ -200,7 +173,7 @@ export class TethrWebcam extends Tethr {
 	public async takePicture({download = true}: TakePictureOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
-		if (!this.captureHandler || !this.videoTrack) {
+		if (!this.media || !this.captureHandler) {
 			return {status: 'unsupported'}
 		}
 
@@ -211,10 +184,11 @@ export class TethrWebcam extends Tethr {
 		if (this.captureHandler.type === 'imageCapture') {
 			blob = await this.captureHandler.imageCapture.takePhoto()
 		} else {
+			const videoTrack = this.media.getVideoTracks()[0]
 			const {width, height} = {
 				width: 640,
 				height: 480,
-				...this.videoTrack.getSettings(),
+				...videoTrack.getSettings(),
 			}
 			const {canvas, context, video} = this.captureHandler
 
