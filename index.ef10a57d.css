@@ -47,9 +47,9 @@ button.red {
 input:not([disabled]):hover,
 select:not([disabled]):hover,
 button:not([disabled]):hover,
-input:not([disabled]):focus,
-select:not([disabled]):focus,
-button:not([disabled]):focus {
+input:not([disabled]):focus-visible,
+select:not([disabled]):focus-visible,
+button:not([disabled]):focus-visible {
   background: #444;
   transition: all ease 0.1s;
 }

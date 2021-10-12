@@ -9736,7 +9736,7 @@ function useTethrConfig(camera, name) {
 function useTethr() {
     const camera = _vue.shallowRef(null);
     const liveviewMediaStream = _vue.ref(null);
-    const lastPictureURL = _vue.ref(TransparentPng);
+    const photoURL = _vue.ref(TransparentPng);
     async function toggleCameraConnection() {
         if (camera.value && camera.value.opened) {
             await camera.value.close();
@@ -9758,18 +9758,18 @@ function useTethr() {
             cam.on('disconnect', ()=>{
                 camera.value = null;
             });
-            cam.on('updateLiveviewStream', (ms)=>{
+            cam.on('liveviewStreamUpdate', (ms)=>{
                 liveviewMediaStream.value = ms;
             });
         }
         window.cam = camera.value;
     }
-    async function takePicture() {
+    async function takePhoto() {
         if (!camera.value) return;
-        const result = await camera.value.takePicture();
+        const result = await camera.value.takePhoto();
         if (result.status === 'ok') {
             for (const object of result.value)if (object.format === 'raw') _fileSaver.saveAs(object.blob, object.filename);
-            else lastPictureURL.value = URL.createObjectURL(object.blob);
+            else photoURL.value = URL.createObjectURL(object.blob);
         }
     }
     async function runAutoFocus() {
@@ -9790,6 +9790,7 @@ function useTethr() {
         camera,
         // DPC
         configs: {
+            manufacturer: useTethrConfig(camera, 'manufacturer'),
             model: useTethrConfig(camera, 'model'),
             exposureMode: useTethrConfig(camera, 'exposureMode'),
             driveMode: useTethrConfig(camera, 'driveMode'),
@@ -9812,18 +9813,18 @@ function useTethr() {
             liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),
             liveviewSize: useTethrConfig(camera, 'liveviewSize'),
             batteryLevel: useTethrConfig(camera, 'batteryLevel'),
-            canTakePicture: useTethrConfig(camera, 'canTakePicture'),
+            canTakePhoto: useTethrConfig(camera, 'canTakePhoto'),
             canRunAutoFocus: useTethrConfig(camera, 'canRunAutoFocus'),
             canRunManualFocus: useTethrConfig(camera, 'canRunManualFocus'),
             canStartLiveview: useTethrConfig(camera, 'canStartLiveview'),
             manualFocusOptions: useTethrConfig(camera, 'manualFocusOptions')
         },
         liveviewMediaStream,
-        lastPictureURL,
+        photoURL,
         runAutoFocus,
         toggleCameraConnection,
         toggleLiveview,
-        takePicture
+        takePhoto
     };
 }
 
@@ -9953,351 +9954,11 @@ parcelHelpers.export(exports, "ManualFocusOption", ()=>_configs.ManualFocusOptio
 );
 parcelHelpers.export(exports, "WhiteBalance", ()=>_configs.WhiteBalance
 );
-var _configs = require("../src/configs");
+var _configs = require("./configs");
 var _detectTethr = require("./detectTethr");
 var _tethr = require("./Tethr");
 
-},{"../src/configs":"2uyxY","./detectTethr":"jnKtw","./Tethr":"kne57","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"2uyxY":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "ConfigForDevicePropTable", ()=>ConfigForDevicePropTable
-);
-parcelHelpers.export(exports, "ExposureModeTable", ()=>ExposureModeTable
-);
-parcelHelpers.export(exports, "WhiteBalanceTable", ()=>WhiteBalanceTable
-);
-parcelHelpers.export(exports, "DriveModeTable", ()=>DriveModeTable
-);
-// Utility functions
-parcelHelpers.export(exports, "computeShutterSpeedSeconds", ()=>computeShutterSpeedSeconds
-);
-var _bim = require("bim");
-const ConfigForDevicePropTable = new _bim.BiMap([
-    [
-        20481,
-        'batteryLevel'
-    ],
-    [
-        20485,
-        'whiteBalance'
-    ],
-    [
-        20487,
-        'aperture'
-    ],
-    [
-        20488,
-        'focalLength'
-    ],
-    [
-        20489,
-        'focusDistance'
-    ],
-    [
-        20493,
-        'shutterSpeed'
-    ],
-    [
-        20494,
-        'exposureMode'
-    ],
-    [
-        20495,
-        'iso'
-    ],
-    [
-        20496,
-        'exposureComp'
-    ],
-    [
-        20498,
-        'captureDelay'
-    ],
-    [
-        20499,
-        'driveMode'
-    ],
-    [
-        20503,
-        'colorMode'
-    ],
-    [
-        20506,
-        'timelapseNumber'
-    ],
-    [
-        20507,
-        'timelapseInterval'
-    ], 
-]);
-const ExposureModeTable = new _bim.BiMap([
-    [
-        1,
-        'M'
-    ],
-    [
-        2,
-        'P'
-    ],
-    [
-        3,
-        'A'
-    ],
-    [
-        4,
-        'S'
-    ],
-    [
-        5,
-        'creative'
-    ],
-    [
-        6,
-        'action'
-    ],
-    [
-        7,
-        'portrait'
-    ], 
-]);
-const WhiteBalanceTable = new _bim.BiMap([
-    [
-        1,
-        'manual'
-    ],
-    [
-        2,
-        'auto'
-    ],
-    [
-        3,
-        'custom'
-    ],
-    [
-        4,
-        'daylight'
-    ],
-    [
-        5,
-        'fluorescent'
-    ],
-    [
-        6,
-        'tungsten'
-    ], 
-]);
-const DriveModeTable = new _bim.BiMap([
-    [
-        1,
-        'normal'
-    ],
-    [
-        2,
-        'burst'
-    ],
-    [
-        3,
-        'timelapse'
-    ], 
-]);
-function computeShutterSpeedSeconds(ss) {
-    if (ss === 'bulk' || ss === 'sync') return Infinity;
-    if (ss.includes('/')) {
-        const [fraction, denominator] = ss.split('/');
-        return parseInt(fraction) / parseInt(denominator);
-    }
-    return parseFloat(ss);
-}
-
-},{"bim":"gfJhS","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"gfJhS":[function(require,module,exports) {
-"use strict";
-var __importDefault = this && this.__importDefault || function(mod) {
-    return mod && mod.__esModule ? mod : {
-        "default": mod
-    };
-};
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.WeakBiMap = exports.BiMap = void 0;
-var BiMap_1 = require("./BiMap");
-Object.defineProperty(exports, "BiMap", {
-    enumerable: true,
-    get: function() {
-        return __importDefault(BiMap_1).default;
-    }
-});
-var WeakBiMap_1 = require("./WeakBiMap");
-Object.defineProperty(exports, "WeakBiMap", {
-    enumerable: true,
-    get: function() {
-        return __importDefault(WeakBiMap_1).default;
-    }
-});
-
-},{"./BiMap":"731Hr","./WeakBiMap":"2yWkl"}],"731Hr":[function(require,module,exports) {
-"use strict";
-var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
-};
-var __classPrivateFieldGet = this && this.__classPrivateFieldGet || function(receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _BiMap_left, _BiMap_right;
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-class BiMap {
-    constructor(iterable){
-        _BiMap_left.set(this, void 0);
-        _BiMap_right.set(this, void 0);
-        __classPrivateFieldSet(this, _BiMap_left, new Map(), "f");
-        __classPrivateFieldSet(this, _BiMap_right, new Map(), "f");
-        if (iterable === undefined) return;
-        for (const [k, v] of iterable){
-            __classPrivateFieldGet(this, _BiMap_left, "f").set(k, v);
-            __classPrivateFieldGet(this, _BiMap_right, "f").set(v, k);
-        }
-    }
-    clear() {
-        __classPrivateFieldGet(this, _BiMap_left, "f").clear();
-        __classPrivateFieldGet(this, _BiMap_right, "f").clear();
-    }
-    delete(key) {
-        const val = __classPrivateFieldGet(this, _BiMap_left, "f").get(key);
-        if (!__classPrivateFieldGet(this, _BiMap_right, "f").has(val)) return false;
-        __classPrivateFieldGet(this, _BiMap_right, "f").delete(val);
-        return __classPrivateFieldGet(this, _BiMap_left, "f").delete(key);
-    }
-    entries() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").entries();
-    }
-    forEach(callbackfn, thisArg) {
-        __classPrivateFieldGet(this, _BiMap_left, "f").forEach(callbackfn, thisArg);
-    }
-    get(key) {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").get(key);
-    }
-    has(key) {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").has(key);
-    }
-    keys() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").keys();
-    }
-    set(key, value) {
-        const left = __classPrivateFieldGet(this, _BiMap_left, "f");
-        const right = __classPrivateFieldGet(this, _BiMap_right, "f");
-        const oldVal = left.get(key);
-        const oldKey = right.get(value);
-        if (left.has(key)) right.delete(oldVal);
-        if (right.has(value)) left.delete(oldKey);
-        left.set(key, value);
-        right.set(value, key);
-        return this;
-    }
-    get size() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").size;
-    }
-    values() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f").values();
-    }
-    [(_BiMap_left = new WeakMap(), _BiMap_right = new WeakMap(), Symbol.iterator)]() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f")[Symbol.iterator]();
-    }
-    get [Symbol.toStringTag]() {
-        return __classPrivateFieldGet(this, _BiMap_left, "f")[Symbol.toStringTag];
-    }
-    deleteValue(value) {
-        const key = __classPrivateFieldGet(this, _BiMap_right, "f").get(value);
-        if (!__classPrivateFieldGet(this, _BiMap_left, "f").has(key)) return false;
-        __classPrivateFieldGet(this, _BiMap_left, "f").delete(key);
-        return __classPrivateFieldGet(this, _BiMap_right, "f").delete(value);
-    }
-    getKey(value) {
-        return __classPrivateFieldGet(this, _BiMap_right, "f").get(value);
-    }
-    hasValue(value) {
-        return __classPrivateFieldGet(this, _BiMap_right, "f").has(value);
-    }
-}
-exports.default = BiMap;
-
-},{}],"2yWkl":[function(require,module,exports) {
-"use strict";
-var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
-};
-var __classPrivateFieldGet = this && this.__classPrivateFieldGet || function(receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _WeakBiMap_left, _WeakBiMap_right;
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-class WeakBiMap {
-    constructor(iterable){
-        _WeakBiMap_left.set(this, void 0);
-        _WeakBiMap_right.set(this, void 0);
-        __classPrivateFieldSet(this, _WeakBiMap_left, new WeakMap(), "f");
-        __classPrivateFieldSet(this, _WeakBiMap_right, new WeakMap(), "f");
-        if (iterable === undefined) return;
-        for (const [k, v] of iterable){
-            __classPrivateFieldGet(this, _WeakBiMap_left, "f").set(k, v);
-            __classPrivateFieldGet(this, _WeakBiMap_right, "f").set(v, k);
-        }
-    }
-    delete(key) {
-        const val = __classPrivateFieldGet(this, _WeakBiMap_left, "f").get(key);
-        if (!__classPrivateFieldGet(this, _WeakBiMap_right, "f").has(val)) return false;
-        __classPrivateFieldGet(this, _WeakBiMap_right, "f").delete(val);
-        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").delete(key);
-    }
-    get(key) {
-        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").get(key);
-    }
-    has(key) {
-        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").has(key);
-    }
-    set(key, value) {
-        const left = __classPrivateFieldGet(this, _WeakBiMap_left, "f");
-        const right = __classPrivateFieldGet(this, _WeakBiMap_right, "f");
-        const oldVal = left.get(key);
-        const oldKey = right.get(value);
-        if (left.has(key)) right.delete(oldVal);
-        if (right.has(value)) left.delete(oldKey);
-        left.set(key, value);
-        right.set(value, key);
-        return this;
-    }
-    get [(_WeakBiMap_left = new WeakMap(), _WeakBiMap_right = new WeakMap(), Symbol.toStringTag)]() {
-        return __classPrivateFieldGet(this, _WeakBiMap_left, "f")[Symbol.toStringTag];
-    }
-    deleteValue(value) {
-        const key = __classPrivateFieldGet(this, _WeakBiMap_right, "f").get(value);
-        if (!__classPrivateFieldGet(this, _WeakBiMap_left, "f").has(key)) return false;
-        __classPrivateFieldGet(this, _WeakBiMap_left, "f").delete(key);
-        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").delete(value);
-    }
-    getKey(value) {
-        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").get(value);
-    }
-    hasValue(value) {
-        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").has(value);
-    }
-}
-exports.default = WeakBiMap;
-
-},{}],"jnKtw":[function(require,module,exports) {
+},{"./detectTethr":"jnKtw","./Tethr":"kne57","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc","./configs":"2uyxY"}],"jnKtw":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "detectTethr", ()=>detectTethr
@@ -10384,6 +10045,15 @@ async function initTethrUSBPTP(usb) {
             break;
     }
     if (!tethr) tethr = new _tethrPTPUSB.TethrPTPUSB(device);
+    // Though this is a little bit dirty, it is required to check whether
+    // the Open/CloseSession command works since some of PTP devices don't support
+    // any commands other than GetDeviceInfo.
+    try {
+        await tethr.open();
+        await tethr.close();
+    } catch  {
+        return null;
+    }
     return tethr;
 }
 
@@ -10409,7 +10079,7 @@ var PTPType;
 })(PTPType || (PTPType = {
 }));
 const PTPCommandMaxByteLength = 24;
-const PTPDefaultTimeoutMs = 1000;
+const PTPDefaultTimeoutMs = 5000;
 class PTPDevice extends _eventemitter3Default.default {
     constructor(usbDevice){
         super();
@@ -10457,7 +10127,7 @@ class PTPDevice extends _eventemitter3Default.default {
         this.sendCommand = (option)=>{
             const queue = ()=>new Promise((resolve, reject)=>{
                     console.groupCollapsed(`Send Command [${option.label}]`);
-                    this.sendCommandNow(option).then(resolve);
+                    this.sendCommandNow(option).then(resolve).catch(reject);
                     setTimeout(()=>reject('Timeout')
                     , PTPDefaultTimeoutMs);
                 }).finally(console.groupEnd)
@@ -10467,7 +10137,7 @@ class PTPDevice extends _eventemitter3Default.default {
         this.sendData = (option)=>{
             const queue = ()=>new Promise((resolve, reject)=>{
                     console.groupCollapsed(`Receive Data [${option.label}]`);
-                    this.sendDataNow(option).then(resolve);
+                    this.sendDataNow(option).then(resolve).catch(reject);
                     setTimeout(()=>reject('Timeout')
                     , PTPDefaultTimeoutMs);
                 }).finally(console.groupEnd)
@@ -10477,7 +10147,7 @@ class PTPDevice extends _eventemitter3Default.default {
         this.receiveData = (option)=>{
             const queue = ()=>new Promise((resolve, reject)=>{
                     console.groupCollapsed(`Receive Data [${option.label}]`);
-                    this.receiveDataNow(option).then(resolve);
+                    this.receiveDataNow(option).then(resolve).catch(reject);
                     setTimeout(()=>reject('Timeout')
                     , PTPDefaultTimeoutMs);
                 }).finally(console.groupEnd)
@@ -26994,7 +26664,7 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
             'far:2', 
         ]);
     }
-    async getCanTakePictureDesc() {
+    async getCanTakePhotoDesc() {
         return _tethr.createReadonlyConfigDesc(true);
     }
     async getCanRunAutoFocusDesc() {
@@ -27205,7 +26875,7 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
         });
     }
     // Actions
-    async takePicture({ download =true  } = {
+    async takePhoto({ download =true  } = {
     }) {
         const quality = await this.get('imageQuality');
         let restNumPhotos = quality?.includes('+') ? 2 : 1;
@@ -27495,7 +27165,347 @@ class TethrPanasonic extends _tethrPTPUSB.TethrPTPUSB {
     }
 }
 
-},{"bim":"gfJhS","lodash":"f4H2C","../configs":"2uyxY","../PTPDatacode":"gzikr","../PTPDataView":"6vBdq","../Tethr":"kne57","../util":"kykCo","./TethrPTPUSB":"7yZjY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"kne57":[function(require,module,exports) {
+},{"bim":"gfJhS","lodash":"f4H2C","../configs":"2uyxY","../PTPDatacode":"gzikr","../PTPDataView":"6vBdq","../Tethr":"kne57","../util":"kykCo","./TethrPTPUSB":"7yZjY","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"gfJhS":[function(require,module,exports) {
+"use strict";
+var __importDefault = this && this.__importDefault || function(mod) {
+    return mod && mod.__esModule ? mod : {
+        "default": mod
+    };
+};
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.WeakBiMap = exports.BiMap = void 0;
+var BiMap_1 = require("./BiMap");
+Object.defineProperty(exports, "BiMap", {
+    enumerable: true,
+    get: function() {
+        return __importDefault(BiMap_1).default;
+    }
+});
+var WeakBiMap_1 = require("./WeakBiMap");
+Object.defineProperty(exports, "WeakBiMap", {
+    enumerable: true,
+    get: function() {
+        return __importDefault(WeakBiMap_1).default;
+    }
+});
+
+},{"./BiMap":"731Hr","./WeakBiMap":"2yWkl"}],"731Hr":[function(require,module,exports) {
+"use strict";
+var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
+};
+var __classPrivateFieldGet = this && this.__classPrivateFieldGet || function(receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var _BiMap_left, _BiMap_right;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+class BiMap {
+    constructor(iterable){
+        _BiMap_left.set(this, void 0);
+        _BiMap_right.set(this, void 0);
+        __classPrivateFieldSet(this, _BiMap_left, new Map(), "f");
+        __classPrivateFieldSet(this, _BiMap_right, new Map(), "f");
+        if (iterable === undefined) return;
+        for (const [k, v] of iterable){
+            __classPrivateFieldGet(this, _BiMap_left, "f").set(k, v);
+            __classPrivateFieldGet(this, _BiMap_right, "f").set(v, k);
+        }
+    }
+    clear() {
+        __classPrivateFieldGet(this, _BiMap_left, "f").clear();
+        __classPrivateFieldGet(this, _BiMap_right, "f").clear();
+    }
+    delete(key) {
+        const val = __classPrivateFieldGet(this, _BiMap_left, "f").get(key);
+        if (!__classPrivateFieldGet(this, _BiMap_right, "f").has(val)) return false;
+        __classPrivateFieldGet(this, _BiMap_right, "f").delete(val);
+        return __classPrivateFieldGet(this, _BiMap_left, "f").delete(key);
+    }
+    entries() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").entries();
+    }
+    forEach(callbackfn, thisArg) {
+        __classPrivateFieldGet(this, _BiMap_left, "f").forEach(callbackfn, thisArg);
+    }
+    get(key) {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").get(key);
+    }
+    has(key) {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").has(key);
+    }
+    keys() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").keys();
+    }
+    set(key, value) {
+        const left = __classPrivateFieldGet(this, _BiMap_left, "f");
+        const right = __classPrivateFieldGet(this, _BiMap_right, "f");
+        const oldVal = left.get(key);
+        const oldKey = right.get(value);
+        if (left.has(key)) right.delete(oldVal);
+        if (right.has(value)) left.delete(oldKey);
+        left.set(key, value);
+        right.set(value, key);
+        return this;
+    }
+    get size() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").size;
+    }
+    values() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f").values();
+    }
+    [(_BiMap_left = new WeakMap(), _BiMap_right = new WeakMap(), Symbol.iterator)]() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f")[Symbol.iterator]();
+    }
+    get [Symbol.toStringTag]() {
+        return __classPrivateFieldGet(this, _BiMap_left, "f")[Symbol.toStringTag];
+    }
+    deleteValue(value) {
+        const key = __classPrivateFieldGet(this, _BiMap_right, "f").get(value);
+        if (!__classPrivateFieldGet(this, _BiMap_left, "f").has(key)) return false;
+        __classPrivateFieldGet(this, _BiMap_left, "f").delete(key);
+        return __classPrivateFieldGet(this, _BiMap_right, "f").delete(value);
+    }
+    getKey(value) {
+        return __classPrivateFieldGet(this, _BiMap_right, "f").get(value);
+    }
+    hasValue(value) {
+        return __classPrivateFieldGet(this, _BiMap_right, "f").has(value);
+    }
+}
+exports.default = BiMap;
+
+},{}],"2yWkl":[function(require,module,exports) {
+"use strict";
+var __classPrivateFieldSet = this && this.__classPrivateFieldSet || function(receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
+};
+var __classPrivateFieldGet = this && this.__classPrivateFieldGet || function(receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var _WeakBiMap_left, _WeakBiMap_right;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+class WeakBiMap {
+    constructor(iterable){
+        _WeakBiMap_left.set(this, void 0);
+        _WeakBiMap_right.set(this, void 0);
+        __classPrivateFieldSet(this, _WeakBiMap_left, new WeakMap(), "f");
+        __classPrivateFieldSet(this, _WeakBiMap_right, new WeakMap(), "f");
+        if (iterable === undefined) return;
+        for (const [k, v] of iterable){
+            __classPrivateFieldGet(this, _WeakBiMap_left, "f").set(k, v);
+            __classPrivateFieldGet(this, _WeakBiMap_right, "f").set(v, k);
+        }
+    }
+    delete(key) {
+        const val = __classPrivateFieldGet(this, _WeakBiMap_left, "f").get(key);
+        if (!__classPrivateFieldGet(this, _WeakBiMap_right, "f").has(val)) return false;
+        __classPrivateFieldGet(this, _WeakBiMap_right, "f").delete(val);
+        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").delete(key);
+    }
+    get(key) {
+        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").get(key);
+    }
+    has(key) {
+        return __classPrivateFieldGet(this, _WeakBiMap_left, "f").has(key);
+    }
+    set(key, value) {
+        const left = __classPrivateFieldGet(this, _WeakBiMap_left, "f");
+        const right = __classPrivateFieldGet(this, _WeakBiMap_right, "f");
+        const oldVal = left.get(key);
+        const oldKey = right.get(value);
+        if (left.has(key)) right.delete(oldVal);
+        if (right.has(value)) left.delete(oldKey);
+        left.set(key, value);
+        right.set(value, key);
+        return this;
+    }
+    get [(_WeakBiMap_left = new WeakMap(), _WeakBiMap_right = new WeakMap(), Symbol.toStringTag)]() {
+        return __classPrivateFieldGet(this, _WeakBiMap_left, "f")[Symbol.toStringTag];
+    }
+    deleteValue(value) {
+        const key = __classPrivateFieldGet(this, _WeakBiMap_right, "f").get(value);
+        if (!__classPrivateFieldGet(this, _WeakBiMap_left, "f").has(key)) return false;
+        __classPrivateFieldGet(this, _WeakBiMap_left, "f").delete(key);
+        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").delete(value);
+    }
+    getKey(value) {
+        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").get(value);
+    }
+    hasValue(value) {
+        return __classPrivateFieldGet(this, _WeakBiMap_right, "f").has(value);
+    }
+}
+exports.default = WeakBiMap;
+
+},{}],"2uyxY":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "ConfigForDevicePropTable", ()=>ConfigForDevicePropTable
+);
+parcelHelpers.export(exports, "ExposureModeTable", ()=>ExposureModeTable
+);
+parcelHelpers.export(exports, "WhiteBalanceTable", ()=>WhiteBalanceTable
+);
+parcelHelpers.export(exports, "DriveModeTable", ()=>DriveModeTable
+);
+// Utility functions
+parcelHelpers.export(exports, "computeShutterSpeedSeconds", ()=>computeShutterSpeedSeconds
+);
+var _bim = require("bim");
+const ConfigForDevicePropTable = new _bim.BiMap([
+    [
+        20481,
+        'batteryLevel'
+    ],
+    [
+        20485,
+        'whiteBalance'
+    ],
+    [
+        20487,
+        'aperture'
+    ],
+    [
+        20488,
+        'focalLength'
+    ],
+    [
+        20489,
+        'focusDistance'
+    ],
+    [
+        20493,
+        'shutterSpeed'
+    ],
+    [
+        20494,
+        'exposureMode'
+    ],
+    [
+        20495,
+        'iso'
+    ],
+    [
+        20496,
+        'exposureComp'
+    ],
+    [
+        20498,
+        'captureDelay'
+    ],
+    [
+        20499,
+        'driveMode'
+    ],
+    [
+        20503,
+        'colorMode'
+    ],
+    [
+        20506,
+        'timelapseNumber'
+    ],
+    [
+        20507,
+        'timelapseInterval'
+    ], 
+]);
+const ExposureModeTable = new _bim.BiMap([
+    [
+        1,
+        'M'
+    ],
+    [
+        2,
+        'P'
+    ],
+    [
+        3,
+        'A'
+    ],
+    [
+        4,
+        'S'
+    ],
+    [
+        5,
+        'creative'
+    ],
+    [
+        6,
+        'action'
+    ],
+    [
+        7,
+        'portrait'
+    ], 
+]);
+const WhiteBalanceTable = new _bim.BiMap([
+    [
+        1,
+        'manual'
+    ],
+    [
+        2,
+        'auto'
+    ],
+    [
+        3,
+        'custom'
+    ],
+    [
+        4,
+        'daylight'
+    ],
+    [
+        5,
+        'fluorescent'
+    ],
+    [
+        6,
+        'tungsten'
+    ], 
+]);
+const DriveModeTable = new _bim.BiMap([
+    [
+        1,
+        'normal'
+    ],
+    [
+        2,
+        'burst'
+    ],
+    [
+        3,
+        'timelapse'
+    ], 
+]);
+function computeShutterSpeedSeconds(ss) {
+    if (ss === 'bulk' || ss === 'sync') return Infinity;
+    if (ss.includes('/')) {
+        const [fraction, denominator] = ss.split('/');
+        return parseInt(fraction) / parseInt(denominator);
+    }
+    return parseFloat(ss);
+}
+
+},{"bim":"gfJhS","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"kne57":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "createUnsupportedConfigDesc", ()=>createUnsupportedConfigDesc
@@ -27539,8 +27549,8 @@ class Tethr extends _eventemitter3Default.default {
                 return this.setCanRunManualFocus(value);
             case 'canStartLiveview':
                 return this.setCanStartLiveview(value);
-            case 'canTakePicture':
-                return this.setCanTakePicture(value);
+            case 'canTakePhoto':
+                return this.setCanTakePhoto(value);
             case 'captureDelay':
                 return this.setCaptureDelay(value);
             case 'colorMode':
@@ -27591,6 +27601,8 @@ class Tethr extends _eventemitter3Default.default {
                 return this.setLiveviewSize(value);
             case 'manualFocusOptions':
                 return this.setManualFocusOptions(value);
+            case 'manufacturer':
+                return this.setManufacturer(value);
             case 'model':
                 return this.setModel(value);
             case 'sharpness':
@@ -27625,8 +27637,8 @@ class Tethr extends _eventemitter3Default.default {
                 return this.getCanRunManualFocusDesc();
             case 'canStartLiveview':
                 return this.getCanStartLiveviewDesc();
-            case 'canTakePicture':
-                return this.getCanTakePictureDesc();
+            case 'canTakePhoto':
+                return this.getCanTakePhotoDesc();
             case 'captureDelay':
                 return this.getCaptureDelayDesc();
             case 'colorMode':
@@ -27677,6 +27689,8 @@ class Tethr extends _eventemitter3Default.default {
                 return this.getLiveviewSizeDesc();
             case 'manualFocusOptions':
                 return this.getManualFocusOptionsDesc();
+            case 'manufacturer':
+                return this.getManufacturerDesc();
             case 'model':
                 return this.getModelDesc();
             case 'sharpness':
@@ -27779,16 +27793,16 @@ class Tethr extends _eventemitter3Default.default {
     async getCanStartLiveviewDesc() {
         return createUnsupportedConfigDesc();
     }
-    async getCanTakePicture() {
-        return (await this.getCanTakePictureDesc()).value;
+    async getCanTakePhoto() {
+        return (await this.getCanTakePhotoDesc()).value;
     }
-    async setCanTakePicture(// eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async setCanTakePhoto(// eslint-disable-next-line @typescript-eslint/no-unused-vars
     value) {
         return {
             status: 'unsupported'
         };
     }
-    async getCanTakePictureDesc() {
+    async getCanTakePhotoDesc() {
         return createUnsupportedConfigDesc();
     }
     async getCaptureDelay() {
@@ -28103,6 +28117,18 @@ class Tethr extends _eventemitter3Default.default {
     async getManualFocusOptionsDesc() {
         return createUnsupportedConfigDesc();
     }
+    async getManufacturer() {
+        return (await this.getManufacturerDesc()).value;
+    }
+    async setManufacturer(// eslint-disable-next-line @typescript-eslint/no-unused-vars
+    value) {
+        return {
+            status: 'unsupported'
+        };
+    }
+    async getManufacturerDesc() {
+        return createUnsupportedConfigDesc();
+    }
     async getModel() {
         return (await this.getModelDesc()).value;
     }
@@ -28187,7 +28213,7 @@ class Tethr extends _eventemitter3Default.default {
             status: 'unsupported'
         };
     }
-    async takePicture(// eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async takePhoto(// eslint-disable-next-line @typescript-eslint/no-unused-vars
     option) {
         return {
             status: 'unsupported'
@@ -28221,9 +28247,6 @@ class TethrPTPUSB extends _tethr.Tethr {
         super();
         this.device = device;
         this._opened = false;
-        this.getDeviceInfo = async ()=>{
-            return await TethrPTPUSB.getDeviceInfo(this.device);
-        };
         this.onDevicePropChanged = async (event)=>{
             const devicePropCode = event.parameters[0];
             const name = this.getConfigNameByCode(devicePropCode);
@@ -28292,7 +28315,7 @@ class TethrPTPUSB extends _tethr.Tethr {
             decode: (data)=>data
         });
     }
-    async getCanTakePictureDesc() {
+    async getCanTakePhotoDesc() {
         const { operationsSupported  } = await this.getDeviceInfo();
         const value = operationsSupported.includes(_ptpdatacode.OpCode.InitiateCapture);
         return _tethr.createReadonlyConfigDesc(value);
@@ -28444,6 +28467,12 @@ class TethrPTPUSB extends _tethr.Tethr {
             }
         });
     }
+    async getManufacturerDesc() {
+        return {
+            writable: false,
+            value: (await this.getDeviceInfo()).manufacturer
+        };
+    }
     async getModelDesc() {
         return {
             writable: false,
@@ -28502,7 +28531,7 @@ class TethrPTPUSB extends _tethr.Tethr {
         });
     }
     // Actions
-    async takePicture({ download =true  } = {
+    async takePhoto({ download =true  } = {
     }) {
         const { operationsSupported  } = await this.getDeviceInfo();
         if (!operationsSupported.includes(_ptpdatacode.OpCode.InitiateCapture)) return {
@@ -28684,6 +28713,21 @@ class TethrPTPUSB extends _tethr.Tethr {
         const { devicePropsSupported  } = await this.getDeviceInfo();
         return devicePropsSupported.includes(code);
     }
+    async getDeviceInfo() {
+        return await TethrPTPUSB.getDeviceInfo(this.device);
+    }
+    async getObjectHandles(storageId = 4294967295) {
+        const { data  } = await this.device.receiveData({
+            label: 'GetObjectHandles',
+            opcode: _ptpdatacode.OpCode.GetObjectHandles,
+            parameters: [
+                storageId,
+                4294967295,
+                0
+            ]
+        });
+        return new _ptpdataView.PTPDataView(data).readUint32Array();
+    }
     async getObjectInfo(id) {
         const { data  } = await this.device.receiveData({
             label: 'GetObjectInfo',
@@ -28749,6 +28793,7 @@ class TethrPTPUSB extends _tethr.Tethr {
             });
             const storageInfo = new _ptpdataView.PTPDataView(data);
             const info = {
+                storageId: id,
                 storageType: _ptpdatacode.PTPStorageTypeCode[storageInfo.readUint16()],
                 filesystemType: _ptpdatacode.PTPFilesystemTypeCode[storageInfo.readUint16()],
                 accessCapability: _ptpdatacode.PTPAccessCapabilityCode[storageInfo.readUint16()],
@@ -29129,7 +29174,7 @@ class TethrSigma extends _.TethrPTPUSB {
             value
         };
     }
-    async getCanTakePictureDesc() {
+    async getCanTakePhotoDesc() {
         return _tethr.createReadonlyConfigDesc(true);
     }
     async getCanRunAutoFocusDesc() {
@@ -29296,8 +29341,14 @@ class TethrSigma extends _.TethrPTPUSB {
             }
         };
     }
+    async getImageAspect() {
+        const { imageAspect  } = await this.getCamDataGroup5();
+        const id = imageAspect - 245 // Magic number
+        ;
+        return this.imageAspectTable.get(id) ?? null;
+    }
     async setImageAspect(imageAspect) {
-        const id = this.imageAspectTableIFD.getKey(imageAspect);
+        const id = this.imageAspectTable.getKey(imageAspect);
         if (id === undefined) return {
             status: 'invalid parameter'
         };
@@ -29307,22 +29358,21 @@ class TethrSigma extends _.TethrPTPUSB {
         const decodeImageAspectIFD = (id)=>{
             return this.imageAspectTableIFD.get(id) ?? 'Unknown';
         };
-        const { imageAspect  } = await this.getCamDataGroup5();
-        const { imageAspect: imageAspectOptions  } = await this.getCamCanSetInfo5();
-        const imageAspectIfdID = imageAspect - this.imageAspectDataGroupOffset;
+        const { imageAspect: values  } = await this.getCamCanSetInfo5();
+        const value = await this.getImageAspect();
         return {
-            writable: imageAspectOptions.length > 0,
-            value: decodeImageAspectIFD(imageAspectIfdID),
+            writable: values.length > 0,
+            value,
             option: {
                 type: 'enum',
-                values: imageAspectOptions.map(decodeImageAspectIFD)
+                values: values.map(decodeImageAspectIFD)
             }
         };
     }
     async setImageQuality(imageQuality) {
         let jpegQuality = null;
         let dngBitDepth = null;
-        const hasDngMatch = imageQuality.match(/^DNG (12|14)bit(?:,([a-z]+))?/i);
+        const hasDngMatch = imageQuality.match(/^raw (12|14)bit(?:,([a-z]+))?/i);
         if (hasDngMatch) {
             const [, dngBitDepthStr, jpegQualityStr] = hasDngMatch;
             jpegQuality = jpegQualityStr ?? null;
@@ -29382,9 +29432,9 @@ class TethrSigma extends _.TethrPTPUSB {
         })();
         const dngBitDepth = await (async ()=>{
             const { dngImageQuality  } = await this.getCamDataGroup4();
-            return dngImageQuality + 'bit';
+            return dngImageQuality;
         })();
-        function stringifyImageQuality(quality, dngBitDepth = '') {
+        function stringifyImageQuality(quality, dngBitDepth) {
             if (quality.hasDNG) {
                 if (quality.jpegQuality) {
                     return `raw ${dngBitDepth}bit,${quality.jpegQuality}`;
@@ -29402,16 +29452,19 @@ class TethrSigma extends _.TethrPTPUSB {
         return {
             writable: true,
             value: stringifyImageQuality(imageQuality, dngBitDepth),
-            options: [
-                // NOTE: Hard-coded so this might not work for some cases
-                'low',
-                'standard',
-                'fine',
-                'raw 12bit,fine',
-                'raw 14bit,fine',
-                'raw 12bit',
-                'raw 14bit', 
-            ]
+            option: {
+                type: 'enum',
+                values: [
+                    // NOTE: Hard-coded so this might not work for some cases
+                    'low',
+                    'standard',
+                    'fine',
+                    'raw 12bit,fine',
+                    'raw 14bit,fine',
+                    'raw 12bit',
+                    'raw 14bit', 
+                ]
+            }
         };
     }
     async setImageSize(imageSize) {
@@ -29579,7 +29632,7 @@ class TethrSigma extends _.TethrPTPUSB {
         };
     }
     // Actions
-    async takePicture({ download =true  } = {
+    async takePhoto({ download =true  } = {
     }) {
         const captId = await this.executeSnapCommand(SnapCaptureMode.NonAFCapture, 2);
         if (captId === null) return {
@@ -30088,7 +30141,36 @@ class TethrSigma extends _.TethrPTPUSB {
                 'powder blue'
             ], 
         ]);
-        // NOTE: This table should fix
+        this.imageAspectTable = new _bim.BiMap([
+            [
+                1,
+                '21:9'
+            ],
+            [
+                2,
+                '16:9'
+            ],
+            [
+                3,
+                '3:2'
+            ],
+            [
+                4,
+                '4:3'
+            ],
+            [
+                5,
+                '7:6'
+            ],
+            [
+                6,
+                '1:1'
+            ],
+            [
+                7,
+                'a size'
+            ], 
+        ]);
         this.imageAspectTableIFD = new _bim.BiMap([
             [
                 1,
@@ -30119,7 +30201,6 @@ class TethrSigma extends _.TethrPTPUSB {
                 '1:1'
             ], 
         ]);
-        this.imageAspectDataGroupOffset = 245;
         this.isoTable = new _bim.BiMap([
             [
                 0,
@@ -31474,31 +31555,34 @@ class TethrWebcam extends _tethr.Tethr {
         super();
         this.liveviewEnabled = false;
         this.media = null;
-        this.videoTrack = null;
-        this._opened = false;
         this.captureHandler = null;
         this.facingModeDict = new _bim.BiMap();
     }
     async open() {
-        this._opened = true;
-        this.media = await navigator.mediaDevices.getUserMedia({
-            video: true
-        });
-        this.videoTrack = this.media.getVideoTracks()[0];
+        try {
+            this.media = await navigator.mediaDevices.getUserMedia({
+                video: true
+            });
+        } catch  {
+            throw new Error('No available webcam is connected');
+        }
         // Setup CaptureHandler
-        if ('ImageCapture' in globalThis) this.captureHandler = {
-            type: 'imageCapture',
-            imageCapture: new ImageCapture(this.videoTrack)
-        };
-        else {
+        if ('ImageCapture' in globalThis) {
+            const videoTrack = this.media.getVideoTracks()[0];
+            this.captureHandler = {
+                type: 'imageCapture',
+                imageCapture: new ImageCapture(videoTrack)
+            };
+        } else {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             const video = document.createElement('video');
             video.autoplay = true;
+            video.muted = true;
             video.style.display = 'none';
+            video.playsInline = true;
             document.body.appendChild(video);
             video.srcObject = this.media;
-            video.play();
             if (context) this.captureHandler = {
                 type: 'canvas',
                 canvas,
@@ -31506,31 +31590,33 @@ class TethrWebcam extends _tethr.Tethr {
                 video
             };
         }
-        // Retrieve deviceIDs for front/rear cameras
+        // Retrieve the camera's available facingModes
         const devices = await navigator.mediaDevices.enumerateDevices();
-        const entries = devices.filter((d)=>d.kind === 'videoinput'
+        const facingModeEntries = devices.filter((d)=>d.kind === 'videoinput'
         ).map((d)=>[
                 d.deviceId,
                 d.label
             ]
         );
-        this.facingModeDict = new _bim.BiMap(entries);
+        this.facingModeDict = new _bim.BiMap(facingModeEntries);
     }
     async close() {
-        this._opened = false;
+        this.media?.getTracks().forEach((t)=>t.stop()
+        );
+        this.media = null;
     }
     get opened() {
-        return this._opened;
+        return !!this.media;
     }
     // Configs
     async getCanStartLiveviewDesc() {
         return _tethr.createReadonlyConfigDesc(true);
     }
-    async getCanTakePictureDesc() {
+    async getCanTakePhotoDesc() {
         return _tethr.createReadonlyConfigDesc(this.captureHandler !== null);
     }
     async setFacingMode(value) {
-        if (!this.media || !this.videoTrack || !this.captureHandler) return {
+        if (!this.media || !this.captureHandler) return {
             status: 'unsupported'
         };
         const desc = await this.getFacingModeDesc();
@@ -31552,26 +31638,22 @@ class TethrWebcam extends _tethr.Tethr {
                 }
             }
         });
-        this.emit('updateLiveviewStream', this.media);
+        this.emit('liveviewStreamUpdate', this.media);
         // Setup other variables
-        this.videoTrack = this.media.getVideoTracks()[0];
-        if (this.captureHandler.type === 'imageCapture') this.captureHandler.imageCapture = new ImageCapture(this.videoTrack);
+        const videoTrack = this.media.getVideoTracks()[0];
+        if (this.captureHandler.type === 'imageCapture') this.captureHandler.imageCapture = new ImageCapture(videoTrack);
         else {
             const { video  } = this.captureHandler;
             video.srcObject = this.media;
-            video.play();
         }
-        /*
-		await this.videoTrack.applyConstraints({
-			facingMode: value,
-		})
-		*/ return {
+        return {
             status: 'ok'
         };
     }
     async getFacingModeDesc() {
-        if (!this.media || !this.videoTrack) return _tethr.createUnsupportedConfigDesc();
-        const currentId = this.videoTrack.getSettings().deviceId ?? '';
+        if (!this.media) return _tethr.createUnsupportedConfigDesc();
+        const videoTrack = this.media.getVideoTracks()[0];
+        const currentId = videoTrack.getSettings().deviceId ?? '';
         const value = this.facingModeDict.get(currentId) ?? null;
         return {
             writable: this.facingModeDict.size > 0,
@@ -31583,26 +31665,7 @@ class TethrWebcam extends _tethr.Tethr {
                 ]
             }
         };
-    /*
-		const settings = this.videoTrack.getSettings()
-		const capabilities = this.videoTrack.getCapabilities()
-
-		const value = settings.facingMode
-		const values = capabilities.facingMode
-
-		if (!value || !values) {
-			return createUnsupportedConfigDesc<string>()
-		}
-
-		return {
-			writable: true,
-			value,
-			option: {
-				type: 'enum',
-				values,
-			},
-		} as ConfigDesc<string>
-		*/ }
+    }
     async getModelDesc() {
         return _tethr.createReadonlyConfigDesc('Webcam');
     }
@@ -31613,9 +31676,9 @@ class TethrWebcam extends _tethr.Tethr {
         };
     }
     // Actions
-    async takePicture({ download =true  } = {
+    async takePhoto({ download =true  } = {
     }) {
-        if (!this.captureHandler || !this.videoTrack) return {
+        if (!this.media || !this.captureHandler) return {
             status: 'unsupported'
         };
         if (!download) return {
@@ -31625,14 +31688,16 @@ class TethrWebcam extends _tethr.Tethr {
         let blob;
         if (this.captureHandler.type === 'imageCapture') blob = await this.captureHandler.imageCapture.takePhoto();
         else {
+            const videoTrack = this.media.getVideoTracks()[0];
             const { width , height  } = {
                 width: 640,
                 height: 480,
-                ...this.videoTrack.getSettings()
+                ...videoTrack.getSettings()
             };
             const { canvas , context , video  } = this.captureHandler;
             canvas.width = width;
             canvas.height = height;
+            video.play();
             context.drawImage(video, 0, 0, width, height);
             const blobOrNull = await new Promise((resolve)=>{
                 canvas.toBlob(resolve);
@@ -31687,7 +31752,7 @@ class TethrWebcam extends _tethr.Tethr {
     }
 }
 
-},{"./Tethr":"kne57","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc","bim":"gfJhS"}],"eapFv":[function(require,module,exports) {
+},{"bim":"gfJhS","./Tethr":"kne57","@parcel/transformer-js/src/esmodule-helpers.js":"JacNc"}],"eapFv":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 let script;
@@ -31852,7 +31917,7 @@ const _hoisted_6 = /*#__PURE__*/ _vue.createElementVNode("h2", null, "Actions", 
 const _hoisted_7 = {
     key: 0
 };
-const _hoisted_8 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "takePicture", -1 /* HOISTED */ );
+const _hoisted_8 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "takePhoto", -1 /* HOISTED */ );
 const _hoisted_9 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "autoFocus", -1 /* HOISTED */ );
 const _hoisted_10 = /*#__PURE__*/ _vue.createElementVNode("dt", null, "manualFocus", -1 /* HOISTED */ );
 const _hoisted_11 = {
@@ -31871,13 +31936,15 @@ function render(_ctx, _cache) {
             _hoisted_2,
             _hoisted_3,
             _vue.createElementVNode("video", {
-                class: "view lv",
+                class: "view",
                 ".srcObject": _ctx.liveviewMediaStream,
-                autoplay: ""
+                autoplay: "",
+                muted: "",
+                playsinline: ""
             }, null, 8 /* PROPS */ , _hoisted_4),
             _vue.createElementVNode("img", {
-                class: "view picture",
-                src: _ctx.lastPictureURL
+                class: "view",
+                src: _ctx.photoURL
             }, null, 8 /* PROPS */ , _hoisted_5)
         ]),
         _vue.createElementVNode("aside", null, [
@@ -31887,14 +31954,14 @@ function render(_ctx, _cache) {
             }, _vue.toDisplayString(_ctx.camera ? 'Disconnect' : 'Connect'), 1 /* TEXT */ ),
             _hoisted_6,
             _ctx.camera ? (_vue.openBlock(), _vue.createElementBlock("dl", _hoisted_7, [
-                _ctx.configs.canTakePicture.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
+                _ctx.configs.canTakePhoto.value ? (_vue.openBlock(), _vue.createElementBlock(_vue.Fragment, {
                     key: 0
                 }, [
                     _hoisted_8,
                     _vue.createElementVNode("dd", null, [
                         _vue.createElementVNode("button", {
                             class: "red",
-                            onClick: _cache[1] || (_cache[1] = (...args)=>_ctx.takePicture && _ctx.takePicture(...args)
+                            onClick: _cache[1] || (_cache[1] = (...args)=>_ctx.takePhoto && _ctx.takePhoto(...args)
                             )
                         }, "Shutter")
                     ])
