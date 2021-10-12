@@ -30,7 +30,7 @@ import {
 	ConfigDesc,
 	createReadonlyConfigDesc,
 	OperationResult,
-	TakePictureOption,
+	TakePhotoOption,
 	Tethr,
 } from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
@@ -133,7 +133,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public async getCanTakePictureDesc() {
+	public async getCanTakePhotoDesc() {
 		const {operationsSupported} = await this.getDeviceInfo()
 		const value = operationsSupported.includes(OpCode.InitiateCapture)
 		return createReadonlyConfigDesc(value)
@@ -388,7 +388,7 @@ export class TethrPTPUSB extends Tethr {
 
 	// Actions
 
-	public async takePicture({download = true}: TakePictureOption = {}): Promise<
+	public async takePhoto({download = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		const {operationsSupported} = await this.getDeviceInfo()

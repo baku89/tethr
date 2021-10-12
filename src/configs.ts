@@ -69,7 +69,7 @@ export type ConfigType = {
 	canRunAutoFocus: boolean
 	canRunManualFocus: boolean
 	canStartLiveview: boolean
-	canTakePicture: boolean
+	canTakePhoto: boolean
 	captureDelay: number
 	colorMode: string
 	colorTemperature: number // Added

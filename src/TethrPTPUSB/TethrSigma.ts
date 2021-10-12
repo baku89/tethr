@@ -20,7 +20,7 @@ import {
 	createReadonlyConfigDesc,
 	OperationResult,
 	OperationResultStatus,
-	TakePictureOption,
+	TakePhotoOption,
 } from '../Tethr'
 import {TethrObject} from '../TethrObject'
 import {isntNil} from '../util'
@@ -202,7 +202,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getCanTakePictureDesc() {
+	public async getCanTakePhotoDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
@@ -794,7 +794,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	// Actions
 
-	public async takePicture({download = true}: TakePictureOption = {}): Promise<
+	public async takePhoto({download = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		const captId = await this.executeSnapCommand(

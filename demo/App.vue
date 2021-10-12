@@ -4,13 +4,13 @@
 			<h1>Tethr Demo</h1>
 			<a href="https://github.com/baku89/tethr">Fork Me on GitHub</a>
 			<video
-				class="view lv"
+				class="view"
 				:srcObject.prop="liveviewMediaStream"
 				autoplay
 				muted
 				playsinline
 			/>
-			<img class="view picture" :src="lastPictureURL" />
+			<img class="view" :src="photoURL" />
 		</main>
 
 		<aside>
@@ -20,9 +20,9 @@
 
 			<h2>Actions</h2>
 			<dl v-if="camera">
-				<template v-if="configs.canTakePicture.value">
-					<dt>takePicture</dt>
-					<dd><button class="red" @click="takePicture">Shutter</button></dd>
+				<template v-if="configs.canTakePhoto.value">
+					<dt>takePhoto</dt>
+					<dd><button class="red" @click="takePhoto">Shutter</button></dd>
 				</template>
 				<template v-if="configs.canRunAutoFocus.value">
 					<dt>autoFocus</dt>

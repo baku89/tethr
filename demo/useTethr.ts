@@ -61,7 +61,7 @@ export function useTethr() {
 	const camera = shallowRef<Tethr | null>(null)
 
 	const liveviewMediaStream = ref<null | MediaStream>(null)
-	const lastPictureURL = ref(TransparentPng)
+	const photoURL = ref(TransparentPng)
 
 	async function toggleCameraConnection() {
 		if (camera.value && camera.value.opened) {
@@ -101,17 +101,17 @@ export function useTethr() {
 		;(window as any).cam = camera.value
 	}
 
-	async function takePicture() {
+	async function takePhoto() {
 		if (!camera.value) return
 
-		const result = await camera.value.takePicture()
+		const result = await camera.value.takePhoto()
 
 		if (result.status === 'ok') {
 			for (const object of result.value) {
 				if (object.format === 'raw') {
 					saveAs(object.blob, object.filename)
 				} else {
-					lastPictureURL.value = URL.createObjectURL(object.blob)
+					photoURL.value = URL.createObjectURL(object.blob)
 				}
 			}
 		}
@@ -165,7 +165,7 @@ export function useTethr() {
 			liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),
 			liveviewSize: useTethrConfig(camera, 'liveviewSize'),
 			batteryLevel: useTethrConfig(camera, 'batteryLevel'),
-			canTakePicture: useTethrConfig(camera, 'canTakePicture'),
+			canTakePhoto: useTethrConfig(camera, 'canTakePhoto'),
 			canRunAutoFocus: useTethrConfig(camera, 'canRunAutoFocus'),
 			canRunManualFocus: useTethrConfig(camera, 'canRunManualFocus'),
 			canStartLiveview: useTethrConfig(camera, 'canStartLiveview'),
@@ -173,10 +173,10 @@ export function useTethr() {
 		},
 
 		liveviewMediaStream,
-		lastPictureURL,
+		photoURL,
 		runAutoFocus,
 		toggleCameraConnection,
 		toggleLiveview,
-		takePicture,
+		takePhoto,
 	}
 }

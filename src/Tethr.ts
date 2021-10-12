@@ -43,7 +43,7 @@ export type ConfigDesc<T> = {
 		| {type: 'range'; min: T; max: T; step: T}
 }
 
-export interface TakePictureOption {
+export interface TakePhotoOption {
 	download?: boolean
 }
 
@@ -121,8 +121,8 @@ export abstract class Tethr
 				return this.setCanRunManualFocus(value as boolean)
 			case 'canStartLiveview':
 				return this.setCanStartLiveview(value as boolean)
-			case 'canTakePicture':
-				return this.setCanTakePicture(value as boolean)
+			case 'canTakePhoto':
+				return this.setCanTakePhoto(value as boolean)
 			case 'captureDelay':
 				return this.setCaptureDelay(value as number)
 			case 'colorMode':
@@ -213,8 +213,8 @@ export abstract class Tethr
 				return this.getCanRunManualFocusDesc() as ReturnType
 			case 'canStartLiveview':
 				return this.getCanStartLiveviewDesc() as ReturnType
-			case 'canTakePicture':
-				return this.getCanTakePictureDesc() as ReturnType
+			case 'canTakePhoto':
+				return this.getCanTakePhotoDesc() as ReturnType
 			case 'captureDelay':
 				return this.getCaptureDelayDesc() as ReturnType
 			case 'colorMode':
@@ -378,16 +378,16 @@ export abstract class Tethr
 		return createUnsupportedConfigDesc()
 	}
 
-	public async getCanTakePicture(): Promise<boolean | null> {
-		return (await this.getCanTakePictureDesc()).value
+	public async getCanTakePhoto(): Promise<boolean | null> {
+		return (await this.getCanTakePhotoDesc()).value
 	}
-	public async setCanTakePicture(
+	public async setCanTakePhoto(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: boolean
 	): Promise<OperationResult<void>> {
 		return {status: 'unsupported'}
 	}
-	public async getCanTakePictureDesc(): Promise<ConfigDesc<boolean>> {
+	public async getCanTakePhotoDesc(): Promise<ConfigDesc<boolean>> {
 		return createUnsupportedConfigDesc()
 	}
 
@@ -838,9 +838,9 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 
-	public async takePicture(
+	public async takePhoto(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		option?: TakePictureOption
+		option?: TakePhotoOption
 	): Promise<OperationResult<TethrObject[]>> {
 		return {status: 'unsupported'}
 	}

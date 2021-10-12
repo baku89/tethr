@@ -5,7 +5,7 @@ import {
 	createReadonlyConfigDesc,
 	createUnsupportedConfigDesc,
 	OperationResult,
-	TakePictureOption,
+	TakePhotoOption,
 	Tethr,
 } from './Tethr'
 import {TethrObject} from './TethrObject'
@@ -94,7 +94,7 @@ export class TethrWebcam extends Tethr {
 		return createReadonlyConfigDesc(true)
 	}
 
-	public async getCanTakePictureDesc() {
+	public async getCanTakePhotoDesc() {
 		return createReadonlyConfigDesc(this.captureHandler !== null)
 	}
 
@@ -167,7 +167,7 @@ export class TethrWebcam extends Tethr {
 	}
 
 	// Actions
-	public async takePicture({download = true}: TakePictureOption = {}): Promise<
+	public async takePhoto({download = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		if (!this.media || !this.captureHandler) {

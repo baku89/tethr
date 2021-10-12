@@ -16,7 +16,7 @@ import {
 	ConfigDesc,
 	createReadonlyConfigDesc,
 	OperationResult,
-	TakePictureOption,
+	TakePhotoOption,
 } from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil} from '../util'
@@ -266,7 +266,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		] as ManualFocusOption[])
 	}
 
-	public async getCanTakePictureDesc() {
+	public async getCanTakePhotoDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
@@ -517,7 +517,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 	// Actions
 
-	public async takePicture({download = true}: TakePictureOption = {}): Promise<
+	public async takePhoto({download = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		const quality = await this.get('imageQuality')
