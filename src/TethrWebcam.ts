@@ -121,7 +121,7 @@ export class TethrWebcam extends Tethr {
 		this.media = await navigator.mediaDevices.getUserMedia({
 			video: {deviceId: {exact: deviceId}},
 		})
-		this.emit('updateLiveviewStream', this.media)
+		this.emit('liveviewStreamUpdate', this.media)
 
 		// Setup other variables
 		const videoTrack = this.media.getVideoTracks()[0]

@@ -93,7 +93,7 @@ export function useTethr() {
 			cam.on('disconnect', () => {
 				camera.value = null
 			})
-			cam.on('updateLiveviewStream', (ms: MediaStream | null) => {
+			cam.on('liveviewStreamUpdate', (ms: MediaStream | null) => {
 				liveviewMediaStream.value = ms
 			})
 		}
@@ -165,7 +165,6 @@ export function useTethr() {
 			liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),
 			liveviewSize: useTethrConfig(camera, 'liveviewSize'),
 			batteryLevel: useTethrConfig(camera, 'batteryLevel'),
-
 			canTakePicture: useTethrConfig(camera, 'canTakePicture'),
 			canRunAutoFocus: useTethrConfig(camera, 'canRunAutoFocus'),
 			canRunManualFocus: useTethrConfig(camera, 'canRunManualFocus'),
