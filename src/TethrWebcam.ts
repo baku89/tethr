@@ -56,11 +56,9 @@ export class TethrWebcam extends Tethr {
 			video.muted = true
 			video.style.display = 'none'
 			video.playsInline = true
-			video.play()
 			document.body.appendChild(video)
 
 			video.srcObject = this.media
-			// video.play()
 
 			if (context) {
 				this.captureHandler = {
@@ -133,7 +131,6 @@ export class TethrWebcam extends Tethr {
 		} else {
 			const {video} = this.captureHandler
 			video.srcObject = this.media
-			video.play()
 		}
 
 		return {status: 'ok'}
@@ -195,6 +192,7 @@ export class TethrWebcam extends Tethr {
 			canvas.width = width
 			canvas.height = height
 
+			video.play()
 			context.drawImage(video, 0, 0, width, height)
 
 			const blobOrNull = await new Promise<Blob | null>(resolve => {
