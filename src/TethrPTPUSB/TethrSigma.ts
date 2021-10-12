@@ -538,17 +538,20 @@ export class TethrSigma extends TethrPTPUSB {
 		return {
 			writable: true,
 			value: stringifyImageQuality(imageQuality, dngBitDepth),
-			options: [
-				// NOTE: Hard-coded so this might not work for some cases
-				'low',
-				'standard',
-				'fine',
-				'raw 12bit,fine',
-				'raw 14bit,fine',
-				'raw 12bit',
-				'raw 14bit',
-			],
-		}
+			option: {
+				type: 'enum',
+				values: [
+					// NOTE: Hard-coded so this might not work for some cases
+					'low',
+					'standard',
+					'fine',
+					'raw 12bit,fine',
+					'raw 14bit,fine',
+					'raw 12bit',
+					'raw 14bit',
+				],
+			},
+		} as ConfigDesc<string>
 
 		function stringifyImageQuality(
 			quality: ImageQualityConfig,
