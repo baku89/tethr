@@ -143,7 +143,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			new Promise<PTPResponse>((resolve, reject) => {
 				console.groupCollapsed(`Send Command [${option.label}]`)
 
-				this.sendCommandNow(option).then(resolve)
+				this.sendCommandNow(option).then(resolve).catch(reject)
 
 				setTimeout(() => reject('Timeout'), PTPDefaultTimeoutMs)
 			}).finally(console.groupEnd)
@@ -156,7 +156,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			new Promise<PTPResponse>((resolve, reject) => {
 				console.groupCollapsed(`Receive Data [${option.label}]`)
 
-				this.sendDataNow(option).then(resolve)
+				this.sendDataNow(option).then(resolve).catch(reject)
 
 				setTimeout(() => reject('Timeout'), PTPDefaultTimeoutMs)
 			}).finally(console.groupEnd)
@@ -171,7 +171,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			new Promise<PTPDataResponse>((resolve, reject) => {
 				console.groupCollapsed(`Receive Data [${option.label}]`)
 
-				this.receiveDataNow(option).then(resolve)
+				this.receiveDataNow(option).then(resolve).catch(reject)
 
 				setTimeout(() => reject('Timeout'), PTPDefaultTimeoutMs)
 			}).finally(console.groupEnd)
