@@ -804,30 +804,42 @@ export class TethrSigma extends TethrPTPUSB {
 
 		if (captId === null) return {status: 'general error'}
 
-		if (!download) return {status: 'ok', value: []}
+		if (!download) {
+			await this.clearImageDBSingle(captId)
+			return {status: 'ok', value: []}
+		}
 
-		const pictInfo = await this.getPictFileInfo()
+		const pictInfos = await this.getPictFileInfo2()
 
-		// Get file buffer
-		const {data: pictFileData} = await this.device.receiveData({
-			label: 'SigmaFP GetBigPartialPictFile',
-			opcode: OpCodeSigma.GetBigPartialPictFile,
-			parameters: [pictInfo.fileAddress, 0x0, pictInfo.fileSize],
-			maxByteLength: pictInfo.fileSize + 1000,
+		const getAllPictPromises = pictInfos.map(async info => {
+			// Get file buffer
+			const {data} = await this.device.receiveData({
+				label: 'SigmaFP GetBigPartialPictFile',
+				opcode: OpCodeSigma.GetBigPartialPictFile,
+				parameters: [info.fileAddress, 0x0, info.fileSize],
+				maxByteLength: info.fileSize + 1000,
+			})
+
+			// First 4 bytes seems to be buffer length so splice it
+			const jpegData = data.slice(4)
+
+			const isRaw = /dng/i.test(info.fileExt)
+			const format = isRaw ? 'raw' : 'jpeg'
+			const type = isRaw ? 'image/x-adobe-dng' : 'image/jpeg'
+
+			const blob = new Blob([jpegData], {type})
+
+			return {
+				format,
+				blob,
+			} as TethrObject
 		})
-
-		// First 4 bytes seems to be buffer length so splice it
-		const jpegData = pictFileData.slice(4)
-		const blob = new Blob([jpegData], {type: 'image/jpeg'})
 
 		await this.clearImageDBSingle(captId)
 
-		const jpegTethrObject = {
-			format: 'jpeg',
-			blob,
-		} as TethrObject
+		const picts = await Promise.all(getAllPictPromises)
 
-		return {status: 'ok', value: [jpegTethrObject]}
+		return {status: 'ok', value: picts}
 	}
 
 	public async runAutoFocus(): Promise<OperationResult<void>> {
@@ -1080,22 +1092,24 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	private async getCamCaptStatus(id = 0) {
+	private async getCamCaptStatus(imageId = 0) {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamCaptStatus',
 			opcode: OpCodeSigma.GetCamCaptStatus,
-			parameters: [id],
+			parameters: [imageId],
 		})
 
 		const dataView = new PTPDataView(data.slice(1))
 
-		return {
+		const status = {
 			imageId: dataView.readUint8(),
 			imageDBHead: dataView.readUint8(),
 			imageDBTail: dataView.readUint8(),
 			status: dataView.readUint16(),
 			destination: dataView.readUint8(),
 		}
+
+		return status
 	}
 
 	/**
@@ -1142,26 +1156,38 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 	}
 
-	private async getPictFileInfo() {
+	private async clearImageDBAll() {
+		await this.device.sendData({
+			label: 'SigmaFP ClearImageDBAll',
+			opcode: OpCodeSigma.ClearImageDBAll,
+			data: new ArrayBuffer(8),
+		})
+	}
+
+	private async getPictFileInfo2() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetPictFileInfo2',
 			opcode: 0x902d,
 		})
 		const dataView = new PTPDataView(data)
 
-		dataView.skip(12)
+		dataView.skip(4) // Packet Size
 
-		return {
-			fileAddress: dataView.readUint32(),
-			fileSize: dataView.readUint32(),
-			fileExt: dataView.skip(8).readAsciiString(),
-			resolution: {
-				width: dataView.readUint16(),
-				height: dataView.readUint16(),
-			},
-			folderName: dataView.readAsciiString(),
-			fileName: dataView.readAsciiString(),
-		}
+		const byteOffsets = dataView.readUint32Array()
+
+		const pictInfos = byteOffsets.map(offset => {
+			dataView.goto(offset)
+
+			return {
+				fileAddress: dataView.readUint32(),
+				fileSize: dataView.readUint32(),
+				fileExt: dataView.skip(8).readAsciiString(),
+				folderName: dataView.skip(4).readAsciiString(),
+				fileName: dataView.readAsciiString(),
+			}
+		})
+
+		return pictInfos
 	}
 
 	private async emitAllConfigChangedEvents() {
