@@ -11,8 +11,8 @@
 		"format": "prettier --write src demo",
 		"fix": "npm run format && npm run lint",
 		"build": "tsc --project tsconfig.prod.json --outDir dist",
-		"build:demo": "rm -rf public && NODE_ENV=production parcel demo/index.html --public-url . --dist-dir public --no-hmr --watch-for-stdin --no-source-maps",
-		"deploy:demo": "gh-pages -d public",
+		"build:demo": "rm -rf public && parcel build demo/index.html --public-url . --dist-dir public --no-source-maps",
+		"deploy:demo": "npm run build:demo; gh-pages -d public",
 		"prepare": "npm run build"
 	},
 	"files": [
@@ -56,5 +56,9 @@
 	},
 	"browserslist": [
 		"since 2020-12"
-	]
+	],
+	"targets": {
+		"main": false,
+		"types": false
+	}
 }
