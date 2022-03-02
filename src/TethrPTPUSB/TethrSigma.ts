@@ -799,7 +799,7 @@ export class TethrSigma extends TethrPTPUSB {
 	> {
 		const captId = await this.executeSnapCommand(
 			SnapCaptureMode.NonAFCapture,
-			2
+			1
 		)
 
 		if (captId === null) return {status: 'general error'}
@@ -904,6 +904,54 @@ export class TethrSigma extends TethrPTPUSB {
 		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		return {status: 'ok'}
+	}
+
+	public async startRec(): Promise<OperationResult<void>> {
+		const captureMode = SnapCaptureMode.StartRecordingMovieWithoutAF
+		const captureAmount = 1
+
+		const snapState = new Uint8Array([captureMode, captureAmount]).buffer
+
+		await this.device.sendData({
+			label: 'Sigma SnapCommand',
+			opcode: OpCodeSigma.SnapCommand,
+			data: this.encodeParameter(snapState),
+		})
+
+		return {status: 'ok'}
+	}
+
+	public async stopRec(): Promise<OperationResult<void>> {
+		const captureMode = SnapCaptureMode.StopRecordingMovie
+		const captureAmount = 1
+
+		const snapState = new Uint8Array([captureMode, captureAmount]).buffer
+
+		await this.device.sendData({
+			label: 'Sigma SnapCommand',
+			opcode: OpCodeSigma.SnapCommand,
+			data: this.encodeParameter(snapState),
+		})
+
+		const movieFileInfo = await this.getMovieFileInfo()
+
+		return {status: 'ok'}
+	}
+
+	private async getMovieFileInfo() {
+		const {data} = await this.device.receiveData({
+			label: 'Sigma GetMovieFileInfo',
+			opcode: OpCodeSigma.GetMovieFileInfo,
+		})
+
+		const dv = new PTPDataView(data)
+
+		const movieFileInfo = {
+			fileFormat: dv.goto(24).readAsciiString(),
+			fileHandler: dv.goto(32).readUint32(),
+		}
+
+		return movieFileInfo
 	}
 
 	private async getCamDataGroup1() {
@@ -1152,14 +1200,6 @@ export class TethrSigma extends TethrPTPUSB {
 			label: 'SigmaFP ClearImageDBSingle',
 			opcode: OpCodeSigma.ClearImageDBSingle,
 			parameters: [captId],
-			data: new ArrayBuffer(8),
-		})
-	}
-
-	private async clearImageDBAll() {
-		await this.device.sendData({
-			label: 'SigmaFP ClearImageDBAll',
-			opcode: OpCodeSigma.ClearImageDBAll,
 			data: new ArrayBuffer(8),
 		})
 	}
