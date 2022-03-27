@@ -761,6 +761,10 @@ export class TethrSigma extends TethrPTPUSB {
 		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return {status: 'invalid parameter'}
 
+		if (ss === 'bulb' && (await this.getIso()) === 'auto') {
+			this.setIso(100)
+		}
+
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
 	}
 
@@ -804,6 +808,8 @@ export class TethrSigma extends TethrPTPUSB {
 		const values = shutterSpeeds
 			.filter(e => ssMinIndex <= e[0] && e[0] <= ssMaxIndex)
 			.map(e => e[1])
+
+		values.unshift('bulb')
 
 		return {
 			writable: values.length > 0,
