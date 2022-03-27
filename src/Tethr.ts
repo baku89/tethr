@@ -133,6 +133,8 @@ export abstract class Tethr
 				return this.setContrast(value as number)
 			case 'dateTime':
 				return this.setDateTime(value as Date)
+			case 'destinationToSave':
+				return this.setDestinationToSave(value as string)
 			case 'digitalZoom':
 				return this.setDigitalZoom(value as number)
 			case 'driveMode':
@@ -225,6 +227,8 @@ export abstract class Tethr
 				return this.getContrastDesc() as ReturnType
 			case 'dateTime':
 				return this.getDateTimeDesc() as ReturnType
+			case 'destinationToSave':
+				return this.getDestinationToSaveDesc() as ReturnType
 			case 'digitalZoom':
 				return this.getDigitalZoomDesc() as ReturnType
 			case 'driveMode':
@@ -466,6 +470,19 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getDateTimeDesc(): Promise<ConfigDesc<Date>> {
+		return createUnsupportedConfigDesc()
+	}
+
+	public async getDestinationToSave(): Promise<string | null> {
+		return (await this.getDestinationToSaveDesc()).value
+	}
+	public async setDestinationToSave(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		value: string
+	): Promise<OperationResult<void>> {
+		return {status: 'unsupported'}
+	}
+	public async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
 		return createUnsupportedConfigDesc()
 	}
 

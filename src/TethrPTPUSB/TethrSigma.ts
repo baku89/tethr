@@ -283,6 +283,60 @@ export class TethrSigma extends TethrPTPUSB {
 		} as ConfigDesc<number>
 	}
 
+	public async setDestinationToSave(
+		value: string
+	): Promise<OperationResult<void>> {
+		let id: number | null = null
+
+		switch (value) {
+			case 'uninitialized':
+				id = 0x00
+				break
+			case 'camera':
+				id = 0x01
+				break
+			case 'pc':
+				id = 0x02
+				break
+			case 'camera,pc':
+				id = 0x03
+				break
+		}
+
+		if (id === null) return {status: 'invalid parameter'}
+
+		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 15, id)
+	}
+
+	public async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
+		const {destinationToSave} = await this.getCamDataGroup3()
+
+		let value = ''
+		switch (destinationToSave) {
+			case 0x00:
+				value = 'uninitialized'
+				break
+			case 0x01:
+				value = 'camera'
+				break
+			case 0x02:
+				value = 'pc'
+				break
+			case 0x03:
+				value = 'camera,pc'
+				break
+		}
+
+		return {
+			writable: true,
+			value,
+			option: {
+				type: 'enum',
+				values: ['uninitialized', 'camera', 'pc', 'camera,pc'],
+			},
+		} as ConfigDesc<string>
+	}
+
 	public async getExposureMode() {
 		const {exposureMode} = await this.getCamDataGroup2()
 		return this.exposureModeTable.get(exposureMode) ?? null
@@ -1023,7 +1077,7 @@ export class TethrSigma extends TethrPTPUSB {
 			afAuxiliaryLight: dataView.readUint8(),
 			afBeep: dataView.readUint8(),
 			timerSound: dataView.readUint8(),
-			destinationToSave: dataView.skip(1).readUint8(),
+			destinationToSave: dataView.readUint8(),
 		}
 	}
 
