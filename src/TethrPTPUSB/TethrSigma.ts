@@ -811,7 +811,9 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const pictInfos = await this.getPictFileInfo2()
 
-		const getAllPictPromises = pictInfos.map(async info => {
+		const picts: TethrObject[] = []
+
+		for await (const info of pictInfos) {
 			// Get file buffer
 			const {data} = await this.device.receiveData({
 				label: 'SigmaFP GetBigPartialPictFile',
@@ -829,15 +831,13 @@ export class TethrSigma extends TethrPTPUSB {
 
 			const blob = new Blob([jpegData], {type})
 
-			return {
+			picts.push({
 				format,
 				blob,
-			} as TethrObject
-		})
+			} as TethrObject)
+		}
 
 		await this.clearImageDBSingle(captId)
-
-		const picts = await Promise.all(getAllPictPromises)
 
 		return {status: 'ok', value: picts}
 	}
