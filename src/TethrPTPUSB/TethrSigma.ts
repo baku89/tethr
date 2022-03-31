@@ -894,6 +894,7 @@ export class TethrSigma extends TethrPTPUSB {
 			picts.push({
 				format,
 				blob,
+				filename: info.fileName,
 			} as TethrObject)
 		}
 
