@@ -75,6 +75,7 @@ export type ConfigType = {
 	colorTemperature: number // Added
 	contrast: number
 	dateTime: Date
+	destinationToSave: string
 	digitalZoom: number
 	driveMode: DriveMode // stillCaptureMode
 	exposureComp: string // exposureBiasCompensation
