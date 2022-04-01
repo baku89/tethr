@@ -19,9 +19,11 @@
 				<template v-if="config.option.type === 'range'">
 					<input
 						type="number"
+						:value="config.value"
 						:min="config.option.min"
 						:max="config.option.max"
 						:step="config.option.step"
+						@change.prevent="update"
 					/>
 				</template>
 			</template>
