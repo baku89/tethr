@@ -388,15 +388,22 @@ export class TethrSigma extends TethrPTPUSB {
 		if (exposureComp.length < 3) {
 			return {
 				writable: false,
-				value,
+				value: null,
 			}
 		}
 
 		const [min, max] = exposureComp
 
+		if (min === 0 && max === 0) {
+			return {
+				writable: false,
+				value: null,
+			}
+		}
+
 		const allValues = [...this.compensationOneThirdTable.values()]
 		const values = allValues
-			.map(v => [v, decodeExposureComp(v)] as [string, number])
+			.map(v => [v, exposureCompStringToFloat(v)] as const)
 			.sort((a, b) => a[1] - b[1])
 			.filter(([, n]) => min - 1e-4 <= n && n <= max + 1e-4)
 			.map(([v]) => v)
@@ -410,7 +417,7 @@ export class TethrSigma extends TethrPTPUSB {
 			},
 		}
 
-		function decodeExposureComp(v: string) {
+		function exposureCompStringToFloat(v: string) {
 			if (v === '0') return 0x0
 
 			let negative = false,
@@ -432,7 +439,7 @@ export class TethrSigma extends TethrPTPUSB {
 				thirds = match2[2] === '1/3' ? 1 : 2
 			}
 
-			if (!match1 && !match2) return null
+			if (!match1 && !match2) throw new Error()
 
 			return (negative ? -1 : 1) * (digits + thirds / 3)
 		}
