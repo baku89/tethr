@@ -285,24 +285,9 @@ export class TethrSigma extends TethrPTPUSB {
 	public async setDestinationToSave(
 		value: string
 	): Promise<OperationResult<void>> {
-		let id: number | null = null
+		const id = this.destinationToSaveTable.getKey(value)
 
-		switch (value) {
-			case 'uninitialized':
-				id = 0x00
-				break
-			case 'camera':
-				id = 0x01
-				break
-			case 'pc':
-				id = 0x02
-				break
-			case 'camera,pc':
-				id = 0x03
-				break
-		}
-
-		if (id === null) return {status: 'invalid parameter'}
+		if (id === undefined) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 15, id)
 	}
@@ -310,21 +295,7 @@ export class TethrSigma extends TethrPTPUSB {
 	public async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
 		const {destinationToSave} = await this.getCamDataGroup3()
 
-		let value = ''
-		switch (destinationToSave) {
-			case 0x00:
-				value = 'uninitialized'
-				break
-			case 0x01:
-				value = 'camera'
-				break
-			case 0x02:
-				value = 'pc'
-				break
-			case 0x03:
-				value = 'camera,pc'
-				break
-		}
+		const value = this.destinationToSaveTable.get(destinationToSave) ?? null
 
 		return {
 			writable: true,
@@ -333,7 +304,7 @@ export class TethrSigma extends TethrPTPUSB {
 				type: 'enum',
 				values: ['uninitialized', 'camera', 'pc', 'camera,pc'],
 			},
-		} as ConfigDesc<string>
+		}
 	}
 
 	public async getExposureMode() {
@@ -1705,5 +1676,12 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x1, 'high'],
 		[0x3, 'medium'],
 		[0x4, 'low'],
+	])
+
+	private destinationToSaveTable = new BiMap<number, string>([
+		[0x00, 'uninitialized'],
+		[0x01, 'camera'],
+		[0x02, 'pc'],
+		[0x03, 'camera,pc'],
 	])
 }
