@@ -870,38 +870,45 @@ export class TethrSigma extends TethrPTPUSB {
 
 		if (captId === null) return {status: 'general error'}
 
-		if (!download) {
-			await this.clearImageDBSingle(captId)
-			return {status: 'ok', value: []}
-		}
-
-		const pictInfos = await this.getPictFileInfo2()
-
 		const picts: TethrObject[] = []
 
-		for await (const info of pictInfos) {
-			// Get file buffer
-			const {data} = await this.device.receiveData({
-				label: 'SigmaFP GetBigPartialPictFile',
-				opcode: OpCodeSigma.GetBigPartialPictFile,
-				parameters: [info.fileAddress, 0x0, info.fileSize],
-				maxByteLength: info.fileSize + 1000,
-			})
+		if (download) {
+			const pictInfos = await this.getPictFileInfo2()
 
-			// First 4 bytes seems to be buffer length so splice it
-			const jpegData = data.slice(4)
+			for await (const info of pictInfos) {
+				const pictArray = new Uint8Array(info.fileSize)
 
-			const isRaw = /dng/i.test(info.fileExt)
-			const format = isRaw ? 'raw' : 'jpeg'
-			const type = isRaw ? 'image/x-adobe-dng' : 'image/jpeg'
+				const CHUNK_SIZE = 0x00200000 // SampleApp uses this
 
-			const blob = new Blob([jpegData], {type})
+				// Download the image with splitting every 2MB chunk
+				for (let offset = 0; offset < info.fileSize; offset += CHUNK_SIZE) {
+					const length = Math.min(info.fileSize - offset, CHUNK_SIZE)
 
-			picts.push({
-				format,
-				blob,
-				filename: info.fileName,
-			} as TethrObject)
+					const {data} = await this.device.receiveData({
+						label: 'SigmaFP GetBigPartialPictFile',
+						opcode: OpCodeSigma.GetBigPartialPictFile,
+						parameters: [info.fileAddress, offset, length],
+						maxByteLength: CHUNK_SIZE + 64,
+					})
+
+					// First 4 bytes is the length of buffer so splice them
+					const chunkArray = new Uint8Array(data.slice(4, 4 + length))
+
+					// Copy to buffer
+					pictArray.set(chunkArray, offset)
+				}
+				const isRaw = /dng/i.test(info.fileExt)
+				const format = isRaw ? 'raw' : 'jpeg'
+				const type = isRaw ? 'image/x-adobe-dng' : 'image/jpeg'
+
+				const blob = new Blob([pictArray.buffer], {type})
+
+				picts.push({
+					format,
+					blob,
+					filename: info.fileName,
+				} as TethrObject)
+			}
 		}
 
 		await this.clearImageDBSingle(captId)
