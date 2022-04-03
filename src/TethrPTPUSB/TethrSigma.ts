@@ -40,7 +40,6 @@ enum OpCodeSigma {
 	GetCamCanSetInfo = 0x901a,
 	SnapCommand = 0x901b,
 	ClearImageDBSingle = 0x901c,
-	ClearImageDBAll = 0x901d,
 	GetPictFileInfo = 0x9020,
 	GetPartialPictFile = 0x9021,
 	GetBigPartialPictFile = 0x9022,
