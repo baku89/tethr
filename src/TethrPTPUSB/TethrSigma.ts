@@ -590,14 +590,11 @@ export class TethrSigma extends TethrPTPUSB {
 			}
 		})()
 
-		const dngBitDepth = await (async () => {
-			const {dngImageQuality} = await this.getCamDataGroup4()
-			return dngImageQuality
-		})()
+		const {dngImageQuality} = await this.getCamDataGroup4()
 
 		return {
 			writable: true,
-			value: stringifyImageQuality(imageQuality, dngBitDepth),
+			value: stringifyImageQuality(imageQuality, dngImageQuality),
 			option: {
 				type: 'enum',
 				values: [
@@ -1221,10 +1218,10 @@ export class TethrSigma extends TethrPTPUSB {
 			parameters: [imageId],
 		})
 
-		const dataView = new PTPDataView(data.slice(1))
+		const dataView = new PTPDataView(data)
 
 		const status = {
-			imageId: dataView.readUint8(),
+			imageId: dataView.skip(1).readUint8(),
 			imageDBHead: dataView.readUint8(),
 			imageDBTail: dataView.readUint8(),
 			status: dataView.readUint16(),
@@ -1307,6 +1304,10 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	/**
+	 * Encode parameter to fit fp's SDK format
+	 * (Byte length on the head, and checksum on the tail)
+	 */
 	private encodeParameter(buffer: ArrayBuffer) {
 		const bytes = new Uint8Array(buffer)
 
