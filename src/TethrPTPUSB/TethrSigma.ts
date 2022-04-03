@@ -1289,17 +1289,13 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const byteOffsets = dataView.readUint32Array()
 
-		const pictInfos = byteOffsets.map(offset => {
-			dataView.goto(offset)
-
-			return {
-				fileAddress: dataView.readUint32(),
-				fileSize: dataView.readUint32(),
-				fileExt: dataView.skip(8).readAsciiString(),
-				folderName: dataView.skip(4).readAsciiString(),
-				fileName: dataView.readAsciiString(),
-			}
-		})
+		const pictInfos = byteOffsets.map(offset => ({
+			fileAddress: dataView.goto(offset).readUint32(),
+			fileSize: dataView.readUint32(),
+			fileExt: dataView.skip(8).readAsciiString(),
+			folderName: dataView.skip(4).readAsciiString(),
+			fileName: dataView.readAsciiString(),
+		}))
 
 		return pictInfos
 	}
