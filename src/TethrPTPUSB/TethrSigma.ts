@@ -696,7 +696,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async setLiveviewMagnifyLevelRatio(
+	public async setLiveviewMagnifyRatio(
 		value: number
 	): Promise<OperationResult<void>> {
 		const id = this.liveviewMagnifyRatioTable.getKey(value)
@@ -705,7 +705,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup4, 5, id)
 	}
 
-	public async getLiveviewMagnifyLevelRatioDesc() {
+	public async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
 		const {lvMagnifyRatio} = await this.getCamDataGroup4()
 		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
 
