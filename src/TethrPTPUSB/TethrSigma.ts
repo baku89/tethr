@@ -206,7 +206,11 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	public async getCanRunAutoFocusDesc() {
-		return createReadonlyConfigDesc(true)
+		const {focusMode} = await this.getCamCanSetInfo5()
+
+		const canRun = focusMode.includes(2)
+
+		return createReadonlyConfigDesc(canRun)
 	}
 
 	public async getCanStartLiveviewDesc() {
