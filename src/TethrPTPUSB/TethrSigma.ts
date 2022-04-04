@@ -754,15 +754,13 @@ export class TethrSigma extends TethrPTPUSB {
 		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return {status: 'invalid parameter'}
 
-		if (ss === 'bulb' && (await this.getIso()) === 'auto') {
-			this.setIso(100)
-		}
-
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
 	}
 
 	public async getShutterSpeedDesc() {
-		const range = (await this.getCamCanSetInfo5()).shutterSpeed
+		const {shutterSpeed: range, notApexShutterSpeed} =
+			await this.getCamCanSetInfo5()
+
 		const value = await this.getShutterSpeed()
 
 		if (range.length < 3) {
@@ -802,7 +800,9 @@ export class TethrSigma extends TethrPTPUSB {
 			.filter(e => ssMinIndex <= e[0] && e[0] <= ssMaxIndex)
 			.map(e => e[1])
 
-		values.unshift('bulb')
+		if (notApexShutterSpeed.includes(0)) {
+			values.unshift('bulb')
+		}
 
 		return {
 			writable: values.length > 0,
@@ -1008,6 +1008,40 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
+	public async startBulb(): Promise<OperationResult<void>> {
+		if ((await this.getShutterSpeed()) !== 'bulb') {
+			return {status: 'general error'}
+		}
+
+		const captureMode = SnapCaptureMode.NonAFCapture
+		const captureAmount = 1
+
+		const snapState = new Uint8Array([captureMode, captureAmount]).buffer
+
+		await this.device.sendData({
+			label: 'Sigma SnapCommand',
+			opcode: OpCodeSigma.SnapCommand,
+			data: this.encodeParameter(snapState),
+		})
+
+		return {status: 'ok'}
+	}
+
+	public async endBulb(): Promise<OperationResult<void>> {
+		const captureMode = SnapCaptureMode.StopCapture
+		const captureAmount = 1
+
+		const snapState = new Uint8Array([captureMode, captureAmount]).buffer
+
+		await this.device.sendData({
+			label: 'Sigma SnapCommand',
+			opcode: OpCodeSigma.SnapCommand,
+			data: this.encodeParameter(snapState),
+		})
+
+		return {status: 'ok'}
+	}
+
 	private async getMovieFileInfo() {
 		const {data} = await this.device.receiveData({
 			label: 'Sigma GetMovieFileInfo',
@@ -1152,6 +1186,7 @@ export class TethrSigma extends TethrPTPUSB {
 			exposureMode: {tag: 200, type: IFDType.Byte},
 			fValue: {tag: 210, type: IFDType.SignedShort},
 			shutterSpeed: {tag: 212, type: IFDType.SignedShort},
+			notApexShutterSpeed: {tag: 213, type: IFDType.Byte},
 			isoManual: {tag: 215, type: IFDType.SignedShort},
 			exposureComp: {tag: 217, type: IFDType.SignedShort},
 			whiteBalance: {tag: 301, type: IFDType.Byte},
@@ -1160,6 +1195,10 @@ export class TethrSigma extends TethrPTPUSB {
 			focusMode: {tag: 600, type: IFDType.Byte},
 			lvImageTransfer: {tag: 700, type: IFDType.Byte},
 			lvMagnifyRatio: {tag: 701, type: IFDType.Byte},
+			focusPeaking: {tag: 702, type: IFDType.Byte},
+			shutterSound: {tag: 801, type: IFDType.Byte},
+			afVolume: {tag: 802, type: IFDType.Byte},
+			timerVolume: {tag: 803, type: IFDType.Byte},
 		})
 	}
 
