@@ -77,6 +77,15 @@ if (takePhotoResult.status === 'ok') {
 	$img.src = url
 }
 
+// Get storage informations
+const storages = await cam.getStorages()
+
+for (const storage of storages) {
+	console.log('Storage ID: ' + storage.id)
+	console.log('name=' + storage.name)
+	console.log('free space in images=' + (await storage.getFreeSpaceInImages()))
+}
+
 await cam.close()
 ```
 
