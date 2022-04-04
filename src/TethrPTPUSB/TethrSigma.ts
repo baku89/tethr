@@ -1008,6 +1008,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
+	// NOTE: WIP
 	public async startBulb(): Promise<OperationResult<void>> {
 		if ((await this.getShutterSpeed()) !== 'bulb') {
 			return {status: 'general error'}
@@ -1027,6 +1028,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
+	// NOTE: WIP
 	public async endBulb(): Promise<OperationResult<void>> {
 		const captureMode = SnapCaptureMode.StopCapture
 		const captureAmount = 1
