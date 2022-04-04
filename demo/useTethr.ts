@@ -1,8 +1,8 @@
-import {saveAs} from 'file-saver'
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 import {ConfigDesc, ConfigType, detectTethr, Tethr} from '~/src'
 import {ConfigName} from '~/src/configs'
+import {TethrObject} from '~/src/TethrObject'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -57,7 +57,7 @@ export function useTethrConfig<Name extends ConfigName>(
 	return readonly(config)
 }
 
-export function useTethr() {
+export function useTethr({onSave = (object: TethrObject) => null as any} = {}) {
 	const camera = shallowRef<Tethr | null>(null)
 
 	const liveviewMediaStream = ref<null | MediaStream>(null)
@@ -108,11 +108,11 @@ export function useTethr() {
 
 		if (result.status === 'ok') {
 			for (const object of result.value) {
-				if (object.format === 'raw') {
-					saveAs(object.blob, object.filename)
-				} else {
+				if (object.format !== 'raw') {
 					photoURL.value = URL.createObjectURL(object.blob)
 				}
+
+				onSave(object)
 			}
 		}
 	}
@@ -164,6 +164,7 @@ export function useTethr() {
 			liveviewMagnifyRatio: useTethrConfig(camera, 'liveviewMagnifyRatio'),
 			liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),
 			liveviewSize: useTethrConfig(camera, 'liveviewSize'),
+			destinationToSave: useTethrConfig(camera, 'destinationToSave'),
 			batteryLevel: useTethrConfig(camera, 'batteryLevel'),
 			canTakePhoto: useTethrConfig(camera, 'canTakePhoto'),
 			canRunAutoFocus: useTethrConfig(camera, 'canRunAutoFocus'),

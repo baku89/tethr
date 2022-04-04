@@ -21,6 +21,12 @@
 			<h2>Actions</h2>
 			<dl v-if="camera">
 				<template v-if="configs.canTakePhoto.value">
+					<dt>saveFolder</dt>
+					<dd>
+						<button @click="setupSaveFolder">
+							{{ folderHandler ? folderHandler.name : '(None)' }}
+						</button>
+					</dd>
 					<dt>takePhoto</dt>
 					<dd><button class="red" @click="takePhoto">Shutter</button></dd>
 				</template>
@@ -100,16 +106,58 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, ref} from 'vue'
+import {saveAs} from 'file-saver'
+
 import {useTethr} from './useTethr'
 import TethrConfig from './TethrConfig.vue'
+import {TethrObject} from '~/src/TethrObject'
 
 export default defineComponent({
 	components: {
 		TethrConfig,
 	},
 	setup() {
-		return useTethr()
+		const folderHandler = ref<FileSystemDirectoryHandle | null>(null)
+
+		const setupSaveFolder = async () => {
+			const handler = await window.showDirectoryPicker({
+				id: 'saveFile',
+			})
+
+			const option: FileSystemHandlePermissionDescriptor = {
+				mode: 'readwrite',
+			}
+
+			const permission = await handler.queryPermission(option)
+
+			if (permission !== 'granted') {
+				await handler.requestPermission(option)
+			}
+
+			folderHandler.value = handler
+		}
+
+		const onSave = async (object: TethrObject) => {
+			if (folderHandler.value) {
+				// Use File System Access API
+				const h = await folderHandler.value.getFileHandle(object.filename, {
+					create: true,
+				})
+				const w = await h.createWritable()
+				await w.write(object.blob)
+				await w.close()
+			} else {
+				// Just download to the default directory
+				saveAs(object.blob, object.filename)
+			}
+		}
+
+		return {
+			setupSaveFolder,
+			folderHandler,
+			...useTethr({onSave}),
+		}
 	},
 })
 </script>

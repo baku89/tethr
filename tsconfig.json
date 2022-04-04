@@ -11,7 +11,11 @@
 		"allowSyntheticDefaultImports": true,
 		"sourceMap": true,
 		"baseUrl": ".",
-		"types": ["@types/w3c-web-usb", "@types/w3c-image-capture"],
+		"types": [
+			"@types/w3c-web-usb",
+			"@types/w3c-image-capture",
+			"@types/wicg-file-system-access"
+		],
 		"typeRoots": ["node_modules/@types", "src", "demo"],
 		"paths": {
 			"*": ["src/@types/*"],

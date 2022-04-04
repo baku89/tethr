@@ -120,6 +120,8 @@ const ConfigListSigma: ConfigName[] = [
 
 export class TethrSigma extends TethrPTPUSB {
 	private liveviewEnabled = false
+	private isCapturing = false
+	private checkPropChangedTimerId!: number
 
 	public async open() {
 		await super.open()
@@ -884,6 +886,8 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 
 		await this.clearImageDBSingle(captId)
+
+		this.isCapturing = false
 
 		return {status: 'ok', value: picts}
 	}
