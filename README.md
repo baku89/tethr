@@ -99,6 +99,7 @@ This is a list of ConfigName and its value type:
 | colorTemperature     | `number`               | `2600`, `5500`                                              |
 | contrast             | `number`               |                                                             |
 | dateTime             | `Date`                 |                                                             |
+| destinationToSave    | `string`               | 'camera', 'pc', 'camera,pc'                                 |
 | digitalZoom          | `number`               |                                                             |
 | driveMode            | `DriveMode`            | `'normal'`, `'burst'`, `'interval'`                         |
 | exposureComp         | `string`               | `'-1 1/3'` `'-1/2'`, `'0'`, `'+2 1/3'`                      |
