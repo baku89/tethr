@@ -51,7 +51,7 @@
 		"gh-pages": "^3.2.3",
 		"parcel": "^2.0.0-nightly.843",
 		"prettier": "^2.3.2",
-		"typescript": "^4.4.2",
+		"typescript": "^4.6.3",
 		"vue": "^3.2.9"
 	},
 	"browserslist": [
