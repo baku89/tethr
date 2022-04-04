@@ -107,6 +107,7 @@ const ConfigListSigma: ConfigName[] = [
 	'iso',
 	'colorTemperature',
 	'colorMode',
+	'destinationToSave',
 	'exposureComp',
 	'exposureMode',
 	'imageAspect',
@@ -131,6 +132,18 @@ export class TethrSigma extends TethrPTPUSB {
 			opcode: OpCodeSigma.ConfigApi,
 			parameters: [0x0],
 		})
+
+		this.checkPropChangedTimerId = setInterval(() => {
+			if (this.isCapturing) return
+			this.emitAllConfigChangedEvents()
+		}, 1000)
+	}
+
+	public async close(): Promise<void> {
+		await this.stopLiveview()
+		clearInterval(this.checkPropChangedTimerId)
+
+		await super.close()
 	}
 
 	public async getAperture(): Promise<Aperture | null> {
@@ -837,6 +850,8 @@ export class TethrSigma extends TethrPTPUSB {
 	public async takePhoto({download = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
+		this.isCapturing = true
+
 		const captId = await this.executeSnapCommand(
 			SnapCaptureMode.NonAFCapture,
 			1
@@ -912,7 +927,7 @@ export class TethrSigma extends TethrPTPUSB {
 		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		const updateFrame = async () => {
-			if (!this.liveviewEnabled) return
+			if (!this.liveviewEnabled || this.isCapturing) return
 
 			try {
 				const {resCode, data} = await this.device.receiveData({
@@ -1137,6 +1152,8 @@ export class TethrSigma extends TethrPTPUSB {
 			whiteBalance: {tag: 301, type: IFDType.Byte},
 			colorTemerature: {tag: 302, type: IFDType.Short},
 			colorMode: {tag: 320, type: IFDType.Byte},
+			focusMode: {tag: 600, type: IFDType.Byte},
+			lvImageTransfer: {tag: 700, type: IFDType.Byte},
 			lvMagnifyRatio: {tag: 701, type: IFDType.Byte},
 		})
 	}
@@ -1277,7 +1294,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	private async emitAllConfigChangedEvents() {
-		for await (const config of ConfigListSigma) {
+		for (const config of ConfigListSigma) {
 			const desc = await this.getDesc(config)
 			this.emit(`${config}Changed`, desc)
 		}
