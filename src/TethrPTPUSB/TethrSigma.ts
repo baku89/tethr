@@ -927,7 +927,12 @@ export class TethrSigma extends TethrPTPUSB {
 		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		const updateFrame = async () => {
-			if (!this.liveviewEnabled || this.isCapturing) return
+			if (!this.liveviewEnabled) return
+
+			if (this.isCapturing) {
+				requestAnimationFrame(updateFrame)
+				return
+			}
 
 			try {
 				const {resCode, data} = await this.device.receiveData({
