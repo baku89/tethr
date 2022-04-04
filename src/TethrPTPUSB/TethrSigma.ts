@@ -1182,6 +1182,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return decodeIFD(data, {
 			imageQuality: {tag: 11, type: IFDType.Byte},
 			dngImageQuality: {tag: 12, type: IFDType.Byte},
+			stillImageResolution: {tag: 20, type: IFDType.Byte},
 			imageAspect: {tag: 21, type: IFDType.Byte},
 			exposureMode: {tag: 200, type: IFDType.Byte},
 			fValue: {tag: 210, type: IFDType.SignedShort},
