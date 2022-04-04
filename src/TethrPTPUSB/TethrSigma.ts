@@ -900,7 +900,7 @@ export class TethrSigma extends TethrPTPUSB {
 			}
 		}
 
-		await this.clearImageDBSingle(captId)
+		await this.clearImageDBAll()
 
 		this.isCapturing = false
 
@@ -908,10 +908,10 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	public async runAutoFocus(): Promise<OperationResult<void>> {
-		const captId = await this.executeSnapCommand(SnapCaptureMode.StartAF)
+		const succeed = await this.executeSnapCommand(SnapCaptureMode.StartAF)
+		await this.clearImageDBAll()
 
-		if (captId !== null) {
-			await this.clearImageDBSingle(captId)
+		if (succeed !== null) {
 			return {status: 'ok'}
 		} else {
 			return {status: 'general error'}
@@ -1234,12 +1234,12 @@ export class TethrSigma extends TethrPTPUSB {
 
 	/**
 	 *
-	 * @returns Capture ID if the command execution has succeed, otherwise null
+	 * @returns true if succeed
 	 */
 	private async executeSnapCommand(
 		captureMode: number,
 		captureAmount = 1
-	): Promise<number | null> {
+	): Promise<boolean> {
 		const {imageDBTail: captId} = await this.getCamCaptStatus()
 
 		const snapState = new Uint8Array([captureMode, captureAmount]).buffer
@@ -1254,26 +1254,30 @@ export class TethrSigma extends TethrPTPUSB {
 			const {status} = await this.getCamCaptStatus(captId)
 
 			const isFailure = (status & 0xf000) === 0x6000
-			if (isFailure) return null
+			if (isFailure) return false
 
 			const isSucceed = (status & 0xf000) === 0x8000
-			if (isSucceed) return captId
+			if (isSucceed) return true
 
-			if (status === CaptStatus.compImageCreate) return captId
+			if (status === CaptStatus.compImageCreate) return true
 
 			await sleep(500)
 		}
 
-		return null
+		return false
 	}
 
-	private async clearImageDBSingle(captId: number) {
-		await this.device.sendData({
-			label: 'SigmaFP ClearImageDBSingle',
-			opcode: OpCodeSigma.ClearImageDBSingle,
-			parameters: [captId],
-			data: new ArrayBuffer(8),
-		})
+	private async clearImageDBAll() {
+		const {imageDBHead, imageDBTail} = await this.getCamCaptStatus()
+
+		for (let id = imageDBHead; id < imageDBTail; id++) {
+			await this.device.sendData({
+				label: 'SigmaFP ClearImageDBSingle',
+				opcode: OpCodeSigma.ClearImageDBSingle,
+				parameters: [id],
+				data: new ArrayBuffer(8),
+			})
+		}
 	}
 
 	private async getPictFileInfo2() {
