@@ -70,10 +70,10 @@ if (!autoFocusResult.status !== 'ok') {
 	console.warn('AF failed')
 }
 
-const takePictureResult = await cam.takePicture({download: true})
+const takePhotoResult = await cam.takePhoto({download: true})
 
-if (takePictureResult.status === 'ok') {
-	const url = URL.createURLObject(takePictureResult.value[0])
+if (takePhotoResult.status === 'ok') {
+	const url = URL.createURLObject(takePhotoResult.value[0])
 	$img.src = url
 }
 
