@@ -1,0 +1,112 @@
+* {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+*,
+::after,
+::before {
+  box-sizing: border-box;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+html {
+  background: #16160e;
+  color: #f7fcfe;
+  font-size: 15px;
+  font-family: 'Fira Code', monospace;
+}
+h1,
+h2,
+h3 {
+  font-weight: normal;
+}
+h1 {
+  margin-bottom: 0.5em;
+}
+a {
+  color: #a0d8ef;
+}
+input,
+select,
+button {
+  padding: 0 0.5em;
+  height: 2em;
+  border: none;
+  border-radius: 4px;
+  background: #2b2b2b;
+  color: inherit;
+  font: inherit;
+  accent-color: inherit;
+}
+input.red,
+select.red,
+button.red {
+  background: #a22041;
+}
+input:not([disabled]):hover,
+select:not([disabled]):hover,
+button:not([disabled]):hover,
+input:not([disabled]):focus-visible,
+select:not([disabled]):focus-visible,
+button:not([disabled]):focus-visible {
+  background: #444;
+  transition: all ease 0.1s;
+}
+input[disabled],
+select[disabled],
+button[disabled] {
+  color: #aaa;
+}
+.app {
+  display: grid;
+  height: 100vh;
+  grid-template-columns: 1fr 25em;
+}
+@media (max-width: 700px) {
+  .app {
+    display: block;
+  }
+}
+.app > * {
+  padding: 1em;
+}
+aside {
+  overflow-y: scroll;
+  border-left: 2px solid #2b2b2b;
+}
+h2 {
+  margin: 2em 0 0.5em;
+}
+dl {
+  display: grid;
+  column-gap: 0.5em;
+  row-gap: 1em;
+  grid-template-columns: 1fr min-content;
+}
+dt {
+  height: 2em;
+  line-height: 2em;
+}
+dd {
+  display: flex;
+  width: 10em;
+  gap: 0.2em;
+}
+dd input,
+dd select,
+dd button {
+  flex-grow: 1;
+  width: 100%;
+}
+.view {
+  display: block;
+  margin-top: 0.5em;
+  width: 100%;
+  border-radius: 0.5em;
+  background-color: #2b2b2b;
+  aspect-ratio: 16/9;
+  object-fit: contain;
+}
+
+/*# sourceMappingURL=index.ef10a57d.css.map */
