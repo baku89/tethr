@@ -226,7 +226,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	public async getColorModeDesc(): Promise<ConfigDesc<string>> {
 		const decodeColorMode = (id: number) => {
-			return this.colorModeTable.get(id) ?? 'unknown'
+			return this.colorModeTable.get(id) ?? `unknown:${id.toString(16)}`
 		}
 
 		const {colorMode} = await this.getCamDataGroup3()
