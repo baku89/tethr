@@ -34,6 +34,7 @@ import {
 	Tethr,
 } from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
+import {TethrStorage} from '../TethrStorage'
 import {isntNil, toHexString} from '../util'
 
 type DevicePropScheme<T, D extends DatatypeCode> = {
@@ -654,17 +655,18 @@ export class TethrPTPUSB extends Tethr {
 		return data
 	}
 
-	protected async getStorageInfo(): Promise<void> {
+	protected async getStorages(): Promise<TethrStorage[]> {
 		const {data} = await this.device.receiveData({
-			label: 'Get Storage IDs',
+			label: 'GetStorageIDs',
 			opcode: OpCode.GetStorageIDs,
 		})
 		const dataView = new PTPDataView(data)
 
-		const storageIDs = dataView.readUint32Array()
-		console.log('Storage IDs =', storageIDs)
+		const ids = dataView.readUint32Array()
 
-		for (const id of storageIDs) {
+		const storages: TethrStorage[] = []
+
+		for (const id of ids) {
 			const {data} = await this.device.receiveData({
 				label: 'GetStorageInfo',
 				parameters: [id],
@@ -673,18 +675,22 @@ export class TethrPTPUSB extends Tethr {
 
 			const storageInfo = new PTPDataView(data)
 
-			const info = {
-				storageId: id,
-				storageType: PTPStorageTypeCode[storageInfo.readUint16()],
+			const storage: TethrStorage = {
+				id: id,
+				type: PTPStorageTypeCode[storageInfo.readUint16()],
 				filesystemType: PTPFilesystemTypeCode[storageInfo.readUint16()],
 				accessCapability: PTPAccessCapabilityCode[storageInfo.readUint16()],
 				maxCapability: storageInfo.readUint64(),
 				freeSpaceInBytes: storageInfo.readUint64(),
 				freeSpaceInImages: storageInfo.readUint32(),
+				description: storageInfo.readAsciiString(),
+				label: storageInfo.readAsciiString(),
 			}
 
-			console.log(`Storage info for ${id}=`, info)
+			storages.push(storage)
 		}
+
+		return storages
 	}
 
 	protected onDevicePropChanged = async (event: PTPEvent) => {
