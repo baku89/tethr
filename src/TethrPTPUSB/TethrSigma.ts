@@ -23,6 +23,7 @@ import {
 	TakePhotoOption,
 } from '../Tethr'
 import {TethrObject} from '../TethrObject'
+import {TethrStorage} from '../TethrStorage'
 import {isntNil} from '../util'
 import {TethrPTPUSB} from '.'
 
@@ -1044,6 +1045,18 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
+	public async getStorages(): Promise<TethrStorage[]> {
+		// fp always returns one storage info even if no SD inserted.
+		const [storage] = await super.getStorages()
+
+		const {mediaFreeSpace} = await this.getCamDataGroup1()
+
+		storage.freeSpaceInImages = mediaFreeSpace
+
+		return [storage]
+	}
+
+	// fp SDK
 	private async getMovieFileInfo() {
 		const {data} = await this.device.receiveData({
 			label: 'Sigma GetMovieFileInfo',
