@@ -83,7 +83,7 @@ const storages = await cam.getStorages()
 for (const storage of storages) {
 	console.log('Storage ID: ' + storage.id)
 	console.log('name=' + storage.name)
-	console.log('free space in images=' + (await storage.getFreeSpaceInImages()))
+	console.log('free space in images=' + storage.freeSpaceInImages)
 }
 
 await cam.close()
