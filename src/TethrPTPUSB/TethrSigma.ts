@@ -930,12 +930,9 @@ export class TethrSigma extends TethrPTPUSB {
 		const updateFrame = async () => {
 			if (!this.liveviewEnabled) return
 
-			if (this.isCapturing) {
-				requestAnimationFrame(updateFrame)
-				return
-			}
-
 			try {
+				if (this.isCapturing) return
+
 				const {resCode, data} = await this.device.receiveData({
 					label: 'SigmaFP GetViewFrame',
 					opcode: OpCodeSigma.GetViewFrame,
