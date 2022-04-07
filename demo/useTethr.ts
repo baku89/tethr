@@ -57,6 +57,7 @@ export function useTethrConfig<Name extends ConfigName>(
 	return readonly(config)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function useTethr({onSave = (object: TethrObject) => null as any} = {}) {
 	const camera = shallowRef<Tethr | null>(null)
 
