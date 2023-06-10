@@ -425,9 +425,9 @@ export class TethrPTPUSB extends Tethr {
 		datatypeCode,
 		encode,
 		value,
-	}: Omit<DevicePropScheme<T, D>, 'decode'> & {value: T}): Promise<
-		OperationResult<void>
-	> {
+	}: Omit<DevicePropScheme<T, D>, 'decode'> & {
+		value: T
+	}): Promise<OperationResult> {
 		const devicePropData = encode(value)
 
 		if (devicePropData === null) {

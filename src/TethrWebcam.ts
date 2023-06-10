@@ -98,7 +98,7 @@ export class TethrWebcam extends Tethr {
 		return createReadonlyConfigDesc(this.captureHandler !== null)
 	}
 
-	public async setFacingMode(value: string): Promise<OperationResult<void>> {
+	public async setFacingMode(value: string): Promise<OperationResult> {
 		if (!this.media || !this.captureHandler) {
 			return {status: 'unsupported'}
 		}
@@ -240,7 +240,7 @@ export class TethrWebcam extends Tethr {
 		}
 	}
 
-	public async stopLiveview(): Promise<OperationResult<void>> {
+	public async stopLiveview(): Promise<OperationResult> {
 		this.liveviewEnabled = false
 		this.emit('liveviewEnabledChanged', createReadonlyConfigDesc(false))
 		return {status: 'ok'}

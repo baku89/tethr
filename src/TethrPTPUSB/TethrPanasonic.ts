@@ -390,9 +390,9 @@ export class TethrPanasonic extends TethrPTPUSB {
 		valueSize,
 		encode,
 		devicePropCode,
-	}: Omit<DevicePropSchemePanasonic<T>, 'decode'> & {value: T}): Promise<
-		OperationResult<void>
-	> {
+	}: Omit<DevicePropSchemePanasonic<T>, 'decode'> & {
+		value: T
+	}): Promise<OperationResult> {
 		const dataView = new PTPDataView()
 		const encodedValue = encode(value)
 
@@ -621,7 +621,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return {status: 'ok', value: stream}
 	}
 
-	public async stopLiveview(): Promise<OperationResult<void>> {
+	public async stopLiveview(): Promise<OperationResult> {
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
 			opcode: OpCodePanasonic.Liveview,
@@ -655,7 +655,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	public async setLiveviewSize(value: string): Promise<OperationResult<void>> {
+	public async setLiveviewSize(value: string): Promise<OperationResult> {
 		const [width, height] = value.split('x').map(parseInt)
 
 		const settings = await this.getLiveviewRecommendedSettings()
@@ -804,7 +804,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 	public async runManualFocus(
 		option: ManualFocusOption
-	): Promise<OperationResult<void>> {
+	): Promise<OperationResult> {
 		const [direction, speed] = option.split(':')
 
 		let mode = 0
@@ -839,7 +839,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	public async runAutoFocus(): Promise<OperationResult<void>> {
+	public async runAutoFocus(): Promise<OperationResult> {
 		await this.device.sendCommand({
 			label: 'Panasonic Ctrl Liveview',
 			opcode: OpCodePanasonic.CtrlLiveview,

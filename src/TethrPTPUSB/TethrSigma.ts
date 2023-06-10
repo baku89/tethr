@@ -157,7 +157,7 @@ export class TethrSigma extends TethrPTPUSB {
 		)
 	}
 
-	public async setAperture(aperture: Aperture): Promise<OperationResult<void>> {
+	public async setAperture(aperture: Aperture): Promise<OperationResult> {
 		if (aperture === 'auto') return {status: 'invalid parameter'}
 
 		const byte = this.apertureOneThirdTable.getKey(aperture)
@@ -233,7 +233,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return createReadonlyConfigDesc(true)
 	}
 
-	public async setColorMode(colorMode: string): Promise<OperationResult<void>> {
+	public async setColorMode(colorMode: string): Promise<OperationResult> {
 		const id = this.colorModeTable.getKey(colorMode)
 		if (id === undefined) return {status: 'invalid parameter'}
 
@@ -302,9 +302,7 @@ export class TethrSigma extends TethrPTPUSB {
 		} as ConfigDesc<number>
 	}
 
-	public async setDestinationToSave(
-		value: string
-	): Promise<OperationResult<void>> {
+	public async setDestinationToSave(value: string): Promise<OperationResult> {
 		const id = this.destinationToSaveTable.getKey(value)
 
 		if (id === undefined) return {status: 'invalid parameter'}
@@ -334,7 +332,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	public async setExposureMode(
 		exposureMode: ExposureMode
-	): Promise<OperationResult<void>> {
+	): Promise<OperationResult> {
 		const id = this.exposureModeTable.getKey(exposureMode)
 		if (!id) return {status: 'invalid parameter'}
 
@@ -364,7 +362,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.compensationOneThirdTable.get(exposureComp) ?? null
 	}
 
-	public async setExposureComp(value: string): Promise<OperationResult<void>> {
+	public async setExposureComp(value: string): Promise<OperationResult> {
 		const id = this.compensationOneThirdTable.getKey(value)
 		if (id === undefined) return {status: 'invalid parameter'}
 
@@ -470,9 +468,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.imageAspectTable.get(id) ?? null
 	}
 
-	public async setImageAspect(
-		imageAspect: string
-	): Promise<OperationResult<void>> {
+	public async setImageAspect(imageAspect: string): Promise<OperationResult> {
 		const id = this.imageAspectTable.getKey(imageAspect)
 		if (id === undefined) return {status: 'invalid parameter'}
 
@@ -497,9 +493,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async setImageQuality(
-		imageQuality: string
-	): Promise<OperationResult<void>> {
+	public async setImageQuality(imageQuality: string): Promise<OperationResult> {
 		let jpegQuality: string | null = null
 		let dngBitDepth: number | null = null
 
@@ -621,7 +615,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async setImageSize(imageSize: string): Promise<OperationResult<void>> {
+	public async setImageSize(imageSize: string): Promise<OperationResult> {
 		const id = this.imageSizeTable.getKey(imageSize)
 		if (id === undefined) return {status: 'invalid parameter'}
 
@@ -659,7 +653,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async setIso(iso: ISO): Promise<OperationResult<void>> {
+	public async setIso(iso: ISO): Promise<OperationResult> {
 		if (iso === 'auto') {
 			return this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
 		}
@@ -718,7 +712,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	public async setLiveviewMagnifyRatio(
 		value: number
-	): Promise<OperationResult<void>> {
+	): Promise<OperationResult> {
 		const id = this.liveviewMagnifyRatioTable.getKey(value)
 		if (!id) return {status: 'invalid parameter'}
 
@@ -751,7 +745,7 @@ export class TethrSigma extends TethrPTPUSB {
 		)
 	}
 
-	public async setShutterSpeed(ss: string): Promise<OperationResult<void>> {
+	public async setShutterSpeed(ss: string): Promise<OperationResult> {
 		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return {status: 'invalid parameter'}
 
@@ -820,9 +814,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.whiteBalanceTable.get(whiteBalance) ?? null
 	}
 
-	public async setWhiteBalance(
-		wb: WhiteBalance
-	): Promise<OperationResult<void>> {
+	public async setWhiteBalance(wb: WhiteBalance): Promise<OperationResult> {
 		const id = this.whiteBalanceTable.getKey(wb)
 		if (!id) return {status: 'invalid parameter'}
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, id)
@@ -908,7 +900,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok', value: picts}
 	}
 
-	public async runAutoFocus(): Promise<OperationResult<void>> {
+	public async runAutoFocus(): Promise<OperationResult> {
 		const succeed = await this.executeSnapCommand(SnapCaptureMode.StartAF)
 		await this.clearImageDBAll()
 
@@ -967,14 +959,14 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok', value: stream}
 	}
 
-	public async stopLiveview(): Promise<OperationResult<void>> {
+	public async stopLiveview(): Promise<OperationResult> {
 		this.liveviewEnabled = false
 		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		return {status: 'ok'}
 	}
 
-	public async startRec(): Promise<OperationResult<void>> {
+	public async startRec(): Promise<OperationResult> {
 		const captureMode = SnapCaptureMode.StartRecordingMovieWithoutAF
 		const captureAmount = 1
 
@@ -989,7 +981,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	public async stopRec(): Promise<OperationResult<void>> {
+	public async stopRec(): Promise<OperationResult> {
 		const captureMode = SnapCaptureMode.StopRecordingMovie
 		const captureAmount = 1
 
@@ -1007,7 +999,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	// NOTE: WIP
-	public async startBulb(): Promise<OperationResult<void>> {
+	public async startBulb(): Promise<OperationResult> {
 		if ((await this.getShutterSpeed()) !== 'bulb') {
 			return {status: 'general error'}
 		}
@@ -1027,7 +1019,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	// NOTE: WIP
-	public async endBulb(): Promise<OperationResult<void>> {
+	public async endBulb(): Promise<OperationResult> {
 		const captureMode = SnapCaptureMode.StopCapture
 		const captureAmount = 1
 
@@ -1241,7 +1233,7 @@ export class TethrSigma extends TethrPTPUSB {
 		opcode: number,
 		devicePropIndex: number,
 		value: number
-	): Promise<OperationResult<void>> {
+	): Promise<OperationResult> {
 		const dataView = new PTPDataView()
 
 		dataView.writeUint16(1 << devicePropIndex)
