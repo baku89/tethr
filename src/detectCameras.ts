@@ -26,8 +26,6 @@ export async function detectCameras(): Promise<Tethr[]> {
 		const promises = await Promise.all(devices.map(initTethrUSBPTP))
 		const cameras = promises.filter(isntNil)
 
-		console.log(devices, promises, cameras)
-
 		return cameras
 	}
 
