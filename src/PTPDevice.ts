@@ -443,9 +443,12 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 			this.emit(`ptpevent:${eventName}`, {code, parameters})
 		} catch (err) {
+			// If the error has risen because of disconnection of the device,
+			// just ignore the error.
 			if (
 				err instanceof DOMException &&
-				err.message === 'The transfer was cancelled.'
+				err.message.match(/The transfer was cancelled./) &&
+				!this._opened
 			) {
 				return
 			}
