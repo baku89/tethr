@@ -106,6 +106,7 @@ enum SnapCaptureMode {
 const ConfigListSigma: ConfigName[] = [
 	'aperture',
 	'iso',
+	'canRunAutoFocus',
 	'colorTemperature',
 	'colorMode',
 	'destinationToSave',
