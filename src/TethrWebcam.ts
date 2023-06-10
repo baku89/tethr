@@ -3,10 +3,10 @@ import {BiMap} from 'bim'
 import {ConfigDesc} from '.'
 import {
 	createReadonlyConfigDesc,
-	createUnsupportedConfigDesc,
 	OperationResult,
 	TakePhotoOption,
 	Tethr,
+	UnsupportedConfigDesc,
 } from './Tethr'
 import {TethrObject} from './TethrObject'
 
@@ -138,7 +138,7 @@ export class TethrWebcam extends Tethr {
 
 	public async getFacingModeDesc() {
 		if (!this.media) {
-			return createUnsupportedConfigDesc<string>()
+			return UnsupportedConfigDesc
 		}
 
 		const videoTrack = this.media.getVideoTracks()[0]

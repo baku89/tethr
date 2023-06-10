@@ -72,11 +72,9 @@ type ConfigDescGetters = {
 	>
 }
 
-export function createUnsupportedConfigDesc<T>(): ConfigDesc<T> {
-	return {
-		writable: false,
-		value: null,
-	}
+export const UnsupportedConfigDesc: ConfigDesc<any> = {
+	writable: false,
+	value: null,
 }
 
 export function createReadonlyConfigDesc<T>(value: T): ConfigDesc<T> {
@@ -300,7 +298,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getBatteryLevel(): Promise<BatteryLevel | null> {
@@ -313,7 +311,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getBurstInterval(): Promise<number | null> {
@@ -326,7 +324,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getBurstIntervalDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getBurstNumber(): Promise<number | null> {
@@ -339,7 +337,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getBurstNumberDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getCanRunAutoFocus(): Promise<boolean | null> {
@@ -352,7 +350,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getCanRunAutoFocusDesc(): Promise<ConfigDesc<boolean>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getCanRunManualFocus(): Promise<boolean | null> {
@@ -365,7 +363,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getCanRunManualFocusDesc(): Promise<ConfigDesc<boolean>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getCanStartLiveview(): Promise<boolean | null> {
@@ -378,7 +376,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getCanStartLiveviewDesc(): Promise<ConfigDesc<boolean>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getCanTakePhoto(): Promise<boolean | null> {
@@ -391,7 +389,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getCanTakePhotoDesc(): Promise<ConfigDesc<boolean>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getCaptureDelay(): Promise<number | null> {
@@ -404,7 +402,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getCaptureDelayDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getColorMode(): Promise<string | null> {
@@ -417,7 +415,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getColorModeDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getColorTemperature(): Promise<number | null> {
@@ -430,7 +428,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getCompressionSetting(): Promise<number | null> {
@@ -443,7 +441,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getCompressionSettingDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getContrast(): Promise<number | null> {
@@ -456,7 +454,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getContrastDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getDateTime(): Promise<Date | null> {
@@ -469,7 +467,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getDateTimeDesc(): Promise<ConfigDesc<Date>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getDestinationToSave(): Promise<string | null> {
@@ -482,7 +480,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getDigitalZoom(): Promise<number | null> {
@@ -495,7 +493,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getDigitalZoomDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getDriveMode(): Promise<DriveMode | null> {
@@ -508,7 +506,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getDriveModeDesc(): Promise<ConfigDesc<DriveMode>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getExposureComp(): Promise<string | null> {
@@ -521,7 +519,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getExposureCompDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getExposureMeteringMode(): Promise<ExposureMeteringMode | null> {
@@ -536,7 +534,7 @@ export abstract class Tethr
 	public async getExposureMeteringModeDesc(): Promise<
 		ConfigDesc<ExposureMeteringMode>
 	> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getExposureMode(): Promise<ExposureMode | null> {
@@ -549,7 +547,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getFacingMode(): Promise<string | null> {
@@ -562,7 +560,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getFacingModeDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getFlashMode(): Promise<FlashMode | null> {
@@ -575,7 +573,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getFlashModeDesc(): Promise<ConfigDesc<FlashMode>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getFocalLength(): Promise<FocalLength | null> {
@@ -588,7 +586,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getFocalLengthDesc(): Promise<ConfigDesc<FocalLength>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getFocusDistance(): Promise<number | null> {
@@ -601,7 +599,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getFocusMeteringMode(): Promise<FocusMeteringMode | null> {
@@ -616,7 +614,7 @@ export abstract class Tethr
 	public async getFocusMeteringModeDesc(): Promise<
 		ConfigDesc<FocusMeteringMode>
 	> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getFocusMode(): Promise<FocusMode | null> {
@@ -629,7 +627,10 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getFocusModeDesc(): Promise<ConfigDesc<FocusMode>> {
-		return createUnsupportedConfigDesc()
+		return {
+			writable: false,
+			value: null,
+		}
 	}
 
 	public async getFunctionalMode(): Promise<FunctionalMode | null> {
@@ -642,7 +643,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getFunctionalModeDesc(): Promise<ConfigDesc<FunctionalMode>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getImageAspect(): Promise<string | null> {
@@ -655,7 +656,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getImageAspectDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getImageQuality(): Promise<string | null> {
@@ -668,7 +669,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getImageQualityDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getImageSize(): Promise<string | null> {
@@ -681,7 +682,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getImageSizeDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getIso(): Promise<ISO | null> {
@@ -694,7 +695,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getIsoDesc(): Promise<ConfigDesc<ISO>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getLiveviewEnabled(): Promise<boolean | null> {
@@ -707,7 +708,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getLiveviewMagnifyRatio(): Promise<number | null> {
@@ -720,7 +721,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getLiveviewSize(): Promise<string | null> {
@@ -733,7 +734,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getManualFocusOptions(): Promise<ManualFocusOption[] | null> {
@@ -748,7 +749,7 @@ export abstract class Tethr
 	public async getManualFocusOptionsDesc(): Promise<
 		ConfigDesc<ManualFocusOption[]>
 	> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getManufacturer(): Promise<string | null> {
@@ -761,7 +762,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getManufacturerDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getModel(): Promise<string | null> {
@@ -774,7 +775,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getModelDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getSharpness(): Promise<number | null> {
@@ -787,7 +788,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getSharpnessDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getShutterSpeed(): Promise<string | null> {
@@ -800,7 +801,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getTimelapseInterval(): Promise<number | null> {
@@ -813,7 +814,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getTimelapseIntervalDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getTimelapseNumber(): Promise<number | null> {
@@ -826,7 +827,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getTimelapseNumberDesc(): Promise<ConfigDesc<number>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	public async getWhiteBalance(): Promise<WhiteBalance | null> {
@@ -839,7 +840,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
-		return createUnsupportedConfigDesc()
+		return UnsupportedConfigDesc
 	}
 
 	// Actions
