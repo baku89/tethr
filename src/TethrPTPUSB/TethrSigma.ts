@@ -248,6 +248,11 @@ export class TethrSigma extends TethrPTPUSB {
 		const {colorMode} = await this.getCamDataGroup3()
 		const {colorMode: colorModeOptions} = await this.getCamCanSetInfo5()
 
+		// NOTE: the colorModeOptions lacks Warm Gold (0xf0).
+		// it must be manually added only if the firmware is 5.0,
+		// but configAPI doesn't return the version information by some reason...
+		colorModeOptions.push(0x11)
+
 		return {
 			writable: colorModeOptions.length > 0,
 			value: decodeColorMode(colorMode),
