@@ -17,6 +17,10 @@
 		},
 		"lib": ["esnext", "dom", "dom.iterable"]
 	},
+	"files": [
+		"node_modules/@types/w3c-web-usb/index.d.ts",
+		"node_modules/@types/w3c-image-capture/index.d.ts"
+	],
 	"include": ["src/**/*.ts", "demo/**/*.ts"],
 	"exclude": ["node_modules"]
 }
