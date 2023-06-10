@@ -128,10 +128,16 @@ export class TethrSigma extends TethrPTPUSB {
 	public async open() {
 		await super.open()
 
-		await this.device.receiveData({
+		const {data} = await this.device.receiveData({
 			label: 'SigmaFP ConfigApi',
 			opcode: OpCodeSigma.ConfigApi,
 			parameters: [0x0],
+		})
+
+		decodeIFD(data, {
+			cameraModel: {tag: 1, type: IFDType.Ascii},
+			serialNumber: {tag: 2, type: IFDType.Ascii},
+			firmwareVersion: {tag: 3, type: IFDType.Ascii},
 		})
 
 		this.checkPropChangedTimerId = setInterval(() => {
