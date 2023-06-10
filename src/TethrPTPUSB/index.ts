@@ -13,14 +13,15 @@ export async function initTethrUSBPTP(
 
 	try {
 		await device.open()
+		console.log('opened')
 		info = await TethrPTPUSB.getDeviceInfo(device)
 	} catch (err) {
 		if (
 			err instanceof DOMException &&
-			err.message === 'Unable to claim interface.' &&
+			err.message.match(/Unable to claim interface/) &&
 			navigator.userAgent.match(/mac/i)
 		) {
-			throw new Error(
+			console.error(
 				'Unable to claim interface. On macOS, you need run "killall -9 PTPCamera" in Terminal before connecting to a camera via USB.'
 			)
 		}
