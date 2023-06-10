@@ -39,16 +39,23 @@ export function decodeIFD<Scheme extends IFDScheme>(
 		})
 	)
 
-	const entryCount = dataView.getUint32(4, true)
 	const result: Record<string, string | number[] | ArrayBuffer> = {}
 
-	for (let i = 0; i < entryCount; i++) {
-		const offset = 8 + 12 * i
+	// The first 4 byte represents the size of packet.
+	const entryCount = dataView.getUint32(4, true)
 
-		const tag = dataView.getUint16(offset, true)
-		const type = dataView.getUint16(offset + 2, true)
-		const count = dataView.getUint32(offset + 4, true)
-		const valueOffset = dataView.getUint32(offset + 8, true)
+	for (let i = 0; i < entryCount; i++) {
+		// (packet size::Uint32) + (entry count::Uint32) = 8
+		const entryOffset = 8 + 12 * i
+
+		// Read a directory entry
+		const tag = dataView.getUint16(entryOffset, true)
+		const type = dataView.getUint16(entryOffset + 2, true)
+		const count = dataView.getUint32(entryOffset + 4, true)
+
+		// If the data size exceeds 4 bytes, this represents a offset
+		// to the data. Oterwise, it's data itself.
+		const valueOffset = dataView.getUint32(entryOffset + 8, true)
 
 		const entryScheme = tagToEntry.get(tag)
 		if (!entryScheme) continue
@@ -65,8 +72,8 @@ export function decodeIFD<Scheme extends IFDScheme>(
 
 		switch (type) {
 			case IFDType.Byte: {
-				const off = count > 4 ? valueOffset : offset
-				const buf = data.slice(off, off + count)
+				const offset = count > 4 ? valueOffset : entryOffset + 8
+				const buf = data.slice(offset, offset + count)
 				value = [...new Uint8Array(buf)]
 				break
 			}
@@ -76,23 +83,22 @@ export function decodeIFD<Scheme extends IFDScheme>(
 				break
 			}
 			case IFDType.Short: {
-				// SHORT
-				const off = count > 2 ? valueOffset : offset
-				const buf = data.slice(off, off + count * 2)
+				const offset = count > 2 ? valueOffset : entryOffset + 8
+				const buf = data.slice(offset, offset + count * 2)
 				value = [...new Uint16Array(buf)]
 				break
 			}
 			case IFDType.Undefined: {
-				const off = count > 4 ? valueOffset : offset
-				value = data.slice(off, off + count)
+				const offset = count > 4 ? valueOffset : entryOffset + 8
+				value = data.slice(offset, offset + count)
 				break
 			}
 			case IFDType.SignedShort: {
 				// Signed SHORT
-				const off = count > 2 ? valueOffset : offset
+				const offset = count > 2 ? valueOffset : entryOffset + 8
 				value = times(count, i => {
-					const f = dataView.getUint8(off + i * 2)
-					const d = dataView.getInt8(off + i * 2 + 1)
+					const f = dataView.getUint8(offset + i * 2)
+					const d = dataView.getInt8(offset + i * 2 + 1)
 
 					return d + f / 0x100
 				})
