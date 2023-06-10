@@ -1,7 +1,8 @@
 import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
-import {ConfigDesc, ConfigType, detectTethr, Tethr} from '~/src'
+import {ConfigDesc, ConfigType, Tethr} from '~/src'
 import {ConfigName} from '~/src/configs'
+import {detectCameras} from '~/src/detectCameras'
 import {TethrObject} from '~/src/TethrObject'
 
 const TransparentPng =
@@ -75,7 +76,7 @@ export function useTethr({onSave = (object: TethrObject) => null as any} = {}) {
 			let cams: Tethr[]
 
 			try {
-				cams = await detectTethr()
+				cams = await detectCameras()
 				if (cams.length === 0) {
 					throw new Error('No camera detected')
 				}
