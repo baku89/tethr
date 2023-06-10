@@ -1412,6 +1412,8 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x0d, 'teal and orange'],
 		[0x0e, 'off'],
 		[0x0f, 'powder blue'],
+		[0x10, 'duo tone'],
+		[0x11, 'warm gold'],
 	])
 
 	private imageAspectTable = new BiMap<number, string>([
