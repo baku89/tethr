@@ -517,7 +517,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 	// Actions
 
-	public async takePhoto({download = true}: TakePhotoOption = {}): Promise<
+	public async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		const quality = await this.get('imageQuality')
@@ -560,7 +560,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			this.device.onEventCode(EventCodePanasonic.ObjectAdded, onObjectAdded)
 		})
 
-		if (!download) {
+		if (!doDownload) {
 			return {status: 'ok', value: []}
 		}
 

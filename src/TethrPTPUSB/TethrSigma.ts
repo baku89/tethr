@@ -853,7 +853,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	// Actions
 
-	public async takePhoto({download = true}: TakePhotoOption = {}): Promise<
+	public async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		this.isCapturing = true
@@ -867,7 +867,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const picts: TethrObject[] = []
 
-		if (download) {
+		if (doDownload) {
 			const pictInfos = await this.getPictFileInfo2()
 
 			for await (const info of pictInfos) {

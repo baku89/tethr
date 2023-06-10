@@ -167,14 +167,14 @@ export class TethrWebcam extends Tethr {
 	}
 
 	// Actions
-	public async takePhoto({download = true}: TakePhotoOption = {}): Promise<
+	public async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		if (!this.media || !this.captureHandler) {
 			return {status: 'unsupported'}
 		}
 
-		if (!download) return {status: 'ok', value: []}
+		if (!doDownload) return {status: 'ok', value: []}
 
 		let blob: Blob
 

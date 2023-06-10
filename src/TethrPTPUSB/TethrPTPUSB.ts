@@ -389,7 +389,7 @@ export class TethrPTPUSB extends Tethr {
 
 	// Actions
 
-	public async takePhoto({download = true}: TakePhotoOption = {}): Promise<
+	public async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		const {operationsSupported} = await this.getDeviceInfo()
@@ -405,7 +405,7 @@ export class TethrPTPUSB extends Tethr {
 
 		const objectAddedEvent = await this.device.waitEvent(EventCode.ObjectAdded)
 
-		if (!download) return {status: 'ok', value: []}
+		if (!doDownload) return {status: 'ok', value: []}
 
 		const objectID = objectAddedEvent.parameters[0]
 		const objectInfo = await this.getObjectInfo(objectID)

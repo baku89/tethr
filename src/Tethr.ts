@@ -44,7 +44,7 @@ export type ConfigDesc<T> = {
 }
 
 export interface TakePhotoOption {
-	download?: boolean
+	doDownload?: boolean
 }
 
 type EventTypes = {
