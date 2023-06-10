@@ -858,19 +858,19 @@ export class TethrSigma extends TethrPTPUSB {
 	> {
 		this.isCapturing = true
 
-		const captId = await this.executeSnapCommand(
+		const captureId = await this.executeSnapCommand(
 			SnapCaptureMode.NonAFCapture,
 			1
 		)
 
-		if (captId === null) return {status: 'general error'}
+		if (captureId === null) return {status: 'general error'}
 
 		const picts: TethrObject[] = []
 
 		if (doDownload) {
-			const pictInfos = await this.getPictFileInfo2()
+			const pictFileInfos = await this.getPictFileInfo2()
 
-			for await (const info of pictInfos) {
+			for await (const info of pictFileInfos) {
 				const pictArray = new Uint8Array(info.fileSize)
 
 				const CHUNK_SIZE = 0x00200000 // SampleApp uses this
