@@ -123,7 +123,7 @@ const ConfigListSigma: ConfigName[] = [
 export class TethrSigma extends TethrPTPUSB {
 	private liveviewEnabled = false
 	private isCapturing = false
-	private checkPropChangedTimerId!: number
+	private checkPropChangedTimerId!: ReturnType<typeof setInterval>
 
 	public async open() {
 		await super.open()
@@ -689,7 +689,9 @@ export class TethrSigma extends TethrPTPUSB {
 		const isoMax = Math.round(3.125 * 2 ** svMax)
 
 		const isos = [...this.isoTable.values()]
-		const values = isos.filter(a => isoMin <= a && a <= isoMax)
+		const values = isos.filter(
+			a => typeof a === 'number' && isoMin <= a && a <= isoMax
+		)
 
 		values.unshift('auto')
 
@@ -993,7 +995,7 @@ export class TethrSigma extends TethrPTPUSB {
 			data: this.encodeParameter(snapState),
 		})
 
-		const movieFileInfo = await this.getMovieFileInfo()
+		// const movieFileInfo = await this.getMovieFileInfo()
 
 		return {status: 'ok'}
 	}
