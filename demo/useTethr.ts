@@ -146,6 +146,7 @@ export function useTethr({onSave = (object: TethrObject) => null as any} = {}) {
 		configs: {
 			manufacturer: useTethrConfig(camera, 'manufacturer'),
 			model: useTethrConfig(camera, 'model'),
+			serialNumber: useTethrConfig(camera, 'serialNumber'),
 			exposureMode: useTethrConfig(camera, 'exposureMode'),
 			driveMode: useTethrConfig(camera, 'driveMode'),
 			aperture: useTethrConfig(camera, 'aperture'),

@@ -177,6 +177,8 @@ export abstract class Tethr
 				return this.setManufacturer(value as string)
 			case 'model':
 				return this.setModel(value as string)
+			case 'serialNumber':
+				return this.setSerialNumber(value as string)
 			case 'sharpness':
 				return this.setSharpness(value as number)
 			case 'shutterSpeed':
@@ -270,6 +272,8 @@ export abstract class Tethr
 				return this.getManufacturerDesc() as ReturnType
 			case 'model':
 				return this.getModelDesc() as ReturnType
+			case 'serialNumber':
+				return this.getSerialNumberDesc() as ReturnType
 			case 'sharpness':
 				return this.getSharpnessDesc() as ReturnType
 			case 'shutterSpeed':
@@ -775,6 +779,19 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 	public async getModelDesc(): Promise<ConfigDesc<string>> {
+		return UnsupportedConfigDesc
+	}
+
+	public async getSerialNumber(): Promise<string | null> {
+		return (await this.getSerialNumberDesc()).value
+	}
+	public async setSerialNumber(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		value: string
+	): Promise<OperationResult> {
+		return {status: 'unsupported'}
+	}
+	public async getSerialNumberDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 

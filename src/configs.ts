@@ -98,6 +98,7 @@ export type ConfigType = {
 	manualFocusOptions: ManualFocusOption[]
 	manufacturer: string
 	model: string
+	serialNumber: string
 	sharpness: number
 	shutterSpeed: string
 	timelapseInterval: number
