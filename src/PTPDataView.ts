@@ -25,6 +25,10 @@ export class PTPDataView {
 		this.dataView = new DataView(this.buffer)
 	}
 
+	public get byteLength() {
+		return this.currentByteLength
+	}
+
 	public skip(bytes: number) {
 		if (this.currentByteOffset + bytes > this.buffer.byteLength) {
 			throw new Error('Not enough byteLength to skip')
@@ -158,60 +162,75 @@ export class PTPDataView {
 		this.resizeBuffer(this.currentByteOffset + 1)
 		this.dataView.setUint8(this.currentByteOffset, value)
 		this.currentByteOffset += 1
-		this.currentByteLength = Math.max(this.currentByteOffset)
+		this.updateByteLength()
 	}
 
 	public writeInt8(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 1)
 		this.dataView.setInt8(this.currentByteOffset, value)
 		this.currentByteOffset += 1
-		this.currentByteLength = Math.max(this.currentByteOffset)
+		this.updateByteLength()
 	}
 
 	public writeUint16(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 2)
 		this.dataView.setUint16(this.currentByteOffset, value, true)
 		this.currentByteOffset += 2
-		this.currentByteLength = Math.max(this.currentByteOffset)
+		this.updateByteLength()
 	}
 
 	public writeInt16(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 2)
 		this.dataView.setInt16(this.currentByteOffset, value, true)
 		this.currentByteOffset += 2
-		this.currentByteLength = Math.max(this.currentByteOffset)
+		this.updateByteLength()
 	}
 
 	public writeUint32(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 4)
 		this.dataView.setUint32(this.currentByteOffset, value, true)
 		this.currentByteOffset += 4
-		this.currentByteLength = Math.max(this.currentByteOffset)
+		this.updateByteLength()
 	}
 
 	public writeInt32(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 4)
 		this.dataView.setInt32(this.currentByteOffset, value, true)
 		this.currentByteOffset += 4
-		this.currentByteLength = Math.max(this.currentByteOffset)
+		this.updateByteLength()
 	}
 
 	public writeBigUint64(value: bigint) {
 		this.resizeBuffer(this.currentByteOffset + 8)
 		this.dataView.setBigUint64(this.currentByteOffset, value, true)
 		this.currentByteOffset += 8
-		this.currentByteLength = Math.max(this.currentByteOffset)
+		this.updateByteLength()
 	}
 
 	public writeBigInt64(value: bigint) {
 		this.resizeBuffer(this.currentByteOffset + 8)
 		this.dataView.setBigInt64(this.currentByteOffset, value, true)
 		this.currentByteOffset += 8
-		this.currentByteLength = Math.max(this.currentByteOffset)
+		this.updateByteLength()
+	}
+
+	public writeCheckSum() {
+		// CheckSum8 Modulo 256
+		const array = new Uint8Array(this.toBuffer())
+		const checksum = array.reduce((a, b) => (a + b) % 0xff, 0)
+		this.goto(this.currentByteLength)
+		this.writeUint8(checksum)
 	}
 
 	public toBuffer() {
 		return this.buffer.slice(0, this.currentByteLength)
+	}
+
+	private updateByteLength() {
+		this.currentByteLength = Math.max(
+			this.currentByteLength,
+			this.currentByteOffset
+		)
 	}
 
 	private resizeBuffer(byteLength: number) {

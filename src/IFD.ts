@@ -1,5 +1,7 @@
 import {times} from 'lodash'
 
+import {PTPDataView} from './PTPDataView'
+
 export enum IFDType {
 	Byte = 0x1,
 	Ascii = 0x2,
@@ -113,3 +115,74 @@ export function decodeIFD<Scheme extends IFDScheme>(
 
 	return result as IFDDecodeResult<Scheme>
 }
+
+export interface IFDData {
+	[name: string]:
+		| {
+				tag: number
+				type: IFDType.Ascii
+				value: string
+		  }
+		| {
+				tag: number
+				type: IFDType.Undefined
+				value: ArrayBuffer
+		  }
+		| {
+				tag: number
+				type: Exclude<IFDType, IFDType.Ascii | IFDType.Undefined>
+				value: number[]
+		  }
+}
+
+export function encodeIFD(data: IFDData): ArrayBuffer {
+	const dataView = new PTPDataView()
+
+	const entries = Object.values(data).sort((a, b) => {
+		if (a.tag === b.tag) throw new Error('Same tag has found')
+		return a.tag < b.tag ? 1 : -1
+	})
+
+	const entryCount = entries.length
+
+	// the first 4 bytes represents the packet size,
+	// but it somehow works just to fill 'em with zeros, at least in Sigma fp
+	dataView.goto(4)
+
+	dataView.writeUint32(entryCount)
+
+	for (const [index, entry] of entries.entries()) {
+		const entryOffset = 8 + index * 12
+
+		dataView.goto(entryOffset)
+		dataView.writeUint16(entry.tag)
+		dataView.writeUint16(entry.type)
+
+		const count =
+			entry.value instanceof ArrayBuffer
+				? entry.value.byteLength
+				: entry.value.length
+		dataView.writeUint32(count)
+
+		switch (entry.type) {
+			case IFDType.Short: {
+				if (entry.value.length > 2) {
+					throw new Error('Not yet supported')
+				} else {
+					for (let i = 0; i < 2; i++) {
+						dataView.writeUint16(entry.value[i] ?? 0)
+					}
+				}
+				break
+			}
+			default:
+				throw new Error(`Type ${IFDType[entry.type]} is not yet supported`)
+		}
+	}
+
+	dataView.writeCheckSum()
+
+	return dataView.toBuffer()
+}
+
+;(window as any).encodeIFD = encodeIFD
