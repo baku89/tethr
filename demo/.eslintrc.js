@@ -1,6 +1,5 @@
 module.exports = {
 	root: false,
-	plugins: ['import'],
 	extends: [
 		'plugin:vue/vue3-essential',
 		'eslint:recommended',

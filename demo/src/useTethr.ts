@@ -44,9 +44,7 @@ export function useTethrConfig<Name extends ConfigName>(
 
 			config.writable = desc.writable
 			config.value = desc.value
-			if (desc.writable) {
-				config.option = desc.option
-			}
+			config.option = desc.option
 
 			config.update = async (value: any) => {
 				cam.set(name, value)
@@ -55,9 +53,7 @@ export function useTethrConfig<Name extends ConfigName>(
 			cam.on(`${name}Changed` as any, (desc: ConfigDesc<ConfigType[Name]>) => {
 				config.value = desc.value
 				config.writable = desc.writable
-				if (desc.writable) {
-					config.option = desc.option
-				}
+				config.option = desc.option
 			})
 		},
 		{immediate: true}

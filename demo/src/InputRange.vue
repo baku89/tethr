@@ -12,6 +12,7 @@
 		<input
 			type="number"
 			:value="modelValue"
+			:disabled="disabled"
 			@change="$emit('change', $event)"
 		/>
 	</div>
