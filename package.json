@@ -6,10 +6,12 @@
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
-		"lint": "eslint --fix --ext .ts --ignore-path .gitignore src",
+		"serve": "yarn workspace demo run serve",
+		"lint": "eslint --fix src --ext .ts --ignore-path .gitignore",
 		"format": "prettier --write src",
 		"fix": "npm run format && npm run lint",
 		"build": "tsc --outDir lib --declaration",
+		"build:demo": "yarn workspace demo build",
 		"prepare": "npm run build"
 	},
 	"private": true,

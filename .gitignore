@@ -4,6 +4,7 @@
 node_modules
 
 lib
-public
+demo/dist
+
 *.log
 .vscode/launch.json
