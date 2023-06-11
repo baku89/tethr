@@ -12,7 +12,7 @@ import {
 	ISO,
 	WhiteBalance,
 } from '../configs'
-import {decodeIFD, IFDType} from '../IFD'
+import {decodeIFD, encodeIFD, IFDType} from '../IFD'
 import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {
@@ -110,6 +110,8 @@ const ConfigListSigma: ConfigName[] = [
 	'colorTemperature',
 	'colorMode',
 	'destinationToSave',
+	'focalLength',
+	'focusDistance',
 	'exposureComp',
 	'exposureMode',
 	'imageAspect',
@@ -231,7 +233,8 @@ export class TethrSigma extends TethrPTPUSB {
 	public async getCanRunAutoFocusDesc() {
 		const {focusMode} = await this.getCamCanSetInfo5()
 
-		const canRun = focusMode.includes(2)
+		// 3 == AF-S
+		const canRun = focusMode.includes(3)
 
 		return createReadonlyConfigDesc(canRun)
 	}
@@ -462,7 +465,7 @@ export class TethrSigma extends TethrPTPUSB {
 				type: 'range',
 				min,
 				max,
-				step: 0,
+				step: 1,
 			},
 		} as ConfigDesc<FocalLength>
 
@@ -472,6 +475,49 @@ export class TethrSigma extends TethrPTPUSB {
 
 			return integer + fractional / 10
 		}
+	}
+
+	public async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
+		const {focusPosition: range} = await this.getCamCanSetInfo5()
+		const value = (await this.getCamDataGroupFocus()).focusPosition[0]
+
+		const writable = range.length === 2 && !!(await this.getCanRunAutoFocus())
+
+		return {
+			writable,
+			value,
+			option:
+				range.length === 2
+					? {
+							type: 'range',
+							min: range[0],
+							max: range[1],
+							step: 1,
+					  }
+					: undefined,
+		}
+	}
+
+	public async setFocusDistance(
+		value: number
+	): Promise<{status: OperationResultStatus}> {
+		const data = encodeIFD({
+			focusPosition: {tag: 81, type: IFDType.Short, value: [value]},
+		})
+
+		try {
+			await this.device.sendData({
+				label: 'SigmaFP SetCamDataGroupFocus',
+				opcode: OpCodeSigma.SetCamDataGroupFocus,
+				data,
+			})
+		} catch (err) {
+			return {status: 'invalid parameter'}
+		}
+
+		// await this.emitAllConfigChangedEvents()
+
+		return {status: 'ok'}
 	}
 
 	public async getImageAspect() {
@@ -1212,6 +1258,7 @@ export class TethrSigma extends TethrPTPUSB {
 			colorTemerature: {tag: 302, type: IFDType.Short},
 			colorMode: {tag: 320, type: IFDType.Byte},
 			focusMode: {tag: 600, type: IFDType.Byte},
+			focusPosition: {tag: 658, type: IFDType.Short},
 			lvImageTransfer: {tag: 700, type: IFDType.Byte},
 			lvMagnifyRatio: {tag: 701, type: IFDType.Byte},
 			focusPeaking: {tag: 702, type: IFDType.Byte},
@@ -1240,6 +1287,7 @@ export class TethrSigma extends TethrPTPUSB {
 			// afFrameFaceFocusDetection: {tag: 14, type: IFDType.Byte},
 			preAlwaysAf: {tag: 51, type: IFDType.Byte},
 			afLimit: {tag: 52, type: IFDType.Byte},
+			focusPosition: {tag: 81, type: IFDType.Short},
 		})
 	}
 
