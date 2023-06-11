@@ -467,7 +467,7 @@ export class TethrSigma extends TethrPTPUSB {
 				type: 'range',
 				min,
 				max,
-				step: 1,
+				step: 0,
 			},
 		} as ConfigDesc<FocalLength>
 
