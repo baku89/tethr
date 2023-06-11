@@ -3,7 +3,6 @@ import PromiseQueue from 'promise-queue'
 
 import {ResCode} from './PTPDatacode'
 import {PTPDataView} from './PTPDataView'
-import {usb} from './usb'
 import {toHexString} from './util'
 
 enum PTPType {
@@ -457,7 +456,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	}
 
 	private listenDisconnect() {
-		usb?.addEventListener('disconnect', ev => {
+		navigator.usb.addEventListener('disconnect', ev => {
 			if (ev.device === this.usbDevice) {
 				this.emit('disconnect')
 			}

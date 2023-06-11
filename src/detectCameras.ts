@@ -1,7 +1,6 @@
 import {Tethr} from './Tethr'
 import {initTethrUSBPTP} from './TethrPTPUSB'
 import {initTethrWebcam} from './TethrWebcam'
-import {usb} from './usb'
 import {isntNil} from './util'
 
 export async function detectCameras(): Promise<Tethr[]> {
@@ -20,9 +19,7 @@ export async function detectCameras(): Promise<Tethr[]> {
 	return cameras
 
 	async function detectPairedPTPUSBCameras() {
-		if (!usb) return []
-
-		const devices = await usb.getDevices()
+		const devices = await navigator.usb.getDevices()
 		const promises = await Promise.all(devices.map(initTethrUSBPTP))
 		const cameras = promises.filter(isntNil)
 
@@ -30,11 +27,9 @@ export async function detectCameras(): Promise<Tethr[]> {
 	}
 
 	async function requestPTPUSBCameras() {
-		if (!usb) return []
-
 		let usbDevice: USBDevice
 		try {
-			usbDevice = await usb.requestDevice({filters: []})
+			usbDevice = await navigator.usb.requestDevice({filters: []})
 		} catch {
 			return []
 		}
