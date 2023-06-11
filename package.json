@@ -1,10 +1,11 @@
 {
 	"name": "tethr",
 	"author": "Baku Hashimoto <mail@baku89.com> (https://baku89.com)",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Tethers USB-connected cameras, webcam, and smartphone camera from browser",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
+	"repository": "https://github.com/baku89/tethr",
 	"scripts": {
 		"serve": "yarn workspace @tethr/demo run serve",
 		"lint": "eslint --fix src --ext .ts --ignore-path .gitignore",
