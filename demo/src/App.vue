@@ -111,7 +111,7 @@ import {saveAs} from 'file-saver'
 
 import {useTethr} from './useTethr'
 import TethrConfig from './TethrConfig.vue'
-import {TethrObject} from '~/src/TethrObject'
+import {Tethr, type TethrObject} from 'tethr'
 
 export default defineComponent({
 	components: {
