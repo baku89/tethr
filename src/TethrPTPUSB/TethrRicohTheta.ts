@@ -20,7 +20,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 
 	// Configs
 
-	public setColorTemperature(value: number) {
+	setColorTemperature(value: number) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCodeRicohTheta.ColorTemperature,
 			datatypeCode: DatatypeCode.Uint16,
@@ -28,7 +28,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 			value,
 		})
 	}
-	public getColorTemperatureDesc() {
+	getColorTemperatureDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCodeRicohTheta.ColorTemperature,
 			datatypeCode: DatatypeCode.Uint16,
@@ -36,7 +36,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		})
 	}
 
-	public setExposureMode(value: ExposureMode) {
+	setExposureMode(value: ExposureMode) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			datatypeCode: DatatypeCode.Uint16,
@@ -47,7 +47,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		})
 	}
 
-	public getExposureModeDesc() {
+	getExposureModeDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			datatypeCode: DatatypeCode.Uint16,
@@ -57,14 +57,14 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		})
 	}
 
-	public async getFocalLengthDesc() {
+	async getFocalLengthDesc() {
 		return {
 			writable: false,
 			value: 'spherical' as FocalLength,
 		}
 	}
 
-	public setShutterSpeed(value: string) {
+	setShutterSpeed(value: string) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
 			datatypeCode: DatatypeCode.Uint64,
@@ -87,7 +87,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		})
 	}
 
-	public getShutterSpeedDesc() {
+	getShutterSpeedDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCodeRicohTheta.ShutterSpeed,
 			datatypeCode: DatatypeCode.Uint64,
@@ -104,7 +104,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		})
 	}
 
-	public setWhiteBalance(value: WhiteBalance) {
+	setWhiteBalance(value: WhiteBalance) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.WhiteBalance,
 			datatypeCode: DatatypeCode.Uint16,
@@ -115,7 +115,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		})
 	}
 
-	public getWhiteBalanceDesc() {
+	getWhiteBalanceDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			datatypeCode: DatatypeCode.Uint16,

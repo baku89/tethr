@@ -131,7 +131,7 @@ export class TethrSigma extends TethrPTPUSB {
 	private isCapturing = false
 	private checkPropChangedTimerId!: ReturnType<typeof setInterval>
 
-	public async open() {
+	async open() {
 		await super.open()
 
 		const {data} = await this.device.receiveData({
@@ -152,14 +152,14 @@ export class TethrSigma extends TethrPTPUSB {
 		}, 1000)
 	}
 
-	public async close(): Promise<void> {
+	async close(): Promise<void> {
 		await this.stopLiveview()
 		clearInterval(this.checkPropChangedTimerId)
 
 		await super.close()
 	}
 
-	public async getAperture(): Promise<Aperture | null> {
+	async getAperture(): Promise<Aperture | null> {
 		const {aperture} = await this.getCamDataGroup1()
 		if (aperture === 0x0) return 'auto'
 		return (
@@ -169,7 +169,7 @@ export class TethrSigma extends TethrPTPUSB {
 		)
 	}
 
-	public async setAperture(aperture: Aperture): Promise<OperationResult> {
+	async setAperture(aperture: Aperture): Promise<OperationResult> {
 		if (aperture === 'auto') return {status: 'invalid parameter'}
 
 		const byte = this.apertureOneThirdTable.getKey(aperture)
@@ -178,7 +178,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
 
-	public async getApertureDesc() {
+	async getApertureDesc() {
 		const fValue = (await this.getCamCanSetInfo5()).fValue
 		const value = await this.getAperture()
 
@@ -219,7 +219,7 @@ export class TethrSigma extends TethrPTPUSB {
 		} as ConfigDesc<Aperture>
 	}
 
-	public async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
+	async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
 		const {batteryLevel} = await this.getCamDataGroup1()
 		const value = this.batteryLevelTable.get(batteryLevel) ?? null
 
@@ -229,11 +229,11 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getCanTakePhotoDesc() {
+	async getCanTakePhotoDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
-	public async getCanRunAutoFocusDesc() {
+	async getCanRunAutoFocusDesc() {
 		const {focusMode} = await this.getCamCanSetInfo5()
 
 		// 3 == AF-S
@@ -242,18 +242,18 @@ export class TethrSigma extends TethrPTPUSB {
 		return createReadonlyConfigDesc(canRun)
 	}
 
-	public async getCanStartLiveviewDesc() {
+	async getCanStartLiveviewDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
-	public async setColorMode(colorMode: string): Promise<OperationResult> {
+	async setColorMode(colorMode: string): Promise<OperationResult> {
 		const id = this.colorModeTable.getKey(colorMode)
 		if (id === undefined) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 4, id)
 	}
 
-	public async getColorModeDesc(): Promise<ConfigDesc<string>> {
+	async getColorModeDesc(): Promise<ConfigDesc<string>> {
 		const decodeColorMode = (id: number) => {
 			return this.colorModeTable.get(id) ?? `unknown:${id.toString(16)}`
 		}
@@ -276,7 +276,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getColorTemperature() {
+	async getColorTemperature() {
 		const wb = await this.getWhiteBalance()
 		if (wb !== 'manual') return null
 
@@ -284,7 +284,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return colorTemperature
 	}
 
-	public async setColorTemperature(value: number) {
+	async setColorTemperature(value: number) {
 		const r0 = await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, 0x0e)
 		const r1 = await this.setCamData(OpCodeSigma.SetCamDataGroup5, 1, value)
 
@@ -294,7 +294,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status}
 	}
 
-	public async getColorTemperatureDesc() {
+	async getColorTemperatureDesc() {
 		const {colorTemerature} = await this.getCamCanSetInfo5()
 		const value = await this.getColorTemperature()
 
@@ -320,7 +320,7 @@ export class TethrSigma extends TethrPTPUSB {
 		} as ConfigDesc<number>
 	}
 
-	public async setDestinationToSave(value: string): Promise<OperationResult> {
+	async setDestinationToSave(value: string): Promise<OperationResult> {
 		const id = this.destinationToSaveTable.getKey(value)
 
 		if (id === undefined) return {status: 'invalid parameter'}
@@ -328,7 +328,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup3, 15, id)
 	}
 
-	public async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
+	async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
 		const {destinationToSave} = await this.getCamDataGroup3()
 
 		const value = this.destinationToSaveTable.get(destinationToSave) ?? null
@@ -343,21 +343,19 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getExposureMode() {
+	async getExposureMode() {
 		const {exposureMode} = await this.getCamDataGroup2()
 		return this.exposureModeTable.get(exposureMode) ?? null
 	}
 
-	public async setExposureMode(
-		exposureMode: ExposureMode
-	): Promise<OperationResult> {
+	async setExposureMode(exposureMode: ExposureMode): Promise<OperationResult> {
 		const id = this.exposureModeTable.getKey(exposureMode)
 		if (!id) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, id)
 	}
 
-	public async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
+	async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
 		const {exposureMode} = await this.getCamCanSetInfo5()
 		const value = await this.getExposureMode()
 
@@ -375,19 +373,19 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getExposureComp() {
+	async getExposureComp() {
 		const {exposureComp} = await this.getCamDataGroup1()
 		return this.compensationOneThirdTable.get(exposureComp) ?? null
 	}
 
-	public async setExposureComp(value: string): Promise<OperationResult> {
+	async setExposureComp(value: string): Promise<OperationResult> {
 		const id = this.compensationOneThirdTable.getKey(value)
 		if (id === undefined) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 5, id)
 	}
 
-	public async getExposureCompDesc(): Promise<ConfigDesc<string>> {
+	async getExposureCompDesc(): Promise<ConfigDesc<string>> {
 		const {exposureComp} = await this.getCamCanSetInfo5()
 		const value = await this.getExposureComp()
 
@@ -451,7 +449,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getFocalLengthDesc() {
+	async getFocalLengthDesc() {
 		const {currentLensFocalLength} = await this.getCamDataGroup1()
 		const value = decodeFocalLength(currentLensFocalLength)
 
@@ -480,7 +478,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
+	async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
 		const {focusPosition: range} = await this.getCamCanSetInfo5()
 		const value = (await this.getCamDataGroupFocus()).focusPosition[0]
 
@@ -501,7 +499,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async setFocusDistance(
+	async setFocusDistance(
 		value: number
 	): Promise<{status: OperationResultStatus}> {
 		const data = encodeIFD({
@@ -523,20 +521,20 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	public async getImageAspect() {
+	async getImageAspect() {
 		const {imageAspect} = await this.getCamDataGroup5()
 		const id = imageAspect - 245 // Magic number
 		return this.imageAspectTable.get(id) ?? null
 	}
 
-	public async setImageAspect(imageAspect: string): Promise<OperationResult> {
+	async setImageAspect(imageAspect: string): Promise<OperationResult> {
 		const id = this.imageAspectTable.getKey(imageAspect)
 		if (id === undefined) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
 	}
 
-	public async getImageAspectDesc(): Promise<ConfigDesc<string>> {
+	async getImageAspectDesc(): Promise<ConfigDesc<string>> {
 		const decodeImageAspectIFD = (id: number) => {
 			return this.imageAspectTableIFD.get(id) ?? 'Unknown'
 		}
@@ -554,7 +552,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async setImageQuality(imageQuality: string): Promise<OperationResult> {
+	async setImageQuality(imageQuality: string): Promise<OperationResult> {
 		let jpegQuality: string | null = null
 		let dngBitDepth: number | null = null
 
@@ -606,7 +604,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getImageQualityDesc() {
+	async getImageQualityDesc() {
 		type ImageQualityConfig = {
 			jpegQuality: string | null
 			hasDNG: boolean
@@ -676,14 +674,14 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async setImageSize(imageSize: string): Promise<OperationResult> {
+	async setImageSize(imageSize: string): Promise<OperationResult> {
 		const id = this.imageSizeTable.getKey(imageSize)
 		if (id === undefined) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 14, id)
 	}
 
-	public async getImageSizeDesc(): Promise<ConfigDesc<string>> {
+	async getImageSizeDesc(): Promise<ConfigDesc<string>> {
 		const {resolution} = await this.getCamDataGroup2()
 
 		const value = this.imageSizeTable.get(resolution)
@@ -705,7 +703,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getIso() {
+	async getIso() {
 		const {isoAuto, isoSpeed} = await this.getCamDataGroup1()
 		if (isoAuto === 0x01) {
 			return 'auto'
@@ -714,7 +712,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async setIso(iso: ISO): Promise<OperationResult> {
+	async setIso(iso: ISO): Promise<OperationResult> {
 		if (iso === 'auto') {
 			return this.setCamData(OpCodeSigma.SetCamDataGroup1, 3, 0x1)
 		}
@@ -740,7 +738,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getIsoDesc(): Promise<ConfigDesc<ISO>> {
+	async getIsoDesc(): Promise<ConfigDesc<ISO>> {
 		const {isoManual} = await this.getCamCanSetInfo5()
 		const value = await this.getIso()
 
@@ -766,23 +764,21 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
+	async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
 		return {
 			writable: false,
 			value: this.liveviewEnabled,
 		}
 	}
 
-	public async setLiveviewMagnifyRatio(
-		value: number
-	): Promise<OperationResult> {
+	async setLiveviewMagnifyRatio(value: number): Promise<OperationResult> {
 		const id = this.liveviewMagnifyRatioTable.getKey(value)
 		if (!id) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup4, 5, id)
 	}
 
-	public async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
+	async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
 		const {lvMagnifyRatio} = await this.getCamDataGroup4()
 		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
 
@@ -798,7 +794,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async getShutterSpeed() {
+	async getShutterSpeed() {
 		const {shutterSpeed} = await this.getCamDataGroup1()
 		if (shutterSpeed === 0x0) return 'auto'
 		return (
@@ -808,14 +804,14 @@ export class TethrSigma extends TethrPTPUSB {
 		)
 	}
 
-	public async setShutterSpeed(ss: string): Promise<OperationResult> {
+	async setShutterSpeed(ss: string): Promise<OperationResult> {
 		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
 	}
 
-	public async getShutterSpeedDesc() {
+	async getShutterSpeedDesc() {
 		const {shutterSpeed: range, notApexShutterSpeed} =
 			await this.getCamCanSetInfo5()
 
@@ -872,18 +868,18 @@ export class TethrSigma extends TethrPTPUSB {
 		} as ConfigDesc<string>
 	}
 
-	public async getWhiteBalance() {
+	async getWhiteBalance() {
 		const {whiteBalance} = await this.getCamDataGroup2()
 		return this.whiteBalanceTable.get(whiteBalance) ?? null
 	}
 
-	public async setWhiteBalance(wb: WhiteBalance): Promise<OperationResult> {
+	async setWhiteBalance(wb: WhiteBalance): Promise<OperationResult> {
 		const id = this.whiteBalanceTable.getKey(wb)
 		if (!id) return {status: 'invalid parameter'}
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, id)
 	}
 
-	public async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
+	async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
 		const {whiteBalance} = await this.getCamCanSetInfo5()
 		const value = await this.getWhiteBalance()
 
@@ -903,7 +899,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	// Actions
 
-	public async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
+	async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		this.isCapturing = true
@@ -963,7 +959,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok', value: picts}
 	}
 
-	public async runAutoFocus(): Promise<OperationResult> {
+	async runAutoFocus(): Promise<OperationResult> {
 		const succeed = await this.executeSnapCommand(SnapCaptureMode.StartAF)
 		await this.clearImageDBAll()
 
@@ -974,7 +970,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	public async startLiveview(): Promise<OperationResult<MediaStream>> {
+	async startLiveview(): Promise<OperationResult<MediaStream>> {
 		const canvas = document.createElement('canvas')
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return {status: 'general error'}
@@ -1022,14 +1018,14 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok', value: stream}
 	}
 
-	public async stopLiveview(): Promise<OperationResult> {
+	async stopLiveview(): Promise<OperationResult> {
 		this.liveviewEnabled = false
 		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		return {status: 'ok'}
 	}
 
-	public async startRec(): Promise<OperationResult> {
+	async startRec(): Promise<OperationResult> {
 		const captureMode = SnapCaptureMode.StartRecordingMovieWithoutAF
 		const captureAmount = 1
 
@@ -1044,7 +1040,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	public async stopRec(): Promise<OperationResult> {
+	async stopRec(): Promise<OperationResult> {
 		const captureMode = SnapCaptureMode.StopRecordingMovie
 		const captureAmount = 1
 
@@ -1062,7 +1058,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	// NOTE: WIP
-	public async startBulb(): Promise<OperationResult> {
+	async startBulb(): Promise<OperationResult> {
 		if ((await this.getShutterSpeed()) !== 'bulb') {
 			return {status: 'general error'}
 		}
@@ -1082,7 +1078,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	// NOTE: WIP
-	public async endBulb(): Promise<OperationResult> {
+	async endBulb(): Promise<OperationResult> {
 		const captureMode = SnapCaptureMode.StopCapture
 		const captureAmount = 1
 
@@ -1097,7 +1093,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	public async getStorages(): Promise<TethrStorage[]> {
+	async getStorages(): Promise<TethrStorage[]> {
 		// fp always returns one storage info even if no SD inserted.
 		const [storage] = await super.getStorages()
 

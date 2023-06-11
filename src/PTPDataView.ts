@@ -13,9 +13,7 @@ export class PTPDataView {
 	private dataView: DataView
 	private buffer: ArrayBufferLike
 
-	public constructor(
-		bufferOrSize: ArrayBufferLike | number = DEFAULT_BUFFER_SIZE
-	) {
+	constructor(bufferOrSize: ArrayBufferLike | number = DEFAULT_BUFFER_SIZE) {
 		if (typeof bufferOrSize === 'number') {
 			this.buffer = new ArrayBuffer(bufferOrSize)
 		} else {
@@ -25,11 +23,11 @@ export class PTPDataView {
 		this.dataView = new DataView(this.buffer)
 	}
 
-	public get byteLength() {
+	get byteLength() {
 		return this.currentByteLength
 	}
 
-	public skip(bytes: number) {
+	skip(bytes: number) {
 		if (this.currentByteOffset + bytes > this.buffer.byteLength) {
 			throw new Error('Not enough byteLength to skip')
 		}
@@ -38,48 +36,48 @@ export class PTPDataView {
 		return this
 	}
 
-	public goto(offset: number) {
+	goto(offset: number) {
 		this.currentByteOffset = offset
 		return this
 	}
 
-	public readUint8 = () => {
+	readUint8 = () => {
 		const off = this.currentByteOffset
 		this.currentByteOffset += 1
 		return this.dataView.getUint8(off)
 	}
 
-	public readInt8 = () => {
+	readInt8 = () => {
 		const off = this.currentByteOffset
 		this.currentByteOffset += 1
 		return this.dataView.getInt8(off)
 	}
 
-	public readUint16 = () => {
+	readUint16 = () => {
 		const off = this.currentByteOffset
 		this.currentByteOffset += 2
 		return this.dataView.getUint16(off, true)
 	}
 
-	public readInt16 = () => {
+	readInt16 = () => {
 		const off = this.currentByteOffset
 		this.currentByteOffset += 2
 		return this.dataView.getInt16(off, true)
 	}
 
-	public readUint32 = () => {
+	readUint32 = () => {
 		const off = this.currentByteOffset
 		this.currentByteOffset += 4
 		return this.dataView.getUint32(off, true)
 	}
 
-	public readUint64 = (): bigint => {
+	readUint64 = (): bigint => {
 		const off = this.currentByteOffset
 		this.currentByteOffset += 8
 		return this.dataView.getBigUint64(off, true)
 	}
 
-	public readAsciiString = (): string => {
+	readAsciiString = (): string => {
 		const start = this.currentByteOffset
 		let end = start
 
@@ -95,7 +93,7 @@ export class PTPDataView {
 		return str
 	}
 
-	public readFixedUTF16String = (): string => {
+	readFixedUTF16String = (): string => {
 		const strLen = this.readUint8()
 
 		if (strLen === 0) {
@@ -113,7 +111,7 @@ export class PTPDataView {
 		return str
 	}
 
-	public readUTF16StringNT = (): string => {
+	readUTF16StringNT = (): string => {
 		this.skip(2)
 
 		let str = ''
@@ -127,28 +125,28 @@ export class PTPDataView {
 		return str
 	}
 
-	public readDate = (): Date => {
+	readDate = (): Date => {
 		const timestamp = this.readFixedUTF16String()
 		return parseTimestamp(timestamp, 'YYYYMMDDThhmmss')
 	}
 
-	public readUint8Array = (): number[] => {
+	readUint8Array = (): number[] => {
 		return this.readArray(this.readUint8)
 	}
 
-	public readUint16Array = (): number[] => {
+	readUint16Array = (): number[] => {
 		return this.readArray(this.readUint16)
 	}
 
-	public readInt16Array = (): number[] => {
+	readInt16Array = (): number[] => {
 		return this.readArray(this.readInt16)
 	}
 
-	public readUint32Array = (): number[] => {
+	readUint32Array = (): number[] => {
 		return this.readArray(this.readUint32)
 	}
 
-	public peekRest = (): ArrayBuffer => {
+	peekRest = (): ArrayBuffer => {
 		return this.buffer.slice(this.currentByteOffset)
 	}
 
@@ -158,63 +156,63 @@ export class PTPDataView {
 	}
 
 	// Write methods
-	public writeUint8(value: number) {
+	writeUint8(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 1)
 		this.dataView.setUint8(this.currentByteOffset, value)
 		this.currentByteOffset += 1
 		this.updateByteLength()
 	}
 
-	public writeInt8(value: number) {
+	writeInt8(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 1)
 		this.dataView.setInt8(this.currentByteOffset, value)
 		this.currentByteOffset += 1
 		this.updateByteLength()
 	}
 
-	public writeUint16(value: number) {
+	writeUint16(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 2)
 		this.dataView.setUint16(this.currentByteOffset, value, true)
 		this.currentByteOffset += 2
 		this.updateByteLength()
 	}
 
-	public writeInt16(value: number) {
+	writeInt16(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 2)
 		this.dataView.setInt16(this.currentByteOffset, value, true)
 		this.currentByteOffset += 2
 		this.updateByteLength()
 	}
 
-	public writeUint32(value: number) {
+	writeUint32(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 4)
 		this.dataView.setUint32(this.currentByteOffset, value, true)
 		this.currentByteOffset += 4
 		this.updateByteLength()
 	}
 
-	public writeInt32(value: number) {
+	writeInt32(value: number) {
 		this.resizeBuffer(this.currentByteOffset + 4)
 		this.dataView.setInt32(this.currentByteOffset, value, true)
 		this.currentByteOffset += 4
 		this.updateByteLength()
 	}
 
-	public writeBigUint64(value: bigint) {
+	writeBigUint64(value: bigint) {
 		this.resizeBuffer(this.currentByteOffset + 8)
 		this.dataView.setBigUint64(this.currentByteOffset, value, true)
 		this.currentByteOffset += 8
 		this.updateByteLength()
 	}
 
-	public writeBigInt64(value: bigint) {
+	writeBigInt64(value: bigint) {
 		this.resizeBuffer(this.currentByteOffset + 8)
 		this.dataView.setBigInt64(this.currentByteOffset, value, true)
 		this.currentByteOffset += 8
 		this.updateByteLength()
 	}
 
-	public writeCheckSum() {
+	writeCheckSum() {
 		// CheckSum8 Modulo 256
 		const array = new Uint8Array(this.toBuffer())
 		const checksum = array.reduce((a, b) => (a + b) % 0xff, 0)
@@ -222,7 +220,7 @@ export class PTPDataView {
 		this.writeUint8(checksum)
 	}
 
-	public toBuffer() {
+	toBuffer() {
 		return this.buffer.slice(0, this.currentByteLength)
 	}
 

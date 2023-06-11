@@ -59,15 +59,15 @@ type DataViewTypeForDatatypeCode<D extends DatatypeCode> =
 export class TethrPTPUSB extends Tethr {
 	protected _opened = false
 
-	public constructor(protected device: PTPDevice) {
+	constructor(protected device: PTPDevice) {
 		super()
 	}
 
-	public get opened(): boolean {
+	get opened(): boolean {
 		return this._opened
 	}
 
-	public async open(): Promise<void> {
+	async open(): Promise<void> {
 		if (!this.device.opened) {
 			await this.device.open()
 		}
@@ -92,7 +92,7 @@ export class TethrPTPUSB extends Tethr {
 		this._opened = true
 	}
 
-	public async close(): Promise<void> {
+	async close(): Promise<void> {
 		this._opened = false
 
 		await this.device.sendCommand({
@@ -104,7 +104,7 @@ export class TethrPTPUSB extends Tethr {
 
 	// Configs
 
-	public setAperture(value: Aperture) {
+	setAperture(value: Aperture) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.FNumber,
 			datatypeCode: DatatypeCode.Uint16,
@@ -116,7 +116,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public getApertureDesc() {
+	getApertureDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.FNumber,
 			datatypeCode: DatatypeCode.Uint16,
@@ -126,7 +126,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public getBatteryLevelDesc() {
+	getBatteryLevelDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.BatteryLevel,
 			datatypeCode: DatatypeCode.Uint8,
@@ -134,13 +134,13 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public async getCanTakePhotoDesc() {
+	async getCanTakePhotoDesc() {
 		const {operationsSupported} = await this.getDeviceInfo()
 		const value = operationsSupported.includes(OpCode.InitiateCapture)
 		return createReadonlyConfigDesc(value)
 	}
 
-	public setCaptureDelay(value: number) {
+	setCaptureDelay(value: number) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.CaptureDelay,
 			datatypeCode: DatatypeCode.Uint32,
@@ -149,7 +149,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public getCaptureDelayDesc() {
+	getCaptureDelayDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.CaptureDelay,
 			datatypeCode: DatatypeCode.Uint32,
@@ -157,7 +157,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public setDriveMode(value: DriveMode) {
+	setDriveMode(value: DriveMode) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.StillCaptureMode,
 			datatypeCode: DatatypeCode.Uint16,
@@ -168,7 +168,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public getDriveModeDesc() {
+	getDriveModeDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.StillCaptureMode,
 			datatypeCode: DatatypeCode.Uint16,
@@ -178,7 +178,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public setExposureComp(value: string) {
+	setExposureComp(value: string) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.ExposureBiasCompensation,
 			datatypeCode: DatatypeCode.Int16,
@@ -212,7 +212,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public getExposureCompDesc() {
+	getExposureCompDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.ExposureBiasCompensation,
 			datatypeCode: DatatypeCode.Int16,
@@ -246,7 +246,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public async setExposureMode(value: ExposureMode) {
+	async setExposureMode(value: ExposureMode) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			datatypeCode: DatatypeCode.Uint16,
@@ -260,7 +260,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public async getExposureModeDesc() {
+	async getExposureModeDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.ExposureProgramMode,
 			datatypeCode: DatatypeCode.Uint16,
@@ -273,7 +273,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public setImageSizeValue(value: string) {
+	setImageSizeValue(value: string) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.ImageSize,
 			datatypeCode: DatatypeCode.String,
@@ -281,7 +281,7 @@ export class TethrPTPUSB extends Tethr {
 			value,
 		})
 	}
-	public getImageSizeDesc() {
+	getImageSizeDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.ImageSize,
 			datatypeCode: DatatypeCode.String,
@@ -289,7 +289,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public setIso(value: ISO) {
+	setIso(value: ISO) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.ExposureIndex,
 			datatypeCode: DatatypeCode.Uint16,
@@ -301,7 +301,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public getIsoDesc() {
+	getIsoDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.ExposureIndex,
 			datatypeCode: DatatypeCode.Uint16,
@@ -312,21 +312,21 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public async getManufacturerDesc() {
+	async getManufacturerDesc() {
 		return {
 			writable: false,
 			value: (await this.getDeviceInfo()).manufacturer,
 		}
 	}
 
-	public async getModelDesc() {
+	async getModelDesc() {
 		return {
 			writable: false,
 			value: (await this.getDeviceInfo()).model,
 		}
 	}
 
-	public setWhiteBalance(value: WhiteBalance) {
+	setWhiteBalance(value: WhiteBalance) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.WhiteBalance,
 			datatypeCode: DatatypeCode.Uint16,
@@ -340,7 +340,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public getWhiteBalanceDesc() {
+	getWhiteBalanceDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.WhiteBalance,
 			datatypeCode: DatatypeCode.Uint16,
@@ -353,7 +353,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public setTimelapseNumber(value: number) {
+	setTimelapseNumber(value: number) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.TimelapseNumber,
 			datatypeCode: DatatypeCode.Uint32,
@@ -362,7 +362,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public getTimelapseNumberDesc() {
+	getTimelapseNumberDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.TimelapseNumber,
 			datatypeCode: DatatypeCode.Uint32,
@@ -370,7 +370,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public setTimelapseInterval(value: number) {
+	setTimelapseInterval(value: number) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.TimelapseInterval,
 			datatypeCode: DatatypeCode.Uint32,
@@ -379,7 +379,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	public getTimelapseIntervalDesc() {
+	getTimelapseIntervalDesc() {
 		return this.getDevicePropDesc({
 			devicePropCode: DevicePropCode.TimelapseInterval,
 			datatypeCode: DatatypeCode.Uint32,
@@ -389,7 +389,7 @@ export class TethrPTPUSB extends Tethr {
 
 	// Actions
 
-	public async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
+	async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		const {operationsSupported} = await this.getDeviceInfo()
@@ -711,7 +711,7 @@ export class TethrPTPUSB extends Tethr {
 		return ObjectFormatCode[code].toLowerCase()
 	}
 
-	public static async getDeviceInfo(device: PTPDevice): Promise<DeviceInfo> {
+	static async getDeviceInfo(device: PTPDevice): Promise<DeviceInfo> {
 		const {data} = await device.receiveData({
 			label: 'GetDeviceInfo',
 			opcode: OpCode.GetDeviceInfo,

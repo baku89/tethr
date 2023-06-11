@@ -70,11 +70,11 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 	private bulkInQueue = new PromiseQueue(1, Infinity)
 
-	public constructor(public usbDevice: USBDevice) {
+	constructor(public usbDevice: USBDevice) {
 		super()
 	}
 
-	public open = async (): Promise<void> => {
+	open = async (): Promise<void> => {
 		await this.usbDevice.open()
 		// Configurate
 		let {configuration} = this.usbDevice
@@ -117,28 +117,28 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		this._opened = true
 	}
 
-	public close = async (): Promise<void> => {
+	close = async (): Promise<void> => {
 		if (this.usbDevice && this.usbDevice.opened) {
 			await this.usbDevice.close()
 		}
 		this._opened = false
 	}
 
-	public get opened(): boolean {
+	get opened(): boolean {
 		return this._opened
 	}
 
-	public onEventCode(eventCode: number, callback: PTPEventCallback) {
+	onEventCode(eventCode: number, callback: PTPEventCallback) {
 		const eventName = toHexString(eventCode, 2)
 		this.on(`ptpevent:${eventName}`, callback)
 	}
 
-	public offEventCode(eventCode: number, callback?: PTPEventCallback) {
+	offEventCode(eventCode: number, callback?: PTPEventCallback) {
 		const eventName = toHexString(eventCode, 2)
 		this.off(`ptpevent:${eventName}`, callback)
 	}
 
-	public sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse> => {
+	sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse> => {
 		const queue = () =>
 			new Promise<PTPResponse>((resolve, reject) => {
 				console.groupCollapsed(`Send Command [${option.label}]`)
@@ -151,7 +151,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		return this.bulkInQueue.add(queue)
 	}
 
-	public sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
+	sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
 		const queue = () =>
 			new Promise<PTPResponse>((resolve, reject) => {
 				console.groupCollapsed(`Receive Data [${option.label}]`)
@@ -164,9 +164,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		return this.bulkInQueue.add(queue)
 	}
 
-	public receiveData = (
-		option: PTPReceiveDataOption
-	): Promise<PTPDataResponse> => {
+	receiveData = (option: PTPReceiveDataOption): Promise<PTPDataResponse> => {
 		const queue = () =>
 			new Promise<PTPDataResponse>((resolve, reject) => {
 				console.groupCollapsed(`Receive Data [${option.label}]`)
@@ -290,7 +288,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		}
 	}
 
-	public waitEvent = async (code: number): Promise<PTPEvent> => {
+	waitEvent = async (code: number): Promise<PTPEvent> => {
 		const eventName = toHexString(code, 2)
 
 		return new Promise(resolve => {

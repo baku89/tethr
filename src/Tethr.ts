@@ -88,19 +88,17 @@ export abstract class Tethr
 	extends EventEmitter<EventTypes>
 	implements ConfigGetters, ConfigSetters, ConfigDescGetters
 {
-	public abstract open(): Promise<void>
-	public abstract close(): Promise<void>
+	abstract open(): Promise<void>
+	abstract close(): Promise<void>
 
-	public abstract get opened(): boolean
+	abstract get opened(): boolean
 
 	// Config
-	public async get<N extends ConfigName>(
-		name: N
-	): Promise<ConfigType[N] | null> {
+	async get<N extends ConfigName>(name: N): Promise<ConfigType[N] | null> {
 		return (await this.getDesc(name)).value
 	}
 
-	public async set<N extends ConfigName>(
+	async set<N extends ConfigName>(
 		name: N,
 		value: ConfigType[N]
 	): Promise<OperationResult> {
@@ -194,7 +192,7 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 
-	public async getDesc<N extends ConfigName>(
+	async getDesc<N extends ConfigName>(
 		name: N
 	): Promise<ConfigDesc<ConfigType[N]>> {
 		type ReturnType = Promise<ConfigDesc<ConfigType[N]>>
@@ -292,597 +290,593 @@ export abstract class Tethr
 		}
 	}
 
-	public async getAperture(): Promise<Aperture | null> {
+	async getAperture(): Promise<Aperture | null> {
 		return (await this.getApertureDesc()).value
 	}
-	public async setAperture(
+	async setAperture(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: Aperture
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
+	async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getBatteryLevel(): Promise<BatteryLevel | null> {
+	async getBatteryLevel(): Promise<BatteryLevel | null> {
 		return (await this.getBatteryLevelDesc()).value
 	}
-	public async setBatteryLevel(
+	async setBatteryLevel(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: BatteryLevel
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
+	async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getBurstInterval(): Promise<number | null> {
+	async getBurstInterval(): Promise<number | null> {
 		return (await this.getBurstIntervalDesc()).value
 	}
-	public async setBurstInterval(
+	async setBurstInterval(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getBurstIntervalDesc(): Promise<ConfigDesc<number>> {
+	async getBurstIntervalDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getBurstNumber(): Promise<number | null> {
+	async getBurstNumber(): Promise<number | null> {
 		return (await this.getBurstNumberDesc()).value
 	}
-	public async setBurstNumber(
+	async setBurstNumber(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getBurstNumberDesc(): Promise<ConfigDesc<number>> {
+	async getBurstNumberDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getCanRunAutoFocus(): Promise<boolean | null> {
+	async getCanRunAutoFocus(): Promise<boolean | null> {
 		return (await this.getCanRunAutoFocusDesc()).value
 	}
-	public async setCanRunAutoFocus(
+	async setCanRunAutoFocus(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: boolean
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getCanRunAutoFocusDesc(): Promise<ConfigDesc<boolean>> {
+	async getCanRunAutoFocusDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getCanRunManualFocus(): Promise<boolean | null> {
+	async getCanRunManualFocus(): Promise<boolean | null> {
 		return (await this.getCanRunManualFocusDesc()).value
 	}
-	public async setCanRunManualFocus(
+	async setCanRunManualFocus(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: boolean
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getCanRunManualFocusDesc(): Promise<ConfigDesc<boolean>> {
+	async getCanRunManualFocusDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getCanStartLiveview(): Promise<boolean | null> {
+	async getCanStartLiveview(): Promise<boolean | null> {
 		return (await this.getCanStartLiveviewDesc()).value
 	}
-	public async setCanStartLiveview(
+	async setCanStartLiveview(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: boolean
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getCanStartLiveviewDesc(): Promise<ConfigDesc<boolean>> {
+	async getCanStartLiveviewDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getCanTakePhoto(): Promise<boolean | null> {
+	async getCanTakePhoto(): Promise<boolean | null> {
 		return (await this.getCanTakePhotoDesc()).value
 	}
-	public async setCanTakePhoto(
+	async setCanTakePhoto(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: boolean
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getCanTakePhotoDesc(): Promise<ConfigDesc<boolean>> {
+	async getCanTakePhotoDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getCaptureDelay(): Promise<number | null> {
+	async getCaptureDelay(): Promise<number | null> {
 		return (await this.getCaptureDelayDesc()).value
 	}
-	public async setCaptureDelay(
+	async setCaptureDelay(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getCaptureDelayDesc(): Promise<ConfigDesc<number>> {
+	async getCaptureDelayDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getColorMode(): Promise<string | null> {
+	async getColorMode(): Promise<string | null> {
 		return (await this.getColorModeDesc()).value
 	}
-	public async setColorMode(
+	async setColorMode(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getColorModeDesc(): Promise<ConfigDesc<string>> {
+	async getColorModeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getColorTemperature(): Promise<number | null> {
+	async getColorTemperature(): Promise<number | null> {
 		return (await this.getColorTemperatureDesc()).value
 	}
-	public async setColorTemperature(
+	async setColorTemperature(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
+	async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getCompressionSetting(): Promise<number | null> {
+	async getCompressionSetting(): Promise<number | null> {
 		return (await this.getCompressionSettingDesc()).value
 	}
-	public async setCompressionSetting(
+	async setCompressionSetting(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getCompressionSettingDesc(): Promise<ConfigDesc<number>> {
+	async getCompressionSettingDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getContrast(): Promise<number | null> {
+	async getContrast(): Promise<number | null> {
 		return (await this.getContrastDesc()).value
 	}
-	public async setContrast(
+	async setContrast(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getContrastDesc(): Promise<ConfigDesc<number>> {
+	async getContrastDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getDateTime(): Promise<Date | null> {
+	async getDateTime(): Promise<Date | null> {
 		return (await this.getDateTimeDesc()).value
 	}
-	public async setDateTime(
+	async setDateTime(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: Date
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getDateTimeDesc(): Promise<ConfigDesc<Date>> {
+	async getDateTimeDesc(): Promise<ConfigDesc<Date>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getDestinationToSave(): Promise<string | null> {
+	async getDestinationToSave(): Promise<string | null> {
 		return (await this.getDestinationToSaveDesc()).value
 	}
-	public async setDestinationToSave(
+	async setDestinationToSave(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
+	async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getDigitalZoom(): Promise<number | null> {
+	async getDigitalZoom(): Promise<number | null> {
 		return (await this.getDigitalZoomDesc()).value
 	}
-	public async setDigitalZoom(
+	async setDigitalZoom(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getDigitalZoomDesc(): Promise<ConfigDesc<number>> {
+	async getDigitalZoomDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getDriveMode(): Promise<DriveMode | null> {
+	async getDriveMode(): Promise<DriveMode | null> {
 		return (await this.getDriveModeDesc()).value
 	}
-	public async setDriveMode(
+	async setDriveMode(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: DriveMode
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getDriveModeDesc(): Promise<ConfigDesc<DriveMode>> {
+	async getDriveModeDesc(): Promise<ConfigDesc<DriveMode>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getExposureComp(): Promise<string | null> {
+	async getExposureComp(): Promise<string | null> {
 		return (await this.getExposureCompDesc()).value
 	}
-	public async setExposureComp(
+	async setExposureComp(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getExposureCompDesc(): Promise<ConfigDesc<string>> {
+	async getExposureCompDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getExposureMeteringMode(): Promise<ExposureMeteringMode | null> {
+	async getExposureMeteringMode(): Promise<ExposureMeteringMode | null> {
 		return (await this.getExposureMeteringModeDesc()).value
 	}
-	public async setExposureMeteringMode(
+	async setExposureMeteringMode(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getExposureMeteringModeDesc(): Promise<
+	async getExposureMeteringModeDesc(): Promise<
 		ConfigDesc<ExposureMeteringMode>
 	> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getExposureMode(): Promise<ExposureMode | null> {
+	async getExposureMode(): Promise<ExposureMode | null> {
 		return (await this.getExposureModeDesc()).value
 	}
-	public async setExposureMode(
+	async setExposureMode(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: ExposureMode
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
+	async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getFacingMode(): Promise<string | null> {
+	async getFacingMode(): Promise<string | null> {
 		return (await this.getFacingModeDesc()).value
 	}
-	public async setFacingMode(
+	async setFacingMode(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getFacingModeDesc(): Promise<ConfigDesc<string>> {
+	async getFacingModeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getFlashMode(): Promise<FlashMode | null> {
+	async getFlashMode(): Promise<FlashMode | null> {
 		return (await this.getFlashModeDesc()).value
 	}
-	public async setFlashMode(
+	async setFlashMode(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: FlashMode
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getFlashModeDesc(): Promise<ConfigDesc<FlashMode>> {
+	async getFlashModeDesc(): Promise<ConfigDesc<FlashMode>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getFocalLength(): Promise<FocalLength | null> {
+	async getFocalLength(): Promise<FocalLength | null> {
 		return (await this.getFocalLengthDesc()).value
 	}
-	public async setFocalLength(
+	async setFocalLength(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: FocalLength
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getFocalLengthDesc(): Promise<ConfigDesc<FocalLength>> {
+	async getFocalLengthDesc(): Promise<ConfigDesc<FocalLength>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getFocusDistance(): Promise<number | null> {
+	async getFocusDistance(): Promise<number | null> {
 		return (await this.getFocusDistanceDesc()).value
 	}
-	public async setFocusDistance(
+	async setFocusDistance(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
+	async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getFocusMeteringMode(): Promise<FocusMeteringMode | null> {
+	async getFocusMeteringMode(): Promise<FocusMeteringMode | null> {
 		return (await this.getFocusMeteringModeDesc()).value
 	}
-	public async setFocusMeteringMode(
+	async setFocusMeteringMode(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: FocusMeteringMode
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getFocusMeteringModeDesc(): Promise<
-		ConfigDesc<FocusMeteringMode>
-	> {
+	async getFocusMeteringModeDesc(): Promise<ConfigDesc<FocusMeteringMode>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getFocusMode(): Promise<FocusMode | null> {
+	async getFocusMode(): Promise<FocusMode | null> {
 		return (await this.getFocusModeDesc()).value
 	}
-	public async setFocusMode(
+	async setFocusMode(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: FocusMode
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getFocusModeDesc(): Promise<ConfigDesc<FocusMode>> {
+	async getFocusModeDesc(): Promise<ConfigDesc<FocusMode>> {
 		return {
 			writable: false,
 			value: null,
 		}
 	}
 
-	public async getFunctionalMode(): Promise<FunctionalMode | null> {
+	async getFunctionalMode(): Promise<FunctionalMode | null> {
 		return (await this.getFunctionalModeDesc()).value
 	}
-	public async setFunctionalMode(
+	async setFunctionalMode(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: FunctionalMode
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getFunctionalModeDesc(): Promise<ConfigDesc<FunctionalMode>> {
+	async getFunctionalModeDesc(): Promise<ConfigDesc<FunctionalMode>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getImageAspect(): Promise<string | null> {
+	async getImageAspect(): Promise<string | null> {
 		return (await this.getImageAspectDesc()).value
 	}
-	public async setImageAspect(
+	async setImageAspect(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getImageAspectDesc(): Promise<ConfigDesc<string>> {
+	async getImageAspectDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getImageQuality(): Promise<string | null> {
+	async getImageQuality(): Promise<string | null> {
 		return (await this.getImageQualityDesc()).value
 	}
-	public async setImageQuality(
+	async setImageQuality(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getImageQualityDesc(): Promise<ConfigDesc<string>> {
+	async getImageQualityDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getImageSize(): Promise<string | null> {
+	async getImageSize(): Promise<string | null> {
 		return (await this.getImageSizeDesc()).value
 	}
-	public async setImageSize(
+	async setImageSize(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getImageSizeDesc(): Promise<ConfigDesc<string>> {
+	async getImageSizeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getIso(): Promise<ISO | null> {
+	async getIso(): Promise<ISO | null> {
 		return (await this.getIsoDesc()).value
 	}
-	public async setIso(
+	async setIso(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: ISO
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getIsoDesc(): Promise<ConfigDesc<ISO>> {
+	async getIsoDesc(): Promise<ConfigDesc<ISO>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getLiveviewEnabled(): Promise<boolean | null> {
+	async getLiveviewEnabled(): Promise<boolean | null> {
 		return (await this.getLiveviewEnabledDesc()).value
 	}
-	public async setLiveviewEnabled(
+	async setLiveviewEnabled(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: boolean
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
+	async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getLiveviewMagnifyRatio(): Promise<number | null> {
+	async getLiveviewMagnifyRatio(): Promise<number | null> {
 		return (await this.getLiveviewMagnifyRatioDesc()).value
 	}
-	public async setLiveviewMagnifyRatio(
+	async setLiveviewMagnifyRatio(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
+	async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getLiveviewSize(): Promise<string | null> {
+	async getLiveviewSize(): Promise<string | null> {
 		return (await this.getLiveviewSizeDesc()).value
 	}
-	public async setLiveviewSize(
+	async setLiveviewSize(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
+	async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getManualFocusOptions(): Promise<ManualFocusOption[] | null> {
+	async getManualFocusOptions(): Promise<ManualFocusOption[] | null> {
 		return (await this.getManualFocusOptionsDesc()).value
 	}
-	public async setManualFocusOptions(
+	async setManualFocusOptions(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: ManualFocusOption[]
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getManualFocusOptionsDesc(): Promise<
-		ConfigDesc<ManualFocusOption[]>
-	> {
+	async getManualFocusOptionsDesc(): Promise<ConfigDesc<ManualFocusOption[]>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getManufacturer(): Promise<string | null> {
+	async getManufacturer(): Promise<string | null> {
 		return (await this.getManufacturerDesc()).value
 	}
-	public async setManufacturer(
+	async setManufacturer(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getManufacturerDesc(): Promise<ConfigDesc<string>> {
+	async getManufacturerDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getModel(): Promise<string | null> {
+	async getModel(): Promise<string | null> {
 		return (await this.getModelDesc()).value
 	}
-	public async setModel(
+	async setModel(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getModelDesc(): Promise<ConfigDesc<string>> {
+	async getModelDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getSerialNumber(): Promise<string | null> {
+	async getSerialNumber(): Promise<string | null> {
 		return (await this.getSerialNumberDesc()).value
 	}
-	public async setSerialNumber(
+	async setSerialNumber(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getSerialNumberDesc(): Promise<ConfigDesc<string>> {
+	async getSerialNumberDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getSharpness(): Promise<number | null> {
+	async getSharpness(): Promise<number | null> {
 		return (await this.getSharpnessDesc()).value
 	}
-	public async setSharpness(
+	async setSharpness(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getSharpnessDesc(): Promise<ConfigDesc<number>> {
+	async getSharpnessDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getShutterSpeed(): Promise<string | null> {
+	async getShutterSpeed(): Promise<string | null> {
 		return (await this.getShutterSpeedDesc()).value
 	}
-	public async setShutterSpeed(
+	async setShutterSpeed(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: string
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
+	async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getTimelapseInterval(): Promise<number | null> {
+	async getTimelapseInterval(): Promise<number | null> {
 		return (await this.getTimelapseIntervalDesc()).value
 	}
-	public async setTimelapseInterval(
+	async setTimelapseInterval(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getTimelapseIntervalDesc(): Promise<ConfigDesc<number>> {
+	async getTimelapseIntervalDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getTimelapseNumber(): Promise<number | null> {
+	async getTimelapseNumber(): Promise<number | null> {
 		return (await this.getTimelapseNumberDesc()).value
 	}
-	public async setTimelapseNumber(
+	async setTimelapseNumber(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: number
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getTimelapseNumberDesc(): Promise<ConfigDesc<number>> {
+	async getTimelapseNumberDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	public async getWhiteBalance(): Promise<WhiteBalance | null> {
+	async getWhiteBalance(): Promise<WhiteBalance | null> {
 		return (await this.getWhiteBalanceDesc()).value
 	}
-	public async setWhiteBalance(
+	async setWhiteBalance(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		value: WhiteBalance
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
-	public async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
+	async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
 		return UnsupportedConfigDesc
 	}
 
 	// Actions
-	public async runAutoFocus(): Promise<OperationResult> {
+	async runAutoFocus(): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
 
-	public async runManualFocus(
+	async runManualFocus(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		option: ManualFocusOption
 	): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
 
-	public async takePhoto(
+	async takePhoto(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		option?: TakePhotoOption
 	): Promise<OperationResult<TethrObject[]>> {
 		return {status: 'unsupported'}
 	}
 
-	public async startLiveview(): Promise<OperationResult<MediaStream>> {
+	async startLiveview(): Promise<OperationResult<MediaStream>> {
 		return {status: 'unsupported'}
 	}
-	public async stopLiveview(): Promise<OperationResult> {
+	async stopLiveview(): Promise<OperationResult> {
 		return {status: 'unsupported'}
 	}
 }

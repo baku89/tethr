@@ -114,11 +114,11 @@ interface LiveviewSetting {
 export class TethrPanasonic extends TethrPTPUSB {
 	private liveviewEnabled = false
 
-	public constructor(device: PTPDevice) {
+	constructor(device: PTPDevice) {
 		super(device)
 	}
 
-	public async open(): Promise<void> {
+	async open(): Promise<void> {
 		await super.open()
 
 		await this.device.sendCommand({
@@ -133,7 +133,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		)
 	}
 
-	public async close(): Promise<void> {
+	async close(): Promise<void> {
 		await this.device.sendCommand({
 			label: 'Panasonic CloseSession',
 			opcode: OpCodePanasonic.CloseSession,
@@ -145,7 +145,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 	// Config
 
-	public setAperture(value: Aperture) {
+	setAperture(value: Aperture) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.Aperture_Param,
 			encode: (value: Aperture) => {
@@ -156,7 +156,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getApertureDesc() {
+	getApertureDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.Aperture,
 			decode: (value: number) => {
@@ -166,7 +166,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public setColorModeDesc(value: string) {
+	setColorModeDesc(value: string) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.PhotoStyle_Param,
 
@@ -178,7 +178,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getColorModeDesc() {
+	getColorModeDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.PhotoStyle,
 			decode: (value: number) => {
@@ -188,7 +188,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getExposureModeDesc() {
+	getExposureModeDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.CameraMode_ModePos,
 			decode: (value: number) => {
@@ -198,7 +198,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public setExposureComp(value: string) {
+	setExposureComp(value: string) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.Exposure_Param,
 			encode: v => {
@@ -234,7 +234,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getExposureCompDesc() {
+	getExposureCompDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.Exposure,
 			decode: v => {
@@ -257,7 +257,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public async getManualFocusOptionsDesc() {
+	async getManualFocusOptionsDesc() {
 		return createReadonlyConfigDesc([
 			'near:2',
 			'near:1',
@@ -266,23 +266,23 @@ export class TethrPanasonic extends TethrPTPUSB {
 		] as ManualFocusOption[])
 	}
 
-	public async getCanTakePhotoDesc() {
+	async getCanTakePhotoDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
-	public async getCanRunAutoFocusDesc() {
+	async getCanRunAutoFocusDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
-	public async getCanRunManualFocusDesc() {
+	async getCanRunManualFocusDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
-	public async getCanStartLiveviewDesc() {
+	async getCanStartLiveviewDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
-	public async setColorTemperature(value: number) {
+	async setColorTemperature(value: number) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.WhiteBalance_KSet,
 			encode: value => value,
@@ -291,7 +291,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public async getColorTemperatureDesc() {
+	async getColorTemperatureDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.WhiteBalance_KSet,
 			decode: data => data,
@@ -299,7 +299,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public setImageAspect(value: string) {
+	setImageAspect(value: string) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.ImageMode_ImageAspect,
 			encode: (value: string) => {
@@ -310,7 +310,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getImageAspectDesc() {
+	getImageAspectDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.ImageMode_ImageAspect,
 			decode: (value: number) => {
@@ -320,7 +320,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public setImageQuality(value: string) {
+	setImageQuality(value: string) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.ImageMode_Quality,
 			encode: (value: string) => {
@@ -331,7 +331,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getImageQualityDesc() {
+	getImageQualityDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.ImageMode_Quality,
 			decode: (value: number) => {
@@ -341,7 +341,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public setIso(value: ISO) {
+	setIso(value: ISO) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.ISO_Param,
 			encode: value => {
@@ -352,7 +352,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getIsoDesc() {
+	getIsoDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.ISO,
 			decode: (value: number) => {
@@ -364,7 +364,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public setWhiteBalance(value: WhiteBalance) {
+	setWhiteBalance(value: WhiteBalance) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.WhiteBalance_Param,
 			encode: (value: WhiteBalance) => {
@@ -375,7 +375,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	public getWhiteBalanceDesc() {
+	getWhiteBalanceDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.WhiteBalance,
 			decode: (value: number) => {
@@ -469,7 +469,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	public setShutterSpeed(value: string) {
+	setShutterSpeed(value: string) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.ShutterSpeed_Param,
 			encode: (value: string) => {
@@ -493,7 +493,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			value,
 		})
 	}
-	public getShutterSpeedDesc() {
+	getShutterSpeedDesc() {
 		return this.getDevicePropDescPanasonic({
 			devicePropCode: DevicePropCodePanasonic.ShutterSpeed,
 			decode: (value: number) => {
@@ -517,7 +517,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 	// Actions
 
-	public async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
+	async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		const quality = await this.get('imageQuality')
@@ -578,7 +578,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return {status: 'ok', value: objects}
 	}
 
-	public async startLiveview(): Promise<OperationResult<MediaStream>> {
+	async startLiveview(): Promise<OperationResult<MediaStream>> {
 		const canvas = document.createElement('canvas')
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return {status: 'general error'}
@@ -621,7 +621,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return {status: 'ok', value: stream}
 	}
 
-	public async stopLiveview(): Promise<OperationResult> {
+	async stopLiveview(): Promise<OperationResult> {
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
 			opcode: OpCodePanasonic.Liveview,
@@ -634,7 +634,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	public async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
+	async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
 		const setting = await this.getLiveviewSetting()
 		const settingOptions = await this.getLiveviewRecommendedSettings()
 
@@ -655,7 +655,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	public async setLiveviewSize(value: string): Promise<OperationResult> {
+	async setLiveviewSize(value: string): Promise<OperationResult> {
 		const [width, height] = value.split('x').map(parseInt)
 
 		const settings = await this.getLiveviewRecommendedSettings()
@@ -802,9 +802,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return image
 	}
 
-	public async runManualFocus(
-		option: ManualFocusOption
-	): Promise<OperationResult> {
+	async runManualFocus(option: ManualFocusOption): Promise<OperationResult> {
 		const [direction, speed] = option.split(':')
 
 		let mode = 0
@@ -839,7 +837,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	public async runAutoFocus(): Promise<OperationResult> {
+	async runAutoFocus(): Promise<OperationResult> {
 		await this.device.sendCommand({
 			label: 'Panasonic Ctrl Liveview',
 			opcode: OpCodePanasonic.CtrlLiveview,

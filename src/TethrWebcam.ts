@@ -29,11 +29,11 @@ export class TethrWebcam extends Tethr {
 	private captureHandler: CaptureHandler | null = null
 	private facingModeDict = new BiMap<string, string>()
 
-	public constructor() {
+	constructor() {
 		super()
 	}
 
-	public async open() {
+	async open() {
 		try {
 			this.media = await navigator.mediaDevices.getUserMedia({video: true})
 		} catch {
@@ -80,25 +80,25 @@ export class TethrWebcam extends Tethr {
 		this.facingModeDict = new BiMap(facingModeEntries)
 	}
 
-	public async close() {
+	async close() {
 		this.media?.getTracks().forEach(t => t.stop())
 		this.media = null
 	}
 
-	public get opened() {
+	get opened() {
 		return !!this.media
 	}
 
 	// Configs
-	public async getCanStartLiveviewDesc() {
+	async getCanStartLiveviewDesc() {
 		return createReadonlyConfigDesc(true)
 	}
 
-	public async getCanTakePhotoDesc() {
+	async getCanTakePhotoDesc() {
 		return createReadonlyConfigDesc(this.captureHandler !== null)
 	}
 
-	public async setFacingMode(value: string): Promise<OperationResult> {
+	async setFacingMode(value: string): Promise<OperationResult> {
 		if (!this.media || !this.captureHandler) {
 			return {status: 'unsupported'}
 		}
@@ -136,7 +136,7 @@ export class TethrWebcam extends Tethr {
 		return {status: 'ok'}
 	}
 
-	public async getFacingModeDesc() {
+	async getFacingModeDesc() {
 		if (!this.media) {
 			return UnsupportedConfigDesc
 		}
@@ -155,11 +155,11 @@ export class TethrWebcam extends Tethr {
 		} as ConfigDesc<string>
 	}
 
-	public async getModelDesc() {
+	async getModelDesc() {
 		return createReadonlyConfigDesc('Webcam')
 	}
 
-	public async getLiveviewEnabledDesc() {
+	async getLiveviewEnabledDesc() {
 		return {
 			writable: false,
 			value: this.liveviewEnabled,
@@ -167,7 +167,7 @@ export class TethrWebcam extends Tethr {
 	}
 
 	// Actions
-	public async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
+	async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
 		if (!this.media || !this.captureHandler) {
@@ -227,7 +227,7 @@ export class TethrWebcam extends Tethr {
 		return {status: 'ok', value: [tethrObject]}
 	}
 
-	public async startLiveview(): Promise<OperationResult<MediaStream>> {
+	async startLiveview(): Promise<OperationResult<MediaStream>> {
 		if (!this.media) {
 			return {status: 'general error'}
 		}
@@ -240,7 +240,7 @@ export class TethrWebcam extends Tethr {
 		}
 	}
 
-	public async stopLiveview(): Promise<OperationResult> {
+	async stopLiveview(): Promise<OperationResult> {
 		this.liveviewEnabled = false
 		this.emit('liveviewEnabledChanged', createReadonlyConfigDesc(false))
 		return {status: 'ok'}
