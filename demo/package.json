@@ -4,10 +4,11 @@
 	"private": true,
 	"scripts": {
 		"serve": "vite",
-		"build": "vite build",
-		"type-check": "vue-tsc --noEmit -p tsconfig.json --composite false",
+		"build": "run-p build-only type-check",
+		"build-only": "vite build",
+		"type-check": "vue-tsc --noEmit",
 		"lint": "npx run eslint . --ext .vue,.ts --fix --ignore-path ../.gitignore",
-		"format": "prettier --write src/"
+		"format": "npx run prettier --write src/"
 	},
 	"dependencies": {
 		"vue": "^3.3.2"

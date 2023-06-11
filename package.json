@@ -10,7 +10,7 @@
 		"lint": "eslint --fix src --ext .ts --ignore-path .gitignore",
 		"format": "prettier --write src",
 		"fix": "npm run format && npm run lint",
-		"build": "tsc --outDir lib --declaration",
+		"build": "tsc",
 		"build:demo": "yarn workspace @tethr/demo build",
 		"prepare": "npm run build"
 	},

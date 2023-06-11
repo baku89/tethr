@@ -1,19 +1,9 @@
 {
+	"extends": "./tsconfig.common",
 	"compilerOptions": {
-		"target": "es2022",
-		"module": "esnext",
-		"strict": true,
-		"importHelpers": true,
-		"moduleResolution": "node",
-		"skipLibCheck": true,
-		"verbatimModuleSyntax": false,
-		"experimentalDecorators": true,
-		"esModuleInterop": true,
-		"allowSyntheticDefaultImports": true,
-		"sourceMap": true,
-		"baseUrl": ".",
-		"lib": ["esnext", "dom", "dom.iterable"]
+		"outDir": "./lib/",
+		"rootDir": "./src",
+		"composite": true
 	},
-	"include": ["src/**/*.ts"],
-	"exclude": ["node_modules"]
+	"include": ["src/**/*.ts"]
 }

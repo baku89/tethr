@@ -1,22 +1,13 @@
 {
-	"extends": "@vue/tsconfig/tsconfig.dom.json",
-	"include": ["env.d.ts", "src/**/*", "src/**/*.vue", "../src/**/*"],
+	"extends": ["@vue/tsconfig/tsconfig.dom.json", "../tsconfig.common"],
+	"include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
 	"compilerOptions": {
-		"target": "es2022",
-		"module": "esnext",
-		"strict": true,
-		"importHelpers": true,
-		"moduleResolution": "node",
-		"skipLibCheck": true,
-		"verbatimModuleSyntax": false,
-		"experimentalDecorators": true,
-		"esModuleInterop": true,
-		"allowSyntheticDefaultImports": true,
-		"sourceMap": true,
 		"baseUrl": ".",
 		"lib": ["esnext", "dom", "dom.iterable"],
 		"paths": {
 			"tethr": ["../src"]
 		}
-	}
+	},
+	"files": ["./node_modules/@types/wicg-file-system-access/index.d.ts"],
+	"references": [{"path": ".."}]
 }
