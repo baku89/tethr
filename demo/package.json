@@ -1,7 +1,6 @@
 {
 	"name": "@tethr/demo",
 	"version": "0.0.0",
-	"private": true,
 	"scripts": {
 		"serve": "vite",
 		"build": "run-p build-only type-check",
@@ -13,6 +12,7 @@
 	"dependencies": {
 		"vue": "^3.3.2"
 	},
+	"license": "MIT",
 	"devDependencies": {
 		"@rushstack/eslint-patch": "^1.2.0",
 		"@types/file-saver": "^2.0.5",
