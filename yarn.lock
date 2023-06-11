@@ -706,7 +706,7 @@
     "@parcel/utils" "2.9.2"
     react-refresh "^0.9.0"
 
-"@parcel/transformer-stylus@^2.0.0-nightly.845":
+"@parcel/transformer-stylus@^2.9.2":
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/@parcel/transformer-stylus/-/transformer-stylus-2.9.2.tgz#17fa1307cf918519e75cdef694c09c6dff59a451"
   integrity sha512-zTsLDFjmR27erPTdblSs3pAduw8QKXZWxeaWuYdyAFGIA3deWol+5DwA1gMfNM46+XlOI18LUfFIn11fonhbmg==
@@ -729,7 +729,7 @@
     posthtml-render "^3.0.0"
     semver "^5.7.1"
 
-"@parcel/transformer-typescript-tsc@^2.0.0-nightly.845":
+"@parcel/transformer-typescript-tsc@^2.9.2":
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/@parcel/transformer-typescript-tsc/-/transformer-typescript-tsc-2.9.2.tgz#f28ff33f5af0bfdceddf70d4f463cb2974535e47"
   integrity sha512-yIOgk/EnRqmQlRVCqa5n9OM8oavul6NQDk4QktXB096KKYGN8lrtt7PaAy7raLopIK5B6PyyM0g2TjtReL2ubw==
@@ -738,7 +738,7 @@
     "@parcel/source-map" "^2.1.1"
     "@parcel/ts-utils" "2.9.2"
 
-"@parcel/transformer-vue@^2.0.0-nightly.2467":
+"@parcel/transformer-vue@2.9.2":
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/@parcel/transformer-vue/-/transformer-vue-2.9.2.tgz#b263141a7b8014f24aa70c7285abd4ca548126f3"
   integrity sha512-T55zQ5WxI2eTeYOckFJPvORoDSFeBITm0XQW2wSv9E4aYBdN9LPsiClVOozxwv5Y/zokthjPoHFcXXfUcTsSMQ==
@@ -786,7 +786,7 @@
     chalk "^4.1.0"
     nullthrows "^1.1.1"
 
-"@parcel/validator-eslint@^2.0.0-nightly.845":
+"@parcel/validator-eslint@^2.9.2":
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/@parcel/validator-eslint/-/validator-eslint-2.9.2.tgz#52a6d9144b64b24cf44c7fd73c2f49b231eae208"
   integrity sha512-zeIPy0BHpcNnylb7fPq4qSHvK+k3Meh4/v//Tm+w4f/I4EXqPpCIZU2b3zyUI//gOo1eQ8WgDLkGbLL2QqileQ==
@@ -795,7 +795,7 @@
     "@parcel/utils" "2.9.2"
     chalk "^4.1.0"
 
-"@parcel/validator-typescript@^2.0.0-nightly.845":
+"@parcel/validator-typescript@^2.9.2":
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/@parcel/validator-typescript/-/validator-typescript-2.9.2.tgz#5c172ef0865da797a780935b09729e02062e78a5"
   integrity sha512-W1jNADcI3kAgyyyuepkpbQV1cAWWE0/4sdTSgtNs9oT4gDnDqOPL8jH5SHsk/yIjMILwsAi8GEHcCD2NSkiS4w==

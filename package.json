@@ -31,11 +31,11 @@
 		"webusb": "^2.2.0"
 	},
 	"devDependencies": {
-		"@parcel/transformer-stylus": "^2.0.0-nightly.845",
-		"@parcel/transformer-typescript-tsc": "^2.0.0-nightly.845",
-		"@parcel/transformer-vue": "^2.0.0-nightly.2467",
-		"@parcel/validator-eslint": "^2.0.0-nightly.845",
-		"@parcel/validator-typescript": "^2.0.0-nightly.845",
+		"@parcel/transformer-stylus": "^2.9.2",
+		"@parcel/transformer-typescript-tsc": "^2.9.2",
+		"@parcel/transformer-vue": "2.9.2",
+		"@parcel/validator-eslint": "^2.9.2",
+		"@parcel/validator-typescript": "^2.9.2",
 		"@types/file-saver": "^2.0.3",
 		"@types/lodash": "^4.14.172",
 		"@types/promise-queue": "^2.2.0",
