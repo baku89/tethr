@@ -18,7 +18,7 @@
 				</template>
 				<template v-if="config.option.type === 'range'">
 					<input
-						type="number"
+						type="range"
 						:value="config.value"
 						:min="config.option.min"
 						:max="config.option.max"
@@ -27,7 +27,21 @@
 					/>
 				</template>
 			</template>
-			<input v-else :value="config.value" disabled />
+			<template v-else>
+				<input
+					v-if="config.option.type === 'enum'"
+					:value="config.value"
+					disabled
+				/>
+				<input
+					v-else
+					type="range"
+					:min="config.option.min"
+					:max="config.option.max"
+					:value="config.value"
+					disabled
+				/>
+			</template>
 		</dd>
 	</template>
 </template>
@@ -54,7 +68,7 @@ export default defineComponent({
 			return 0
 		})
 
-		function update(e: InputEvent) {
+		function update(e: Event) {
 			if (!props.config.option) return
 
 			const str = (e.target as HTMLSelectElement).value
