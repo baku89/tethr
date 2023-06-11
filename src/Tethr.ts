@@ -46,7 +46,7 @@ export type ConfigDesc<T> = {
 			writable: true
 			option: ConfigDescOption<T>
 	  }
-	| {writable: false}
+	| {writable: false; option?: ConfigDescOption<T>}
 )
 
 export interface TakePhotoOption {

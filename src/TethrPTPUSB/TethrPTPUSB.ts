@@ -537,7 +537,7 @@ export class TethrPTPUSB extends Tethr {
 		// Read options
 		const formFlag = dataView.readUint8()
 
-		let option: ConfigDescOption<T> | null = null
+		let option: ConfigDescOption<T> | undefined
 
 		switch (formFlag) {
 			case 0x00:
@@ -579,7 +579,7 @@ export class TethrPTPUSB extends Tethr {
 		if (writable && option) {
 			return {writable, value, option}
 		} else {
-			return {writable: false, value}
+			return {writable: false, value, option}
 		}
 	}
 
