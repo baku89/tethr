@@ -35,13 +35,19 @@ export type OperationResult<T = void> = T extends void
 					value: T
 			  }
 
+export type ConfigDescOption<T> =
+	| {type: 'enum'; values: T[]}
+	| {type: 'range'; min: T; max: T; step: T}
+
 export type ConfigDesc<T> = {
 	value: T | null
-	writable: boolean
-	option?:
-		| {type: 'enum'; values: T[]}
-		| {type: 'range'; min: T; max: T; step: T}
-}
+} & (
+	| {
+			writable: true
+			option: ConfigDescOption<T>
+	  }
+	| {writable: false}
+)
 
 export interface TakePhotoOption {
 	doDownload?: boolean

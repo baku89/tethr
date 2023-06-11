@@ -1,13 +1,13 @@
-import {reactive, readonly, type Ref, ref, shallowRef, watch} from 'vue'
-
 import {
-	type ConfigDesc,
-	type ConfigType,
-	Tethr,
-	type ConfigName,
+	ConfigDesc,
+	ConfigDescOption,
+	ConfigName,
+	ConfigType,
 	detectCameras,
-	type TethrObject,
+	Tethr,
+	TethrObject,
 } from 'tethr'
+import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -16,7 +16,7 @@ export interface TethrConfig<T extends ConfigType[ConfigName]> {
 	writable: boolean
 	value: T | null
 	update: (value: T) => void
-	option: ConfigDesc<T>['option']
+	option?: ConfigDescOption<T>
 }
 
 export function useTethrConfig<Name extends ConfigName>(
@@ -44,7 +44,9 @@ export function useTethrConfig<Name extends ConfigName>(
 
 			config.writable = desc.writable
 			config.value = desc.value
-			config.option = desc.option
+			if (desc.writable) {
+				config.option = desc.option
+			}
 
 			config.update = async (value: any) => {
 				cam.set(name, value)
@@ -53,7 +55,9 @@ export function useTethrConfig<Name extends ConfigName>(
 			cam.on(`${name}Changed` as any, (desc: ConfigDesc<ConfigType[Name]>) => {
 				config.value = desc.value
 				config.writable = desc.writable
-				config.option = desc.option
+				if (desc.writable) {
+					config.option = desc.option
+				}
 			})
 		},
 		{immediate: true}
@@ -62,7 +66,7 @@ export function useTethrConfig<Name extends ConfigName>(
 	return readonly(config)
 }
 
-export function useTethr({onSave = (object: TethrObject) => null as any} = {}) {
+export function useTethr(onSave: (object: TethrObject) => void) {
 	const camera = shallowRef<Tethr | null>(null)
 	const liveviewMediaStream = ref<null | MediaStream>(null)
 	const photoURL = ref(TransparentPng)

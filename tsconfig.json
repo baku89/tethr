@@ -1,22 +1,19 @@
 {
 	"compilerOptions": {
 		"target": "es2022",
-		"module": "umd",
+		"module": "esnext",
 		"strict": true,
 		"importHelpers": true,
 		"moduleResolution": "node",
 		"skipLibCheck": true,
+		"verbatimModuleSyntax": false,
 		"experimentalDecorators": true,
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
 		"sourceMap": true,
 		"baseUrl": ".",
-		"paths": {
-			"*": ["src/@types/*"],
-			"~/*": ["./*"]
-		},
 		"lib": ["esnext", "dom", "dom.iterable"]
 	},
-	"include": ["src/**/*.ts", "demo/**/*.ts"],
+	"include": ["src/**/*.ts"],
 	"exclude": ["node_modules"]
 }

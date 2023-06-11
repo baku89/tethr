@@ -28,6 +28,7 @@ import {PTPDataView} from '../PTPDataView'
 import {PTPDevice, PTPEvent} from '../PTPDevice'
 import {
 	ConfigDesc,
+	ConfigDescOption,
 	createReadonlyConfigDesc,
 	OperationResult,
 	TakePhotoOption,
@@ -56,6 +57,7 @@ type DataViewTypeForDatatypeCode<D extends DatatypeCode> =
 		: D extends DatatypeCode.Int128
 		? bigint
 		: number
+
 export class TethrPTPUSB extends Tethr {
 	protected _opened = false
 
@@ -313,17 +315,13 @@ export class TethrPTPUSB extends Tethr {
 	}
 
 	async getManufacturerDesc() {
-		return {
-			writable: false,
-			value: (await this.getDeviceInfo()).manufacturer,
-		}
+		const value = (await this.getDeviceInfo()).manufacturer
+		return createReadonlyConfigDesc(value)
 	}
 
 	async getModelDesc() {
-		return {
-			writable: false,
-			value: (await this.getDeviceInfo()).model,
-		}
+		const value = (await this.getDeviceInfo()).model
+		return createReadonlyConfigDesc(value)
 	}
 
 	setWhiteBalance(value: WhiteBalance) {
@@ -539,12 +537,11 @@ export class TethrPTPUSB extends Tethr {
 		// Read options
 		const formFlag = dataView.readUint8()
 
-		let option: ConfigDesc<T>['option']
+		let option: ConfigDescOption<T> | null = null
 
 		switch (formFlag) {
 			case 0x00:
 				// None
-				option = undefined
 				break
 			case 0x01: {
 				// Range
@@ -579,10 +576,10 @@ export class TethrPTPUSB extends Tethr {
 				throw new Error(`Invalid form flag ${formFlag}`)
 		}
 
-		return {
-			writable,
-			value,
-			option,
+		if (writable && option) {
+			return {writable, value, option}
+		} else {
+			return {writable: false, value}
 		}
 	}
 

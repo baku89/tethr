@@ -2,6 +2,7 @@
 	"extends": "@vue/tsconfig/tsconfig.dom.json",
 	"include": ["env.d.ts", "src/**/*", "src/**/*.vue", "../src/**/*"],
 	"compilerOptions": {
+		"verbatimModuleSyntax": false,
 		"baseUrl": ".",
 		"paths": {
 			"tethr": ["../src"]

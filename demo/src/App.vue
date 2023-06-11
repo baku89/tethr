@@ -44,37 +44,37 @@
 						"
 					>
 						<button
-							v-if="configs.manualFocusOptions.value.includes('far:1')"
+							v-if="configs.manualFocusOptions.value?.includes('far:1')"
 							@click="camera.runManualFocus('far:1')"
 						>
 							↑
 						</button>
 						<button
-							v-if="configs.manualFocusOptions.value.includes('near:1')"
+							v-if="configs.manualFocusOptions.value?.includes('near:1')"
 							@click="camera.runManualFocus('near:1')"
 						>
 							↓
 						</button>
 						<button
-							v-if="configs.manualFocusOptions.value.includes('far:2')"
+							v-if="configs.manualFocusOptions.value?.includes('far:2')"
 							@click="camera.runManualFocus('far:2')"
 						>
 							↑↑
 						</button>
 						<button
-							v-if="configs.manualFocusOptions.value.includes('near:2')"
+							v-if="configs.manualFocusOptions.value?.includes('near:2')"
 							@click="camera.runManualFocus('near:2')"
 						>
 							↓↓
 						</button>
 						<button
-							v-if="configs.manualFocusOptions.value.includes('far:3')"
+							v-if="configs.manualFocusOptions.value?.includes('far:3')"
 							@click="camera.runManualFocus('far:3')"
 						>
 							↑↑↑
 						</button>
 						<button
-							v-if="configs.manualFocusOptions.value.includes('near:3')"
+							v-if="configs.manualFocusOptions.value?.includes('near:3')"
 							@click="camera.runManualFocus('near:3')"
 						>
 							↓↓↓
@@ -106,12 +106,12 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ref} from 'vue'
 import {saveAs} from 'file-saver'
+import {TethrObject} from 'tethr'
+import {defineComponent, ref} from 'vue'
 
-import {useTethr} from './useTethr'
 import TethrConfig from './TethrConfig.vue'
-import {Tethr, type TethrObject} from 'tethr'
+import {useTethr} from './useTethr'
 
 export default defineComponent({
 	components: {
@@ -156,7 +156,7 @@ export default defineComponent({
 		return {
 			setupSaveFolder,
 			folderHandler,
-			...useTethr({onSave}),
+			...useTethr(onSave),
 		}
 	},
 })

@@ -3,7 +3,7 @@
 		<dt>{{ label }}</dt>
 		<dd style="font-family: monospace">
 			<template v-if="config.writable">
-				<template v-if="config.option.type === 'enum'">
+				<template v-if="config.option?.type === 'enum'">
 					<select :value="valueIndex" @change.prevent="update">
 						<option
 							v-for="(v, i) in config.option.values"
@@ -16,7 +16,7 @@
 						</option>
 					</select>
 				</template>
-				<template v-if="config.option.type === 'range'">
+				<template v-if="config.option?.type === 'range'">
 					<input
 						type="range"
 						:value="config.value"
@@ -29,15 +29,15 @@
 			</template>
 			<template v-else>
 				<input
-					v-if="config.option.type === 'enum'"
+					v-if="config.option?.type === 'enum'"
 					:value="config.value"
 					disabled
 				/>
 				<input
 					v-else
 					type="range"
-					:min="config.option.min"
-					:max="config.option.max"
+					:min="config.option?.min"
+					:max="config.option?.max"
 					:value="config.value"
 					disabled
 				/>
@@ -48,6 +48,7 @@
 
 <script lang="ts">
 import {computed, defineComponent, PropType} from 'vue'
+
 import {TethrConfig} from './useTethr'
 
 export default defineComponent({

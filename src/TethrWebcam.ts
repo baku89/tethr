@@ -160,10 +160,7 @@ export class TethrWebcam extends Tethr {
 	}
 
 	async getLiveviewEnabledDesc() {
-		return {
-			writable: false,
-			value: this.liveviewEnabled,
-		}
+		return createReadonlyConfigDesc(this.liveviewEnabled)
 	}
 
 	// Actions
