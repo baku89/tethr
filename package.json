@@ -10,8 +10,8 @@
 		"lint": "eslint --fix --ext .ts --ignore-path .gitignore .",
 		"format": "prettier --write src demo",
 		"fix": "npm run format && npm run lint",
-		"build": "tsc --project tsconfig.prod.json --outDir dist",
-		"build:demo": "rm -rf public && parcel build demo/index.html --public-url . --dist-dir public --no-source-maps",
+		"build": "tsc --project tsconfig.prod.json --outDir lib",
+		"build:demo": "parcel build demo/index.html --public-url . --dist-dir public --no-source-maps",
 		"deploy:demo": "npm run build:demo; gh-pages -d public",
 		"prepare": "npm run build"
 	},
@@ -49,7 +49,6 @@
 		"eslint-plugin-simple-import-sort": "^7.0.0",
 		"eslint-plugin-unused-imports": "^1.1.2",
 		"file-saver": "^2.0.5",
-		"gh-pages": "^3.2.3",
 		"parcel": "^2.9.2",
 		"prettier": "^2.3.2",
 		"typescript": "^5.1.3",
