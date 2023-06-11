@@ -2,11 +2,21 @@
 	"extends": "@vue/tsconfig/tsconfig.dom.json",
 	"include": ["env.d.ts", "src/**/*", "src/**/*.vue", "../src/**/*"],
 	"compilerOptions": {
+		"target": "es2022",
+		"module": "esnext",
+		"strict": true,
+		"importHelpers": true,
+		"moduleResolution": "node",
+		"skipLibCheck": true,
 		"verbatimModuleSyntax": false,
+		"experimentalDecorators": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
 		"baseUrl": ".",
+		"lib": ["esnext", "dom", "dom.iterable"],
 		"paths": {
 			"tethr": ["../src"]
-		},
-		"lib": ["esnext", "dom", "dom.iterable"]
+		}
 	}
 }
