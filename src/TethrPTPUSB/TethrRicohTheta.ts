@@ -1,4 +1,5 @@
 import {BiMap} from 'bim'
+import {ConfigDesc} from 'src/Tethr'
 
 import {
 	ExposureMode,
@@ -57,10 +58,10 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		})
 	}
 
-	async getFocalLengthDesc() {
+	async getFocalLengthDesc(): Promise<ConfigDesc<FocalLength>> {
 		return {
 			writable: false,
-			value: 'spherical' as FocalLength,
+			value: 'spherical',
 		}
 	}
 

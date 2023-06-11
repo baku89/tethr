@@ -179,7 +179,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 1, byte)
 	}
 
-	async getApertureDesc() {
+	async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
 		const fValue = (await this.getCamCanSetInfo5()).fValue
 		const value = await this.getAperture()
 
@@ -217,7 +217,7 @@ export class TethrSigma extends TethrPTPUSB {
 				type: 'enum',
 				values,
 			},
-		} as ConfigDesc<Aperture>
+		}
 	}
 
 	async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
@@ -295,7 +295,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status}
 	}
 
-	async getColorTemperatureDesc() {
+	async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
 		const {colorTemerature} = await this.getCamCanSetInfo5()
 		const value = await this.getColorTemperature()
 
@@ -318,7 +318,7 @@ export class TethrSigma extends TethrPTPUSB {
 				max,
 				step,
 			},
-		} as ConfigDesc<number>
+		}
 	}
 
 	async setDestinationToSave(value: string): Promise<OperationResult> {
@@ -485,18 +485,22 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const writable = range.length === 2 && !!(await this.getCanRunAutoFocus())
 
-		return {
-			writable,
-			value,
-			option:
-				range.length === 2
-					? {
-							type: 'range',
-							min: range[0],
-							max: range[1],
-							step: 1,
-					  }
-					: undefined,
+		if (writable) {
+			return {
+				writable,
+				value,
+				option: {
+					type: 'range',
+					min: range[0],
+					max: range[1],
+					step: 1,
+				},
+			}
+		} else {
+			return {
+				writable,
+				value,
+			}
 		}
 	}
 
@@ -812,7 +816,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
 	}
 
-	async getShutterSpeedDesc() {
+	async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
 		const {shutterSpeed: range, notApexShutterSpeed} =
 			await this.getCamCanSetInfo5()
 
