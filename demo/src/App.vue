@@ -195,17 +195,18 @@ dl
 	row-gap 1em
 	grid-template-columns 13rem 1fr
 
-	&::v-deep
-		dt
-			height 2em
-			line-height 2em
+	&:deep(dt)
+		height 2em
+		line-height 2em
 
-		dd
-			display flex
-			gap 0.2em
+	&:deep(dd)
+		display flex
+		gap 0.2em
 
-		input, select, button
-			display block
-			width 100%
-			text-align center
+	&:deep(input),
+	&:deep(select),
+	&:deep(button)
+		display block
+		width 100%
+		text-align center
 </style>
