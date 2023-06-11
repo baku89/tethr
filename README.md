@@ -1,16 +1,22 @@
 <div align="center">
-  <img src="docs/logo.svg" width="50%" />
-  <br>
-  <br>
   <h1>Tethr</h1>
 	<a href="https://baku89.github.io/tethr/">Demo</a>
 	<br>
 	<br>
 </div>
   
-Tethr is a JavaScript/TypeScript library for controlling USB-connected digital cameras from browsers.
+Tethr is a JavaScript/TypeScript library designed to control USB-connected digital cameras directly from browsers.
 
-It is built on top of the [WebUSB API](https://developer.mozilla.org/en-US/docs/Web/API/USB) and aims to support cameras from various vendors. There is a protocol called PTP (Picture Transfer Protocol) that provides a way to access camera functionalities such as shutter, aperture, ISO, and more via USB or TCP/IP. However, most cameras use their own vendor extensions to communicate with PCs, resulting in little compatibility between them. Tethr aims to bridge this gap and provide a uniform and modern interface for developers, without having to worry about the differences. The project draws inspiration from [libgphoto2](https://github.com/gphoto/libgphoto2).
+It is built on top of the [WebUSB API](https://developer.mozilla.org/en-US/docs/Web/API/USB) and aims to provide support for cameras by various vendors. The library utilizes the Picture Transfer Protocol (PTP), which offers a means to access camera functionalities such as shutter control, aperture adjustment, ISO settings, and more via USB or TCP/IP connections. However, due to the varying vendor-specific extensions employed by different camera models, acheving compatibility among them has been challenging.
+
+Tethr addreses this issue by acting as a bridge and offering a standarized and contemporary interface for developers. With Tethr, developers can interact with cameras seamlessly, abstracting away the underlying differences and complexities. The project takes inspiration from [libgphoto2](https://github.com/gphoto/libgphoto2) in its pursuit of providing a comprehensive camera control solution.
+
+### Features
+
+- 📸 Control camera functionalities such as shutter, aperture, ISO, and more.
+- ⚡️ Access cameras via USB using the PTP (Picture Transfer Protocol) standard.
+- 🌎 Vendor-specific support to fully access all features of each camera model.
+- 🤳 Automatic fallback to web cameras when WebUSB is disabled or no USB camera is connected.
 
 ## Installation in Your Package
 
@@ -21,14 +27,16 @@ yarn add https://github.com/baku89/tethr
 
 ## Supported Cameras
 
-As mentioned above, most vendors add their own extensions to PTP. Therefore, vendor-specific support is required to fully access all the features of each camera model. Otherwise, the library can only access a limited number of configurations exposed as standard device properties defined in the PTP specification. The library also supports fallback to web cameras in case WebUSB is disabled or no camera is connected, such as a smartphone.
+As mentioned, due to the vendor-specific extensions added to the PTP, comprehensive support for each camera model's features requires vendor-specific implementation. Without such support, the library can only access a limited set of configs exposed through standard device properties defined in the PTP specification.
 
-Here's a list of supported camera models:
+In addition, the library offers fallback functionality to web cameras in situations where WebUSB is disabled or when no USB-connected camera is detected. This enables developers to seamlessly switch to using web cameras, such as those integrated into smartphones, as an alternative capture source.
+
+Here's a list of camera models currently supported by the library:
 
 | Vendor    | Camera   | Features                    |
 | --------- | -------- | --------------------------- |
 | Panasonic | Lumix S5 | Shutter, LV, AF, MF, Config |
-| Sigma     | fp       | Shutter, LV, AF, Config     |
+| Sigma     | fp, fp L | Shutter, LV, AF, MF, Config |
 | Ricoh     | Theta S  | Shutter, Config             |
 | WebCam    |          | Shutter, LV, Config         |
 
@@ -36,19 +44,20 @@ Here's a list of supported camera models:
 
 ## Sample Code
 
-This project is in the very early stages of development and is not yet fully documented. Here is a sample code to give you an idea of how to use the library. Note that all camera operations are asynchronous, and Tethr's instance methods return Promises.
+The project is in the early stages of development and lacks complete documentation. Here is a code sample to provide you with an understanding of how to utilize the library. it's important to note that all camera operations are asynchronous, and Tethr's instance methods return [Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
 ```ts
-import {detectTethr} from 'tethr'
+import {detectCameras} from 'tethr'
 
-const cameras = await detectTethr()
+const cameras = await detectCameras()
 
 const cam = cameras[0]
 
 await cam.init()
 
-await cam.get('model') // 'Lumix S5'
+await cam.get('model')
 await cam.getModel()
+// -> 'Lumix S5'
 
 await cam.set('shutterSpeed', '1/1000')
 await cam.setShutterSpeed('1/1000')
@@ -65,6 +74,7 @@ console.log(exposureModeDesc)
 } */
 
 const autoFocusResult = await cam.runAutoFocus()
+// -> {status: 'ok'}
 
 if (!autoFocusResult.status !== 'ok') {
 	console.warn('AF failed')
@@ -93,7 +103,7 @@ await cam.close()
 
 This is a list of ConfigName and their value types:
 
-| ConfigName           | Type                   | Example                                                     |
+| ConfigName           | ConfigType             | Example                                                     |
 | -------------------- | ---------------------- | ----------------------------------------------------------- |
 | aperture             | `Aperture`             | `2.2`, `5.6`, `'auto'`                                      |
 | batteryLevel         | `BatteryLevel`         | `50`, `100`, `'ac'`, `'low'` (Represented in range `0-100`) |
@@ -136,30 +146,30 @@ This is a list of ConfigName and their value types:
 | timelapseNumber      | `number`               |                                                             |
 | whiteBalance         | `WhiteBalance`         | `'auto'`, `'cloud'`, `'daylight'`...                        |
 
+The `configName` mentioned in the subsequent sample code can be replaced with the names shown above.
+
 ### Getter/Setter
 
-You can retrieve and modify configurations by two ways shown below:
+You can retrieve and modify configs by two methods outlined below:
 
 ```ts
-// 1. Specify a kind of config as argument
-tethr.get('<configName>'): Promise<ConfigType | null>
-tethr.set('<configName>'): Promise<Result>
+// 1. Specify a name of config as the first argument
+tethr.get('configName'): Promise<ConfigType | null>
+tethr.set('configName', value): Promise<OperationResult>
 
-// 1. Directly call a getter/setter methods defined per config
-tethr.get<ConfigName>(): Promise<ConfigType | null>
-tethr.set<ConfigName>(): Promise<Result>
+// 2. Directly call a getter/setter methods defined per config
+tethr.getConfigName(): Promise<ConfigType | null>
+tethr.setConfigName(): Promise<OperationResult>
 
-interface Result {
+// Setters return the following object:
+interface OperationResult {
 	status: 'ok' | 'unsupported' | 'invalid parameter' | 'busy' | 'general error'
 }
-
-// '<configName>' is a name of config written in camelCase ('batteryLevel'),
-// and <ConfigName> in CapitalCase (BatteryLevel)
 ```
 
-### Config Discriptor
+### Config Descriptor
 
-If you want to obtain information about a config, such as its writability and valid options, you can use the `tethr.getDesc('<configName>')` or 1tethr.getConfigNameDesc1 methods. These methods return a descriptor object.
+If you want to obtain information about a config, such as its writability and a list of valid values, you can use the `tethr.getDesc('configName')` or `tethr.getConfigNameDesc` methods. These methods return a descriptor object.
 
 ```ts
 interface ConfigDesc<ConfigType> {
@@ -173,15 +183,12 @@ interface ConfigDesc<ConfigType> {
 
 ### Watching Config Changes
 
-Whenever a value of configuration is changed, a correspoinding `${configName}Changed` event will be fired. Since Tethr class inherits from [EventEmitter](https://github.com/primus/eventemitter3), you can monitor the value change as follows:
+Whenever a config is changed, a correspoinding `configNameChanged` event will be fired. Since Tethr class inherits from [EventEmitter](https://github.com/primus/eventemitter3), you can monitor the value change using the following pattern:
 
 ```ts
-function callback(desc: ConfigDesc<Aperture>) {
-	console.log(`Current aperture=${desc.value}`)
-}
-
-// Register the callback
-tethr.on('apertureChanged', callback)
+tethr.on('apertureChanged', (newValue: Aperture) => {
+	// Handle the value change here
+})
 
 // Or watch once
 tethr.once('shutterSpeedChanged', callback)
@@ -190,11 +197,11 @@ tethr.once('shutterSpeedChanged', callback)
 tethr.off('apertureChanged', callback)
 ```
 
-A event `${configName}Changed` is triggered out in the case:
+An event `configNameChanged` is triggered in the the following:
 
-- When you manually set the value of config itself.
-- When you modify other configs which will affect the config value as a side effect. For example, setting 'whiteBalance' to 'auto' makes 'colorTemperature' read-only.
-- When users change settings by camera buttons or dials physically.
+- When you manually set the value of the `configName`.
+- When you modify other configs that have a side effect on the value of `configName`. For example, setting the `whiteBalance` to `'auto'` will make the `colorTemperature` read-only.
+- When users change settings by camera buttons or dials.
 
 ## Development Environment
 
@@ -204,3 +211,7 @@ cd tethr
 yarn install
 yarn dev # Then open https://localhost:1234 in a browser
 ```
+
+## License
+
+This repository is published under an MIT License. See the included [LICENSE file](./LICENSE).
