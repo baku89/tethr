@@ -1,7 +1,7 @@
 <template>
 	<template v-if="config.value !== null">
 		<dt>{{ label }}</dt>
-		<dd style="font-family: monospace">
+		<dd>
 			<template v-if="config.writable">
 				<template v-if="config.option?.type === 'enum'">
 					<select :value="valueIndex" @change.prevent="update">
@@ -17,30 +17,24 @@
 					</select>
 				</template>
 				<template v-if="config.option?.type === 'range'">
-					<input
-						type="range"
-						:value="config.value"
+					<InputRange
+						:modelValue="config.value"
 						:min="config.option.min"
 						:max="config.option.max"
 						:step="config.option.step"
-						@change.prevent="update"
+						@change="update"
 					/>
 				</template>
 			</template>
 			<template v-else>
-				<input
-					v-if="config.option?.type === 'enum'"
-					:value="config.value"
-					disabled
-				/>
-				<input
-					v-else
-					type="range"
+				<InputRange
+					v-if="config.option?.type === 'range'"
 					:min="config.option?.min"
 					:max="config.option?.max"
-					:value="config.value"
+					:modelValue="config.value"
 					disabled
 				/>
+				<input v-else :value="config.value" disabled />
 			</template>
 		</dd>
 	</template>
@@ -49,6 +43,7 @@
 <script lang="ts">
 import {computed, defineComponent, PropType} from 'vue'
 
+import InputRange from './InputRange.vue'
 import {TethrConfig} from './useTethr'
 
 export default defineComponent({
@@ -68,12 +63,9 @@ export default defineComponent({
 			}
 			return 0
 		})
-
 		function update(e: Event) {
 			if (!props.config.option) return
-
 			const str = (e.target as HTMLSelectElement).value
-
 			if (props.config.option.type === 'enum') {
 				const index = parseInt(str)
 				const value = props.config.option.values[index]
@@ -83,11 +75,11 @@ export default defineComponent({
 				props.config.update(value)
 			}
 		}
-
 		return {
 			valueIndex,
 			update,
 		}
 	},
+	components: {InputRange},
 })
 </script>

@@ -94,7 +94,6 @@
 			<h2>Configs</h2>
 			<dl>
 				<TethrConfig
-					template
 					v-for="(config, name) in configs"
 					:key="name"
 					:label="name"
@@ -161,3 +160,52 @@ export default defineComponent({
 	},
 })
 </script>
+
+<style lang="stylus" scoped>
+.app
+	display grid
+	height 100vh
+	grid-template-columns 1fr 30rem
+
+	@media (max-width 700px)
+		display block
+
+	& > *
+		padding 1em
+
+aside
+	overflow-y scroll
+	border-left 2px solid #2b2b2b
+
+h2
+	margin 2em 0 0.5em
+
+.view
+	display block
+	margin-top 0.5em
+	width 100%
+	border-radius 0.5em
+	background-color #2b2b2b
+	aspect-ratio 16 / 9
+	object-fit contain
+
+dl
+	display grid
+	column-gap 0.5em
+	row-gap 1em
+	grid-template-columns 13rem 1fr
+
+	&::v-deep
+		dt
+			height 2em
+			line-height 2em
+
+		dd
+			display flex
+			gap 0.2em
+
+		input, select, button
+			display block
+			width 100%
+			text-align center
+</style>
