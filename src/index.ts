@@ -1,8 +1,4 @@
 export * from './configs'
 export * from './detectCameras'
-export {
-	ConfigDesc,
-	OperationResult,
-	OperationResultStatus,
-	Tethr,
-} from './Tethr'
+export * from './Tethr'
+export * from './TethrObject'
