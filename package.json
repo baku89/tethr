@@ -27,6 +27,7 @@
 		"lodash": "^4.17.21",
 		"promise-queue": "^2.2.5",
 		"sleep-promise": "^9.1.0",
+		"typescript-memoize": "^1.1.1",
 		"webusb": "^2.2.0"
 	},
 	"devDependencies": {
@@ -41,8 +42,8 @@
 		"@types/w3c-image-capture": "^1.0.5",
 		"@types/w3c-web-usb": "^1.0.5",
 		"@types/wicg-file-system-access": "^2020.9.5",
-		"@typescript-eslint/eslint-plugin": "^4.28.2",
-		"@typescript-eslint/parser": "^4.28.2",
+		"@typescript-eslint/eslint-plugin": "^5.59.9",
+		"@typescript-eslint/parser": "^5.59.9",
 		"eslint": "^7.30.0",
 		"eslint-config-prettier": "^8.3.0",
 		"eslint-plugin-simple-import-sort": "^7.0.0",

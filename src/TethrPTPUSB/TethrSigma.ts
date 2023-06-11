@@ -1,6 +1,7 @@
 import {BiMap} from 'bim'
 import {minBy} from 'lodash'
 import sleep from 'sleep-promise'
+import {MemoizeExpiring} from 'typescript-memoize'
 
 import {FocalLength} from '..'
 import {
@@ -122,6 +123,8 @@ const ConfigListSigma: ConfigName[] = [
 	'shutterSpeed',
 	'whiteBalance',
 ]
+
+const SigmaExpirationDuration = 50
 
 export class TethrSigma extends TethrPTPUSB {
 	private liveviewEnabled = false
@@ -1106,6 +1109,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	// fp SDK
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async getMovieFileInfo() {
 		const {data} = await this.device.receiveData({
 			label: 'Sigma GetMovieFileInfo',
@@ -1122,6 +1126,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return movieFileInfo
 	}
 
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async getCamDataGroup1() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup1',
@@ -1151,6 +1156,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async getCamDataGroup2() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup2',
@@ -1172,6 +1178,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async getCamDataGroup3() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup3',
@@ -1195,6 +1202,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async getCamDataGroup4() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup4',
@@ -1216,6 +1224,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async getCamDataGroup5() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroup5',
@@ -1236,6 +1245,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async getCamCanSetInfo5() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamCanSetInfo5',
@@ -1268,6 +1278,7 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 	}
 
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async getCamDataGroupFocus() {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamDataGroupFocus',
@@ -1291,6 +1302,7 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 	}
 
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async setCamData(
 		opcode: number,
 		devicePropIndex: number,
@@ -1318,6 +1330,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
+	@MemoizeExpiring(SigmaExpirationDuration)
 	private async getCamCaptStatus(imageId = 0) {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamCaptStatus',
