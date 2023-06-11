@@ -8,6 +8,6 @@
 			"tethr": ["../src"]
 		}
 	},
-	"files": ["./node_modules/@types/wicg-file-system-access/index.d.ts"],
+	"files": ["../node_modules/@types/wicg-file-system-access/index.d.ts"],
 	"references": [{"path": ".."}]
 }
