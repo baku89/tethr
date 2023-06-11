@@ -3,7 +3,7 @@
 .parcel-cache
 node_modules
 
-dist
+lib
 public
 *.log
 .vscode/launch.json
