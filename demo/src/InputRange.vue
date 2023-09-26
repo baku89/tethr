@@ -28,7 +28,7 @@ defineProps({
 })
 
 defineEmits<{
-	(e: 'change', value: number): void
+	(e: 'change', value: Event): void
 }>()
 </script>
 
