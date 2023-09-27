@@ -13,7 +13,6 @@ export async function initTethrUSBPTP(
 
 	try {
 		await device.open()
-		console.log('opened')
 		info = await TethrPTPUSB.getDeviceInfo(device)
 	} catch (err) {
 		if (
