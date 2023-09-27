@@ -50,8 +50,8 @@ export async function initTethrUSBPTP(
 	// the Open/CloseSession command works since some of PTP devices don't support
 	// any commands other than GetDeviceInfo.
 	try {
-		await tethr.open()
-		await tethr.close()
+		// await tethr.open()
+		// await tethr.close()
 	} catch {
 		return null
 	}
