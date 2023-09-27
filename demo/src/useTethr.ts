@@ -12,23 +12,23 @@ import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 
-export interface TethrConfig<T extends ConfigType[ConfigName]> {
+export interface TethrConfig<T> {
 	writable: boolean
 	value: T | null
 	update: (value: T) => void
 	option?: ConfigDescOption<T>
 }
 
-export function useTethrConfig<Name extends ConfigName>(
+export function useTethrConfig<N extends ConfigName>(
 	camera: Ref<Tethr | null>,
-	name: Name
+	name: N
 ) {
 	const config = reactive({
 		writable: false,
 		value: null,
 		update: () => null,
 		option: undefined,
-	}) as TethrConfig<ConfigType[Name]>
+	}) as TethrConfig<ConfigType[N]>
 
 	watch(
 		camera,
@@ -46,11 +46,9 @@ export function useTethrConfig<Name extends ConfigName>(
 			config.value = desc.value
 			config.option = desc.option
 
-			config.update = async (value: any) => {
-				cam.set(name, value)
-			}
+			config.update = (value: ConfigType[N]) => cam.set(name, value)
 
-			cam.on(`${name}Changed` as any, (desc: ConfigDesc<ConfigType[Name]>) => {
+			cam.on(`${name}Changed` as any, (desc: ConfigDesc<ConfigType[N]>) => {
 				config.value = desc.value
 				config.writable = desc.writable
 				config.option = desc.option
@@ -64,8 +62,11 @@ export function useTethrConfig<Name extends ConfigName>(
 
 export function useTethr(onSave: (object: TethrObject) => void) {
 	const camera = shallowRef<Tethr | null>(null)
+
 	const liveviewMediaStream = ref<null | MediaStream>(null)
+
 	const photoURL = ref(TransparentPng)
+
 	async function toggleCameraConnection() {
 		if (camera.value && camera.value.opened) {
 			await camera.value.close()
@@ -95,8 +96,8 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 				liveviewMediaStream.value = ms
 			})
 		}
-		;(window as any).cam = camera.value
 	}
+
 	async function takePhoto() {
 		if (!camera.value) return
 		const result = await camera.value.takePhoto()
@@ -109,9 +110,11 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 			}
 		}
 	}
+
 	async function runAutoFocus() {
 		await camera.value?.runAutoFocus()
 	}
+
 	async function toggleLiveview() {
 		if (!camera.value) return
 		const enabled = await camera.value.get('liveviewEnabled')
@@ -125,6 +128,7 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 			}
 		}
 	}
+
 	return {
 		camera,
 		// DPC
