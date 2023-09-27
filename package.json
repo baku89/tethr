@@ -7,6 +7,13 @@
 	"types": "lib/index.d.ts",
 	"repository": "https://github.com/baku89/tethr",
 	"sideEffects": false,
+	"keywords": [
+		"camera",
+		"webcam",
+		"dslr",
+		"webusb",
+		"ptp"
+	],
 	"scripts": {
 		"dev": "vite serve demo",
 		"lint": "eslint --fix src --ext .ts --ignore-path .gitignore",
