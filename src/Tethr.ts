@@ -12,6 +12,7 @@ import {
 	FocalLength,
 	FocusMeteringMode,
 	FocusMode,
+	FocusPeaking,
 	FunctionalMode,
 	ISO,
 	ManualFocusOption,
@@ -163,6 +164,8 @@ export abstract class Tethr
 				return this.setFocusMeteringMode(value as FocusMeteringMode)
 			case 'focusMode':
 				return this.setFocusMode(value as FocusMode)
+			case 'focusPeaking':
+				return this.setFocusPeaking(value as FocusPeaking)
 			case 'functionalMode':
 				return this.setFunctionalMode(value as FunctionalMode)
 			case 'imageAspect':
@@ -260,6 +263,8 @@ export abstract class Tethr
 				return this.getFocusMeteringModeDesc() as ReturnType
 			case 'focusMode':
 				return this.getFocusModeDesc() as ReturnType
+			case 'focusPeaking':
+				return this.getFocusPeakingDesc() as ReturnType
 			case 'functionalMode':
 				return this.getFunctionalModeDesc() as ReturnType
 			case 'imageAspect':
@@ -641,6 +646,22 @@ export abstract class Tethr
 		return UnsupportedOperationResult
 	}
 	async getFocusModeDesc(): Promise<ConfigDesc<FocusMode>> {
+		return {
+			writable: false,
+			value: null,
+		}
+	}
+
+	async getFocusPeaking(): Promise<FocusPeaking | null> {
+		return (await this.getFocusPeakingDesc()).value
+	}
+	async setFocusPeaking(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		value: FocusPeaking
+	): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+	async getFocusPeakingDesc(): Promise<ConfigDesc<FocusPeaking>> {
 		return {
 			writable: false,
 			value: null,

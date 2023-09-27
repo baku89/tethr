@@ -38,6 +38,11 @@ export type FunctionalMode = 'standard' | 'sleep'
 
 export type FocusMeteringMode = 'center-spot' | 'multi-spot'
 
+/**
+ * Focus peaking mode. `false` means disabled.
+ */
+export type FocusPeaking = false | string
+
 export type FocalLength = number | 'spherical'
 
 export type ISO = 'auto' | number
@@ -87,6 +92,7 @@ export type ConfigType = {
 	focusDistance: number
 	focusMeteringMode: FocusMeteringMode
 	focusMode: FocusMode
+	focusPeaking: FocusPeaking
 	functionalMode: FunctionalMode
 	imageAspect: string // Added e.g. 16:9, 3:2...
 	imageQuality: string // Added e.g. JPEG, JPEG+RAW...
