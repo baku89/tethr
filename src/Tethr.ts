@@ -83,7 +83,7 @@ export const UnsupportedConfigDesc: ConfigDesc<any> = {
 	value: null,
 }
 
-export const UnsupportedOperationResult: OperationResult = {
+export const UnsupportedOperationResult: OperationResult<any> = {
 	status: 'unsupported',
 }
 
@@ -880,11 +880,11 @@ export abstract class Tethr
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		option?: TakePhotoOption
 	): Promise<OperationResult<TethrObject[]>> {
-		return UnsupportedOperationResult
+		return {status: 'unsupported'}
 	}
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
-		return UnsupportedOperationResult
+		return {status: 'unsupported'}
 	}
 	async stopLiveview(): Promise<OperationResult> {
 		return UnsupportedOperationResult
