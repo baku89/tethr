@@ -16,7 +16,7 @@
 		"fix": "npm run format && npm run lint",
 		"fix:demo": "npm run format:demo && npm run lint:demo",
 		"build": "tsc --p tsconfig.json",
-		"build:demo": "vue-tsc --p demo/tsconfig.json --noEmit && vite build --config demo/vite.config.ts",
+		"build:demo": "vue-tsc --p demo/tsconfig.json --noEmit && vite build demo",
 		"prepare": "npm run build"
 	},
 	"files": [
