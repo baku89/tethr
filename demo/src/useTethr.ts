@@ -7,7 +7,7 @@ import {
 	Tethr,
 	TethrObject,
 } from 'tethr'
-import {reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
+import {onUnmounted, reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -128,6 +128,15 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 			}
 		}
 	}
+
+	onUnmounted(() => {
+		console.error('unmountd')
+		if (camera.value) {
+			console.error('Camera is not closed')
+			camera.value.close()
+			camera.value = null
+		}
+	})
 
 	return {
 		camera,
