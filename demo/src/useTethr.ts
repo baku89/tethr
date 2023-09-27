@@ -164,6 +164,7 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 			canRunManualFocus: useTethrConfig(camera, 'canRunManualFocus'),
 			canStartLiveview: useTethrConfig(camera, 'canStartLiveview'),
 			manualFocusOptions: useTethrConfig(camera, 'manualFocusOptions'),
+			shutterSound: useTethrConfig(camera, 'shutterSound'),
 		},
 		liveviewMediaStream,
 		photoURL,

@@ -101,6 +101,7 @@ export type ConfigType = {
 	serialNumber: string
 	sharpness: number
 	shutterSpeed: string
+	shutterSound: number
 	timelapseInterval: number
 	timelapseNumber: number
 	whiteBalance: WhiteBalance

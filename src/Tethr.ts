@@ -191,6 +191,8 @@ export abstract class Tethr
 				return this.setSharpness(value as number)
 			case 'shutterSpeed':
 				return this.setShutterSpeed(value as string)
+			case 'shutterSound':
+				return this.setShutterSound(value as number)
 			case 'timelapseInterval':
 				return this.setTimelapseInterval(value as number)
 			case 'timelapseNumber':
@@ -286,6 +288,8 @@ export abstract class Tethr
 				return this.getSharpnessDesc() as ReturnType
 			case 'shutterSpeed':
 				return this.getShutterSpeedDesc() as ReturnType
+			case 'shutterSound':
+				return this.getShutterSoundDesc() as ReturnType
 			case 'timelapseInterval':
 				return this.getTimelapseIntervalDesc() as ReturnType
 			case 'timelapseNumber':
@@ -822,6 +826,19 @@ export abstract class Tethr
 		return UnsupportedOperationResult
 	}
 	async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
+		return UnsupportedConfigDesc
+	}
+
+	async getShutterSound(): Promise<number | null> {
+		return (await this.getShutterSoundDesc()).value
+	}
+	async setShutterSound(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		value: number
+	): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+	async getShutterSoundDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
