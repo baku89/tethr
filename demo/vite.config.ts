@@ -8,10 +8,11 @@ export default defineConfig({
 	plugins: [vue()],
 	resolve: {
 		alias: {
-			tethr: path.resolve('../src'),
+			tethr: path.resolve('./src'),
 		},
 	},
 	define: {
+		// This is needed to make the PromiseQueue class available in the browser.
 		'process.env.PROMISE_QUEUE_COVERAGE': false,
 	},
 })
