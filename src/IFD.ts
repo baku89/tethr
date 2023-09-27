@@ -90,6 +90,12 @@ export function decodeIFD<Scheme extends IFDScheme>(
 				value = [...new Uint16Array(buf)]
 				break
 			}
+			case IFDType.Long: {
+				const offset = count > 1 ? valueOffset : entryOffset + 8
+				const buf = data.slice(offset, offset + count * 4)
+				value = [...new Uint32Array(buf)]
+				break
+			}
 			case IFDType.Undefined: {
 				const offset = count > 4 ? valueOffset : entryOffset + 8
 				value = data.slice(offset, offset + count)
