@@ -10,6 +10,7 @@ import {
 	computeShutterSpeedSeconds,
 	ConfigName,
 	ExposureMode,
+	FocusPeaking,
 	ISO,
 	WhiteBalance,
 } from '../configs'
@@ -113,6 +114,7 @@ const ConfigListSigma: ConfigName[] = [
 	'destinationToSave',
 	'focalLength',
 	'focusDistance',
+	'focusPeaking',
 	'exposureComp',
 	'exposureMode',
 	'imageAspect',
@@ -121,6 +123,7 @@ const ConfigListSigma: ConfigName[] = [
 	'liveviewEnabled',
 	'liveviewMagnifyRatio',
 	'shutterSpeed',
+	'shutterSound',
 	'whiteBalance',
 ]
 
@@ -161,7 +164,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getAperture(): Promise<Aperture | null> {
-		const {aperture} = await this.getCamDataGroup1()
+		const {aperture} = await this.getCamStatus()
 		if (aperture === 0x0) return 'auto'
 		return (
 			this.apertureOneThirdTable.get(aperture) ??
@@ -221,7 +224,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
-		const {batteryLevel} = await this.getCamDataGroup1()
+		const {batteryLevel} = await this.getCamStatus()
 		const value = this.batteryLevelTable.get(batteryLevel) ?? null
 
 		return {
@@ -259,7 +262,7 @@ export class TethrSigma extends TethrPTPUSB {
 			return this.colorModeTable.get(id) ?? `unknown:${id.toString(16)}`
 		}
 
-		const {colorMode} = await this.getCamDataGroup3()
+		const {colorMode} = await this.getCamStatus()
 		const {colorMode: colorModeOptions} = await this.getCamCanSetInfo5()
 
 		// NOTE: the colorModeOptions lacks Warm Gold (0xf0).
@@ -281,7 +284,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const wb = await this.getWhiteBalance()
 		if (wb !== 'manual') return null
 
-		const {colorTemperature} = await this.getCamDataGroup5()
+		const {colorTemperature} = await this.getCamStatus()
 		return colorTemperature
 	}
 
@@ -330,7 +333,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
-		const {destinationToSave} = await this.getCamDataGroup3()
+		const {destinationToSave} = await this.getCamStatus()
 
 		const value = this.destinationToSaveTable.get(destinationToSave) ?? null
 
@@ -345,7 +348,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getExposureMode() {
-		const {exposureMode} = await this.getCamDataGroup2()
+		const {exposureMode} = await this.getCamStatus()
 		return this.exposureModeTable.get(exposureMode) ?? null
 	}
 
@@ -375,7 +378,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getExposureComp() {
-		const {exposureComp} = await this.getCamDataGroup1()
+		const {exposureComp} = await this.getCamStatus()
 		return this.compensationOneThirdTable.get(exposureComp) ?? null
 	}
 
@@ -451,11 +454,10 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getFocalLengthDesc() {
-		const {currentLensFocalLength} = await this.getCamDataGroup1()
+		const {currentLensFocalLength} = await this.getCamStatus()
 		const value = decodeFocalLength(currentLensFocalLength)
 
-		const {lensWideFocalLength, lensTeleFocalLength} =
-			await this.getCamDataGroup3()
+		const {lensWideFocalLength, lensTeleFocalLength} = await this.getCamStatus()
 
 		const min = decodeFocalLength(lensWideFocalLength)
 		const max = decodeFocalLength(lensTeleFocalLength)
@@ -481,7 +483,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
 		const {focusPosition: range} = await this.getCamCanSetInfo5()
-		const value = (await this.getCamDataGroupFocus()).focusPosition[0]
+		const value = (await this.getCamStatus()).focusPosition[0]
 
 		const writable = range.length === 2 && !!(await this.getCanRunAutoFocus())
 
@@ -521,15 +523,45 @@ export class TethrSigma extends TethrPTPUSB {
 			return {status: 'invalid parameter'}
 		}
 
-		// await this.emitAllConfigChangedEvents()
-
 		return {status: 'ok'}
 	}
 
-	async getImageAspect() {
-		const {imageAspect} = await this.getCamDataGroup5()
-		const id = imageAspect - 245 // Magic number
-		return this.imageAspectTable.get(id) ?? null
+	async getFocusPeakingDesc(): Promise<ConfigDesc<FocusPeaking>> {
+		// const value = (await this.getCamDataGroup5()).focusPeaking
+		const value = 0
+		const {focusPeaking: values} = await this.getCamCanSetInfo5()
+
+		return {
+			writable: values.length > 0,
+			value: this.focusPeakingTable.get(value) ?? false,
+			option: {
+				type: 'enum',
+				values: values
+					.sort()
+					.map(v => this.focusPeakingTable.get(v)) as FocusPeaking[],
+			},
+		}
+	}
+
+	async setFocusPeaking(focusPeaking: FocusPeaking): Promise<OperationResult> {
+		const id = this.focusPeakingTable.getKey(focusPeaking)
+		if (id === undefined) return {status: 'invalid parameter'}
+
+		// const data = encodeIFD({
+		// 	focusPeaking: {tag: 702, type: IFDType.Byte, value: [id]},
+		// })
+
+		// try {
+		// 	await this.device.sendData({
+		// 		label: 'SigmaFP SetCamDataGroupFocus',
+		// 		opcode: OpCodeSigma.SetCamDataGroup,
+		// 		data,
+		// 	})
+		// } catch (err) {
+		// 	return {status: 'invalid parameter'}
+		// }
+
+		return {status: 'ok'}
 	}
 
 	async setImageAspect(imageAspect: string): Promise<OperationResult> {
@@ -540,19 +572,17 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getImageAspectDesc(): Promise<ConfigDesc<string>> {
-		const decodeImageAspectIFD = (id: number) => {
-			return this.imageAspectTableIFD.get(id) ?? 'Unknown'
-		}
+		const {imageAspect} = await this.getCamStatus()
+
+		const value = this.imageAspectTable.get(imageAspect) ?? null
 
 		const {imageAspect: values} = await this.getCamCanSetInfo5()
-		const value = await this.getImageAspect()
-
 		return {
 			writable: values.length > 0,
 			value,
 			option: {
 				type: 'enum',
-				values: values.map(decodeImageAspectIFD),
+				values: values.map(v => this.imageAspectTableIFD.get(v) ?? 'Unknown'),
 			},
 		}
 	}
@@ -616,7 +646,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 
 		const imageQuality: ImageQualityConfig = await (async () => {
-			const {imageQuality} = await this.getCamDataGroup2()
+			const {imageQuality} = await this.getCamStatus()
 
 			let jpegQuality: string | null = null
 			switch (imageQuality & 0x0f) {
@@ -639,7 +669,7 @@ export class TethrSigma extends TethrPTPUSB {
 			}
 		})()
 
-		const {dngImageQuality} = await this.getCamDataGroup4()
+		const {dngImageQuality} = await this.getCamStatus()
 
 		return {
 			writable: true,
@@ -687,7 +717,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getImageSizeDesc(): Promise<ConfigDesc<string>> {
-		const {resolution} = await this.getCamDataGroup2()
+		const {resolution} = await this.getCamStatus()
 
 		const value = this.imageSizeTable.get(resolution)
 
@@ -709,7 +739,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getIso() {
-		const {isoAuto, isoSpeed} = await this.getCamDataGroup1()
+		const {isoAuto, isoSpeed} = await this.getCamStatus()
 		if (isoAuto === 0x01) {
 			return 'auto'
 		} else {
@@ -784,7 +814,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
-		const {lvMagnifyRatio} = await this.getCamDataGroup4()
+		const {lvMagnifyRatio} = await this.getCamStatus()
 		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
 
 		const {lvMagnifyRatio: values} = await this.getCamCanSetInfo5()
@@ -800,7 +830,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getShutterSpeed() {
-		const {shutterSpeed} = await this.getCamDataGroup1()
+		const {shutterSpeed} = await this.getCamStatus()
 		if (shutterSpeed === 0x0) return 'auto'
 		return (
 			this.shutterSpeedOneThirdTable.get(shutterSpeed) ??
@@ -873,8 +903,31 @@ export class TethrSigma extends TethrPTPUSB {
 		} as ConfigDesc<string>
 	}
 
+	async getShutterSoundDesc(): Promise<ConfigDesc<number>> {
+		const {shutterSound: value} = await this.getCamStatus()
+
+		const {
+			shutterSound: [min, max, step],
+		} = await this.getCamCanSetInfo5()
+
+		return {
+			writable: true,
+			value,
+			option: {
+				type: 'range',
+				min,
+				max,
+				step,
+			},
+		}
+	}
+
+	async setShutterSound(value: number) {
+		return await this.setCamData(OpCodeSigma.SetCamDataGroup4, 13, value)
+	}
+
 	async getWhiteBalance() {
-		const {whiteBalance} = await this.getCamDataGroup2()
+		const {whiteBalance} = await this.getCamStatus()
 		return this.whiteBalanceTable.get(whiteBalance) ?? null
 	}
 
@@ -1102,7 +1155,7 @@ export class TethrSigma extends TethrPTPUSB {
 		// fp always returns one storage info even if no SD inserted.
 		const [storage] = await super.getStorages()
 
-		const {mediaFreeSpace} = await this.getCamDataGroup1()
+		const {mediaFreeSpace} = await this.getCamStatus()
 
 		storage.freeSpaceInImages = mediaFreeSpace
 
@@ -1128,121 +1181,149 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	@MemoizeExpiring(SigmaExpirationMs)
-	private async getCamDataGroup1() {
+	private async getCamStatus() {
 		const {data} = await this.device.receiveData({
-			label: 'SigmaFP GetCamDataGroup1',
-			opcode: OpCodeSigma.GetCamDataGroup1,
-			parameters: [0x0],
+			label: 'SigmaFP GetCamStatus2',
+			opcode: OpCodeSigma.GetCamStatus2,
+			parameters: [0b0000, 0b1111111, 0b0],
 		})
 
-		const dataView = new PTPDataView(data)
-		dataView.skip(3) // OC + FieldPreset
+		const decoded = decodeIFD(data, {
+			camDataGroup1: {
+				tag: OpCodeSigma.GetCamDataGroup1,
+				type: IFDType.Undefined,
+			},
+			camDataGroup2: {
+				tag: OpCodeSigma.GetCamDataGroup2,
+				type: IFDType.Undefined,
+			},
+			camDataGroup3: {
+				tag: OpCodeSigma.GetCamDataGroup3,
+				type: IFDType.Undefined,
+			},
+			camDataGroup4: {
+				tag: OpCodeSigma.GetCamDataGroup4,
+				type: IFDType.Undefined,
+			},
+			camDataGroup5: {
+				tag: OpCodeSigma.GetCamDataGroup5,
+				type: IFDType.Undefined,
+			},
+			camDataGroupFocus: {
+				tag: OpCodeSigma.GetCamDataGroupFocus,
+				type: IFDType.Undefined,
+			},
+			camDataGroupMovie: {
+				tag: OpCodeSigma.GetCamDataGroupMovie,
+				type: IFDType.Undefined,
+			},
+		})
 
-		return {
-			shutterSpeed: dataView.readUint8(),
-			aperture: dataView.readUint8(),
-			programShift: dataView.readInt8(),
-			isoAuto: dataView.readUint8(),
-			isoSpeed: dataView.readUint8(),
-			exposureComp: dataView.readUint8(),
-			abValue: dataView.readUint8(),
-			abSettings: dataView.readUint8(),
-			frameBufferState: dataView.readUint8(),
-			mediaFreeSpace: dataView.readUint16(),
-			mediaStatus: dataView.readUint8(),
-			currentLensFocalLength: dataView.readUint16(),
-			batteryLevel: dataView.readUint8(),
-			abShotRemainNumber: dataView.readUint8(),
-			expCompExcludeAB: dataView.readUint8(),
+		const group1DataView = new PTPDataView(decoded.camDataGroup1)
+		group1DataView.skip(3) // OC + FieldPreset
+
+		const group1 = {
+			shutterSpeed: group1DataView.readUint8(),
+			aperture: group1DataView.readUint8(),
+			programShift: group1DataView.readInt8(),
+			isoAuto: group1DataView.readUint8(),
+			isoSpeed: group1DataView.readUint8(),
+			exposureComp: group1DataView.readUint8(),
+			abValue: group1DataView.readUint8(),
+			abSettings: group1DataView.readUint8(),
+			frameBufferState: group1DataView.readUint8(),
+			mediaFreeSpace: group1DataView.readUint16(),
+			mediaStatus: group1DataView.readUint8(),
+			currentLensFocalLength: group1DataView.readUint16(),
+			batteryLevel: group1DataView.readUint8(),
+			abShotRemainNumber: group1DataView.readUint8(),
+			expCompExcludeAB: group1DataView.readUint8(),
 		}
-	}
 
-	@MemoizeExpiring(SigmaExpirationMs)
-	private async getCamDataGroup2() {
-		const {data} = await this.device.receiveData({
-			label: 'SigmaFP GetCamDataGroup2',
-			opcode: OpCodeSigma.GetCamDataGroup2,
-			parameters: [0x0],
-		})
+		const group2DataView = new PTPDataView(decoded.camDataGroup2)
+		group2DataView.skip(3) // OC + FieldPreset
 
-		const dataView = new PTPDataView(data)
-		dataView.skip(3) // OC + FieldPreset
-
-		return {
-			driveMode: dataView.readUint8(),
-			specialMode: dataView.readUint8(),
-			exposureMode: dataView.readUint8(),
-			aeMeteringMode: dataView.readUint8(),
-			whiteBalance: dataView.goto(3 + 10).readUint8(),
-			resolution: dataView.readUint8(),
-			imageQuality: dataView.readUint8(),
+		const group2 = {
+			driveMode: group2DataView.readUint8(),
+			specialMode: group2DataView.readUint8(),
+			exposureMode: group2DataView.readUint8(),
+			aeMeteringMode: group2DataView.readUint8(),
+			whiteBalance: group2DataView.goto(3 + 10).readUint8(),
+			resolution: group2DataView.readUint8(),
+			imageQuality: group2DataView.readUint8(),
 		}
-	}
 
-	@MemoizeExpiring(SigmaExpirationMs)
-	private async getCamDataGroup3() {
-		const {data} = await this.device.receiveData({
-			label: 'SigmaFP GetCamDataGroup3',
-			opcode: OpCodeSigma.GetCamDataGroup3,
-			parameters: [0x0],
-		})
+		const group3DataView = new PTPDataView(decoded.camDataGroup3)
+		group3DataView.skip(3) // OC + FieldPreset
 
-		const dataView = new PTPDataView(data)
-		dataView.skip(3) // OC + FieldPreset
-
-		return {
-			colorSpace: dataView.skip(3).readUint8(),
-			colorMode: dataView.readUint8(),
-			batteryKind: dataView.readUint8(),
-			lensWideFocalLength: dataView.readUint16(),
-			lensTeleFocalLength: dataView.readUint16(),
-			afAuxiliaryLight: dataView.readUint8(),
-			afBeep: dataView.readUint8(),
-			timerSound: dataView.readUint8(),
-			destinationToSave: dataView.readUint8(),
+		const group3 = {
+			colorSpace: group3DataView.skip(3).readUint8(),
+			colorMode: group3DataView.readUint8(),
+			batteryKind: group3DataView.readUint8(),
+			lensWideFocalLength: group3DataView.readUint16(),
+			lensTeleFocalLength: group3DataView.readUint16(),
+			afAuxiliaryLight: group3DataView.readUint8(),
+			afBeep: group3DataView.readUint8(),
+			timerSound: group3DataView.readUint8(),
+			destinationToSave: group3DataView.readUint8(),
 		}
-	}
 
-	@MemoizeExpiring(SigmaExpirationMs)
-	private async getCamDataGroup4() {
-		const {data} = await this.device.receiveData({
-			label: 'SigmaFP GetCamDataGroup4',
-			opcode: OpCodeSigma.GetCamDataGroup4,
-			parameters: [0x0],
-		})
+		const group4DataView = new PTPDataView(decoded.camDataGroup4)
+		group4DataView.skip(3) // OC + FieldPreset
 
-		const dataView = new PTPDataView(data)
-		dataView.skip(3) // OC + FieldPreset
-
-		return {
-			dcCropMode: dataView.readUint8(),
-			lvMagnifyRatio: dataView.readUint8(),
-			isoExtension: dataView.readUint8(),
-			continuousShootingSpeed: dataView.readUint8(),
-			hdr: dataView.readUint8(),
-			dngImageQuality: dataView.readUint8(),
-			fillLight: dataView.readUint8(),
+		const group4 = {
+			dcCropMode: group4DataView.readUint8(),
+			lvMagnifyRatio: group4DataView.readUint8(),
+			isoExtension: group4DataView.readUint8(),
+			continuousShootingSpeed: group4DataView.readUint8(),
+			hdr: group4DataView.readUint8(),
+			dngImageQuality: group4DataView.readUint8(),
+			fillLight: group4DataView.readUint8(),
+			opticalDistortion: group4DataView.readUint8(),
+			opticalAberration: group4DataView.readUint8(),
+			opticalDiffraction: group4DataView.readUint8(),
+			opticalLightIntensity: group4DataView.readUint8(),
+			opticalColorShading: group4DataView.readUint8(),
+			opticalColorShadingGet: group4DataView.readUint8(),
+			imageStabilization: group4DataView.readUint8(),
+			shutterSound: group4DataView.readUint8(),
 		}
-	}
 
-	@MemoizeExpiring(SigmaExpirationMs)
-	private async getCamDataGroup5() {
-		const {data} = await this.device.receiveData({
-			label: 'SigmaFP GetCamDataGroup5',
-			opcode: OpCodeSigma.GetCamDataGroup5,
-			parameters: [0x0],
+		const group5DataView = new PTPDataView(decoded.camDataGroup5)
+		group5DataView.skip(3) // OC + FieldPreset
+
+		const group5 = {
+			intervalTimerSecond: group5DataView.readUint16(),
+			intervalTimerFame: group5DataView.readUint8(),
+			restTimerSecond: group5DataView.readUint16(),
+			restTimerFrame: group5DataView.readUint8(),
+			colorTemperature: group5DataView.readUint16(),
+			imageAspect: group5DataView.readUint8(),
+			toneEffect: group5DataView.readUint8(),
+		}
+
+		const groupFocus = decodeIFD(decoded.camDataGroupFocus, {
+			focusMode: {tag: 1, type: IFDType.Byte},
+			afLock: {tag: 2, type: IFDType.Byte},
+			afFaceEyePriorMode: {tag: 3, type: IFDType.Byte},
+			afFaceEyePriorDetectionStatus: {tag: 4, type: IFDType.Byte},
+			afAreaSelect: {tag: 10, type: IFDType.Byte},
+			afAreaMode: {tag: 11, type: IFDType.Byte},
+			afFrameSize: {tag: 12, type: IFDType.Byte},
+			// afFramePosition: {tag: 13, type: IFDType.Byte},
+			// afFrameFaceFocusDetection: {tag: 14, type: IFDType.Byte},
+			preAlwaysAf: {tag: 51, type: IFDType.Byte},
+			afLimit: {tag: 52, type: IFDType.Byte},
+			focusPosition: {tag: 81, type: IFDType.Short},
 		})
 
-		const dataView = new PTPDataView(data)
-		dataView.skip(3) // OC + FieldPreset
-
 		return {
-			intervalTimerSecond: dataView.readUint16(),
-			intervalTimerFame: dataView.readUint8(),
-			intervalTimerSecond_Remain: dataView.readUint16(),
-			intervalTimerFrame_Remain: dataView.readUint8(),
-			colorTemperature: dataView.readUint16(),
-			imageAspect: dataView.skip(2).readUint8(),
+			...group1,
+			...group2,
+			...group3,
+			...group4,
+			...group5,
+			...groupFocus,
 		}
 	}
 
@@ -1280,30 +1361,6 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	@MemoizeExpiring(SigmaExpirationMs)
-	private async getCamDataGroupFocus() {
-		const {data} = await this.device.receiveData({
-			label: 'SigmaFP GetCamDataGroupFocus',
-			opcode: OpCodeSigma.GetCamDataGroupFocus,
-			parameters: [0x0],
-		})
-
-		return decodeIFD(data, {
-			focusMode: {tag: 1, type: IFDType.Byte},
-			afLock: {tag: 2, type: IFDType.Byte},
-			afFaceEyePriorMode: {tag: 3, type: IFDType.Byte},
-			afFaceEyePriorDetectionStatus: {tag: 4, type: IFDType.Byte},
-			afAreaSelect: {tag: 10, type: IFDType.Byte},
-			afAreaMode: {tag: 11, type: IFDType.Byte},
-			afFrameSize: {tag: 12, type: IFDType.Byte},
-			// afFramePosition: {tag: 13, type: IFDType.Byte},
-			// afFrameFaceFocusDetection: {tag: 14, type: IFDType.Byte},
-			preAlwaysAf: {tag: 51, type: IFDType.Byte},
-			afLimit: {tag: 52, type: IFDType.Byte},
-			focusPosition: {tag: 81, type: IFDType.Short},
-		})
-	}
-
-	@MemoizeExpiring(SigmaExpirationMs)
 	private async setCamData(
 		opcode: number,
 		devicePropIndex: number,
@@ -1326,7 +1383,7 @@ export class TethrSigma extends TethrPTPUSB {
 			return {status: 'invalid parameter'}
 		}
 
-		await this.emitAllConfigChangedEvents()
+		await this.checkConfigChanged()
 
 		return {status: 'ok'}
 	}
@@ -1784,6 +1841,14 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x2, 'A'],
 		[0x3, 'S'],
 		[0x4, 'M'],
+	])
+
+	protected focusPeakingTable = new BiMap<number, FocusPeaking>([
+		[0, false],
+		[1, 'white'],
+		[2, 'black'],
+		[3, 'red'],
+		[4, 'yellow'],
 	])
 
 	protected liveviewMagnifyRatioTable = new BiMap<number, number>([
