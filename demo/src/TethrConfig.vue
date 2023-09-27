@@ -1,5 +1,5 @@
 <template>
-	<template v-if="config.value !== null">
+	<div class="TethrConfig">
 		<dt>{{ label }}</dt>
 		<dd>
 			<template v-if="config.writable">
@@ -37,49 +37,47 @@
 				<input v-else :value="config.value" disabled />
 			</template>
 		</dd>
-	</template>
+	</div>
 </template>
 
-<script lang="ts">
-import {computed, defineComponent, PropType} from 'vue'
+<script lang="ts" setup>
+import {computed} from 'vue'
 
 import InputRange from './InputRange.vue'
 import {TethrConfig} from './useTethr'
 
-export default defineComponent({
-	props: {
-		label: String,
-		config: {
-			type: Object as PropType<TethrConfig<any>>,
-			required: true,
-		},
-	},
-	inheritAttrs: false,
-	setup(props) {
-		const valueIndex = computed(() => {
-			const {config} = props
-			if (config.option?.type === 'enum') {
-				return config.option.values.indexOf(config.value)
-			}
-			return 0
-		})
-		function update(e: Event) {
-			if (!props.config.option) return
-			const str = (e.target as HTMLSelectElement).value
-			if (props.config.option.type === 'enum') {
-				const index = parseInt(str)
-				const value = props.config.option.values[index]
-				props.config.update(value)
-			} else {
-				const value = parseInt(str)
-				props.config.update(value)
-			}
-		}
-		return {
-			valueIndex,
-			update,
-		}
-	},
-	components: {InputRange},
+interface Props {
+	label: string
+	config: TethrConfig<any>
+}
+
+const props = defineProps<Props>()
+
+const valueIndex = computed(() => {
+	const {config} = props
+	if (config.option?.type === 'enum') {
+		return config.option.values.indexOf(config.value)
+	}
+	return 0
 })
+
+function update(e: Event) {
+	if (!props.config.option) return
+	const str = (e.target as HTMLSelectElement).value
+	if (props.config.option.type === 'enum') {
+		const index = parseInt(str)
+		const value = props.config.option.values[index]
+		props.config.update(value)
+	} else {
+		const value = parseInt(str)
+		props.config.update(value)
+	}
+}
 </script>
+
+<style lang="stylus" scoped>
+.TethrConfig
+	display grid
+	grid-column 1 / 3
+	grid-template-columns subgrid
+</style>
