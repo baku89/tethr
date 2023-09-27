@@ -1,5 +1,5 @@
 import {BiMap} from 'bim'
-import {minBy} from 'lodash'
+import {isEqual, minBy} from 'lodash'
 import sleep from 'sleep-promise'
 import {MemoizeExpiring} from 'typescript-memoize'
 
@@ -149,7 +149,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		this.checkPropChangedTimerId = setInterval(() => {
 			if (this.isCapturing) return
-			this.emitAllConfigChangedEvents()
+			this.checkConfigChanged()
 		}, SigmaCheckConfigIntervalMs)
 	}
 
@@ -1422,10 +1422,19 @@ export class TethrSigma extends TethrPTPUSB {
 		return pictInfos
 	}
 
-	private async emitAllConfigChangedEvents() {
-		for (const config of ConfigListSigma) {
-			const desc = await this.getDesc(config)
-			this.emit(`${config}Changed`, desc)
+	#prevConfigValue = new Map<ConfigName, ConfigDesc<any>>()
+
+	private async checkConfigChanged() {
+		for (const name of ConfigListSigma) {
+			const desc = await this.getDesc(name)
+
+			const prev = this.#prevConfigValue.get(name)
+
+			if (prev !== undefined && !isEqual(prev, desc)) {
+				this.emit(`${name}Changed`, desc)
+			}
+
+			this.#prevConfigValue.set(name, desc)
 		}
 	}
 
