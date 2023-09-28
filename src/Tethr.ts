@@ -17,8 +17,10 @@ import {
 	ISO,
 	ManualFocusOption,
 	WhiteBalance,
+	WritableConfigNameList,
 } from './configs'
 import {TethrObject} from './TethrObject'
+import {isntNil} from './util'
 
 export type OperationResultStatus =
 	| 'ok'
@@ -103,6 +105,38 @@ export abstract class Tethr
 	abstract close(): Promise<void>
 
 	abstract get opened(): boolean
+
+	/**
+	 * Export all writable configs to a plain object.
+	 */
+	async exportConfigs(): Promise<Partial<ConfigType>> {
+		const configs = await Promise.all(
+			WritableConfigNameList.map(async name => {
+				const desc = await this.getDesc(name)
+				return desc.writable ? ([name, desc.value] as const) : null
+			})
+		)
+
+		const entries = configs.filter(isntNil)
+
+		return Object.fromEntries(entries)
+	}
+
+	/**
+	 * Apply all writable configs.
+	 */
+	async importConfigs(configs: Partial<ConfigType>) {
+		const sortedConfigs = Object.entries(configs).sort(([a], [b]) => {
+			const ai = WritableConfigNameList.indexOf(a as ConfigName)
+			const bi = WritableConfigNameList.indexOf(b as ConfigName)
+			return ai - bi
+		})
+
+		for (const [name, value] of sortedConfigs) {
+			// NOTE: this might be converted to parallel execution in the future
+			await this.set(name as ConfigName, value)
+		}
+	}
 
 	// Config
 	async get<N extends ConfigName>(name: N): Promise<ConfigType[N] | null> {

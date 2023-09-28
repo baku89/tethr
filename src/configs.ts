@@ -115,6 +115,54 @@ export type ConfigType = {
 
 export type ConfigName = keyof ConfigType
 
+/**
+ * All settable config list for `Tethr.{exportConfigs,importConfigs}()`. The list is sorted to ensure that all configs are correctly set. For example, `exposureMode` must be set before `shutterSpeed` and `aperture`.
+ */
+export const WritableConfigNameList: ConfigName[] = [
+	// Exposure settings
+	'exposureMode',
+	'aperture',
+	'shutterSpeed',
+
+	// White balance
+	'whiteBalance',
+	'colorTemperature',
+
+	// Focus-related configs
+	'focusMode',
+	'focalLength',
+	'focusMeteringMode',
+	'focusDistance',
+
+	// Misc
+	'burstInterval',
+	'burstNumber',
+	'captureDelay',
+	'colorMode',
+	'contrast',
+	'dateTime',
+	'destinationToSave',
+	'digitalZoom',
+	'driveMode',
+	'exposureComp',
+	'exposureMeteringMode',
+	'facingMode',
+	'flashMode',
+	'focusPeaking',
+	'functionalMode',
+	'imageAspect',
+	'imageQuality',
+	'imageSize',
+	'iso',
+	'liveviewEnabled',
+	'liveviewMagnifyRatio',
+	'liveviewSize',
+	'sharpness',
+	'shutterSound',
+	'timelapseInterval',
+	'timelapseNumber',
+]
+
 // Table
 export const ConfigForDevicePropTable = new BiMap<number, ConfigName>([
 	[0x5001, 'batteryLevel'],
