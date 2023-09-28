@@ -23,6 +23,7 @@ import {
 	OperationResult,
 	OperationResultStatus,
 	TakePhotoOption,
+	UnsupportedConfigDesc,
 } from '../Tethr'
 import {TethrObject} from '../TethrObject'
 import {TethrStorage} from '../TethrStorage'
@@ -127,7 +128,7 @@ const ConfigListSigma: ConfigName[] = [
 	'whiteBalance',
 ]
 
-const SigmaExpirationMs = 50
+const SigmaExpirationMs = 16
 const SigmaCheckConfigIntervalMs = 1000
 
 export class TethrSigma extends TethrPTPUSB {
@@ -454,6 +455,10 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const min = decodeFocalLength(lensWideFocalLength)
 		const max = decodeFocalLength(lensTeleFocalLength)
+
+		if (min === 0 && max === 0) {
+			return UnsupportedConfigDesc
+		}
 
 		return {
 			writable: false,
