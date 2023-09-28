@@ -393,7 +393,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const {exposureComp: range} = await this.getCamCanSetInfo5()
 		const value = await this.getExposureComp()
 
-		if (range.length < 3) {
+		if (range.length < 3 || (range[0] === 0 && range[1] === 0)) {
 			return {
 				writable: false,
 				value,
@@ -401,13 +401,6 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 
 		const [min, max] = range
-
-		if (min === 0 && max === 0) {
-			return {
-				writable: false,
-				value: null,
-			}
-		}
 
 		const allValues = [...this.compensationOneThirdTable.values()]
 		const values = allValues
