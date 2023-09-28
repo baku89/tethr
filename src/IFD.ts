@@ -12,6 +12,8 @@ export enum IFDType {
 	SignedShort = 0x8,
 	Slong = 0x9,
 	Srational = 0xa,
+	Float = 0xb,
+	Double = 0xc,
 }
 
 export type IFDValue<Type extends IFDType> = Type extends IFDType.Ascii
@@ -110,6 +112,12 @@ export function decodeIFD<Scheme extends IFDScheme>(
 
 					return d + f / 0x100
 				})
+				break
+			}
+			case IFDType.Float: {
+				const offset = count > 1 ? valueOffset : entryOffset + 8
+				const buf = data.slice(offset, offset + count * 4)
+				value = [...new Float32Array(buf)]
 				break
 			}
 			default:
