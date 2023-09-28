@@ -183,10 +183,10 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
-		const fValue = (await this.getCamCanSetInfo5()).fValue
+		const {fValue: range} = await this.getCamCanSetInfo5()
 		const value = await this.getAperture()
 
-		if (fValue.length === 0) {
+		if (range.length === 0) {
 			// Should be auto aperture
 			return {
 				writable: false,
@@ -194,7 +194,7 @@ export class TethrSigma extends TethrPTPUSB {
 			}
 		}
 
-		const [svMin, svMax, step] = fValue
+		const [svMin, svMax, step] = range
 
 		const isStepOneThird = Math.abs(step - 1 / 3) < Math.abs(step - 1 / 2)
 		const table = isStepOneThird
@@ -299,10 +299,10 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
-		const {colorTemerature} = await this.getCamCanSetInfo5()
+		const {colorTemerature: range} = await this.getCamCanSetInfo5()
 		const value = await this.getColorTemperature()
 
-		if (colorTemerature.length !== 3) {
+		if (range.length !== 3) {
 			// When WB is not set to 'manual'
 			return {
 				writable: false,
@@ -310,7 +310,7 @@ export class TethrSigma extends TethrPTPUSB {
 			}
 		}
 
-		const [min, max, step] = colorTemerature
+		const [min, max, step] = range
 
 		return {
 			writable: true,
@@ -390,17 +390,17 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getExposureCompDesc(): Promise<ConfigDesc<string>> {
-		const {exposureComp} = await this.getCamCanSetInfo5()
+		const {exposureComp: range} = await this.getCamCanSetInfo5()
 		const value = await this.getExposureComp()
 
-		if (exposureComp.length < 3) {
+		if (range.length < 3) {
 			return {
 				writable: false,
-				value: null,
+				value,
 			}
 		}
 
-		const [min, max] = exposureComp
+		const [min, max] = range
 
 		if (min === 0 && max === 0) {
 			return {
@@ -417,7 +417,7 @@ export class TethrSigma extends TethrPTPUSB {
 			.map(([v]) => v)
 
 		return {
-			writable: exposureComp.length > 0,
+			writable: true,
 			value,
 			option: {
 				type: 'enum',
@@ -900,7 +900,7 @@ export class TethrSigma extends TethrPTPUSB {
 				type: 'enum',
 				values,
 			},
-		} as ConfigDesc<string>
+		}
 	}
 
 	async getShutterSoundDesc(): Promise<ConfigDesc<number>> {
