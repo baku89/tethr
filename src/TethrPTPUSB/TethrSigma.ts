@@ -902,7 +902,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getShutterSoundDesc(): Promise<ConfigDesc<number>> {
-		const {shutterSound: value} = await this.getCamStatus()
+		const value = (await this.getCamStatus()).shutterSound - 0x02
 
 		const {
 			shutterSound: [min, max, step],
@@ -921,7 +921,8 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async setShutterSound(value: number) {
-		return await this.setCamData(OpCodeSigma.SetCamDataGroup4, 13, value)
+		const id = value + 0x02
+		return await this.setCamData(OpCodeSigma.SetCamDataGroup4, 13, id)
 	}
 
 	async getWhiteBalance() {
