@@ -149,8 +149,8 @@ export class TethrSigma extends TethrPTPUSB {
 			cameraModel: {tag: 1, type: IFDType.Ascii},
 			serialNumber: {tag: 2, type: IFDType.Ascii},
 			firmwareVersion: {tag: 3, type: IFDType.Ascii},
+			communiationVersion: {tag: 5, type: IFDType.Float},
 		})
-
 		this.checkPropChangedTimerId = setInterval(() => {
 			if (this.isCapturing) return
 			this.checkConfigChanged()
@@ -1256,7 +1256,10 @@ export class TethrSigma extends TethrPTPUSB {
 		group3DataView.skip(3) // OC + FieldPreset
 
 		const group3 = {
-			colorSpace: group3DataView.skip(3).readUint8(),
+			contrast: group3DataView.readUint8(),
+			sharpness: group3DataView.readUint8(),
+			saturation: group3DataView.readUint8(),
+			colorSpace: group3DataView.readUint8(),
 			colorMode: group3DataView.readUint8(),
 			batteryKind: group3DataView.readUint8(),
 			lensWideFocalLength: group3DataView.readUint16(),
