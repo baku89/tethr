@@ -1,4 +1,5 @@
 import {times} from 'lodash'
+import {Memoize} from 'typescript-memoize'
 
 import {
 	Aperture,
@@ -595,6 +596,7 @@ export class TethrPTPUSB extends Tethr {
 		return devicePropsSupported.includes(code)
 	}
 
+	@Memoize()
 	protected async getDeviceInfo(): Promise<DeviceInfo> {
 		return await TethrPTPUSB.getDeviceInfo(this.device)
 	}
