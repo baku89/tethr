@@ -1,4 +1,5 @@
 import EventEmitter from 'eventemitter3'
+import promiseTimeout from 'p-timeout'
 import PromiseQueue from 'promise-queue'
 
 import {ResCode} from './PTPDatacode'
@@ -139,39 +140,42 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 	sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse> => {
 		const queue = () =>
-			new Promise<PTPResponse>((resolve, reject) => {
-				console.groupCollapsed(`Send Command [${option.label}]`)
+			promiseTimeout(
+				new Promise<PTPResponse>((resolve, reject) => {
+					console.groupCollapsed(`Send Command [${option.label}]`)
 
-				this.sendCommandNow(option).then(resolve).catch(reject)
-
-				setTimeout(() => reject('Timeout'), PTPDefaultTimeoutMs)
-			}).finally(console.groupEnd)
+					this.sendCommandNow(option).then(resolve).catch(reject)
+				}),
+				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
+			).finally(console.groupEnd)
 
 		return this.bulkInQueue.add(queue)
 	}
 
 	sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
 		const queue = () =>
-			new Promise<PTPResponse>((resolve, reject) => {
-				console.groupCollapsed(`Receive Data [${option.label}]`)
+			promiseTimeout(
+				new Promise<PTPResponse>((resolve, reject) => {
+					console.groupCollapsed(`Receive Data [${option.label}]`)
 
-				this.sendDataNow(option).then(resolve).catch(reject)
-
-				setTimeout(() => reject('Timeout'), PTPDefaultTimeoutMs)
-			}).finally(console.groupEnd)
+					this.sendDataNow(option).then(resolve).catch(reject)
+				}),
+				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
+			).finally(console.groupEnd)
 
 		return this.bulkInQueue.add(queue)
 	}
 
 	receiveData = (option: PTPReceiveDataOption): Promise<PTPDataResponse> => {
 		const queue = () =>
-			new Promise<PTPDataResponse>((resolve, reject) => {
-				console.groupCollapsed(`Receive Data [${option.label}]`)
+			promiseTimeout(
+				new Promise<PTPDataResponse>((resolve, reject) => {
+					console.groupCollapsed(`Receive Data [${option.label}]`)
 
-				this.receiveDataNow(option).then(resolve).catch(reject)
-
-				setTimeout(() => reject('Timeout'), PTPDefaultTimeoutMs)
-			}).finally(console.groupEnd)
+					this.receiveDataNow(option).then(resolve).catch(reject)
+				}),
+				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
+			).finally(console.groupEnd)
 
 		return this.bulkInQueue.add(queue)
 	}

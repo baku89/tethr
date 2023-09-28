@@ -36,6 +36,7 @@
 		"date-format-parse": "^0.2.7",
 		"eventemitter3": "^4.0.7",
 		"lodash": "^4.17.21",
+		"p-timeout": "^6.1.2",
 		"promise-queue": "^2.2.5",
 		"sleep-promise": "^9.1.0",
 		"typescript-memoize": "^1.1.1"
