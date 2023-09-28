@@ -12,6 +12,9 @@ export async function initTethrUSBPTP(
 	let info: DeviceInfo
 
 	try {
+		if (device.opened) {
+			await device.close()
+		}
 		await device.open()
 		info = await TethrPTPUSB.getDeviceInfo(device)
 	} catch (err) {
