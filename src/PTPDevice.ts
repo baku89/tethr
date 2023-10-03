@@ -60,15 +60,15 @@ interface EventTypes {
 }
 
 export class PTPDevice extends EventEmitter<EventTypes> {
-	private transactionId = 0x00000000
+	#transactionId = 0x00000000
 
-	private bulkOut = 0x0
-	private bulkIn = 0x0
-	private interruptIn = 0x0
+	#endpointNumberBulkOut = 0x0
+	#endpointNumberBulkIn = 0x0
+	#endpointerNumberInterruptIn = 0x0
 
-	private _opened = false
+	#opened = false
 
-	private bulkInQueue = new PromiseQueue(1, Infinity)
+	#commandQueue = new PromiseQueue(1, Infinity)
 
 	constructor(public usbDevice: USBDevice) {
 		super()
@@ -107,25 +107,25 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		if (!endpointOut || !endpointIn || !endpointEvent)
 			throw new Error('Invalid endpoints')
 
-		this.bulkOut = endpointOut.endpointNumber
-		this.bulkIn = endpointIn.endpointNumber
-		this.interruptIn = endpointEvent.endpointNumber
+		this.#endpointNumberBulkOut = endpointOut.endpointNumber
+		this.#endpointNumberBulkIn = endpointIn.endpointNumber
+		this.#endpointerNumberInterruptIn = endpointEvent.endpointNumber
 
 		this.listenInterruptIn()
 		this.listenDisconnect()
 
-		this._opened = true
+		this.#opened = true
 	}
 
 	close = async (): Promise<void> => {
 		if (this.usbDevice && this.usbDevice.opened) {
 			await this.usbDevice.close()
 		}
-		this._opened = false
+		this.#opened = false
 	}
 
 	get opened(): boolean {
-		return this._opened
+		return this.#opened
 	}
 
 	onEventCode(eventCode: number, callback: PTPEventCallback) {
@@ -149,7 +149,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
 			).finally(console.groupEnd)
 
-		return this.bulkInQueue.add(queue)
+		return this.#commandQueue.add(queue)
 	}
 
 	sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
@@ -163,7 +163,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
 			).finally(console.groupEnd)
 
-		return this.bulkInQueue.add(queue)
+		return this.#commandQueue.add(queue)
 	}
 
 	receiveData = (option: PTPReceiveDataOption): Promise<PTPDataResponse> => {
@@ -177,7 +177,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
 			).finally(console.groupEnd)
 
-		return this.bulkInQueue.add(queue)
+		return this.#commandQueue.add(queue)
 	}
 
 	private sendCommandNow = async (
@@ -318,10 +318,10 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		parameters.forEach(param => dataView.writeUint32(param))
 
 		const sent = await this.usbDevice.transferOut(
-			this.bulkOut,
+			this.#endpointNumberBulkOut,
 			dataView.toBuffer()
 		)
-		console.log(
+		console.info(
 			'transferOutBulk',
 			'type=Command',
 			'opcode=' + toHexString(opcode, 2),
@@ -352,10 +352,10 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		dataBytes.forEach(byte => dataView.writeUint8(byte))
 
 		const sent = await this.usbDevice.transferOut(
-			this.bulkOut,
+			this.#endpointNumberBulkOut,
 			dataView.toBuffer()
 		)
-		console.log(
+		console.info(
 			'transferOutBulk',
 			'type=Data',
 			'opcode=' + toHexString(opcode, 2),
@@ -373,7 +373,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		if (!this.usbDevice || !this.usbDevice.opened) throw new Error()
 
 		const {data, status} = await this.usbDevice.transferIn(
-			this.bulkIn,
+			this.#endpointNumberBulkIn,
 			maxByteLength
 		)
 
@@ -387,7 +387,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const transactionId = data.getUint32(8, true)
 		const payload = data.buffer.slice(12)
 
-		console.log(
+		console.info(
 			'transferInBulk',
 			'type=' + PTPType[type] ?? type,
 			'code=' + toHexString(code, 2),
@@ -415,7 +415,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		try {
 			const {data, status} = await this.usbDevice.transferIn(
-				this.interruptIn,
+				this.#endpointerNumberInterruptIn,
 				0x800000
 			)
 
@@ -434,7 +434,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 			const eventName = toHexString(code, 2)
 
-			console.log(
+			console.info(
 				'transferInInterrupt',
 				'type=' + PTPType[type],
 				'code=' + eventName,
@@ -449,7 +449,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			if (
 				err instanceof DOMException &&
 				err.message.match(/The transfer was cancelled./) &&
-				!this._opened
+				!this.#opened
 			) {
 				return
 			}
@@ -468,11 +468,11 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	}
 
 	private generateTransactionId = (): number => {
-		this.transactionId += 1
-		if (this.transactionId > 0xfffffffe) {
-			this.transactionId = 1
+		this.#transactionId += 1
+		if (this.#transactionId > 0xfffffffe) {
+			this.#transactionId = 1
 		}
 
-		return this.transactionId
+		return this.#transactionId
 	}
 }
