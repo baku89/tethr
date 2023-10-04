@@ -132,9 +132,8 @@ const SigmaExpirationMs = 16
 const SigmaCheckConfigIntervalMs = 1000
 
 export class TethrSigma extends TethrPTPUSB {
-	private liveviewEnabled = false
-	private isCapturing = false
-	private checkPropChangedTimerId!: ReturnType<typeof setInterval>
+	#liveviewEnabled = false
+	#isCapturing = false
 
 	async open() {
 		await super.open()
@@ -151,16 +150,22 @@ export class TethrSigma extends TethrPTPUSB {
 			firmwareVersion: {tag: 3, type: IFDType.Ascii},
 			communiationVersion: {tag: 5, type: IFDType.Float},
 		})
-		this.checkPropChangedTimerId = setInterval(() => {
-			if (this.isCapturing) return
-			this.checkConfigChanged()
-		}, SigmaCheckConfigIntervalMs)
+
+		const checkPropChangedInterval = () => {
+			if (!this.opened) return
+
+			if (!this.#isCapturing) {
+				this.checkConfigChanged()
+			}
+
+			setTimeout(checkPropChangedInterval, SigmaCheckConfigIntervalMs)
+		}
+
+		checkPropChangedInterval()
 	}
 
 	async close(): Promise<void> {
 		await this.stopLiveview()
-		clearInterval(this.checkPropChangedTimerId)
-
 		await super.close()
 	}
 
@@ -800,7 +805,7 @@ export class TethrSigma extends TethrPTPUSB {
 	async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
 		return {
 			writable: false,
-			value: this.liveviewEnabled,
+			value: this.#liveviewEnabled,
 		}
 	}
 
@@ -959,7 +964,7 @@ export class TethrSigma extends TethrPTPUSB {
 	async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
-		this.isCapturing = true
+		this.#isCapturing = true
 
 		const captureId = await this.executeSnapCommand(
 			SnapCaptureMode.NonAFCapture,
@@ -1011,7 +1016,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		await this.clearImageDBAll()
 
-		this.isCapturing = false
+		this.#isCapturing = false
 
 		return {status: 'ok', value: picts}
 	}
@@ -1056,14 +1061,14 @@ export class TethrSigma extends TethrPTPUSB {
 		const canvas = this.#ctx.canvas
 		const ctx = this.#ctx
 
-		this.liveviewEnabled = true
+		this.#liveviewEnabled = true
 		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		const updateFrame = async () => {
-			if (!this.liveviewEnabled) return
+			if (!this.#liveviewEnabled || !this.opened) return
 
 			try {
-				if (this.isCapturing) return
+				if (this.#isCapturing) return
 
 				const lvImage = await this.getLiveViewImage()
 
@@ -1093,7 +1098,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async stopLiveview(): Promise<OperationResult> {
-		this.liveviewEnabled = false
+		this.#liveviewEnabled = false
 		this.emit('liveviewStreamUpdate', null)
 		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 

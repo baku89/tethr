@@ -85,7 +85,10 @@ export class TethrPTPUSB extends Tethr {
 			EventCode.DevicePropChanged,
 			this.onDevicePropChanged
 		)
-		this.device.on('disconnect', () => this.emit('disconnect'))
+		this.device.on('disconnect', () => {
+			this._opened = false
+			this.emit('disconnect')
+		})
 
 		window.addEventListener('beforeunload', async () => {
 			await this.close()
