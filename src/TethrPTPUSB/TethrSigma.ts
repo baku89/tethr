@@ -1027,10 +1027,34 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
+	async getLiveViewImage(): Promise<OperationResult<Blob>> {
+		const {resCode, data} = await this.device.receiveData({
+			label: 'SigmaFP GetViewFrame',
+			opcode: OpCodeSigma.GetViewFrame,
+			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
+			maxByteLength: 1_000_000, // = 1MB
+		})
+
+		if (resCode === ResCode.DeviceBusy) return {status: 'busy'}
+
+		// Might be quirky but somehow works
+		const jpegData = data.slice(10)
+
+		return {status: 'ok', value: new Blob([jpegData], {type: 'image/jpg'})}
+	}
+
+	#ctx: CanvasRenderingContext2D | null = null
+
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
-		const canvas = document.createElement('canvas')
-		const ctx = canvas.getContext('2d')
-		if (!ctx) return {status: 'general error'}
+		if (!this.#ctx) {
+			const canvas = document.createElement('canvas')
+			const ctx = canvas.getContext('2d')
+			if (!ctx) return {status: 'general error'}
+			this.#ctx = ctx
+		}
+
+		const canvas = this.#ctx.canvas
+		const ctx = this.#ctx
 
 		this.liveviewEnabled = true
 		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
@@ -1041,42 +1065,36 @@ export class TethrSigma extends TethrPTPUSB {
 			try {
 				if (this.isCapturing) return
 
-				const {resCode, data} = await this.device.receiveData({
-					label: 'SigmaFP GetViewFrame',
-					opcode: OpCodeSigma.GetViewFrame,
-					expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
-					maxByteLength: 1_000_000, // = 1MB
-				})
-				if (resCode !== ResCode.OK) return null
+				const lvImage = await this.getLiveViewImage()
 
-				// Might be quirky but somehow works
-				const jpegData = data.slice(10)
+				if (lvImage.status !== 'ok') return
 
-				const image = new Blob([jpegData], {type: 'image/jpg'})
-				const imageBitmap = await createImageBitmap(image)
+				const bitmap = await createImageBitmap(lvImage.value)
 
 				const sizeChanged =
-					canvas.width !== imageBitmap.width ||
-					canvas.height !== imageBitmap.height
+					canvas.width !== bitmap.width || canvas.height !== bitmap.height
 
 				if (sizeChanged) {
-					canvas.width = imageBitmap.width
-					canvas.height = imageBitmap.height
+					canvas.width = bitmap.width
+					canvas.height = bitmap.height
 				}
 
-				ctx.drawImage(imageBitmap, 0, 0)
+				ctx.drawImage(bitmap, 0, 0)
 			} finally {
 				requestAnimationFrame(updateFrame)
 			}
 		}
 		updateFrame()
 
-		const stream = canvas.captureStream(60)
+		const stream = ctx.canvas.captureStream(60)
+		this.emit('liveviewStreamUpdate', stream)
+
 		return {status: 'ok', value: stream}
 	}
 
 	async stopLiveview(): Promise<OperationResult> {
 		this.liveviewEnabled = false
+		this.emit('liveviewStreamUpdate', null)
 		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
 
 		return {status: 'ok'}

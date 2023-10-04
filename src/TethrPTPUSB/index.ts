@@ -23,7 +23,7 @@ export async function initTethrUSBPTP(
 			err.message.match(/Unable to claim interface/) &&
 			navigator.userAgent.match(/mac/i)
 		) {
-			console.error(
+			throw new Error(
 				`Unable to claim interface. On macOS, you need run " while ; do; kill -9 $(ps aux | grep "[p]tpcamera" | awk '{print $2}'); done" in Terminal during connecting to a camera via USB.`
 			)
 		}

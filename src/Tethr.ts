@@ -961,4 +961,7 @@ export abstract class Tethr
 	async stopLiveview(): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getLiveViewImage(): Promise<OperationResult<Blob>> {
+		return {status: 'unsupported'}
+	}
 }

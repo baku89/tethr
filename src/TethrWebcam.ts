@@ -24,10 +24,10 @@ type CaptureHandler =
 	  }
 
 export class TethrWebcam extends Tethr {
-	private liveviewEnabled = false
-	private media: MediaStream | null = null
-	private captureHandler: CaptureHandler | null = null
-	private facingModeDict = new BiMap<string, string>()
+	#liveviewEnabled = false
+	#media: MediaStream | null = null
+	#captureHandler: CaptureHandler | null = null
+	#facingModeDict = new BiMap<string, string>()
 
 	constructor() {
 		super()
@@ -35,15 +35,15 @@ export class TethrWebcam extends Tethr {
 
 	async open() {
 		try {
-			this.media = await navigator.mediaDevices.getUserMedia({video: true})
+			this.#media = await navigator.mediaDevices.getUserMedia({video: true})
 		} catch {
 			throw new Error('No available webcam is connected')
 		}
 
 		// Setup CaptureHandler
 		if ('ImageCapture' in globalThis) {
-			const videoTrack = this.media.getVideoTracks()[0]
-			this.captureHandler = {
+			const videoTrack = this.#media.getVideoTracks()[0]
+			this.#captureHandler = {
 				type: 'imageCapture',
 				imageCapture: new ImageCapture(videoTrack),
 			}
@@ -58,10 +58,10 @@ export class TethrWebcam extends Tethr {
 			video.playsInline = true
 			document.body.appendChild(video)
 
-			video.srcObject = this.media
+			video.srcObject = this.#media
 
 			if (context) {
-				this.captureHandler = {
+				this.#captureHandler = {
 					type: 'canvas',
 					canvas,
 					context,
@@ -77,16 +77,16 @@ export class TethrWebcam extends Tethr {
 			.filter(d => d.kind === 'videoinput')
 			.map(d => [d.deviceId, d.label] as [string, string])
 
-		this.facingModeDict = new BiMap(facingModeEntries)
+		this.#facingModeDict = new BiMap(facingModeEntries)
 	}
 
 	async close() {
-		this.media?.getTracks().forEach(t => t.stop())
-		this.media = null
+		this.#media?.getTracks().forEach(t => t.stop())
+		this.#media = null
 	}
 
 	get opened() {
-		return !!this.media
+		return !!this.#media
 	}
 
 	// Configs
@@ -95,11 +95,11 @@ export class TethrWebcam extends Tethr {
 	}
 
 	async getCanTakePhotoDesc() {
-		return createReadonlyConfigDesc(this.captureHandler !== null)
+		return createReadonlyConfigDesc(this.#captureHandler !== null)
 	}
 
 	async setFacingMode(value: string): Promise<OperationResult> {
-		if (!this.media || !this.captureHandler) {
+		if (!this.#media || !this.#captureHandler) {
 			return {status: 'unsupported'}
 		}
 
@@ -108,49 +108,49 @@ export class TethrWebcam extends Tethr {
 			return {status: 'unsupported'}
 		}
 
-		const deviceId = this.facingModeDict.getKey(value)
+		const deviceId = this.#facingModeDict.getKey(value)
 
 		if (!deviceId) {
 			return {status: 'invalid parameter'}
 		}
 
 		// Stop all tracks at first
-		this.media.getTracks().forEach(t => t.stop())
+		this.#media.getTracks().forEach(t => t.stop())
 
 		// Then get a new media stream and notify the change
-		this.media = await navigator.mediaDevices.getUserMedia({
+		this.#media = await navigator.mediaDevices.getUserMedia({
 			video: {deviceId: {exact: deviceId}},
 		})
-		this.emit('liveviewStreamUpdate', this.media)
+		this.emit('liveviewStreamUpdate', this.#media)
 
 		// Setup other variables
-		const videoTrack = this.media.getVideoTracks()[0]
+		const videoTrack = this.#media.getVideoTracks()[0]
 
-		if (this.captureHandler.type === 'imageCapture') {
-			this.captureHandler.imageCapture = new ImageCapture(videoTrack)
+		if (this.#captureHandler.type === 'imageCapture') {
+			this.#captureHandler.imageCapture = new ImageCapture(videoTrack)
 		} else {
-			const {video} = this.captureHandler
-			video.srcObject = this.media
+			const {video} = this.#captureHandler
+			video.srcObject = this.#media
 		}
 
 		return {status: 'ok'}
 	}
 
 	async getFacingModeDesc() {
-		if (!this.media) {
+		if (!this.#media) {
 			return UnsupportedConfigDesc
 		}
 
-		const videoTrack = this.media.getVideoTracks()[0]
+		const videoTrack = this.#media.getVideoTracks()[0]
 		const currentId = videoTrack.getSettings().deviceId ?? ''
-		const value = this.facingModeDict.get(currentId) ?? null
+		const value = this.#facingModeDict.get(currentId) ?? null
 
 		return {
-			writable: this.facingModeDict.size > 0,
+			writable: this.#facingModeDict.size > 0,
 			value,
 			option: {
 				type: 'enum',
-				values: [...this.facingModeDict.values()],
+				values: [...this.#facingModeDict.values()],
 			},
 		} as ConfigDesc<string>
 	}
@@ -160,14 +160,14 @@ export class TethrWebcam extends Tethr {
 	}
 
 	async getLiveviewEnabledDesc() {
-		return createReadonlyConfigDesc(this.liveviewEnabled)
+		return createReadonlyConfigDesc(this.#liveviewEnabled)
 	}
 
 	// Actions
 	async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
-		if (!this.media || !this.captureHandler) {
+		if (!this.#media || !this.#captureHandler) {
 			return {status: 'unsupported'}
 		}
 
@@ -175,16 +175,16 @@ export class TethrWebcam extends Tethr {
 
 		let blob: Blob
 
-		if (this.captureHandler.type === 'imageCapture') {
-			blob = await this.captureHandler.imageCapture.takePhoto()
+		if (this.#captureHandler.type === 'imageCapture') {
+			blob = await this.#captureHandler.imageCapture.takePhoto()
 		} else {
-			const videoTrack = this.media.getVideoTracks()[0]
+			const videoTrack = this.#media.getVideoTracks()[0]
 			const {width, height} = {
 				width: 640,
 				height: 480,
 				...videoTrack.getSettings(),
 			}
-			const {canvas, context, video} = this.captureHandler
+			const {canvas, context, video} = this.#captureHandler
 
 			canvas.width = width
 			canvas.height = height
@@ -224,21 +224,29 @@ export class TethrWebcam extends Tethr {
 		return {status: 'ok', value: [tethrObject]}
 	}
 
+	async getLiveViewImage(): Promise<OperationResult<Blob>> {
+		const result = await this.takePhoto()
+		if (result.status !== 'ok') return result
+		return {status: 'ok', value: result.value[0].blob}
+	}
+
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
-		if (!this.media) {
+		if (!this.#media) {
 			return {status: 'general error'}
 		}
 
-		this.liveviewEnabled = true
+		this.#liveviewEnabled = true
+		this.emit('liveviewStreamUpdate', this.#media)
 		this.emit('liveviewEnabledChanged', createReadonlyConfigDesc(true))
 		return {
 			status: 'ok',
-			value: this.media,
+			value: this.#media,
 		}
 	}
 
 	async stopLiveview(): Promise<OperationResult> {
-		this.liveviewEnabled = false
+		this.#liveviewEnabled = false
+		this.emit('liveviewStreamUpdate', null)
 		this.emit('liveviewEnabledChanged', createReadonlyConfigDesc(false))
 		return {status: 'ok'}
 	}
