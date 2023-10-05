@@ -978,6 +978,11 @@ export class TethrSigma extends TethrPTPUSB {
 		if (doDownload) {
 			const pictFileInfos = await this.getPictFileInfo2()
 
+			const totalSize = pictFileInfos.reduce((p, i) => p + i.fileSize, 0)
+			let loaded = 0
+
+			this.emit('progress', 0)
+
 			for await (const info of pictFileInfos) {
 				const pictArray = new Uint8Array(info.fileSize)
 
@@ -991,11 +996,16 @@ export class TethrSigma extends TethrPTPUSB {
 						label: 'SigmaFP GetBigPartialPictFile',
 						opcode: OpCodeSigma.GetBigPartialPictFile,
 						parameters: [info.fileAddress, offset, length],
+						// Added 64 bytes for safety
 						maxByteLength: CHUNK_SIZE + 64,
 					})
 
 					// First 4 bytes is the length of buffer so splice them
 					const chunkArray = new Uint8Array(data.slice(4, 4 + length))
+
+					loaded += length
+
+					this.emit('progress', {progress: loaded / totalSize})
 
 					// Copy to buffer
 					pictArray.set(chunkArray, offset)

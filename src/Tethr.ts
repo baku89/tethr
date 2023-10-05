@@ -61,6 +61,7 @@ type EventTypes = {
 } & {
 	disconnect: void
 	liveviewStreamUpdate: MediaStream
+	progress: {progress: number}
 }
 
 type ConfigGetters = {
