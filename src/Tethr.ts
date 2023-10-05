@@ -106,6 +106,11 @@ export abstract class Tethr
 
 	abstract get opened(): boolean
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	setLog(log: boolean) {
+		null
+	}
+
 	/**
 	 * Export all writable configs to a plain object.
 	 */

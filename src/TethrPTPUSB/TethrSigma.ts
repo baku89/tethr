@@ -54,7 +54,7 @@ enum OpCodeSigma {
 
 	GetCamCanSetInfo3 = 0x9026, // ver1.2
 	GetCamDataGroup5 = 0x9027, // ver1.2
-	SetCamDataGroup5 = 0x9028, // ver1.2
+	SetCamDataGroup5 = 0x9028, // ver1.2 x
 	GetCamDataGroup6 = 0x9029, // ver1.2
 	SetCamDataGroup6 = 0x902a, // ver1.2
 

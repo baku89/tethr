@@ -65,10 +65,6 @@ export class TethrPTPUSB extends Tethr {
 		super()
 	}
 
-	get opened(): boolean {
-		return this._opened
-	}
-
 	async open(): Promise<void> {
 		if (!this.device.opened) {
 			await this.device.open()
@@ -105,6 +101,14 @@ export class TethrPTPUSB extends Tethr {
 			opcode: OpCode.CloseSession,
 		})
 		await this.device.close()
+	}
+
+	get opened(): boolean {
+		return this._opened
+	}
+
+	setLog(log: boolean) {
+		this.device.setLog(log)
 	}
 
 	// Configs

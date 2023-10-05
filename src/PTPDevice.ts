@@ -59,6 +59,10 @@ interface EventTypes {
 	disconnect: void
 }
 
+interface PTPDeviceOptions {
+	log?: boolean
+}
+
 export class PTPDevice extends EventEmitter<EventTypes> {
 	#transactionId = 0x00000000
 
@@ -70,8 +74,15 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 	#commandQueue = new PromiseQueue(1, Infinity)
 
-	constructor(public usbDevice: USBDevice) {
+	#console = console as Pick<Console, 'groupCollapsed' | 'groupEnd' | 'info'>
+
+	constructor(
+		public usbDevice: USBDevice,
+		{log = true}: PTPDeviceOptions = {}
+	) {
 		super()
+
+		this.setLog(log)
 	}
 
 	open = async (): Promise<void> => {
@@ -128,6 +139,16 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		return this.#opened
 	}
 
+	setLog(log: boolean) {
+		this.#console = log
+			? console
+			: {
+					groupCollapsed: () => null,
+					groupEnd: () => null,
+					info: () => null,
+			  }
+	}
+
 	onEventCode(eventCode: number, callback: PTPEventCallback) {
 		const eventName = toHexString(eventCode, 2)
 		this.on(`ptpevent:${eventName}`, callback)
@@ -142,12 +163,12 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const queue = () =>
 			promiseTimeout(
 				new Promise<PTPResponse>((resolve, reject) => {
-					console.groupCollapsed(`Send Command [${option.label}]`)
+					this.#console.groupCollapsed(`Send Command [${option.label}]`)
 
 					this.sendCommandNow(option).then(resolve).catch(reject)
 				}),
 				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
-			).finally(console.groupEnd)
+			).finally(this.#console.groupEnd)
 
 		return this.#commandQueue.add(queue)
 	}
@@ -156,12 +177,12 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const queue = () =>
 			promiseTimeout(
 				new Promise<PTPResponse>((resolve, reject) => {
-					console.groupCollapsed(`Receive Data [${option.label}]`)
+					this.#console.groupCollapsed(`Receive Data [${option.label}]`)
 
 					this.sendDataNow(option).then(resolve).catch(reject)
 				}),
 				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
-			).finally(console.groupEnd)
+			).finally(this.#console.groupEnd)
 
 		return this.#commandQueue.add(queue)
 	}
@@ -170,12 +191,12 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const queue = () =>
 			promiseTimeout(
 				new Promise<PTPDataResponse>((resolve, reject) => {
-					console.groupCollapsed(`Receive Data [${option.label}]`)
+					this.#console.groupCollapsed(`Receive Data [${option.label}]`)
 
 					this.receiveDataNow(option).then(resolve).catch(reject)
 				}),
 				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
-			).finally(console.groupEnd)
+			).finally(this.#console.groupEnd)
 
 		return this.#commandQueue.add(queue)
 	}
@@ -263,7 +284,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		if (res1.type === PTPType.Response) {
 			if (expectedResCodes.includes(res1.code)) {
-				console.groupEnd()
+				this.#console.groupEnd()
 				return {
 					resCode: res1.code,
 					parameters: [],
@@ -321,7 +342,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			this.#endpointNumberBulkOut,
 			dataView.toBuffer()
 		)
-		console.info(
+		this.#console.info(
 			'transferOutBulk',
 			'type=Command',
 			'opcode=' + toHexString(opcode, 2),
@@ -355,7 +376,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			this.#endpointNumberBulkOut,
 			dataView.toBuffer()
 		)
-		console.info(
+		this.#console.info(
 			'transferOutBulk',
 			'type=Data',
 			'opcode=' + toHexString(opcode, 2),
@@ -387,7 +408,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const transactionId = data.getUint32(8, true)
 		const payload = data.buffer.slice(12)
 
-		console.info(
+		this.#console.info(
 			'transferInBulk',
 			'type=' + PTPType[type] ?? type,
 			'code=' + toHexString(code, 2),
@@ -434,7 +455,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 			const eventName = toHexString(code, 2)
 
-			console.info(
+			this.#console.info(
 				'transferInInterrupt',
 				'type=' + PTPType[type],
 				'code=' + eventName,
