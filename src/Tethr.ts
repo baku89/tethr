@@ -40,7 +40,7 @@ export type OperationResult<T = void> = T extends void
 
 export type ConfigDescOption<T> =
 	| {type: 'enum'; values: T[]}
-	| {type: 'range'; min: T; max: T; step: T}
+	| {type: 'range'; min: number; max: number; step: number}
 
 export type ConfigDesc<T> = {
 	value: T | null
