@@ -66,6 +66,7 @@ export type WhiteBalance =
 	| 'flash'
 	| 'underwater'
 	| 'manual'
+	| 'custom'
 	| `vendor:${string}`
 
 export type ConfigType = {
