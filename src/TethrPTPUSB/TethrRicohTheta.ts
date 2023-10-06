@@ -128,7 +128,7 @@ export class TethrRicohTheta extends TethrPTPUSB {
 
 	private exposureModeTable = new BiMap<number, ExposureMode>([
 		...ExposureModeTable.entries(),
-		[0x8003, 'vendor iso-priority'],
+		[0x8003, 'vendor:iso-priority'],
 	])
 
 	private WhiteBalanceTable = new BiMap<number, WhiteBalance>([
@@ -137,10 +137,10 @@ export class TethrRicohTheta extends TethrPTPUSB {
 		[0x0004, 'daylight'],
 		[0x0006, 'incandescent'],
 		[0x8002, 'cloud'],
-		[0x8020, 'vendor incandescent 2'],
-		[0x8003, 'vendor fluorescent daylight'],
-		[0x8004, 'vendor fluorescent natural white'],
-		[0x8005, 'vendor fluorescent white'],
+		[0x8020, 'vendor:incandescent 2'],
+		[0x8003, 'vendor:fluorescent daylight'],
+		[0x8004, 'vendor:fluorescent natural white'],
+		[0x8005, 'vendor:fluorescent white'],
 		[0x8006, 'tungsten'],
 		[0x8007, 'manual'],
 		[0x8008, 'underwater'],

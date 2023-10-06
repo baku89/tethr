@@ -248,7 +248,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<Vec2>> {
-		if (!(await this.getCanRunAutoFocus())) {
+		if (!(await this.get('canRunAutoFocus'))) {
 			return {writable: false, value: null}
 		}
 
@@ -296,7 +296,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async setAutoFocusFrameCenter(center: Vec2): Promise<OperationResult> {
-		if (!(await this.getCanRunAutoFocus())) {
+		if (!(await this.get('canRunAutoFocus'))) {
 			return {status: 'invalid parameter'}
 		}
 
@@ -343,7 +343,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getAutoFocusFrameSizeDesc(): Promise<ConfigDesc<string>> {
-		if (!(await this.getCanRunAutoFocus())) {
+		if (!(await this.get('canRunAutoFocus'))) {
 			return {writable: false, value: null}
 		}
 
@@ -370,7 +370,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async setAutoFocusFrameSize(size: string): Promise<OperationResult> {
-		if (!(await this.getCanRunAutoFocus())) {
+		if (!(await this.get('canRunAutoFocus'))) {
 			return {status: 'invalid parameter'}
 		}
 
@@ -663,7 +663,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const value = scalar.invlerp(range[1], range[0], focusPosition)
 
 		// Only writable when AF is on
-		const writable = range.length === 2 && !!(await this.getCanRunAutoFocus())
+		const writable = range.length === 2 && !!(await this.get('canRunAutoFocus'))
 
 		if (writable) {
 			return {

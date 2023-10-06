@@ -73,7 +73,7 @@ enum DevicePropCodePanasonic {
 	CameraMode_ModePos = 0x02000082,
 	CameraMode_CreativeMode = 0x02000083,
 	CameraMode_iAMode = 0x02000084,
-	ImageFormat = 0x020000a2,
+	// ImageFormat = 0x020000a2, // Duplicated with ImageMode_Quality
 	MeteringInfo = 0x020000b0,
 	IntervalInfo = 0x020000c0,
 	RecDispConfig = 0x020000e0,
@@ -899,11 +899,11 @@ export class TethrPanasonic extends TethrPTPUSB {
 		[2, 'S'],
 		[3, 'M'],
 		[5, 'video'],
-		[7, 'vendor iA'],
+		[7, 'vendor:iA'],
 		[8, 'C1'],
 		[9, 'C2'],
 		[10, 'C3'],
-		[12, 'vendor S&Q'],
+		[12, 'vendor:S&Q'],
 	])
 
 	protected whiteBalanceTable = new BiMap<number, WhiteBalance>([
@@ -920,10 +920,10 @@ export class TethrPanasonic extends TethrPTPUSB {
 		// [0x800d, 'WB Setting 3'],
 		// [0x800e, 'WB Setting 4'],
 		[0x800f, 'shade'],
-		[0x8010, 'manual'],
-		[0x8011, 'manual2'],
-		[0x8012, 'manual3'],
-		[0x8013, 'manual4'],
+		[0x8010, 'vendor:manual'],
+		[0x8011, 'vendor:manual2'],
+		[0x8012, 'vendor:manual3'],
+		[0x8013, 'vendor:manual4'],
 		[0x8014, 'auto cool'],
 		[0x8015, 'auto warm'],
 	])
