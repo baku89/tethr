@@ -165,6 +165,8 @@ export function encodeIFD(data: IFDData): ArrayBuffer {
 
 	dataView.writeUint32(entryCount)
 
+	let dataOffset = 8 + entries.length * 12
+
 	for (const [index, entry] of entries.entries()) {
 		const entryOffset = 8 + index * 12
 
@@ -191,7 +193,12 @@ export function encodeIFD(data: IFDData): ArrayBuffer {
 			}
 			case IFDType.Short: {
 				if (entry.value.length > 2) {
-					throw new Error('Not yet supported')
+					dataView.writeUint32(dataOffset)
+					dataView.goto(dataOffset)
+					for (let i = 0; i < entry.value.length; i++) {
+						dataView.writeUint16(entry.value[i])
+					}
+					dataOffset += entry.value.length * 2
 				} else {
 					for (let i = 0; i < 2; i++) {
 						dataView.writeUint16(entry.value[i])
