@@ -1,5 +1,5 @@
 import {BiMap} from 'bim'
-import {scalar} from 'linearly'
+import {scalar, Vec2, vec2} from 'linearly'
 import {isEqual, minBy} from 'lodash'
 import sleep from 'sleep-promise'
 import {MemoizeExpiring} from 'typescript-memoize'
@@ -56,7 +56,7 @@ enum OpCodeSigma {
 
 	GetCamCanSetInfo3 = 0x9026, // ver1.2
 	GetCamDataGroup5 = 0x9027, // ver1.2
-	SetCamDataGroup5 = 0x9028, // ver1.2 x
+	SetCamDataGroup5 = 0x9028, // ver1.2
 	GetCamDataGroup6 = 0x9029, // ver1.2
 	SetCamDataGroup6 = 0x902a, // ver1.2
 
@@ -110,6 +110,8 @@ enum SnapCaptureMode {
 
 const ConfigListSigma: ConfigName[] = [
 	'aperture',
+	'autoFocusFrameCenter',
+	'autoFocusFrameSize',
 	'batteryLevel',
 	'iso',
 	'canRunAutoFocus',
@@ -235,6 +237,164 @@ export class TethrSigma extends TethrPTPUSB {
 				values,
 			},
 		}
+	}
+
+	async #getLVCoordinateSize() {
+		const {focusValidArea} = await this.getCamCanSetInfo5()
+
+		const [lvTop, lvBottom, lvLeft, lvRight] = focusValidArea
+
+		return [lvLeft + lvRight, lvTop + lvBottom] as Vec2
+	}
+
+	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<Vec2>> {
+		if (!(await this.getCanRunAutoFocus())) {
+			return {writable: false, value: null}
+		}
+
+		// First, enable the spot focus area
+		await this.device.sendData({
+			label: 'SigmaFP SetCamDataGroupFocus',
+			opcode: OpCodeSigma.SetCamDataGroupFocus,
+			data: encodeIFD({
+				focusArea: {tag: 10, type: IFDType.Short, value: [2]},
+				onePointSelectionMethod: {tag: 11, type: IFDType.Short, value: [49]},
+			}),
+		})
+
+		// Then, get the current position
+		const {distanceMeasurementFramePosition} = await this.getCamStatus()
+
+		const {distanceMeasurementFrameMovementAmount, focusValidArea} =
+			await this.getCamCanSetInfo5()
+
+		const [lvY, lvX] = new Uint16Array(distanceMeasurementFramePosition)
+		const [lvStepY, lvStepX] = distanceMeasurementFrameMovementAmount
+		const lvSize: Vec2 = await this.#getLVCoordinateSize()
+		const [lvTop, , lvLeft] = focusValidArea
+
+		const value: Vec2 = vec2.invlerp([0, 0], lvSize, [lvX, lvY])
+		const step = vec2.div([lvStepX, lvStepY], lvSize)
+
+		// The value of focusValidArea includes the maximum 64x64 focus frame,
+		// so to find the valid area of the center of the focus frame,
+		// it is necessary to offset it inside.
+		// 80 and 64 are the additional margins for the focus area.
+		const min = vec2.div([lvLeft + 80, lvTop + 64], lvSize)
+		const max = vec2.sub(vec2.one, min)
+
+		return {
+			writable: true,
+			value,
+			option: {
+				type: 'range',
+				min: min,
+				max: max,
+				step,
+			},
+		}
+	}
+
+	async setAutoFocusFrameCenter(center: Vec2): Promise<OperationResult> {
+		if (!(await this.getCanRunAutoFocus())) {
+			return {status: 'invalid parameter'}
+		}
+
+		// First, enable the spot focus area
+		await this.device.sendData({
+			label: 'SigmaFP SetCamDataGroupFocus',
+			opcode: OpCodeSigma.SetCamDataGroupFocus,
+			data: encodeIFD({
+				focusArea: {tag: 10, type: IFDType.Short, value: [2]},
+				onePointSelectionMethod: {tag: 11, type: IFDType.Short, value: [49]},
+			}),
+		})
+
+		const lvSize = await this.#getLVCoordinateSize()
+
+		// Assume the margins are symmetrical
+		const [x, y] = vec2.round(vec2.mul(center, lvSize))
+
+		const data = encodeIFD({
+			distanceMeasurementFramePosition: {
+				tag: 13,
+				type: IFDType.Short,
+				value: [y, x],
+			},
+		})
+
+		// Try to set the focus position many times because it often fails
+		for (let i = 0; i < 20; i++) {
+			const {resCode} = await this.device.sendData({
+				label: 'SigmaFP SetCamDataGroupFocus',
+				opcode: OpCodeSigma.SetCamDataGroupFocus,
+				expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
+				data,
+			})
+
+			if (resCode === ResCode.OK) {
+				return {status: 'ok'}
+			}
+
+			await sleep(50)
+		}
+
+		return {status: 'invalid parameter'}
+	}
+
+	async getAutoFocusFrameSizeDesc(): Promise<ConfigDesc<string>> {
+		if (!(await this.getCanRunAutoFocus())) {
+			return {writable: false, value: null}
+		}
+
+		const {
+			distanceMeasurementFrameSize: [lvSizeId],
+		} = await this.getCamStatus()
+
+		const {
+			distanceMeasurementFrameSize: [sizeCount],
+		} = await this.getCamCanSetInfo5()
+
+		const values = ['large', 'medium', 'small'].slice(0, sizeCount)
+
+		const value = values[lvSizeId]
+
+		return {
+			writable: sizeCount > 0,
+			value,
+			option: {
+				type: 'enum',
+				values: values,
+			},
+		}
+	}
+
+	async setAutoFocusFrameSize(size: string): Promise<OperationResult> {
+		if (!(await this.getCanRunAutoFocus())) {
+			return {status: 'invalid parameter'}
+		}
+
+		const id = ['large', 'medium', 'small'].indexOf(size)
+
+		if (id === -1) return {status: 'invalid parameter'}
+
+		try {
+			await this.device.sendData({
+				label: 'SigmaFP SetCamDataGroupFocus',
+				opcode: OpCodeSigma.SetCamDataGroupFocus,
+				data: encodeIFD({
+					distanceMeasurementFrameSize: {
+						tag: 12,
+						type: IFDType.Byte,
+						value: [id],
+					},
+				}),
+			})
+		} catch (err) {
+			return {status: 'invalid parameter'}
+		}
+
+		return {status: 'ok'}
 	}
 
 	async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
@@ -1383,7 +1543,7 @@ export class TethrSigma extends TethrPTPUSB {
 			focusArea: {tag: 10, type: IFDType.Byte},
 			onePointSelectionMethod: {tag: 11, type: IFDType.Byte},
 			distanceMeasurementFrameSize: {tag: 12, type: IFDType.Byte},
-			// distanceMeasurementFramePosition: {tag: 13, type: IFDType.Short},
+			distanceMeasurementFramePosition: {tag: 13, type: IFDType.Undefined},
 			// distanceMeasurementFrame: {tag: 14, type: IFDType.Byte},
 			preAlwaysAf: {tag: 51, type: IFDType.Byte},
 			afLimit: {tag: 52, type: IFDType.Byte},
