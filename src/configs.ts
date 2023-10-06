@@ -22,7 +22,7 @@ export type ExposureMode =
 	| 'portrait'
 	| 'video'
 	| `C${1 | 2 | 3}`
-	| `vendor ${string}`
+	| `vendor:${string}`
 
 export type FlashMode =
 	| 'auto'
@@ -65,9 +65,8 @@ export type WhiteBalance =
 	| 'tungsten'
 	| 'flash'
 	| 'underwater'
-	| `manual${'' | 2 | 3 | 4}`
-	| `custom${'' | 2 | 3 | 4}`
-	| `vendor ${string}`
+	| 'manual'
+	| `vendor:${string}`
 
 export type ConfigType = {
 	aperture: Aperture // fNumber

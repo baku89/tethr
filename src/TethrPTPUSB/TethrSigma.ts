@@ -1963,14 +1963,14 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x05, 'incandescent'],
 		[0x06, 'fluorescent'],
 		[0x07, 'flash'],
-		[0x08, 'custom'], // Custom 1
+		[0x08, 'vendor:custom'], // Custom 1
 		// [0x09, null], // CustomCapture 1
-		[0x0a, 'custom2'], // Custom 2
+		[0x0a, 'vendor:custom2'], // Custom 2
 		// [0x0b, null], // CustomCapture 2
-		[0x0c, 'custom3'], // Custom 3
+		[0x0c, 'vendor:custom3'], // Custom 3
 		// // [0x0d, null], // CustomCapture 3
 		[0x0e, 'manual'], // Custom Temperature
-		[0x0f, 'auto ambience'], // Auto (Light Source Priority)
+		[0x0f, 'vendor:auto ambience'], // Auto (Light Source Priority)
 	])
 
 	private whiteBalanceTableIFD = new Map<number, WhiteBalance>([
