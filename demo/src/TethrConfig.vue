@@ -69,7 +69,7 @@ function update(e: Event) {
 		const value = props.config.option.values[index]
 		props.config.update(value)
 	} else {
-		const value = parseInt(str)
+		const value = parseFloat(str)
 		props.config.update(value)
 	}
 }

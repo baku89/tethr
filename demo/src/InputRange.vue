@@ -4,7 +4,7 @@
 			type="range"
 			:min="min"
 			:max="max"
-			:step="step"
+			:step="step || 0.0001"
 			:value="modelValue"
 			:disabled="disabled"
 			@change="$emit('change', $event)"

@@ -180,6 +180,7 @@ aside
 	overflow-y scroll
 	border-left 2px solid #2b2b2b
 	grid-template-columns min-content 1fr
+	grid-template-rows repeat(10000, min-content)
 
 .connect-button, h2, dl
 	grid-column 1 / 3
