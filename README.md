@@ -56,11 +56,9 @@ const cam = cameras[0]
 await cam.init()
 
 await cam.get('model')
-await cam.getModel()
 // -> 'Lumix S5'
 
 await cam.set('shutterSpeed', '1/1000')
-await cam.setShutterSpeed('1/1000')
 
 const exposureModeDesc = await cam.getDesc('exposureMode')
 console.log(exposureModeDesc)
@@ -103,63 +101,61 @@ await cam.close()
 
 This is a list of ConfigName and their value types:
 
-| ConfigName           | ConfigType             | Example                                                     |
-| -------------------- | ---------------------- | ----------------------------------------------------------- |
-| aperture             | `Aperture`             | `2.2`, `5.6`, `'auto'`                                      |
-| batteryLevel         | `BatteryLevel`         | `50`, `100`, `'ac'`, `'low'` (Represented in range `0-100`) |
-| burstInterval        | `number`               |                                                             |
-| burstNumber          | `number`               |                                                             |
-| canRunAutoFocus      | `boolean`              |                                                             |
-| canRunManualFocus    | `boolean`              |                                                             |
-| canStartLiveview     | `boolean`              |                                                             |
-| canTakePicture       | `boolean`              |                                                             |
-| captureDelay         | `number`               |                                                             |
-| colorMode            | `string`               | `V-Log`, `Teal and Orange`, `CineV`... (vendor-specific)    |
-| colorTemperature     | `number`               | `2600`, `5500`                                              |
-| contrast             | `number`               |                                                             |
-| dateTime             | `Date`                 |                                                             |
-| destinationToSave    | `string`               | 'camera', 'pc', 'camera,pc'                                 |
-| digitalZoom          | `number`               |                                                             |
-| driveMode            | `DriveMode`            | `'normal'`, `'burst'`, `'interval'`                         |
-| exposureComp         | `string`               | `'-1 1/3'` `'-1/2'`, `'0'`, `'+2 1/3'`                      |
-| exposureMeteringMode | `ExposureMeteringMode` | `'average'`, '`multi-spot'`, `'center-spot'`...             |
-| exposureMode         | `ExposureMode`         | `'P'`, `'A'`, `'S'`, `'M'`                                  |
-| facingMode           | `string`               | `'user'`, `'environemnt'`... (Webcam fallback only)         |
-| flashMode            | `FlashMode`            | `'auto'`, `'off'`, `'fill'`...                              |
-| focalLength          | `FocalLength`          | `35`, `55`, `105`, `'spherical'` (= Theta S, Insta360)      |
-| focusDistance        | `number`               |                                                             |
-| focusMeteringMode    | `FocusMeteringMode`    | `'center-spot'`, `'multi-spot'`                             |
-| focusMode            | `FocusMode`            |                                                             |
-| functionalMode       | `FunctionalMode`       | `'standard'`, `'sleep'`                                     |
-| imageAspect          | `string`               | `'16:9'`, `'3:2'`, `'a size'`                               |
-| imageQuality         | `string`               | `'fine'`, `'raw,fine'`, `'raw'` (comma-separated)           |
-| imageSize            | `string`               | `'L'`, `'M'`, `'S'`, `'1024x768'`                           |
-| iso                  | `ISO`                  | `160`, `3200`, `'auto'`                                     |
-| liveviewEnabled      | `boolean`              |                                                             |
-| liveviewMagnifyRatio | `number`               |                                                             |
-| liveviewSize         | `string`               |                                                             |
-| manualFocusOptions   | `ManualFocusOption[]`  | `['near:2', 'near:1', 'far:1', 'far:2']` (`3` at max speed) |
-| model                | `string`               |                                                             |
-| sharpness            | `number`               |                                                             |
-| shutterSpeed         | `string`               | `'30'`, `'1.5'`, `'1/200'`, `'1/6400'`                      |
-| timelapseInterval    | `number`               |                                                             |
-| timelapseNumber      | `number`               |                                                             |
-| whiteBalance         | `WhiteBalance`         | `'auto'`, `'cloud'`, `'daylight'`...                        |
+| ConfigName           | ConfigType             | Example                                                                                    |
+| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------ |
+| aperture             | `Aperture`             | `2.2`, `5.6`, `'auto'`                                                                     |
+| autoFocusFrameCenter | `Vec2`                 | The center of auto focus frame. Normalized from [0, 0] (top-left) to [1, 1] (bottom-right) |
+| autoFocusFrameSize   | `string`               | `large`, `medium`, `small`, `64x64`                                                        |
+| batteryLevel         | `BatteryLevel`         | `50`, `100`, `'ac'`, `'low'` (Represented in range `0-100`)                                |
+| burstInterval        | `number`               |                                                                                            |
+| burstNumber          | `number`               |                                                                                            |
+| canRunAutoFocus      | `boolean`              |                                                                                            |
+| canRunManualFocus    | `boolean`              |                                                                                            |
+| canStartLiveview     | `boolean`              |                                                                                            |
+| canTakePicture       | `boolean`              |                                                                                            |
+| captureDelay         | `number`               |                                                                                            |
+| colorMode            | `string`               | `V-Log`, `Teal and Orange`, `CineV`... (vendor-specific)                                   |
+| colorTemperature     | `number`               | `2600`, `5500`                                                                             |
+| contrast             | `number`               |                                                                                            |
+| dateTime             | `Date`                 |                                                                                            |
+| destinationToSave    | `string`               | 'camera', 'pc', 'camera,pc'                                                                |
+| digitalZoom          | `number`               |                                                                                            |
+| driveMode            | `DriveMode`            | `'normal'`, `'burst'`, `'interval'`                                                        |
+| exposureComp         | `string`               | `'-1 1/3'` `'-1/2'`, `'0'`, `'+2 1/3'`                                                     |
+| exposureMeteringMode | `ExposureMeteringMode` | `'average'`, '`multi-spot'`, `'center-spot'`...                                            |
+| exposureMode         | `ExposureMode`         | `'P'`, `'A'`, `'S'`, `'M'`                                                                 |
+| facingMode           | `string`               | `'user'`, `'environemnt'`... (Webcam fallback only)                                        |
+| flashMode            | `FlashMode`            | `'auto'`, `'off'`, `'fill'`...                                                             |
+| focalLength          | `FocalLength`          | `35`, `55`, `105`, `'spherical'` (= Theta S, Insta360)                                     |
+| focusDistance        | `number`               |                                                                                            |
+| focusMeteringMode    | `FocusMeteringMode`    | `'center-spot'`, `'multi-spot'`                                                            |
+| focusMode            | `FocusMode`            |                                                                                            |
+| functionalMode       | `FunctionalMode`       | `'standard'`, `'sleep'`                                                                    |
+| imageAspect          | `string`               | `'16:9'`, `'3:2'`, `'a size'`                                                              |
+| imageQuality         | `string`               | `'fine'`, `'raw,fine'`, `'raw'` (comma-separated)                                          |
+| imageSize            | `string`               | `'L'`, `'M'`, `'S'`, `'1024x768'`                                                          |
+| iso                  | `ISO`                  | `160`, `3200`, `'auto'`                                                                    |
+| liveviewEnabled      | `boolean`              |                                                                                            |
+| liveviewMagnifyRatio | `number`               |                                                                                            |
+| liveviewSize         | `string`               |                                                                                            |
+| manualFocusOptions   | `ManualFocusOption[]`  | `['near:2', 'near:1', 'far:1', 'far:2']` (`3` at max speed)                                |
+| model                | `string`               |                                                                                            |
+| sharpness            | `number`               |                                                                                            |
+| shutterSpeed         | `string`               | `'30'`, `'1.5'`, `'1/200'`, `'1/6400'`                                                     |
+| timelapseInterval    | `number`               |                                                                                            |
+| timelapseNumber      | `number`               |                                                                                            |
+| whiteBalance         | `WhiteBalance`         | `'auto'`, `'cloud'`, `'daylight'`...                                                       |
 
 The `configName` mentioned in the subsequent sample code can be replaced with the names shown above.
 
 ### Getter/Setter
 
-You can retrieve and modify configs by two methods outlined below:
+You can retrieve and modify configs like code shown below:
 
 ```ts
 // 1. Specify a name of config as the first argument
 tethr.get('configName'): Promise<ConfigType | null>
 tethr.set('configName', value): Promise<OperationResult>
-
-// 2. Directly call a getter/setter methods defined per config
-tethr.getConfigName(): Promise<ConfigType | null>
-tethr.setConfigName(): Promise<OperationResult>
 
 // Setters return the following object:
 interface OperationResult {
@@ -169,7 +165,7 @@ interface OperationResult {
 
 ### Config Descriptor
 
-If you want to obtain information about a config, such as its writability and a list of valid values, you can use the `tethr.getDesc('configName')` or `tethr.getConfigNameDesc` methods. These methods return a descriptor object.
+If you want to obtain information about a config, such as its writability and a list of valid values, you can use the `cam.getDesc('configName')` methods. These methods return a descriptor object.
 
 ```ts
 interface ConfigDesc<ConfigType> {

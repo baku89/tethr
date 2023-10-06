@@ -1,8 +1,16 @@
 import {BiMap} from 'bim'
 import {Vec2} from 'linearly'
 
+/**
+ * Aperture value. `'auto'` means auto aperture.
+ * @example `'auto', 5.6, 9`
+ */
 export type Aperture = 'auto' | number
 
+/**
+ * Battery level represented as a number between `0` and `100`. `100` means full battery.
+ * . `'ac'` means AC power, `'low'` means low battery.
+ */
 export type BatteryLevel = 'ac' | 'low' | number
 
 export type DriveMode = 'normal' | 'burst' | 'timelapse'
