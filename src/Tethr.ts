@@ -1,4 +1,5 @@
 import EventEmitter from 'eventemitter3'
+import {Vec2} from 'linearly'
 
 import {
 	Aperture,
@@ -40,7 +41,7 @@ export type OperationResult<T = void> = T extends void
 
 export type ConfigDescOption<T> =
 	| {type: 'enum'; values: T[]}
-	| {type: 'range'; min: number; max: number; step: number}
+	| {type: 'range'; min: T; max: T; step: T}
 
 export type ConfigDesc<T> = {
 	value: T | null
@@ -156,6 +157,8 @@ export abstract class Tethr
 		switch (name) {
 			case 'aperture':
 				return this.setAperture(value as Aperture)
+			case 'autoFocusFrameCenter':
+				return this.setAutoFocusFrameCenter(value as Vec2)
 			case 'batteryLevel':
 				return this.setBatteryLevel(value as BatteryLevel)
 			case 'burstInterval':
@@ -250,103 +253,13 @@ export abstract class Tethr
 	async getDesc<N extends ConfigName>(
 		name: N
 	): Promise<ConfigDesc<ConfigType[N]>> {
-		type ReturnType = Promise<ConfigDesc<ConfigType[N]>>
+		const getterName = `get${name[0].toUpperCase()}${name.slice(1)}Desc`
 
-		switch (name) {
-			case 'aperture':
-				return this.getApertureDesc() as ReturnType
-			case 'batteryLevel':
-				return this.getBatteryLevelDesc() as ReturnType
-			case 'burstInterval':
-				return this.getBurstIntervalDesc() as ReturnType
-			case 'burstNumber':
-				return this.getBurstNumberDesc() as ReturnType
-			case 'canRunAutoFocus':
-				return this.getCanRunAutoFocusDesc() as ReturnType
-			case 'canRunManualFocus':
-				return this.getCanRunManualFocusDesc() as ReturnType
-			case 'canStartLiveview':
-				return this.getCanStartLiveviewDesc() as ReturnType
-			case 'canTakePhoto':
-				return this.getCanTakePhotoDesc() as ReturnType
-			case 'captureDelay':
-				return this.getCaptureDelayDesc() as ReturnType
-			case 'colorMode':
-				return this.getColorModeDesc() as ReturnType
-			case 'colorTemperature':
-				return this.getColorTemperatureDesc() as ReturnType
-			case 'contrast':
-				return this.getContrastDesc() as ReturnType
-			case 'dateTime':
-				return this.getDateTimeDesc() as ReturnType
-			case 'destinationToSave':
-				return this.getDestinationToSaveDesc() as ReturnType
-			case 'digitalZoom':
-				return this.getDigitalZoomDesc() as ReturnType
-			case 'driveMode':
-				return this.getDriveModeDesc() as ReturnType
-			case 'exposureComp':
-				return this.getExposureCompDesc() as ReturnType
-			case 'exposureMeteringMode':
-				return this.getExposureMeteringModeDesc() as ReturnType
-			case 'exposureMode':
-				return this.getExposureModeDesc() as ReturnType
-			case 'facingMode':
-				return this.getFacingModeDesc() as ReturnType
-			case 'flashMode':
-				return this.getFlashModeDesc() as ReturnType
-			case 'focalLength':
-				return this.getFocalLengthDesc() as ReturnType
-			case 'focusDistance':
-				return this.getFocusDistanceDesc() as ReturnType
-			case 'focusMeteringMode':
-				return this.getFocusMeteringModeDesc() as ReturnType
-			case 'focusMode':
-				return this.getFocusModeDesc() as ReturnType
-			case 'focusPeaking':
-				return this.getFocusPeakingDesc() as ReturnType
-			case 'functionalMode':
-				return this.getFunctionalModeDesc() as ReturnType
-			case 'imageAspect':
-				return this.getImageAspectDesc() as ReturnType
-			case 'imageQuality':
-				return this.getImageQualityDesc() as ReturnType
-			case 'imageSize':
-				return this.getImageSizeDesc() as ReturnType
-			case 'iso':
-				return this.getIsoDesc() as ReturnType
-			case 'liveviewEnabled':
-				return this.getLiveviewEnabledDesc() as ReturnType
-			case 'liveviewMagnifyRatio':
-				return this.getLiveviewMagnifyRatioDesc() as ReturnType
-			case 'liveviewSize':
-				return this.getLiveviewSizeDesc() as ReturnType
-			case 'manualFocusOptions':
-				return this.getManualFocusOptionsDesc() as ReturnType
-			case 'manufacturer':
-				return this.getManufacturerDesc() as ReturnType
-			case 'model':
-				return this.getModelDesc() as ReturnType
-			case 'serialNumber':
-				return this.getSerialNumberDesc() as ReturnType
-			case 'sharpness':
-				return this.getSharpnessDesc() as ReturnType
-			case 'shutterSpeed':
-				return this.getShutterSpeedDesc() as ReturnType
-			case 'shutterSound':
-				return this.getShutterSoundDesc() as ReturnType
-			case 'timelapseInterval':
-				return this.getTimelapseIntervalDesc() as ReturnType
-			case 'timelapseNumber':
-				return this.getTimelapseNumberDesc() as ReturnType
-			case 'whiteBalance':
-				return this.getWhiteBalanceDesc() as ReturnType
+		if (!(this as any)[getterName]) {
+			throw new Error(`No such config: ${name}`)
 		}
 
-		return {
-			writable: false,
-			value: null,
-		}
+		return (this as any)[getterName]()
 	}
 
 	async getAperture(): Promise<Aperture | null> {
@@ -358,7 +271,33 @@ export abstract class Tethr
 	): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
-	async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
+	async getApertureFrameDesc(): Promise<ConfigDesc<Aperture>> {
+		return UnsupportedConfigDesc
+	}
+
+	async getAutoFocusFrameCenter(): Promise<Vec2 | null> {
+		return (await this.getAutoFocusFrameCenterDesc()).value
+	}
+	async setAutoFocusFrameCenter(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		value: Vec2
+	): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<Vec2>> {
+		return UnsupportedConfigDesc
+	}
+
+	async getAutoFocusFrameSize(): Promise<string | null> {
+		return (await this.getAutoFocusFrameSizeDesc()).value
+	}
+	async setAutoFocusFrameSize(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		value: string
+	): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+	async getAutoFocusFrameSizeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
