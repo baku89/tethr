@@ -1,4 +1,5 @@
 import {BiMap} from 'bim'
+import {scalar} from 'linearly'
 import {isEqual, minBy} from 'lodash'
 import sleep from 'sleep-promise'
 import {MemoizeExpiring} from 'typescript-memoize'
@@ -253,7 +254,8 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getCanStartLiveviewDesc() {
-		return createReadonlyConfigDesc(true)
+		const {lvImageTransfer} = await this.getCamCanSetInfo5()
+		return createReadonlyConfigDesc(lvImageTransfer.length > 0)
 	}
 
 	async setColorMode(colorMode: string): Promise<OperationResult> {
@@ -486,8 +488,12 @@ export class TethrSigma extends TethrPTPUSB {
 
 	async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
 		const {focusPosition: range} = await this.getCamCanSetInfo5()
-		const value = (await this.getCamStatus()).focusPosition[0]
+		const focusPosition = (await this.getCamStatus()).focusPosition[0]
 
+		// Small value means far direction, so invert the min/max and normalize it
+		const value = scalar.invlerp(range[1], range[0], focusPosition)
+
+		// Only writable when AF is on
 		const writable = range.length === 2 && !!(await this.getCanRunAutoFocus())
 
 		if (writable) {
@@ -496,9 +502,9 @@ export class TethrSigma extends TethrPTPUSB {
 				value,
 				option: {
 					type: 'range',
-					min: range[0],
-					max: range[1],
-					step: 1,
+					min: 0,
+					max: 1,
+					step: 0,
 				},
 			}
 		} else {
@@ -512,8 +518,14 @@ export class TethrSigma extends TethrPTPUSB {
 	async setFocusDistance(
 		value: number
 	): Promise<{status: OperationResultStatus}> {
+		const {focusPosition: range} = await this.getCamCanSetInfo5()
+
+		const focusPosition = scalar.round(scalar.lerp(range[1], range[0], value))
+
+		console.error(value, focusPosition)
+
 		const data = encodeIFD({
-			focusPosition: {tag: 81, type: IFDType.Short, value: [value]},
+			focusPosition: {tag: 81, type: IFDType.Short, value: [focusPosition]},
 		})
 
 		try {
