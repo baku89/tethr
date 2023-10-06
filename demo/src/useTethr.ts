@@ -162,6 +162,7 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 			facingMode: useTethrConfig(camera, 'facingMode'),
 			focalLength: useTethrConfig(camera, 'focalLength'),
 			focusDistance: useTethrConfig(camera, 'focusDistance'),
+			focusMeteringMode: useTethrConfig(camera, 'focusMeteringMode'),
 			focusPeaking: useTethrConfig(camera, 'focusPeaking'),
 			liveviewMagnifyRatio: useTethrConfig(camera, 'liveviewMagnifyRatio'),
 			liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),

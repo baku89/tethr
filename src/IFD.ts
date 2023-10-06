@@ -179,12 +179,22 @@ export function encodeIFD(data: IFDData): ArrayBuffer {
 		dataView.writeUint32(count)
 
 		switch (entry.type) {
+			case IFDType.Byte: {
+				if (count > 4) {
+					throw new Error('Not yet supported')
+				} else {
+					for (let i = 0; i < 4; i++) {
+						dataView.writeUint8(entry.value[i])
+					}
+				}
+				break
+			}
 			case IFDType.Short: {
 				if (entry.value.length > 2) {
 					throw new Error('Not yet supported')
 				} else {
 					for (let i = 0; i < 2; i++) {
-						dataView.writeUint16(entry.value[i] ?? 0)
+						dataView.writeUint16(entry.value[i])
 					}
 				}
 				break

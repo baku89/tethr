@@ -11,6 +11,7 @@ import {
 	computeShutterSpeedSeconds,
 	ConfigName,
 	ExposureMode,
+	FocusMeteringMode,
 	FocusPeaking,
 	ISO,
 	WhiteBalance,
@@ -109,6 +110,7 @@ enum SnapCaptureMode {
 
 const ConfigListSigma: ConfigName[] = [
 	'aperture',
+	'batteryLevel',
 	'iso',
 	'canRunAutoFocus',
 	'colorTemperature',
@@ -116,6 +118,7 @@ const ConfigListSigma: ConfigName[] = [
 	'destinationToSave',
 	'focalLength',
 	'focusDistance',
+	'focusMeteringMode',
 	'focusPeaking',
 	'exposureComp',
 	'exposureMode',
@@ -139,18 +142,22 @@ export class TethrSigma extends TethrPTPUSB {
 	async open() {
 		await super.open()
 
-		const {data} = await this.device.receiveData({
+		await this.device.receiveData({
 			label: 'SigmaFP ConfigApi',
 			opcode: OpCodeSigma.ConfigApi,
 			parameters: [0x0],
 		})
 
+		/**
+		 * Don't need this IFD data
+		 * 
 		decodeIFD(data, {
 			cameraModel: {tag: 1, type: IFDType.Ascii},
 			serialNumber: {tag: 2, type: IFDType.Ascii},
 			firmwareVersion: {tag: 3, type: IFDType.Ascii},
 			communiationVersion: {tag: 5, type: IFDType.Float},
 		})
+		*/
 
 		const checkPropChangedInterval = () => {
 			if (!this.opened) return
@@ -276,7 +283,9 @@ export class TethrSigma extends TethrPTPUSB {
 		// NOTE: the colorModeOptions lacks Warm Gold (0xf0).
 		// it must be manually added only if the firmware is 5.0,
 		// but configAPI doesn't return the version information by some reason...
-		colorModeOptions.push(0x11)
+		if (!colorModeOptions.includes(0x11)) {
+			colorModeOptions.push(0x11)
+		}
 
 		return {
 			writable: colorModeOptions.length > 0,
@@ -515,14 +524,10 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	async setFocusDistance(
-		value: number
-	): Promise<{status: OperationResultStatus}> {
+	async setFocusDistance(value: number): Promise<OperationResult> {
 		const {focusPosition: range} = await this.getCamCanSetInfo5()
 
 		const focusPosition = scalar.round(scalar.lerp(range[1], range[0], value))
-
-		console.error(value, focusPosition)
 
 		const data = encodeIFD({
 			focusPosition: {tag: 81, type: IFDType.Short, value: [focusPosition]},
@@ -541,8 +546,50 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
+	async getFocusMeteringModeDesc(): Promise<ConfigDesc<FocusMeteringMode>> {
+		const {focusArea: ids} = await this.getCamCanSetInfo5()
+
+		const id = (await this.getCamStatus()).focusArea[0]
+
+		const value = this.focusAreaTable.get(id) as FocusMeteringMode
+
+		const values = ids.map(n =>
+			this.focusAreaTable.get(n)
+		) as FocusMeteringMode[]
+
+		return {
+			writable: values.length > 0,
+			value,
+			option: {
+				type: 'enum',
+				values: values,
+			},
+		}
+	}
+
+	async setFocusMeteringMode(
+		value: FocusMeteringMode
+	): Promise<OperationResult> {
+		const id = this.focusAreaTable.getKey(value) as number
+		const data = encodeIFD({
+			focusArea: {tag: 10, type: IFDType.Byte, value: [id]},
+		})
+
+		try {
+			await this.device.sendData({
+				label: 'SigmaFP SetCamDataGroupFocus',
+				opcode: OpCodeSigma.SetCamDataGroupFocus,
+				data,
+			})
+		} catch (err) {
+			return {status: 'invalid parameter'}
+		}
+
+		return {status: 'ok'}
+	}
+
 	async getFocusPeakingDesc(): Promise<ConfigDesc<FocusPeaking>> {
-		// const value = (await this.getCamDataGroup5()).focusPeaking
+		// TODO: There's no way to retrieve and configure this value in the latest firmware
 		const value = 0
 		const {focusPeaking: values} = await this.getCamCanSetInfo5()
 
@@ -606,10 +653,10 @@ export class TethrSigma extends TethrPTPUSB {
 		let jpegQuality: string | null = null
 		let dngBitDepth: number | null = null
 
-		const hasDngMatch = imageQuality.match(/^raw (12|14)bit(?:,([a-z]+))?/i)
+		const pattern = imageQuality.match(/^raw (12|14)bit(?:,([a-z]+))?/i)
 
-		if (hasDngMatch) {
-			const [, dngBitDepthStr, jpegQualityStr] = hasDngMatch
+		if (pattern) {
+			const [, dngBitDepthStr, jpegQualityStr] = pattern
 			jpegQuality = jpegQualityStr ?? null
 			dngBitDepth = parseInt(dngBitDepthStr)
 		} else {
@@ -655,40 +702,31 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getImageQualityDesc() {
-		type ImageQualityConfig = {
-			jpegQuality: string | null
-			hasDNG: boolean
+		const {imageQuality, dngImageQuality: dngBitDepth} =
+			await this.getCamStatus()
+
+		let jpegQuality: string | null = null
+		switch (imageQuality & 0x0f) {
+			case 0x02:
+				jpegQuality = 'fine'
+				break
+			case 0x04:
+				jpegQuality = 'standard'
+				break
+			case 0x08:
+				jpegQuality = 'low'
+				break
 		}
 
-		const imageQuality: ImageQualityConfig = await (async () => {
-			const {imageQuality} = await this.getCamStatus()
+		const hasDNG = !!(imageQuality & 0x10)
 
-			let jpegQuality: string | null = null
-			switch (imageQuality & 0x0f) {
-				case 0x02:
-					jpegQuality = 'fine'
-					break
-				case 0x04:
-					jpegQuality = 'standard'
-					break
-				case 0x08:
-					jpegQuality = 'low'
-					break
-			}
-
-			const hasDNG = !!(imageQuality & 0x10)
-
-			return {
-				jpegQuality,
-				hasDNG,
-			}
-		})()
-
-		const {dngImageQuality} = await this.getCamStatus()
+		const value = [hasDNG ? `raw ${dngBitDepth}bit` : null, jpegQuality]
+			.filter(Boolean)
+			.join(',')
 
 		return {
 			writable: true,
-			value: stringifyImageQuality(imageQuality, dngImageQuality),
+			value: value,
 			option: {
 				type: 'enum',
 				values: [
@@ -703,25 +741,6 @@ export class TethrSigma extends TethrPTPUSB {
 				],
 			},
 		} as ConfigDesc<string>
-
-		function stringifyImageQuality(
-			quality: ImageQualityConfig,
-			dngBitDepth: number
-		) {
-			if (quality.hasDNG) {
-				if (quality.jpegQuality) {
-					return `raw ${dngBitDepth}bit,${quality.jpegQuality}`
-				} else {
-					return `raw ${dngBitDepth}bit`
-				}
-			} else {
-				if (quality.jpegQuality) {
-					return quality.jpegQuality
-				} else {
-					throw new Error('Invalid ImageQualityConfig')
-				}
-			}
-		}
 	}
 
 	async setImageSize(imageSize: string): Promise<OperationResult> {
@@ -733,10 +752,14 @@ export class TethrSigma extends TethrPTPUSB {
 
 	async getImageSizeDesc(): Promise<ConfigDesc<string>> {
 		const {resolution} = await this.getCamStatus()
+		const {stillImageResolution} = await this.getCamCanSetInfo5()
 
 		const value = this.imageSizeTable.get(resolution)
+		const values = stillImageResolution.map(v =>
+			this.imageSizeTableIFD.get(v)
+		) as string[]
 
-		if (!value) {
+		if (!value || values.length === 0) {
 			return {
 				writable: false,
 				value: null,
@@ -748,7 +771,7 @@ export class TethrSigma extends TethrPTPUSB {
 			value,
 			option: {
 				type: 'enum',
-				values: ['low', 'medium', 'high'],
+				values,
 			},
 		}
 	}
@@ -832,7 +855,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const {lvMagnifyRatio} = await this.getCamStatus()
 		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
 
-		const {lvMagnifyRatio: values} = await this.getCamCanSetInfo5()
+		const {lvMagnificationRate: values} = await this.getCamCanSetInfo5()
 
 		return {
 			writable: values.length > 0,
@@ -1044,14 +1067,17 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async runAutoFocus(): Promise<OperationResult> {
-		const succeed = await this.executeSnapCommand(SnapCaptureMode.StartAF)
-		await this.clearImageDBAll()
+		const startAFSucceed = await this.executeSnapCommand(
+			SnapCaptureMode.StartAF
+		)
 
-		if (succeed !== null) {
-			return {status: 'ok'}
-		} else {
-			return {status: 'general error'}
-		}
+		if (!startAFSucceed) return {status: 'general error'}
+
+		const stopAFSucceed = await this.executeSnapCommand(SnapCaptureMode.StopAF)
+
+		if (!stopAFSucceed) return {status: 'general error'}
+
+		return {status: 'ok'}
 	}
 
 	async getLiveViewImage(): Promise<OperationResult<Blob>> {
@@ -1354,11 +1380,11 @@ export class TethrSigma extends TethrPTPUSB {
 			afLock: {tag: 2, type: IFDType.Byte},
 			afFaceEyePriorMode: {tag: 3, type: IFDType.Byte},
 			afFaceEyePriorDetectionStatus: {tag: 4, type: IFDType.Byte},
-			afAreaSelect: {tag: 10, type: IFDType.Byte},
-			afAreaMode: {tag: 11, type: IFDType.Byte},
-			afFrameSize: {tag: 12, type: IFDType.Byte},
-			// afFramePosition: {tag: 13, type: IFDType.Byte},
-			// afFrameFaceFocusDetection: {tag: 14, type: IFDType.Byte},
+			focusArea: {tag: 10, type: IFDType.Byte},
+			onePointSelectionMethod: {tag: 11, type: IFDType.Byte},
+			distanceMeasurementFrameSize: {tag: 12, type: IFDType.Byte},
+			// distanceMeasurementFramePosition: {tag: 13, type: IFDType.Short},
+			// distanceMeasurementFrame: {tag: 14, type: IFDType.Byte},
 			preAlwaysAf: {tag: 51, type: IFDType.Byte},
 			afLimit: {tag: 52, type: IFDType.Byte},
 			focusPosition: {tag: 81, type: IFDType.Short},
@@ -1397,9 +1423,18 @@ export class TethrSigma extends TethrPTPUSB {
 			colorTemerature: {tag: 302, type: IFDType.Short},
 			colorMode: {tag: 320, type: IFDType.Byte},
 			focusMode: {tag: 600, type: IFDType.Byte},
+
+			focusArea: {tag: 610, type: IFDType.Byte},
+			onePointSelectionMethod: {tag: 611, type: IFDType.Byte},
+			focusOverallArea: {tag: 612, type: IFDType.Short},
+			focusValidArea: {tag: 613, type: IFDType.Short},
+			distanceMeasurementFrameSize: {tag: 614, type: IFDType.Byte},
+			eachDistanceMesasurementFrameSize: {tag: 615, type: IFDType.Short},
+			distanceMeasurementFrameMovementAmount: {tag: 616, type: IFDType.Byte},
+
 			focusPosition: {tag: 658, type: IFDType.Short},
 			lvImageTransfer: {tag: 700, type: IFDType.Byte},
-			lvMagnifyRatio: {tag: 701, type: IFDType.Byte},
+			lvMagnificationRate: {tag: 701, type: IFDType.Byte},
 			focusPeaking: {tag: 702, type: IFDType.Byte},
 			shutterSound: {tag: 801, type: IFDType.Byte},
 			afVolume: {tag: 802, type: IFDType.Byte},
@@ -1953,6 +1988,14 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x1, 'high'],
 		[0x3, 'medium'],
 		[0x4, 'low'],
+		[0xff, 'raw'],
+	])
+
+	private imageSizeTableIFD = new BiMap<number, string>([
+		[0x1, 'high'],
+		[0x2, 'medium'],
+		[0x3, 'low'],
+		[0xff, 'raw'],
 	])
 
 	private destinationToSaveTable = new BiMap<number, string>([
@@ -1960,5 +2003,11 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x01, 'camera'],
 		[0x02, 'pc'],
 		[0x03, 'camera,pc'],
+	])
+
+	private focusAreaTable = new BiMap<number, FocusMeteringMode>([
+		[1, 'multi spot'],
+		[2, 'vendor:1 point selection'],
+		[3, 'vendor:tracking'],
 	])
 }

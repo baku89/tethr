@@ -36,7 +36,10 @@ export type FocusMode = 'af' | 'mf'
 
 export type FunctionalMode = 'standard' | 'sleep'
 
-export type FocusMeteringMode = 'center-spot' | 'multi-spot'
+export type FocusMeteringMode =
+	| 'center spot'
+	| 'multi spot'
+	| `vendor:${string}`
 
 /**
  * Focus peaking mode. `false` means disabled.
