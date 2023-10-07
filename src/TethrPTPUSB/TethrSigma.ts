@@ -465,14 +465,14 @@ export class TethrSigma extends TethrPTPUSB {
 		return colorTemperature
 	}
 
-	async setColorTemperature(value: number) {
-		const r0 = await this.setCamData(OpCodeSigma.SetCamDataGroup2, 13, 0x0e)
-		const r1 = await this.setCamData(OpCodeSigma.SetCamDataGroup5, 1, value)
+	async setColorTemperature(value: number): Promise<OperationResult> {
+		const r0 = await this.setWhiteBalance('manual')
 
-		const status: OperationResultStatus =
-			r0.status === 'ok' && r1.status === 'ok' ? 'ok' : 'general error'
+		if (r0.status !== 'ok') {
+			return {status: 'general error'}
+		}
 
-		return {status}
+		return await this.setCamData(OpCodeSigma.SetCamDataGroup5, 1, value)
 	}
 
 	async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
