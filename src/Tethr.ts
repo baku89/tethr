@@ -131,11 +131,11 @@ export abstract class Tethr
 			const ai = WritableConfigNameList.indexOf(a as ConfigName)
 			const bi = WritableConfigNameList.indexOf(b as ConfigName)
 			return ai - bi
-		})
+		}) as [ConfigName, ConfigType[ConfigName]][]
 
 		for (const [name, value] of sortedConfigs) {
 			// NOTE: this might be converted to parallel execution in the future
-			await this.set(name as ConfigName, value)
+			await this.set(name, value)
 		}
 	}
 

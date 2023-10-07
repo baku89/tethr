@@ -1602,7 +1602,6 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 	}
 
-	@MemoizeExpiring(SigmaExpirationMs)
 	private async setCamData(
 		opcode: number,
 		devicePropIndex: number,
@@ -1615,14 +1614,17 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const data = this.encodeParameter(dataView.toBuffer())
 
-		try {
-			await this.device.sendData({
+		for (let i = 0; i < 10; i++) {
+			const {resCode} = await this.device.sendData({
 				label: 'SigmaFP SetCamDataGroup#',
 				opcode,
 				data,
+				expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 			})
-		} catch (err) {
-			return {status: 'invalid parameter'}
+
+			if (resCode === ResCode.OK) break
+
+			await sleep(25)
 		}
 
 		await this.checkConfigChanged()
