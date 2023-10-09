@@ -1,5 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import {Vec2} from 'linearly'
+import sleep from 'sleep-promise'
 
 import {
 	Aperture,
@@ -60,6 +61,7 @@ export interface TakePhotoOption {
 type EventTypes = {
 	[N in ConfigName as `${N}Changed`]: ConfigDesc<ConfigType[N]>
 } & {
+	change: [name: ConfigName, value: ConfigType[ConfigName]]
 	disconnect: void
 	liveviewStreamUpdate: MediaStream
 	progress: {progress: number}
@@ -97,6 +99,20 @@ export abstract class Tethr
 	extends EventEmitter<EventTypes>
 	implements ConfigSetters, ConfigDescGetters
 {
+	constructor() {
+		super()
+	}
+
+	emit(eventName: keyof EventTypes, ...args: any[]) {
+		const ret = super.emit(eventName, ...args)
+
+		if (eventName.endsWith('Changed')) {
+			this.emit('change', eventName.slice(0, -7) as ConfigName, args[0])
+		}
+
+		return ret
+	}
+
 	abstract open(): Promise<void>
 	abstract close(): Promise<void>
 
@@ -136,6 +152,9 @@ export abstract class Tethr
 		for (const [name, value] of sortedConfigs) {
 			// NOTE: this might be converted to parallel execution in the future
 			await this.set(name, value)
+
+			// The delay is necessary to avoid "busy" error
+			await sleep(50)
 		}
 	}
 
