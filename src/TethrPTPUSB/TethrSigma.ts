@@ -244,7 +244,28 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const [lvTop, lvBottom, lvLeft, lvRight] = focusValidArea
 
+		// Assume the margins are symmetrical
 		return [lvLeft + lvRight, lvTop + lvBottom] as Vec2
+	}
+
+	async #enableSpotAutoFocus() {
+		await this.device.sendData({
+			label: 'SigmaFP SetCamDataGroupFocus',
+			opcode: OpCodeSigma.SetCamDataGroupFocus,
+			data: encodeIFD({
+				// 2 === 1-spot selection
+				focusArea: {tag: 10, type: IFDType.Byte, value: [2]},
+			}),
+		})
+
+		await this.device.sendData({
+			label: 'SigmaFP SetCamDataGroupFocus',
+			opcode: OpCodeSigma.SetCamDataGroupFocus,
+			data: encodeIFD({
+				// 49 === 49-point selection mode
+				onePointSelectionMethod: {tag: 11, type: IFDType.Byte, value: [49]},
+			}),
+		})
 	}
 
 	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<Vec2>> {
@@ -252,15 +273,7 @@ export class TethrSigma extends TethrPTPUSB {
 			return {writable: false, value: null}
 		}
 
-		// First, enable the spot focus area
-		await this.device.sendData({
-			label: 'SigmaFP SetCamDataGroupFocus',
-			opcode: OpCodeSigma.SetCamDataGroupFocus,
-			data: encodeIFD({
-				focusArea: {tag: 10, type: IFDType.Short, value: [2]},
-				onePointSelectionMethod: {tag: 11, type: IFDType.Short, value: [49]},
-			}),
-		})
+		await this.#enableSpotAutoFocus()
 
 		// Then, get the current position
 		const {distanceMeasurementFramePosition} = await this.getCamStatus()
@@ -300,46 +313,29 @@ export class TethrSigma extends TethrPTPUSB {
 			return {status: 'invalid parameter'}
 		}
 
-		// First, enable the spot focus area
-		await this.device.sendData({
-			label: 'SigmaFP SetCamDataGroupFocus',
-			opcode: OpCodeSigma.SetCamDataGroupFocus,
-			data: encodeIFD({
-				focusArea: {tag: 10, type: IFDType.Short, value: [2]},
-				onePointSelectionMethod: {tag: 11, type: IFDType.Short, value: [49]},
-			}),
-		})
+		await this.#enableSpotAutoFocus()
 
 		const lvSize = await this.#getLVCoordinateSize()
 
-		// Assume the margins are symmetrical
 		const [x, y] = vec2.round(vec2.mul(center, lvSize))
 
-		const data = encodeIFD({
-			distanceMeasurementFramePosition: {
-				tag: 13,
-				type: IFDType.Short,
-				value: [y, x],
-			},
+		const {resCode} = await this.device.sendData({
+			label: 'SigmaFP SetCamDataGroupFocus',
+			opcode: OpCodeSigma.SetCamDataGroupFocus,
+			data: encodeIFD({
+				distanceMeasurementFramePosition: {
+					tag: 13,
+					type: IFDType.Short,
+					value: [y, x],
+				},
+			}),
 		})
 
-		// Try to set the focus position many times because it often fails
-		for (let i = 0; i < 20; i++) {
-			const {resCode} = await this.device.sendData({
-				label: 'SigmaFP SetCamDataGroupFocus',
-				opcode: OpCodeSigma.SetCamDataGroupFocus,
-				expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
-				data,
-			})
-
-			if (resCode === ResCode.OK) {
-				return {status: 'ok'}
-			}
-
-			await sleep(50)
+		if (resCode === ResCode.OK) {
+			return {status: 'ok'}
+		} else {
+			return {status: 'invalid parameter'}
 		}
-
-		return {status: 'invalid parameter'}
 	}
 
 	async getAutoFocusFrameSizeDesc(): Promise<ConfigDesc<string>> {

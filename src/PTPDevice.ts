@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3'
 import promiseTimeout from 'p-timeout'
 import PromiseQueue from 'promise-queue'
+import sleep from 'sleep-promise'
 
 import {ResCode} from './PTPDatacode'
 import {PTPDataView} from './PTPDataView'
@@ -15,6 +16,8 @@ enum PTPType {
 
 const PTPCommandMaxByteLength = 12 + 4 * 3
 const PTPDefaultTimeoutMs = 10000
+const PTPTryCount = 30
+const PTPTryAgainIntervalMs = 500
 
 interface PTPSendCommandOption {
 	label?: string
@@ -209,29 +212,45 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			expectedResCodes: [ResCode.OK],
 			...option,
 		}
-		const id = this.generateTransactionId()
 
-		await this.transferOutCommand(opcode, id, parameters)
+		for (let i = 0; i < PTPTryCount; i++) {
+			const id = this.generateTransactionId()
 
-		const res = await this.waitBulkIn(id, PTPCommandMaxByteLength)
+			await this.transferOutCommand(opcode, id, parameters)
 
-		// Error checking
-		if (res.type !== PTPType.Response) {
-			throw new Error(
-				`Expected response type: ${PTPType.Response}, got: ${res.type}`
-			)
+			const res = await this.waitBulkIn(id, PTPCommandMaxByteLength)
+
+			// Error checking
+			if (res.type !== PTPType.Response) {
+				throw new Error(
+					`Expected response type: ${PTPType.Response}, got: ${res.type}`
+				)
+			}
+
+			// When the device is busy, try again
+			const tryAgain =
+				!expectedResCodes.includes(ResCode.DeviceBusy) &&
+				res.code === ResCode.DeviceBusy
+
+			if (tryAgain) {
+				sleep(PTPTryAgainIntervalMs)
+				continue
+			}
+
+			// Check rescode
+			if (!expectedResCodes.includes(res.code)) {
+				const expected = expectedResCodes.map(toHexString)
+				const got = toHexString(res.code)
+				throw new Error(`Expected rescode=[${expected}], got= ${got}`)
+			}
+
+			return {
+				resCode: res.code,
+				parameters: [...new Uint32Array(res.payload)],
+			}
 		}
 
-		if (!expectedResCodes.includes(res.code)) {
-			const expected = expectedResCodes.map(toHexString)
-			const got = toHexString(res.code)
-			throw new Error(`Expected rescode=[${expected}], got= ${got}`)
-		}
-
-		return {
-			resCode: res.code,
-			parameters: [...new Uint32Array(res.payload)],
-		}
+		throw new Error('Cannot send command')
 	}
 
 	private sendDataNow = async (
@@ -242,30 +261,46 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			expectedResCodes: [ResCode.OK],
 			...option,
 		}
-		const id = this.generateTransactionId()
 
-		await this.transferOutCommand(opcode, id, parameters)
-		await this.transferOutData(opcode, id, data)
+		for (let i = 0; i < PTPTryCount; i++) {
+			const id = this.generateTransactionId()
 
-		const res = await this.waitBulkIn(id, PTPCommandMaxByteLength)
+			await this.transferOutCommand(opcode, id, parameters)
+			await this.transferOutData(opcode, id, data)
 
-		// Error checking
-		if (res.type !== PTPType.Response) {
-			throw new Error(
-				`Expected response type: ${PTPType.Response}, got: ${res.type}`
-			)
+			const res = await this.waitBulkIn(id, PTPCommandMaxByteLength)
+
+			// Error checking
+			if (res.type !== PTPType.Response) {
+				throw new Error(
+					`Expected response type: ${PTPType.Response}, got: ${res.type}`
+				)
+			}
+
+			// When the device is busy, try again
+			const tryAgain =
+				!expectedResCodes.includes(ResCode.DeviceBusy) &&
+				res.code === ResCode.DeviceBusy
+
+			if (tryAgain) {
+				sleep(PTPTryAgainIntervalMs)
+				continue
+			}
+
+			// Check rescode
+			if (!expectedResCodes.includes(res.code)) {
+				const expected = expectedResCodes.map(toHexString)
+				const got = toHexString(res.code)
+				throw new Error(`Expected rescode=[${expected}], got=${got}`)
+			}
+
+			return {
+				resCode: res.code,
+				parameters: [...new Uint32Array(res.payload)],
+			}
 		}
 
-		if (!expectedResCodes.includes(res.code)) {
-			const expected = expectedResCodes.map(toHexString)
-			const got = toHexString(res.code)
-			throw new Error(`Expected rescode=[${expected}], got=${got}`)
-		}
-
-		return {
-			resCode: res.code,
-			parameters: [...new Uint32Array(res.payload)],
-		}
+		throw new Error('Cannot send data')
 	}
 
 	private receiveDataNow = async (
@@ -277,39 +312,55 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			maxByteLength: 10_000, // = 10KB. Looks enough for non-media data transfer
 			...option,
 		}
-		const id = this.generateTransactionId()
 
-		await this.transferOutCommand(opcode, id, parameters)
-		const res1 = await this.waitBulkIn(id, maxByteLength)
+		for (let i = 0; i < PTPTryCount; i++) {
+			const id = this.generateTransactionId()
 
-		if (res1.type === PTPType.Response) {
-			if (expectedResCodes.includes(res1.code)) {
-				this.#console.groupEnd()
-				return {
-					resCode: res1.code,
-					parameters: [],
-					data: new ArrayBuffer(0),
+			await this.transferOutCommand(opcode, id, parameters)
+			const res1 = await this.waitBulkIn(id, maxByteLength)
+
+			if (res1.type === PTPType.Response) {
+				if (expectedResCodes.includes(res1.code)) {
+					this.#console.groupEnd()
+					return {
+						resCode: res1.code,
+						parameters: [],
+						data: new ArrayBuffer(0),
+					}
 				}
+			}
+
+			if (res1.type !== PTPType.Data) {
+				throw new Error(`Cannot receive data code=${toHexString(res1.code)}`)
+			}
+
+			const res2 = await this.waitBulkIn(id, PTPCommandMaxByteLength)
+
+			if (res2.type !== PTPType.Response) {
+				throw new Error(
+					`Expected response type: ${PTPType.Response}, but got: ${res2.type}`
+				)
+			}
+			// When the device is busy, try again
+			const tryAgain =
+				!expectedResCodes.includes(ResCode.DeviceBusy) &&
+				res2.code === ResCode.DeviceBusy
+
+			if (tryAgain) {
+				sleep(PTPTryAgainIntervalMs)
+				continue
+			}
+
+			// Check rescode
+
+			return {
+				resCode: res2.code,
+				parameters: [...new Uint32Array(res2.payload)],
+				data: res1.payload,
 			}
 		}
 
-		if (res1.type !== PTPType.Data) {
-			throw new Error(`Cannot receive data code=${toHexString(res1.code)}`)
-		}
-
-		const res2 = await this.waitBulkIn(id, PTPCommandMaxByteLength)
-
-		if (res2.type !== PTPType.Response) {
-			throw new Error(
-				`Expected response type: ${PTPType.Response}, but got: ${res2.type}`
-			)
-		}
-
-		return {
-			resCode: res2.code,
-			parameters: [...new Uint32Array(res2.payload)],
-			data: res1.payload,
-		}
+		throw new Error('Cannot receive data')
 	}
 
 	waitEvent = async (code: number): Promise<PTPEvent> => {
