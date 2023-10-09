@@ -48,7 +48,7 @@ export function useTethrConfig<N extends ConfigName>(
 
 			config.update = (value: ConfigType[N]) => cam.set(name, value)
 
-			cam.on(`${name}Changed` as any, (desc: ConfigDesc<ConfigType[N]>) => {
+			cam.on(`${name}Change` as any, (desc: ConfigDesc<ConfigType[N]>) => {
 				config.value = desc.value
 				config.writable = desc.writable
 				config.option = desc.option
