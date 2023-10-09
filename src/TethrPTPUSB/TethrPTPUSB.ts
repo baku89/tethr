@@ -706,7 +706,7 @@ export class TethrPTPUSB extends Tethr {
 		if (!name) return
 
 		const desc = await this.getDesc(name)
-		this.emit(`${name}Changed`, desc)
+		this.emit(`${name}Change`, desc)
 	}
 
 	protected getConfigNameByCode(code: number) {

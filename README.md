@@ -179,21 +179,21 @@ interface ConfigDesc<ConfigType> {
 
 ### Watching Config Changes
 
-Whenever a config is changed, a correspoinding `configNameChanged` event will be fired. Since Tethr class inherits from [EventEmitter](https://github.com/primus/eventemitter3), you can monitor the value change using the following pattern:
+Whenever a config is changed, a correspoinding `configNameChange` event will be fired. Since Tethr class inherits from [EventEmitter](https://github.com/primus/eventemitter3), you can monitor the value change using the following pattern:
 
 ```ts
-tethr.on('apertureChanged', (newValue: Aperture) => {
+tethr.on('apertureChange', (newValue: Aperture) => {
 	// Handle the value change here
 })
 
 // Or watch once
-tethr.once('shutterSpeedChanged', callback)
+tethr.once('shutterSpeedChange', callback)
 
 // Delete event listener
-tethr.off('apertureChanged', callback)
+tethr.off('apertureChange', callback)
 ```
 
-An event `configNameChanged` is triggered in the the following:
+An event `configNameChange` is triggered in the the following:
 
 - When you manually set the value of the `configName`.
 - When you modify other configs that have a side effect on the value of `configName`. For example, setting the `whiteBalance` to `'auto'` will make the `colorTemperature` read-only.

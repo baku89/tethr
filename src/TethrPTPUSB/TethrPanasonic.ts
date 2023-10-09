@@ -590,7 +590,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 
 		this.liveviewEnabled = true
-		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
+		this.emit('liveviewEnabledChange', await this.getDesc('liveviewEnabled'))
 
 		const updateFrame = async () => {
 			if (!this.liveviewEnabled) return
@@ -629,7 +629,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 
 		this.liveviewEnabled = false
-		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
+		this.emit('liveviewEnabledChange', await this.getDesc('liveviewEnabled'))
 
 		return {status: 'ok'}
 	}
@@ -883,7 +883,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 
 		for (const config of configs) {
 			const desc = await this.getDesc(config)
-			this.emit(`${config}Changed`, desc)
+			this.emit(`${config}Change`, desc)
 		}
 	}
 

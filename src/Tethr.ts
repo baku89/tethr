@@ -59,7 +59,7 @@ export interface TakePhotoOption {
 }
 
 type EventTypes = {
-	[N in ConfigName as `${N}Changed`]: ConfigDesc<ConfigType[N]>
+	[N in ConfigName as `${N}Change`]: ConfigDesc<ConfigType[N]>
 } & {
 	change: [name: ConfigName, value: ConfigType[ConfigName]]
 	disconnect: void
@@ -106,8 +106,8 @@ export abstract class Tethr
 	emit(eventName: keyof EventTypes, ...args: any[]) {
 		const ret = super.emit(eventName, ...args)
 
-		if (eventName.endsWith('Changed')) {
-			this.emit('change', eventName.slice(0, -7) as ConfigName, args[0])
+		if (eventName.endsWith('Change')) {
+			this.emit('change', eventName.slice(0, -6) as ConfigName, args[0])
 		}
 
 		return ret

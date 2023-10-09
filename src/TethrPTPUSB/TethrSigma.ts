@@ -161,17 +161,17 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 		*/
 
-		const checkPropChangedInterval = () => {
+		const checkPropChangeInterval = () => {
 			if (!this.opened) return
 
 			if (!this.#isCapturing) {
-				this.checkConfigChanged()
+				this.checkConfigChange()
 			}
 
-			setTimeout(checkPropChangedInterval, SigmaCheckConfigIntervalMs)
+			setTimeout(checkPropChangeInterval, SigmaCheckConfigIntervalMs)
 		}
 
-		checkPropChangedInterval()
+		checkPropChangeInterval()
 	}
 
 	async close(): Promise<void> {
@@ -1266,7 +1266,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const ctx = this.#ctx
 
 		this.#liveviewEnabled = true
-		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
+		this.emit('liveviewEnabledChange', await this.getDesc('liveviewEnabled'))
 
 		const updateFrame = async () => {
 			if (!this.#liveviewEnabled || !this.opened) return
@@ -1304,7 +1304,7 @@ export class TethrSigma extends TethrPTPUSB {
 	async stopLiveview(): Promise<OperationResult> {
 		this.#liveviewEnabled = false
 		this.emit('liveviewStreamUpdate', null)
-		this.emit('liveviewEnabledChanged', await this.getDesc('liveviewEnabled'))
+		this.emit('liveviewEnabledChange', await this.getDesc('liveviewEnabled'))
 
 		return {status: 'ok'}
 	}
@@ -1623,7 +1623,7 @@ export class TethrSigma extends TethrPTPUSB {
 			await sleep(25)
 		}
 
-		await this.checkConfigChanged()
+		await this.checkConfigChange()
 
 		return {status: 'ok'}
 	}
@@ -1721,14 +1721,14 @@ export class TethrSigma extends TethrPTPUSB {
 
 	#prevConfigValue = new Map<ConfigName, ConfigDesc<any>>()
 
-	private async checkConfigChanged() {
+	private async checkConfigChange() {
 		for (const name of ConfigListSigma) {
 			const desc = await this.getDesc(name)
 
 			const prev = this.#prevConfigValue.get(name)
 
 			if (prev !== undefined && !isEqual(prev, desc)) {
-				this.emit(`${name}Changed`, desc)
+				this.emit(`${name}Change`, desc)
 			}
 
 			this.#prevConfigValue.set(name, desc)
