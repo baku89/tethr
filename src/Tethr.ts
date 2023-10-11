@@ -151,7 +151,6 @@ export abstract class Tethr
 
 		for (const [name, value] of sortedConfigs) {
 			// NOTE: this might be converted to parallel execution in the future
-			console.log('setting', name, value)
 			await this.set(name, value)
 
 			// The delay is necessary to avoid "busy" error
