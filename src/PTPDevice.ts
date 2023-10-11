@@ -17,7 +17,7 @@ enum PTPType {
 const PTPCommandMaxByteLength = 12 + 4 * 3
 const PTPDefaultTimeoutMs = 10000
 const PTPTryCount = 30
-const PTPTryAgainIntervalMs = 500
+const PTPTryAgainIntervalMs = 100
 
 interface PTPSendCommandOption {
 	label?: string
@@ -233,7 +233,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				res.code === ResCode.DeviceBusy
 
 			if (tryAgain) {
-				sleep(PTPTryAgainIntervalMs)
+				await sleep(PTPTryAgainIntervalMs)
 				continue
 			}
 
@@ -283,7 +283,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				res.code === ResCode.DeviceBusy
 
 			if (tryAgain) {
-				sleep(PTPTryAgainIntervalMs)
+				await sleep(PTPTryAgainIntervalMs)
 				continue
 			}
 
@@ -347,7 +347,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				res2.code === ResCode.DeviceBusy
 
 			if (tryAgain) {
-				sleep(PTPTryAgainIntervalMs)
+				await sleep(PTPTryAgainIntervalMs)
 				continue
 			}
 
