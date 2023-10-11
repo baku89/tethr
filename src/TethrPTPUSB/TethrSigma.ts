@@ -121,7 +121,7 @@ const ConfigListSigma: ConfigName[] = [
 	'focalLength',
 	'focusDistance',
 	'focusMeteringMode',
-	'focusPeaking',
+	// 'focusPeaking',
 	'exposureComp',
 	'exposureMode',
 	'imageAspect',
@@ -744,6 +744,7 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
+	/*
 	async getFocusPeakingDesc(): Promise<ConfigDesc<FocusPeaking>> {
 		// TODO: There's no way to retrieve and configure this value in the latest firmware
 		const value = 0
@@ -780,7 +781,7 @@ export class TethrSigma extends TethrPTPUSB {
 		// }
 
 		return {status: 'ok'}
-	}
+	}*/
 
 	async setImageAspect(imageAspect: string): Promise<OperationResult> {
 		const id = this.imageAspectTable.getKey(imageAspect)
