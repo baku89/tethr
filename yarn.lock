@@ -1844,10 +1844,10 @@ levn@^0.4.1:
     prelude-ls "^1.2.1"
     type-check "~0.4.0"
 
-linearly@^0.12.1:
-  version "0.12.1"
-  resolved "https://registry.yarnpkg.com/linearly/-/linearly-0.12.1.tgz#a58a14fdbfc7e419ac21fad5cd459b7dccff414f"
-  integrity sha512-mGdv/cSZENtaf0vJZiKwjOggOIhID8JZNJa8aIafsa0ipLvDuu+R01rPtk4oy8IQkcEcqVLnIeH5MHNG8SuYFA==
+linearly@^0.17.0:
+  version "0.17.0"
+  resolved "https://registry.yarnpkg.com/linearly/-/linearly-0.17.0.tgz#0b587f7eb31999eeac750079de546d414bf8f88f"
+  integrity sha512-RUOBwr8p0nx7CguxOYu8ro0WgLlf7pFiYCw1A2aCa4774+zpCSX13BAF1E48BI63gkxtVBIrnjewaVWGriVlWQ==
 
 load-json-file@^4.0.0:
   version "4.0.0"
