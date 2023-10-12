@@ -130,7 +130,7 @@ export abstract class Tethr
 		const configs = await Promise.all(
 			WritableConfigNameList.map(async name => {
 				const desc = await this.getDesc(name)
-				return desc.writable ? ([name, desc.value] as const) : null
+				return desc.value === null ? null : ([name, desc.value] as const)
 			})
 		)
 
@@ -170,7 +170,8 @@ export abstract class Tethr
 		const setterName = `set${name[0].toUpperCase()}${name.slice(1)}`
 
 		if (!(this as any)[setterName]) {
-			throw new Error(`No such config: ${name}`)
+			console.error(`No such config: ${name}`)
+			return {status: 'invalid parameter'}
 		}
 
 		return (this as any)[setterName](value)
@@ -182,7 +183,8 @@ export abstract class Tethr
 		const getterName = `get${name[0].toUpperCase()}${name.slice(1)}Desc`
 
 		if (!(this as any)[getterName]) {
-			throw new Error(`No such config: ${name}`)
+			console.error(`No such config: ${name}`)
+			return UnsupportedConfigDesc
 		}
 
 		return (this as any)[getterName]()
