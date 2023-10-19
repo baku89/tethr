@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import {Vec2} from 'linearly'
+import {vec2} from 'linearly'
 import sleep from 'sleep-promise'
 
 import {
@@ -202,11 +202,11 @@ export abstract class Tethr
 
 	async setAutoFocusFrameCenter(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: Vec2
+		value: vec2
 	): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
-	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<Vec2>> {
+	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<vec2>> {
 		return UnsupportedConfigDesc
 	}
 

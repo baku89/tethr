@@ -1,5 +1,5 @@
 import {BiMap} from 'bim'
-import {Vec2} from 'linearly'
+import {vec2} from 'linearly'
 
 /**
  * Aperture value. `'auto'` means auto aperture.
@@ -80,7 +80,7 @@ export type WhiteBalance =
 
 export type ConfigType = {
 	aperture: Aperture // fNumber
-	autoFocusFrameCenter: Vec2
+	autoFocusFrameCenter: vec2
 	autoFocusFrameSize: string
 	batteryLevel: BatteryLevel
 	burstInterval: number

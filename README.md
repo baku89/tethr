@@ -104,7 +104,7 @@ This is a list of ConfigName and their value types:
 | ConfigName           | ConfigType             | Example                                                                                    |
 | -------------------- | ---------------------- | ------------------------------------------------------------------------------------------ |
 | aperture             | `Aperture`             | `2.2`, `5.6`, `'auto'`                                                                     |
-| autoFocusFrameCenter | `Vec2`                 | The center of auto focus frame. Normalized from [0, 0] (top-left) to [1, 1] (bottom-right) |
+| autoFocusFrameCenter | `vec2`                 | The center of auto focus frame. Normalized from [0, 0] (top-left) to [1, 1] (bottom-right) |
 | autoFocusFrameSize   | `string`               | `large`, `medium`, `small`, `64x64`                                                        |
 | batteryLevel         | `BatteryLevel`         | `50`, `100`, `'ac'`, `'low'` (Represented in range `0-100`)                                |
 | burstInterval        | `number`               |                                                                                            |

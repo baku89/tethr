@@ -1,5 +1,5 @@
 import {BiMap} from 'bim'
-import {scalar, Vec2, vec2} from 'linearly'
+import {scalar, vec2} from 'linearly'
 import {isEqual, minBy} from 'lodash'
 import sleep from 'sleep-promise'
 import {MemoizeExpiring} from 'typescript-memoize'
@@ -245,7 +245,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const [lvTop, lvBottom, lvLeft, lvRight] = focusValidArea
 
 		// Assume the margins are symmetrical
-		return [lvLeft + lvRight, lvTop + lvBottom] as Vec2
+		return [lvLeft + lvRight, lvTop + lvBottom] as vec2
 	}
 
 	async #enableSpotAutoFocus() {
@@ -268,7 +268,7 @@ export class TethrSigma extends TethrPTPUSB {
 		})
 	}
 
-	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<Vec2>> {
+	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<vec2>> {
 		if (!(await this.get('canRunAutoFocus'))) {
 			return {writable: false, value: null}
 		}
@@ -283,10 +283,10 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const [lvY, lvX] = new Uint16Array(distanceMeasurementFramePosition)
 		const [lvStepY, lvStepX] = distanceMeasurementFrameMovementAmount
-		const lvSize: Vec2 = await this.#getLVCoordinateSize()
+		const lvSize: vec2 = await this.#getLVCoordinateSize()
 		const [lvTop, , lvLeft] = focusValidArea
 
-		const value: Vec2 = vec2.invlerp([0, 0], lvSize, [lvX, lvY])
+		const value: vec2 = vec2.invlerp([0, 0], lvSize, [lvX, lvY])
 		const step = vec2.div([lvStepX, lvStepY], lvSize)
 
 		// The value of focusValidArea includes the maximum 64x64 focus frame,
@@ -308,7 +308,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	async setAutoFocusFrameCenter(center: Vec2): Promise<OperationResult> {
+	async setAutoFocusFrameCenter(center: vec2): Promise<OperationResult> {
 		if (!(await this.get('canRunAutoFocus'))) {
 			return {status: 'invalid parameter'}
 		}
