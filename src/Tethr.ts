@@ -1,6 +1,5 @@
 import EventEmitter from 'eventemitter3'
 import {vec2} from 'linearly'
-import sleep from 'sleep-promise'
 
 import {
 	Aperture,
@@ -130,7 +129,8 @@ export abstract class Tethr
 		const configs = await Promise.all(
 			WritableConfigNameList.map(async name => {
 				const desc = await this.getDesc(name)
-				return desc.value === null ? null : ([name, desc.value] as const)
+				if (!desc.writable || desc.value === null) return null
+				return [name, desc.value] as const
 			})
 		)
 
@@ -151,10 +151,14 @@ export abstract class Tethr
 
 		for (const [name, value] of sortedConfigs) {
 			// NOTE: this might be converted to parallel execution in the future
-			await this.set(name, value)
+			try {
+				await this.set(name, value)
+			} finally {
+				null
+			}
 
 			// The delay is necessary to avoid "busy" error
-			await sleep(25)
+			// await sleep(25)
 		}
 	}
 
