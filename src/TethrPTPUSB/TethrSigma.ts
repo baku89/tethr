@@ -138,7 +138,6 @@ const SigmaExpirationMs = 16
 const SigmaCheckConfigIntervalMs = 1000
 
 export class TethrSigma extends TethrPTPUSB {
-	#liveviewEnabled = false
 	#isCapturing = false
 
 	async open() {
@@ -1237,7 +1236,10 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	async getLiveViewImage(): Promise<OperationResult<Blob>> {
+	#liveviewEnabled = false
+	#liveviewImageResult: OperationResult<Blob> = {status: 'busy'}
+
+	async #getLiveViewImage(): Promise<OperationResult<Blob>> {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'SigmaFP GetViewFrame',
 			opcode: OpCodeSigma.GetViewFrame,
@@ -1249,8 +1251,18 @@ export class TethrSigma extends TethrPTPUSB {
 
 		// Might be quirky but somehow works
 		const jpegData = data.slice(10)
+		return (this.#liveviewImageResult = {
+			status: 'ok',
+			value: new Blob([jpegData], {type: 'image/jpg'}),
+		})
+	}
 
-		return {status: 'ok', value: new Blob([jpegData], {type: 'image/jpg'})}
+	async getLiveViewImage(): Promise<OperationResult<Blob>> {
+		if (this.#liveviewEnabled) {
+			return this.#liveviewImageResult
+		}
+
+		return await this.#getLiveViewImage()
 	}
 
 	#ctx: CanvasRenderingContext2D | null = null
@@ -1275,7 +1287,7 @@ export class TethrSigma extends TethrPTPUSB {
 			try {
 				if (this.#isCapturing) return
 
-				const lvImage = await this.getLiveViewImage()
+				const lvImage = await this.#getLiveViewImage()
 
 				if (lvImage.status !== 'ok') return
 
