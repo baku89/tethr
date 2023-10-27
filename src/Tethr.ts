@@ -5,6 +5,7 @@ import {
 	Aperture,
 	BatteryLevel,
 	ConfigName,
+	ConfigNameList,
 	ConfigType,
 	DriveMode,
 	ExposureMeteringMode,
@@ -18,10 +19,8 @@ import {
 	ISO,
 	ManualFocusOption,
 	WhiteBalance,
-	WritableConfigNameList,
 } from './configs'
 import {TethrObject} from './TethrObject'
-import {isntNil} from './util'
 
 export type OperationResultStatus =
 	| 'ok'
@@ -127,16 +126,14 @@ export abstract class Tethr
 	 */
 	async exportConfigs(): Promise<Partial<ConfigType>> {
 		const configs = await Promise.all(
-			WritableConfigNameList.map(async name => {
+			ConfigNameList.flatMap(async name => {
 				const desc = await this.getDesc(name)
-				if (!desc.writable || desc.value === null) return null
-				return [name, desc.value] as const
+				if (desc.value === null) return []
+				return [[name, desc.value] as const]
 			})
 		)
 
-		const entries = configs.filter(isntNil)
-
-		return Object.fromEntries(entries)
+		return Object.fromEntries(configs)
 	}
 
 	/**
@@ -144,8 +141,8 @@ export abstract class Tethr
 	 */
 	async importConfigs(configs: Partial<ConfigType>) {
 		const sortedConfigs = Object.entries(configs).sort(([a], [b]) => {
-			const ai = WritableConfigNameList.indexOf(a as ConfigName)
-			const bi = WritableConfigNameList.indexOf(b as ConfigName)
+			const ai = ConfigNameList.indexOf(a as ConfigName)
+			const bi = ConfigNameList.indexOf(b as ConfigName)
 			return ai - bi
 		}) as [ConfigName, ConfigType[ConfigName]][]
 

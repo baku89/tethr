@@ -132,7 +132,7 @@ export type ConfigName = keyof ConfigType
 /**
  * All settable config list for `Tethr.{exportConfigs,importConfigs}()`. The list is sorted to ensure that all configs are correctly set. For example, `exposureMode` must be set before `shutterSpeed` and `aperture`.
  */
-export const WritableConfigNameList: ConfigName[] = [
+export const ConfigNameList: ConfigName[] = [
 	// Exposure settings
 	'exposureMode',
 	'aperture',
