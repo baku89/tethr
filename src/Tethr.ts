@@ -21,6 +21,7 @@ import {
 	WhiteBalance,
 } from './configs'
 import {TethrObject} from './TethrObject'
+import {isntNil} from './util'
 
 export type OperationResultStatus =
 	| 'ok'
@@ -125,13 +126,15 @@ export abstract class Tethr
 	 * Export all writable configs to a plain object.
 	 */
 	async exportConfigs(): Promise<Partial<ConfigType>> {
-		const configs = await Promise.all(
-			ConfigNameList.flatMap(async name => {
-				const desc = await this.getDesc(name)
-				if (desc.value === null) return []
-				return [[name, desc.value] as const]
-			})
-		)
+		const configs = (
+			await Promise.all(
+				ConfigNameList.map(async name => {
+					const desc = await this.getDesc(name)
+					if (desc.value === null) return null
+					return [name, desc.value] as const
+				})
+			)
+		).filter(isntNil)
 
 		return Object.fromEntries(configs)
 	}
