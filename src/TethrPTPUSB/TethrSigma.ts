@@ -1155,7 +1155,13 @@ export class TethrSigma extends TethrPTPUSB {
 	async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
+		if (this.#isCapturing) {
+			return {status: 'busy'}
+		}
+
 		this.#isCapturing = true
+
+		await this.clearImageDBAll()
 
 		const captureId = await this.executeSnapCommand(
 			SnapCaptureMode.NonAFCapture,
