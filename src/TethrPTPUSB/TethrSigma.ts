@@ -1161,14 +1161,12 @@ export class TethrSigma extends TethrPTPUSB {
 
 		this.#isCapturing = true
 
-		await this.clearImageDBAll()
-
-		const captureId = await this.executeSnapCommand(
+		const succeedSnapCommand = await this.executeSnapCommand(
 			SnapCaptureMode.NonAFCapture,
 			1
 		)
 
-		if (captureId === null) return {status: 'general error'}
+		if (!succeedSnapCommand) return {status: 'general error'}
 
 		const picts: TethrObject[] = []
 
@@ -1676,8 +1674,6 @@ export class TethrSigma extends TethrPTPUSB {
 		captureMode: number,
 		captureAmount = 1
 	): Promise<boolean> {
-		const {imageDBTail: captId} = await this.getCamCaptStatus()
-
 		const snapState = new Uint8Array([captureMode, captureAmount]).buffer
 
 		await this.device.sendData({
@@ -1686,8 +1682,10 @@ export class TethrSigma extends TethrPTPUSB {
 			data: this.encodeParameter(snapState),
 		})
 
+		const {imageDBHead} = await this.getCamCaptStatus()
+
 		for (let restTries = 50; restTries > 0; restTries--) {
-			const {status} = await this.getCamCaptStatus(captId)
+			const {status} = await this.getCamCaptStatus(imageDBHead)
 
 			const isFailure = (status & 0xf000) === 0x6000
 			if (isFailure) return false
@@ -1706,12 +1704,18 @@ export class TethrSigma extends TethrPTPUSB {
 	private async clearImageDBAll() {
 		const {imageDBHead, imageDBTail} = await this.getCamCaptStatus()
 
-		for (let id = imageDBHead; id < imageDBTail; id++) {
+		const imageDBCount = 29
+
+		for (
+			let id = imageDBHead;
+			id !== imageDBTail;
+			id = (id + 1) % imageDBCount
+		) {
 			await this.device.sendData({
 				label: 'SigmaFP ClearImageDBSingle',
 				opcode: OpCodeSigma.ClearImageDBSingle,
 				parameters: [id],
-				data: new ArrayBuffer(8),
+				data: new ArrayBuffer(16),
 			})
 		}
 	}
