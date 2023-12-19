@@ -95,7 +95,6 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 			cam.on('liveviewStreamUpdate', (ms: MediaStream | null) => {
 				liveviewMediaStream.value = ms
 			})
-			;(window as any).cam = cam
 		}
 	}
 
