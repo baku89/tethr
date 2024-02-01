@@ -39,15 +39,14 @@
 		"date-format-parse": "^0.2.7",
 		"eventemitter3": "^5.0.1",
 		"lodash": "^4.17.21",
+		"p-queue": "^8.0.1",
 		"p-timeout": "^6.1.2",
-		"promise-queue": "^2.2.5",
 		"sleep-promise": "^9.1.0",
 		"typescript-memoize": "^1.1.1"
 	},
 	"devDependencies": {
 		"@types/file-saver": "^2.0.7",
 		"@types/lodash": "^4.14.202",
-		"@types/promise-queue": "^2.2.3",
 		"@types/w3c-image-capture": "^1.0.10",
 		"@types/w3c-web-usb": "^1.0.10",
 		"@types/wicg-file-system-access": "^2023.10.4",

@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
+import PQueue from 'p-queue'
 import promiseTimeout from 'p-timeout'
-import PromiseQueue from 'promise-queue'
 import sleep from 'sleep-promise'
 
 import {ResCode} from './PTPDatacode'
@@ -75,7 +75,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 	#opened = false
 
-	#commandQueue = new PromiseQueue(1, Infinity)
+	#queue = new PQueue({concurrency: 1})
 
 	#console = console as Pick<Console, 'groupCollapsed' | 'groupEnd' | 'info'>
 
@@ -149,7 +149,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 					groupCollapsed: () => null,
 					groupEnd: () => null,
 					info: () => null,
-			  }
+				}
 	}
 
 	onEventCode(eventCode: number, callback: PTPEventCallback) {
@@ -173,7 +173,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
 			).finally(this.#console.groupEnd)
 
-		return this.#commandQueue.add(queue)
+		return this.#queue.add(queue) as Promise<PTPResponse>
 	}
 
 	sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
@@ -187,7 +187,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
 			).finally(this.#console.groupEnd)
 
-		return this.#commandQueue.add(queue)
+		return this.#queue.add(queue) as Promise<PTPResponse>
 	}
 
 	receiveData = (option: PTPReceiveDataOption): Promise<PTPDataResponse> => {
@@ -201,7 +201,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
 			).finally(this.#console.groupEnd)
 
-		return this.#commandQueue.add(queue)
+		return this.#queue.add(queue) as Promise<PTPDataResponse>
 	}
 
 	private sendCommandNow = async (
