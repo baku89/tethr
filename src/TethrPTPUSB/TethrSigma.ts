@@ -1171,6 +1171,8 @@ export class TethrSigma extends TethrPTPUSB {
 		const picts: TethrObject[] = []
 
 		if (doDownload) {
+			const CHUNK_SIZE = 0x00200000 // SampleApp uses this
+
 			const pictFileInfos = await this.getPictFileInfo2()
 
 			const totalSize = pictFileInfos.reduce((p, i) => p + i.fileSize, 0)
@@ -1180,8 +1182,6 @@ export class TethrSigma extends TethrPTPUSB {
 
 			for await (const info of pictFileInfos) {
 				const pictArray = new Uint8Array(info.fileSize)
-
-				const CHUNK_SIZE = 0x00200000 // SampleApp uses this
 
 				// Download the image with splitting every 2MB chunk
 				for (let offset = 0; offset < info.fileSize; offset += CHUNK_SIZE) {
