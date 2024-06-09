@@ -53,7 +53,7 @@ const cameras = await detectCameras()
 
 const cam = cameras[0]
 
-await cam.init()
+await cam.open()
 
 await cam.get('model')
 // -> 'Lumix S5'
