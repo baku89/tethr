@@ -691,6 +691,22 @@ export abstract class Tethr
 		return {status: 'unsupported'}
 	}
 
+	async startVideoRecording(): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+
+	async stopVideoRecording(): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+
+	async startBulbCapture(): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+
+	async stopBulbCapture(): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
 		return {status: 'unsupported'}
 	}
