@@ -5,7 +5,6 @@ import {
 	ConfigType,
 	Tethr,
 	TethrManager,
-	TethrObject,
 } from 'tethr'
 import {onUnmounted, reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
 
@@ -60,12 +59,12 @@ export function useTethrConfig<N extends ConfigName>(
 	return readonly(config)
 }
 
-export function useTethr(onSave: (object: TethrObject) => void) {
+export function useTethr() {
 	const manager = new TethrManager()
 
 	const pairedCameras = shallowRef<Tethr[]>([])
 
-	manager.getPairedCameras().then(cameras => {
+	manager.addListener('pairedCameraChange', cameras => {
 		pairedCameras.value = cameras
 	})
 
@@ -84,26 +83,33 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 	}
 
 	async function openCamera(cam: Tethr) {
+		if (camera.value) {
+			await closeCamera(camera.value)
+		}
+
 		await cam.open()
 		camera.value = cam
 		cam.on('disconnect', onDisconnect)
 		cam.on('liveviewStreamUpdate', onLivewviewStreamUpdate)
 	}
 
-	async function closeCurrentSelectedCamera() {
+	async function closeCamera(cam: Tethr) {
 		if (!camera.value) return
 
 		camera.value.off('disconnect', onDisconnect)
 		camera.value.off('liveviewStreamUpdate', onLivewviewStreamUpdate)
 		await camera.value.close()
-		camera.value = null
+
+		if (camera.value === cam) {
+			camera.value = null
+		}
 	}
 
 	async function requestCameras(type: 'usbptp' | 'webcam') {
-		let cams: Tethr[]
+		let cam: Tethr | null
 		try {
-			cams = await manager.requestCameras(type)
-			if (cams.length === 0) {
+			cam = await manager.requestCamera(type)
+			if (!cam) {
 				return
 			}
 		} catch (err) {
@@ -113,26 +119,7 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 			return
 		}
 
-		await closeCurrentSelectedCamera()
-
-		await openCamera(cams[0])
-	}
-
-	async function takePhoto() {
-		if (!camera.value) return
-		const result = await camera.value.takePhoto()
-		if (result.status === 'ok') {
-			for (const object of result.value) {
-				if (object.format !== 'raw') {
-					photoURL.value = URL.createObjectURL(object.blob)
-				}
-				onSave(object)
-			}
-		}
-	}
-
-	async function runAutoFocus() {
-		await camera.value?.runAutoFocus()
+		await openCamera(cam)
 	}
 
 	async function toggleLiveview() {
@@ -158,6 +145,8 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 
 	return {
 		pairedCameras,
+		openCamera,
+		closeCamera,
 		camera,
 		requestCameras,
 		// DPC
@@ -199,8 +188,6 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 		},
 		liveviewMediaStream,
 		photoURL,
-		runAutoFocus,
 		toggleLiveview,
-		takePhoto,
 	}
 }

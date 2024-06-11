@@ -14,22 +14,24 @@
 		</main>
 
 		<aside>
-			<ul>
-				<li v-for="(cam, i) in pairedCameras" :key="i">
-					<button>{{ i }}</button>
-				</li>
-			</ul>
 			<dl>
-				<dt>Request</dt>
-				<dt style="display: flex; gap: 1em">
+				<dt>Connect to</dt>
+				<dd class="connect-to">
 					<button class="connect-button" @click="requestCameras('usbptp')">
 						USB
 					</button>
 					<button class="connect-button" @click="requestCameras('webcam')">
 						Webcam
 					</button>
-				</dt>
+				</dd>
 			</dl>
+			<ul class="webcam-list">
+				<li v-for="(cam, i) in pairedCameras" :key="i">
+					<button @click="onClickCamera(cam)">
+						[{{ cam.type }}] {{ cam.name }}
+					</button>
+				</li>
+			</ul>
 
 			<template v-if="camera">
 				<h2>Actions</h2>
@@ -46,7 +48,7 @@
 					</template>
 					<template v-if="configs.canRunAutoFocus.value">
 						<dt>autoFocus</dt>
-						<dd><button @click="runAutoFocus">Run</button></dd>
+						<dd><button @click="camera.runAutoFocus">Run</button></dd>
 					</template>
 					<template v-if="configs.canRunManualFocus.value">
 						<dt>manualFocus</dt>
@@ -112,7 +114,7 @@
 							v-if="config.value !== null"
 							:key="name"
 							:label="name"
-							:config="config as any"
+							:config="config"
 						/>
 					</template>
 				</dl>
@@ -123,7 +125,7 @@
 
 <script lang="ts" setup>
 import {saveAs} from 'file-saver'
-import {TethrObject} from 'tethr'
+import {Tethr, TethrObject} from 'tethr'
 import {ref} from 'vue'
 
 import TethrConfig from './TethrConfig.vue'
@@ -167,14 +169,35 @@ async function onSave(object: TethrObject) {
 const {
 	pairedCameras,
 	camera,
+	openCamera,
+	closeCamera,
 	requestCameras,
 	configs,
 	liveviewMediaStream,
 	photoURL,
-	runAutoFocus,
 	toggleLiveview,
-	takePhoto,
-} = useTethr(onSave)
+} = useTethr()
+
+async function takePhoto() {
+	if (!camera.value) return
+	const result = await camera.value.takePhoto()
+	if (result.status === 'ok') {
+		for (const object of result.value) {
+			if (object.format !== 'raw') {
+				photoURL.value = URL.createObjectURL(object.blob)
+			}
+			onSave(object)
+		}
+	}
+}
+
+async function onClickCamera(cam: Tethr) {
+	if (cam.opened) {
+		closeCamera(cam)
+	} else {
+		openCamera(cam)
+	}
+}
 </script>
 
 <style lang="stylus" scoped>
@@ -220,6 +243,7 @@ dl
 	&:deep(dt)
 		height 2em
 		line-height 2em
+		white-space nowrap
 
 	&:deep(dd)
 		display flex
@@ -231,4 +255,18 @@ dl
 		display block
 		width 100%
 		text-align center
+
+.connect-to
+	display: flex
+	gap: 1em
+	margin-bottom 1em
+
+.webcam-list
+	grid-column: 1 / span 2
+
+	li
+		margin-bottom 0.2em
+
+	button
+		width 100%
 </style>

@@ -1,31 +1,107 @@
 import EventEmitter from 'eventemitter3'
 
 import {Tethr} from './Tethr'
-import {initTethrUSBPTP} from './TethrPTPUSB'
+import {initTethrUSBPTP, TethrPTPUSB} from './TethrPTPUSB'
 import {TethrWebcam} from './TethrWebcam'
-import {isntNil} from './util'
 
-export class TethrManager extends EventEmitter {
-	#cameras: Tethr[] | null = null
+type TethrManagerEvents = {
+	pairedCameraChange: (cameras: Tethr[]) => void
+}
+
+export class TethrManager extends EventEmitter<TethrManagerEvents> {
+	#ptpusbCameras: Map<USBDevice, TethrPTPUSB> = new Map()
+	#webcamCameras: Map<string, TethrWebcam> = new Map()
 
 	constructor() {
 		super()
+
+		this.#init()
+	}
+
+	async #init() {
+		console.log(this.#ptpusbCameras, this.#webcamCameras)
+		await Promise.allSettled([
+			this.#initPairedUSBPTPCameras(),
+			this.#refreshPairedWebcam(),
+		])
+
+		this.#emitPairedCameras()
+
+		// Detect USB PTP camera changes
+		navigator.usb.addEventListener('connect', async event => {
+			const camera = await initTethrUSBPTP(event.device)
+			if (camera) {
+				this.#ptpusbCameras.set(event.device, camera)
+				this.#emitPairedCameras()
+			}
+		})
+
+		navigator.usb.addEventListener('disconnect', event => {
+			const camera = this.#ptpusbCameras.get(event.device)
+			if (camera) {
+				this.#ptpusbCameras.delete(event.device)
+				this.#emitPairedCameras()
+			}
+		})
+
+		// Detect webcam changes
+		navigator.mediaDevices.addEventListener('devicechange', async e => {
+			await this.#refreshPairedWebcam()
+			this.#emitPairedCameras()
+		})
 	}
 
 	/**
-	 * Get all cameras that are connected and already paired with the browser. This can be called at any time.
-	 * @returns A list of cameras that are already connected
-n	 */
-	private async getPairedCameras() {
-		// Enumerate all USB devices
+	 * Initialize paired USB PTP cameras and add them to the manager. This should be called once during initialization.
+	 */
+	async #initPairedUSBPTPCameras() {
 		const usbDevices = await navigator.usb.getDevices()
-		const usbPromises = await Promise.all(usbDevices.map(initTethrUSBPTP))
-		const usbCameras = usbPromises.filter(isntNil)
+		const usbPromises = await Promise.allSettled(
+			usbDevices.map(initTethrUSBPTP)
+		)
+		const cameras = usbPromises
+			.filter(promise => promise.status === 'fulfilled')
+			.map(promise => (promise as PromiseFulfilledResult<TethrPTPUSB>).value)
 
-		// Enumerate all media devices (webcams)
-		const webcamDevices = await this.enumerateWebcamo()
+		for (const camera of cameras) {
+			this.#ptpusbCameras.set(camera.device.usb, camera)
+		}
+	}
 
-		return [...usbCameras]
+	async #refreshPairedWebcam(): Promise<TethrWebcam | null> {
+		const devices = await this.enumerateWebcamDeviceInfo()
+
+		let camera: TethrWebcam | null = null
+
+		const prevCameras = this.#webcamCameras
+
+		this.#webcamCameras = new Map()
+
+		for (const device of devices) {
+			if (device.kind !== 'videoinput' || device.deviceId === '') {
+				continue
+			}
+
+			const prevCamera = prevCameras.get(device.deviceId)
+
+			if (prevCamera) {
+				this.#webcamCameras.set(device.deviceId, prevCamera)
+			} else {
+				camera = new TethrWebcam(device)
+				this.#webcamCameras.set(device.deviceId, camera)
+			}
+		}
+
+		return camera ?? [...this.#webcamCameras.values()][0] ?? null
+	}
+
+	#emitPairedCameras() {
+		const cameras = [
+			...this.#ptpusbCameras.values(),
+			...this.#webcamCameras.values(),
+		]
+
+		this.emit('pairedCameraChange', cameras)
 	}
 
 	/**
@@ -33,36 +109,46 @@ n	 */
 	 * @param type The type of camera to request
 	 * @returns A list of cameras that were successfully connected to
 	 */
-	async requestCameras(type: 'usbptp' | 'webcam') {
+	async requestCamera(type: 'usbptp' | 'webcam'): Promise<Tethr | null> {
+		let camera: Tethr | null = null
+
 		switch (type) {
-			case 'usbptp':
-				return this.requestUSBPTPCameras()
-			case 'webcam':
-				return this.requestWebcams()
+			case 'usbptp': {
+				const ptpusbCamera = await this.requestUSBPTPCamera()
+				if (ptpusbCamera) {
+					this.#ptpusbCameras.set(ptpusbCamera.device.usb, ptpusbCamera)
+				}
+				camera = ptpusbCamera
+				break
+			}
+			case 'webcam': {
+				camera = await this.requestWebcam()
+			}
 		}
+
+		if (camera) {
+			this.#emitPairedCameras()
+		}
+
+		return camera
 	}
 
-	private async requestUSBPTPCameras() {
+	private async requestUSBPTPCamera(): Promise<TethrPTPUSB | null> {
 		let usbDevice: USBDevice
 		try {
 			usbDevice = await navigator.usb.requestDevice({filters: []})
 		} catch {
-			return []
+			return null
 		}
 
-		const camera = await initTethrUSBPTP(usbDevice)
-
-		if (!camera) return []
-
-		return [camera]
+		return await initTethrUSBPTP(usbDevice)
 	}
 
-	private async requestWebcams() {
+	private async requestWebcam() {
 		const media = await navigator.mediaDevices.getUserMedia({video: true})
 		media.getTracks().forEach(track => track.stop())
 
-		const camera = new TethrWebcam()
-		return [camera]
+		return this.#refreshPairedWebcam()
 	}
 
 	private async enumerateWebcamDeviceInfo() {

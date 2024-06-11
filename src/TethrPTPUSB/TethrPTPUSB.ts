@@ -49,19 +49,19 @@ type DataViewTypeForDatatypeCode<D extends DatatypeCode> =
 	D extends DatatypeCode.String
 		? string
 		: D extends DatatypeCode.Uint64
-		? bigint
-		: D extends DatatypeCode.Int64
-		? bigint
-		: D extends DatatypeCode.Uint128
-		? bigint
-		: D extends DatatypeCode.Int128
-		? bigint
-		: number
+			? bigint
+			: D extends DatatypeCode.Int64
+				? bigint
+				: D extends DatatypeCode.Uint128
+					? bigint
+					: D extends DatatypeCode.Int128
+						? bigint
+						: number
 
 export class TethrPTPUSB extends Tethr {
 	protected _opened = false
 
-	constructor(protected device: PTPDevice) {
+	constructor(readonly device: PTPDevice) {
 		super()
 	}
 
@@ -105,6 +105,14 @@ export class TethrPTPUSB extends Tethr {
 
 	get opened(): boolean {
 		return this._opened
+	}
+
+	get type(): 'usbptp' {
+		return 'usbptp'
+	}
+
+	get name(): string {
+		return this.device.usb.productName ?? 'Generic PTP Camera'
 	}
 
 	setLog(log: boolean) {

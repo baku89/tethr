@@ -21,17 +21,21 @@ type CaptureHandler =
 
 export class TethrWebcam extends Tethr {
 	#liveviewEnabled = false
+	#mediaDeviceInfo: MediaDeviceInfo
 	#media: MediaStream | null = null
 	#captureHandler: CaptureHandler | null = null
 	#facingModeDict = new BiMap<string, string>()
 
-	constructor() {
+	constructor(mediaDeviceInfo: MediaDeviceInfo) {
 		super()
+		this.#mediaDeviceInfo = mediaDeviceInfo
 	}
 
 	async open() {
 		try {
-			this.#media = await navigator.mediaDevices.getUserMedia({video: true})
+			this.#media = await navigator.mediaDevices.getUserMedia({
+				video: {deviceId: this.#mediaDeviceInfo.deviceId},
+			})
 		} catch {
 			throw new Error('No available webcam is connected')
 		}
@@ -83,6 +87,14 @@ export class TethrWebcam extends Tethr {
 
 	get opened() {
 		return !!this.#media
+	}
+
+	get type(): 'webcam' {
+		return 'webcam'
+	}
+
+	get name() {
+		return this.#mediaDeviceInfo.label
 	}
 
 	// Configs

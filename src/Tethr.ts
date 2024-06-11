@@ -116,6 +116,8 @@ export abstract class Tethr
 	abstract close(): Promise<void>
 
 	abstract get opened(): boolean
+	abstract get type(): 'usbptp' | 'webcam'
+	abstract get name(): string
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	setLog(log: boolean) {
