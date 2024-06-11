@@ -44,11 +44,10 @@
 import {computed} from 'vue'
 
 import InputRange from './InputRange.vue'
-import {TethrConfig} from './useTethr'
 
 interface Props {
 	label: string
-	config: TethrConfig<any>
+	config: any
 }
 
 const props = defineProps<Props>()
