@@ -47,22 +47,28 @@ Here's a list of camera models currently supported by the library:
 The project is in the early stages of development and lacks complete documentation. Here is a code sample to provide you with an understanding of how to utilize the library. it's important to note that all camera operations are asynchronous, and Tethr's instance methods return [Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
 ```ts
-import {detectCameras} from 'tethr'
+import {TethrManager} from 'tethr'
 
-const cameras = await detectCameras()
+// Since the TethrManager.requestCamera must be called in a user interaction, you need to call it in a button click event or something like that.
+document.getElementById('#connect').addEventListener('click', test)
 
-const cam = cameras[0]
+async function test() {
+	// Create a new TethrManager instance
+	const manager = new TethrManager()
 
-await cam.init()
+	// It will display a prompt to select a USB camera
+	const camera = await manager.requestCamera('usb')
 
-await cam.get('model')
-// -> 'Lumix S5'
+	await cam.init()
 
-await cam.set('shutterSpeed', '1/1000')
+	await cam.get('model')
+	// -> 'Lumix S5'
 
-const exposureModeDesc = await cam.getDesc('exposureMode')
-console.log(exposureModeDesc)
-/* -> {
+	await cam.set('shutterSpeed', '1/1000')
+
+	const exposureModeDesc = await cam.getDesc('exposureMode')
+	console.log(exposureModeDesc)
+	/* -> {
 	value: 'M',
 	writable: false // Because this can be set by physical dial on a camera
 	option: {
@@ -71,30 +77,31 @@ console.log(exposureModeDesc)
 	}
 } */
 
-const autoFocusResult = await cam.runAutoFocus()
-// -> {status: 'ok'}
+	const autoFocusResult = await cam.runAutoFocus()
+	// -> {status: 'ok'}
 
-if (!autoFocusResult.status !== 'ok') {
-	console.warn('AF failed')
+	if (!autoFocusResult.status !== 'ok') {
+		console.warn('AF failed')
+	}
+
+	const takePhotoResult = await cam.takePhoto({download: true})
+
+	if (takePhotoResult.status === 'ok') {
+		const url = URL.createURLObject(takePhotoResult.value[0])
+		$img.src = url
+	}
+
+	// Get storage informations
+	const storages = await cam.getStorages()
+
+	for (const storage of storages) {
+		console.log('Storage ID= ' + storage.id)
+		console.log('name=' + storage.name)
+		console.log('free space in images=' + storage.freeSpaceInImages)
+	}
+
+	await cam.close()
 }
-
-const takePhotoResult = await cam.takePhoto({download: true})
-
-if (takePhotoResult.status === 'ok') {
-	const url = URL.createURLObject(takePhotoResult.value[0])
-	$img.src = url
-}
-
-// Get storage informations
-const storages = await cam.getStorages()
-
-for (const storage of storages) {
-	console.log('Storage ID: ' + storage.id)
-	console.log('name=' + storage.name)
-	console.log('free space in images=' + storage.freeSpaceInImages)
-}
-
-await cam.close()
 ```
 
 ## Configs
