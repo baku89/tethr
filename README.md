@@ -59,7 +59,7 @@ async function test() {
 	// It will display a prompt to select a USB camera
 	const camera = await manager.requestCamera('usb')
 
-	await cam.init()
+	await cam.open()
 
 	await cam.get('model')
 	// -> 'Lumix S5'
