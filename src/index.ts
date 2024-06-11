@@ -1,4 +1,4 @@
 export * from './configs'
-export * from './detectCameras'
 export * from './Tethr'
+export * from './TethrManager'
 export * from './TethrObject'

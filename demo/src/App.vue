@@ -14,9 +14,22 @@
 		</main>
 
 		<aside>
-			<button class="connect-button" @click="toggleCameraConnection">
-				{{ camera ? 'Disconnect' : 'Connect' }}
-			</button>
+			<ul>
+				<li v-for="(cam, i) in pairedCameras" :key="i">
+					<button>{{ i }}</button>
+				</li>
+			</ul>
+			<dl>
+				<dt>Request</dt>
+				<dt style="display: flex; gap: 1em">
+					<button class="connect-button" @click="requestCameras('usbptp')">
+						USB
+					</button>
+					<button class="connect-button" @click="requestCameras('webcam')">
+						Webcam
+					</button>
+				</dt>
+			</dl>
 
 			<template v-if="camera">
 				<h2>Actions</h2>
@@ -99,7 +112,7 @@
 							v-if="config.value !== null"
 							:key="name"
 							:label="name"
-							:config="(config as any)"
+							:config="config as any"
 						/>
 					</template>
 				</dl>
@@ -152,12 +165,13 @@ async function onSave(object: TethrObject) {
 }
 
 const {
+	pairedCameras,
 	camera,
+	requestCameras,
 	configs,
 	liveviewMediaStream,
 	photoURL,
 	runAutoFocus,
-	toggleCameraConnection,
 	toggleLiveview,
 	takePhoto,
 } = useTethr(onSave)

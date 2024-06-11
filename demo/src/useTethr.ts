@@ -3,8 +3,8 @@ import {
 	ConfigDescOption,
 	ConfigName,
 	ConfigType,
-	detectCameras,
 	Tethr,
+	TethrManager,
 	TethrObject,
 } from 'tethr'
 import {onUnmounted, reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
@@ -61,41 +61,61 @@ export function useTethrConfig<N extends ConfigName>(
 }
 
 export function useTethr(onSave: (object: TethrObject) => void) {
+	const manager = new TethrManager()
+
+	const pairedCameras = shallowRef<Tethr[]>([])
+
+	manager.getPairedCameras().then(cameras => {
+		pairedCameras.value = cameras
+	})
+
 	const camera = shallowRef<Tethr | null>(null)
 
 	const liveviewMediaStream = ref<null | MediaStream>(null)
 
 	const photoURL = ref(TransparentPng)
 
-	async function toggleCameraConnection() {
-		if (camera.value && camera.value.opened) {
-			await camera.value.close()
-			camera.value = null
-			return
-		}
-		if (!camera.value) {
-			let cams: Tethr[]
-			try {
-				cams = await detectCameras()
-				if (cams.length === 0) {
-					throw new Error('No camera detected')
-				}
-			} catch (err) {
-				if (err instanceof Error) {
-					alert(err.message)
-				}
+	function onDisconnect() {
+		camera.value = null
+	}
+
+	function onLivewviewStreamUpdate(ms: MediaStream | null) {
+		liveviewMediaStream.value = ms
+	}
+
+	async function openCamera(cam: Tethr) {
+		await cam.open()
+		camera.value = cam
+		cam.on('disconnect', onDisconnect)
+		cam.on('liveviewStreamUpdate', onLivewviewStreamUpdate)
+	}
+
+	async function closeCurrentSelectedCamera() {
+		if (!camera.value) return
+
+		camera.value.off('disconnect', onDisconnect)
+		camera.value.off('liveviewStreamUpdate', onLivewviewStreamUpdate)
+		await camera.value.close()
+		camera.value = null
+	}
+
+	async function requestCameras(type: 'usbptp' | 'webcam') {
+		let cams: Tethr[]
+		try {
+			cams = await manager.requestCameras(type)
+			if (cams.length === 0) {
 				return
 			}
-			const cam = cams[0]
-			await cam.open()
-			camera.value = cam
-			cam.on('disconnect', () => {
-				camera.value = null
-			})
-			cam.on('liveviewStreamUpdate', (ms: MediaStream | null) => {
-				liveviewMediaStream.value = ms
-			})
+		} catch (err) {
+			if (err instanceof Error) {
+				alert(err.message)
+			}
+			return
 		}
+
+		await closeCurrentSelectedCamera()
+
+		await openCamera(cams[0])
 	}
 
 	async function takePhoto() {
@@ -137,7 +157,9 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 	})
 
 	return {
+		pairedCameras,
 		camera,
+		requestCameras,
 		// DPC
 		configs: {
 			manufacturer: useTethrConfig(camera, 'manufacturer'),
@@ -178,7 +200,6 @@ export function useTethr(onSave: (object: TethrObject) => void) {
 		liveviewMediaStream,
 		photoURL,
 		runAutoFocus,
-		toggleCameraConnection,
 		toggleLiveview,
 		takePhoto,
 	}

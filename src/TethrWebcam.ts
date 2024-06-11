@@ -10,10 +10,6 @@ import {
 } from './Tethr'
 import {TethrObject} from './TethrObject'
 
-export function initTethrWebcam() {
-	return new TethrWebcam()
-}
-
 type CaptureHandler =
 	| {type: 'imageCapture'; imageCapture: ImageCapture}
 	| {

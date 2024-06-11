@@ -5,6 +5,11 @@ import {TethrPTPUSB} from './TethrPTPUSB'
 import {TethrRicohTheta} from './TethrRicohTheta'
 import {TethrSigma} from './TethrSigma'
 
+/**
+ * Try to initialize the given usb device as a PTP camera.
+ * @param usb The USB device to initialize
+ * @returns The initialized TethrPTPUSB object or null if the device is not a PTP camera
+ */
 export async function initTethrUSBPTP(
 	usb: USBDevice
 ): Promise<TethrPTPUSB | null> {
@@ -24,7 +29,7 @@ export async function initTethrUSBPTP(
 			navigator.userAgent.match(/mac/i)
 		) {
 			throw new Error(
-				`Unable to claim interface. On macOS, you need run " while ; do; kill -9 $(ps aux | grep "[p]tpcamera" | awk '{print $2}'); done" in Terminal during connecting to a camera via USB.`
+				`Unable to claim interface. On macOS, you need run "while ; do; kill -9 $(ps aux | grep '[p]tpcamera' | awk '{print $2}'); done" in Terminal during connecting to a camera via USB.`
 			)
 		}
 		return null
