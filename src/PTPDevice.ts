@@ -80,7 +80,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	#console = console as Pick<Console, 'groupCollapsed' | 'groupEnd' | 'info'>
 
 	constructor(
-		public usbDevice: USBDevice,
+		public readonly usb: USBDevice,
 		{log = true}: PTPDeviceOptions = {}
 	) {
 		super()
@@ -89,13 +89,13 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	}
 
 	open = async (): Promise<void> => {
-		await this.usbDevice.open()
+		await this.usb.open()
 		// Configurate
-		let {configuration} = this.usbDevice
+		let {configuration} = this.usb
 		if (!configuration) {
-			const num = this.usbDevice.configurations[0].configurationValue
-			await this.usbDevice.selectConfiguration(num)
-			configuration = this.usbDevice.configuration
+			const num = this.usb.configurations[0].configurationValue
+			await this.usb.selectConfiguration(num)
+			configuration = this.usb.configuration
 		}
 
 		if (!configuration) throw new Error('Cannot configure PTPDevice')
@@ -103,7 +103,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		// Claim interface (Ignore error)
 		const usbInterface = configuration.interfaces[0]
 		const interfaceNum = usbInterface.interfaceNumber
-		await this.usbDevice.claimInterface(interfaceNum)
+		await this.usb.claimInterface(interfaceNum)
 
 		// Determine endpoints number
 		const endpoints = usbInterface.alternates[0].endpoints
@@ -132,8 +132,8 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	}
 
 	close = async (): Promise<void> => {
-		if (this.usbDevice && this.usbDevice.opened) {
-			await this.usbDevice.close()
+		if (this.usb && this.usb.opened) {
+			await this.usb.close()
 		}
 		this.#opened = false
 	}
@@ -376,7 +376,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		transactionId: number,
 		parameters: number[]
 	) => {
-		if (!this.usbDevice) throw new Error('Device is not opened')
+		if (!this.usb) throw new Error('Device is not opened')
 
 		const length = 12 + parameters.length * 4
 
@@ -389,7 +389,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		parameters.forEach(param => dataView.writeUint32(param))
 
-		const sent = await this.usbDevice.transferOut(
+		const sent = await this.usb.transferOut(
 			this.#endpointNumberBulkOut,
 			dataView.toBuffer()
 		)
@@ -409,7 +409,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		transactionId: number,
 		data: ArrayBuffer
 	) => {
-		if (!this.usbDevice) return false
+		if (!this.usb) return false
 
 		const dataView = new PTPDataView()
 
@@ -423,7 +423,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const dataBytes = new Uint8Array(data)
 		dataBytes.forEach(byte => dataView.writeUint8(byte))
 
-		const sent = await this.usbDevice.transferOut(
+		const sent = await this.usb.transferOut(
 			this.#endpointNumberBulkOut,
 			dataView.toBuffer()
 		)
@@ -442,9 +442,9 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		expectedTransactionId: number,
 		maxByteLength: number
 	): Promise<BulkInInfo> => {
-		if (!this.usbDevice || !this.usbDevice.opened) throw new Error()
+		if (!this.usb || !this.usb.opened) throw new Error()
 
-		const {data, status} = await this.usbDevice.transferIn(
+		const {data, status} = await this.usb.transferIn(
 			this.#endpointNumberBulkIn,
 			maxByteLength
 		)
@@ -483,10 +483,10 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	}
 
 	private listenInterruptIn = async () => {
-		if (!this.usbDevice || !this.usbDevice.opened) return
+		if (!this.usb || !this.usb.opened) return
 
 		try {
-			const {data, status} = await this.usbDevice.transferIn(
+			const {data, status} = await this.usb.transferIn(
 				this.#endpointerNumberInterruptIn,
 				0x800000
 			)
@@ -533,7 +533,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 	private listenDisconnect() {
 		navigator.usb.addEventListener('disconnect', ev => {
-			if (ev.device === this.usbDevice) {
+			if (ev.device === this.usb) {
 				this.emit('disconnect')
 			}
 		})
