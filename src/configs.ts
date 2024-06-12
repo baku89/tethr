@@ -130,52 +130,85 @@ export type ConfigType = {
 export type ConfigName = keyof ConfigType
 
 /**
- * All settable config list for `Tethr.{exportConfigs,importConfigs}()`. The list is sorted to ensure that all configs are correctly set. For example, `exposureMode` must be set before `shutterSpeed` and `aperture`.
+ * All configuration names in the order of dependencies.
  */
-export const ConfigNameList: ConfigName[] = [
-	// Exposure settings
-	'exposureMode',
-	'aperture',
-	'shutterSpeed',
+export const ConfigNameList: ConfigName[] = (() => {
+	const names: ConfigName[] = [
+		'aperture',
+		'autoFocusFrameCenter',
+		'autoFocusFrameSize',
+		'batteryLevel',
+		'burstInterval',
+		'burstNumber',
+		'canRunAutoFocus',
+		'canRunManualFocus',
+		'canStartLiveview',
+		'canTakePhoto',
+		'captureDelay',
+		'colorMode',
+		'colorTemperature',
+		'contrast',
+		'dateTime',
+		'destinationToSave',
+		'digitalZoom',
+		'driveMode',
+		'exposureComp',
+		'exposureMeteringMode',
+		'exposureMode',
+		'facingMode',
+		'flashMode',
+		'focalLength',
+		'focusDistance',
+		'focusMeteringMode',
+		'focusMode',
+		'focusPeaking',
+		'functionalMode',
+		'imageAspect',
+		'imageQuality',
+		'imageSize',
+		'iso',
+		'liveviewEnabled',
+		'liveviewMagnifyRatio',
+		'liveviewSize',
+		'manualFocusOptions',
+		'manufacturer',
+		'model',
+		'serialNumber',
+		'sharpness',
+		'shutterSpeed',
+		'shutterSound',
+		'timelapseInterval',
+		'timelapseNumber',
+		'whiteBalance',
+	]
 
-	// White balance
-	'whiteBalance',
-	'colorTemperature',
+	const dependencies = new Map<ConfigName, ConfigName[]>([
+		['aperture', ['exposureMode']],
+		['shutterSpeed', ['exposureMode', 'driveMode', 'iso']],
+		['exposureComp', ['exposureMode']],
+		['iso', ['exposureMode']],
+		['colorTemperature', ['whiteBalance']],
+	])
 
-	// Focus-related configs
-	'focusMode',
-	'focalLength',
-	'focusMeteringMode',
-	'focusDistance',
+	const sortedNames: ConfigName[] = []
 
-	// Misc
-	'burstInterval',
-	'burstNumber',
-	'captureDelay',
-	'colorMode',
-	'contrast',
-	'dateTime',
-	'destinationToSave',
-	'digitalZoom',
-	'driveMode',
-	'exposureComp',
-	'exposureMeteringMode',
-	'facingMode',
-	'flashMode',
-	'focusPeaking',
-	'functionalMode',
-	'imageAspect',
-	'imageQuality',
-	'imageSize',
-	'iso',
-	'liveviewEnabled',
-	'liveviewMagnifyRatio',
-	'liveviewSize',
-	'sharpness',
-	'shutterSound',
-	'timelapseInterval',
-	'timelapseNumber',
-]
+	const set = new Set<ConfigName>()
+
+	const add = (name: ConfigName) => {
+		if (set.has(name)) {
+			return
+		}
+
+		dependencies.get(name)?.forEach(add)
+
+		sortedNames.push(name)
+		set.add(name)
+	}
+
+	names.forEach(add)
+
+	return sortedNames
+})()
 
 // Table
 export const ConfigForDevicePropTable = new BiMap<number, ConfigName>([
