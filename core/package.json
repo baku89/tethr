@@ -20,7 +20,8 @@
 	],
 	"scripts": {
 		"build": "tsc",
-		"prepare": "npm run build"
+		"prepare": "npm run build",
+		"postversion": "git push && git push --tags && npm publish"
 	},
 	"files": [
 		"lib"

@@ -1,6 +1,6 @@
 {
 	"name": "@tethr/vue3",
-	"version": "1.0.0",
+	"version": "0.0.0",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
@@ -8,8 +8,10 @@
 		"prepare": "npm run build"
 	},
 	"files": [
-		"index.js"
+		"lib"
 	],
+	"homepage": "https://baku89.github.io/tethr/",
+	"license": "MIT",
 	"dependencies": {
 		"vue": "^3.0.0",
 		"tethr": "^0.2.0"
