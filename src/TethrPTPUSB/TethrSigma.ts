@@ -1288,29 +1288,26 @@ export class TethrSigma extends TethrPTPUSB {
 		const updateFrame = async () => {
 			if (!this.#liveviewEnabled || !this.opened) return
 
-			try {
-				if (this.#isCapturing) return
+			if (this.#isCapturing) return
 
-				const lvImage = await this.#getLiveViewImage()
+			const lvImage = await this.#getLiveViewImage()
 
-				if (lvImage.status !== 'ok') return
+			if (lvImage.status !== 'ok') return
 
-				const bitmap = await createImageBitmap(lvImage.value)
+			const bitmap = await createImageBitmap(lvImage.value)
 
-				const sizeChanged =
-					canvas.width !== bitmap.width || canvas.height !== bitmap.height
+			const sizeChanged =
+				canvas.width !== bitmap.width || canvas.height !== bitmap.height
 
-				if (sizeChanged) {
-					canvas.width = bitmap.width
-					canvas.height = bitmap.height
-				}
-
-				ctx.drawImage(bitmap, 0, 0)
-			} finally {
-				requestAnimationFrame(updateFrame)
+			if (sizeChanged) {
+				canvas.width = bitmap.width
+				canvas.height = bitmap.height
 			}
+
+			ctx.drawImage(bitmap, 0, 0)
 		}
-		updateFrame()
+
+		this.device.on('idle', updateFrame)
 
 		const stream = ctx.canvas.captureStream(60)
 		this.emit('liveviewStreamUpdate', stream)
