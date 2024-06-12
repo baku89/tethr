@@ -58,8 +58,9 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 		const usbPromises = await Promise.allSettled(
 			usbDevices.map(initTethrUSBPTP)
 		)
+
 		const cameras = usbPromises
-			.filter(promise => promise.status === 'fulfilled')
+			.filter(promise => promise.status === 'fulfilled' && promise.value)
 			.map(promise => (promise as PromiseFulfilledResult<TethrPTPUSB>).value)
 
 		for (const camera of cameras) {
