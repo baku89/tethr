@@ -2,8 +2,8 @@ import {BiMap} from 'bim'
 
 import {ConfigDesc} from '.'
 import {
-	createReadonlyConfigDesc,
 	OperationResult,
+	readonlyConfigDesc,
 	TakePhotoOption,
 	Tethr,
 	UnsupportedConfigDesc,
@@ -99,11 +99,11 @@ export class TethrWebcam extends Tethr {
 
 	// Configs
 	async getCanStartLiveviewDesc() {
-		return createReadonlyConfigDesc(true)
+		return readonlyConfigDesc(true)
 	}
 
 	async getCanTakePhotoDesc() {
-		return createReadonlyConfigDesc(this.#captureHandler !== null)
+		return readonlyConfigDesc(this.#captureHandler !== null)
 	}
 
 	async setFacingMode(value: string): Promise<OperationResult> {
@@ -164,11 +164,11 @@ export class TethrWebcam extends Tethr {
 	}
 
 	async getModelDesc() {
-		return createReadonlyConfigDesc('Webcam')
+		return readonlyConfigDesc('Webcam')
 	}
 
 	async getLiveviewEnabledDesc() {
-		return createReadonlyConfigDesc(this.#liveviewEnabled)
+		return readonlyConfigDesc(this.#liveviewEnabled)
 	}
 
 	// Actions
@@ -245,7 +245,7 @@ export class TethrWebcam extends Tethr {
 
 		this.#liveviewEnabled = true
 		this.emit('liveviewStreamUpdate', this.#media)
-		this.emit('liveviewEnabledChange', createReadonlyConfigDesc(true))
+		this.emit('liveviewEnabledChange', readonlyConfigDesc(true))
 		return {
 			status: 'ok',
 			value: this.#media,
@@ -255,7 +255,7 @@ export class TethrWebcam extends Tethr {
 	async stopLiveview(): Promise<OperationResult> {
 		this.#liveviewEnabled = false
 		this.emit('liveviewStreamUpdate', null)
-		this.emit('liveviewEnabledChange', createReadonlyConfigDesc(false))
+		this.emit('liveviewEnabledChange', readonlyConfigDesc(false))
 		return {status: 'ok'}
 	}
 }

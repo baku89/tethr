@@ -14,8 +14,8 @@ import {PTPDataView} from '../PTPDataView'
 import {PTPDevice, PTPEvent} from '../PTPDevice'
 import {
 	ConfigDesc,
-	createReadonlyConfigDesc,
 	OperationResult,
+	readonlyConfigDesc,
 	TakePhotoOption,
 } from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
@@ -258,7 +258,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 	}
 
 	async getManualFocusOptionsDesc() {
-		return createReadonlyConfigDesc([
+		return readonlyConfigDesc([
 			'near:2',
 			'near:1',
 			'far:1',
@@ -267,19 +267,19 @@ export class TethrPanasonic extends TethrPTPUSB {
 	}
 
 	async getCanTakePhotoDesc() {
-		return createReadonlyConfigDesc(true)
+		return readonlyConfigDesc(true)
 	}
 
 	async getCanRunAutoFocusDesc() {
-		return createReadonlyConfigDesc(true)
+		return readonlyConfigDesc(true)
 	}
 
 	async getCanRunManualFocusDesc() {
-		return createReadonlyConfigDesc(true)
+		return readonlyConfigDesc(true)
 	}
 
 	async getCanStartLiveviewDesc() {
-		return createReadonlyConfigDesc(true)
+		return readonlyConfigDesc(true)
 	}
 
 	async setColorTemperature(value: number) {

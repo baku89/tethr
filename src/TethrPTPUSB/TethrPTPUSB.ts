@@ -29,8 +29,8 @@ import {PTPDevice, PTPEvent} from '../PTPDevice'
 import {
 	ConfigDesc,
 	ConfigDescOption,
-	createReadonlyConfigDesc,
 	OperationResult,
+	readonlyConfigDesc,
 	TakePhotoOption,
 	Tethr,
 } from '../Tethr'
@@ -154,7 +154,7 @@ export class TethrPTPUSB extends Tethr {
 	async getCanTakePhotoDesc() {
 		const {operationsSupported} = await this.getDeviceInfo()
 		const value = operationsSupported.includes(OpCode.InitiateCapture)
-		return createReadonlyConfigDesc(value)
+		return readonlyConfigDesc(value)
 	}
 
 	setCaptureDelay(value: number) {
@@ -331,12 +331,12 @@ export class TethrPTPUSB extends Tethr {
 
 	async getManufacturerDesc() {
 		const value = (await this.getDeviceInfo()).manufacturer
-		return createReadonlyConfigDesc(value)
+		return readonlyConfigDesc(value)
 	}
 
 	async getModelDesc() {
 		const value = (await this.getDeviceInfo()).model
-		return createReadonlyConfigDesc(value)
+		return readonlyConfigDesc(value)
 	}
 
 	setWhiteBalance(value: WhiteBalance) {

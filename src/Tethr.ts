@@ -83,11 +83,11 @@ export const UnsupportedConfigDesc: ConfigDesc<any> = {
 	value: null,
 }
 
-export const UnsupportedOperationResult: OperationResult<any> = {
+export const UnsupportedOperationResult = {
 	status: 'unsupported',
-}
+} as const
 
-export function createReadonlyConfigDesc<T>(value: T): ConfigDesc<T> {
+export function readonlyConfigDesc<T>(value: T): ConfigDesc<T> {
 	return {
 		writable: false,
 		value,
@@ -196,210 +196,168 @@ export abstract class Tethr
 		return (this as any)[getterName]()
 	}
 
-	async setAperture(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: Aperture
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setAperture(value: Aperture): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setAutoFocusFrameCenter(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: vec2
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setAutoFocusFrameCenter(value: vec2): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<vec2>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setAutoFocusFrameSize(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setAutoFocusFrameSize(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getAutoFocusFrameSizeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setBatteryLevel(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: BatteryLevel
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setBatteryLevel(value: BatteryLevel): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setBurstInterval(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setBurstInterval(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getBurstIntervalDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setBurstNumber(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setBurstNumber(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getBurstNumberDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setCanRunAutoFocus(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: boolean
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setCanRunAutoFocus(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getCanRunAutoFocusDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setCanRunManualFocus(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: boolean
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setCanRunManualFocus(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getCanRunManualFocusDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setCanStartLiveview(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: boolean
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setCanStartLiveview(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getCanStartLiveviewDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setCanTakePhoto(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: boolean
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setCanTakePhoto(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getCanTakePhotoDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setCaptureDelay(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setCaptureDelay(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getCaptureDelayDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setColorMode(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setColorMode(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getColorModeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setColorTemperature(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setColorTemperature(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setCompressionSetting(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setCompressionSetting(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getCompressionSettingDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setContrast(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setContrast(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getContrastDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setDateTime(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: Date
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setDateTime(value: Date): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getDateTimeDesc(): Promise<ConfigDesc<Date>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setDestinationToSave(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setDestinationToSave(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setDigitalZoom(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setDigitalZoom(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getDigitalZoomDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setDriveMode(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: DriveMode
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setDriveMode(value: DriveMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getDriveModeDesc(): Promise<ConfigDesc<DriveMode>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setExposureComp(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setExposureComp(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getExposureCompDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setExposureMeteringMode(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setExposureMeteringMode(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getExposureMeteringModeDesc(): Promise<
@@ -408,50 +366,39 @@ export abstract class Tethr
 		return UnsupportedConfigDesc
 	}
 
-	async setExposureMode(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: ExposureMode
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setExposureMode(value: ExposureMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setFacingMode(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setFacingMode(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getFacingModeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setFlashMode(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: FlashMode
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setFlashMode(value: FlashMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getFlashModeDesc(): Promise<ConfigDesc<FlashMode>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setFocalLength(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: FocalLength
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setFocalLength(value: FocalLength): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getFocalLengthDesc(): Promise<ConfigDesc<FocalLength>> {
 		return UnsupportedConfigDesc
 	}
-
-	async setFocusDistance(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setFocusDistance(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
@@ -468,10 +415,8 @@ export abstract class Tethr
 		return UnsupportedConfigDesc
 	}
 
-	async setFocusMode(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: FocusMode
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setFocusMode(value: FocusMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getFocusModeDesc(): Promise<ConfigDesc<FocusMode>> {
@@ -481,10 +426,8 @@ export abstract class Tethr
 		}
 	}
 
-	async setFocusPeaking(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: FocusPeaking
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setFocusPeaking(value: FocusPeaking): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getFocusPeakingDesc(): Promise<ConfigDesc<FocusPeaking>> {
@@ -494,80 +437,64 @@ export abstract class Tethr
 		}
 	}
 
-	async setFunctionalMode(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: FunctionalMode
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setFunctionalMode(value: FunctionalMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getFunctionalModeDesc(): Promise<ConfigDesc<FunctionalMode>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setImageAspect(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setImageAspect(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getImageAspectDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setImageQuality(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setImageQuality(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getImageQualityDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setImageSize(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setImageSize(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getImageSizeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setIso(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: ISO
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setIso(value: ISO): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getIsoDesc(): Promise<ConfigDesc<ISO>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setLiveviewEnabled(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: boolean
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setLiveviewEnabled(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setLiveviewMagnifyRatio(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setLiveviewMagnifyRatio(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setLiveviewSize(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setLiveviewSize(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
@@ -584,105 +511,88 @@ export abstract class Tethr
 		return UnsupportedConfigDesc
 	}
 
-	async setManufacturer(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setManufacturer(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getManufacturerDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setModel(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setModel(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getModelDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setSerialNumber(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setSerialNumber(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getSerialNumberDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setSharpness(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setSharpness(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getSharpnessDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setShutterSpeed(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: string
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setShutterSpeed(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setShutterSound(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setShutterSound(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getShutterSoundDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setTimelapseInterval(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setTimelapseInterval(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getTimelapseIntervalDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setTimelapseNumber(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: number
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setTimelapseNumber(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getTimelapseNumberDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
 
-	async setWhiteBalance(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		value: WhiteBalance
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setWhiteBalance(value: WhiteBalance): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
 		return UnsupportedConfigDesc
 	}
 
-	// Actions
+	/**
+	 * Runs auto focus.
+	 * @category Action
+	 */
 	async runAutoFocus(): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 
-	async runManualFocus(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		option: ManualFocusOption
-	): Promise<OperationResult> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async runManualFocus(option: ManualFocusOption): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 
@@ -690,16 +600,16 @@ export abstract class Tethr
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		option?: TakePhotoOption
 	): Promise<OperationResult<TethrObject[]>> {
-		return {status: 'unsupported'}
+		return UnsupportedOperationResult
 	}
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
-		return {status: 'unsupported'}
+		return UnsupportedOperationResult
 	}
 	async stopLiveview(): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getLiveViewImage(): Promise<OperationResult<Blob>> {
-		return {status: 'unsupported'}
+		return UnsupportedOperationResult
 	}
 }

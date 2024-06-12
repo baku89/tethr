@@ -21,9 +21,9 @@ import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {
 	ConfigDesc,
-	createReadonlyConfigDesc,
 	OperationResult,
 	OperationResultStatus,
+	readonlyConfigDesc,
 	TakePhotoOption,
 	UnsupportedConfigDesc,
 } from '../Tethr'
@@ -403,7 +403,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getCanTakePhotoDesc() {
-		return createReadonlyConfigDesc(true)
+		return readonlyConfigDesc(true)
 	}
 
 	async getCanRunAutoFocusDesc() {
@@ -412,12 +412,12 @@ export class TethrSigma extends TethrPTPUSB {
 		// 3 == AF-S
 		const canRun = focusMode.includes(3)
 
-		return createReadonlyConfigDesc(canRun)
+		return readonlyConfigDesc(canRun)
 	}
 
 	async getCanStartLiveviewDesc() {
 		const {lvImageTransfer} = await this.getCamCanSetInfo5()
-		return createReadonlyConfigDesc(lvImageTransfer.length > 0)
+		return readonlyConfigDesc(lvImageTransfer.length > 0)
 	}
 
 	async setColorMode(colorMode: string): Promise<OperationResult> {
