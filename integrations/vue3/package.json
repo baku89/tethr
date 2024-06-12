@@ -3,6 +3,7 @@
 	"version": "0.0.0",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
+	"private": false,
 	"scripts": {
 		"build": "tsc",
 		"prepare": "npm run build",
