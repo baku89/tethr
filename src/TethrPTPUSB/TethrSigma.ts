@@ -269,11 +269,11 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<vec2>> {
-		if (!(await this.get('canRunAutoFocus'))) {
+		if (!(await this.getCanRunAutoFocus())) {
 			return {writable: false, value: null}
 		}
 
-		await this.#enableSpotAutoFocus()
+		// await this.#enableSpotAutoFocus()
 
 		// Then, get the current position
 		const {distanceMeasurementFramePosition} = await this.getCamStatus()
