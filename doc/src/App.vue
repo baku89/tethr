@@ -5,7 +5,7 @@
 			<a href="https://github.com/baku89/tethr">Fork Me on GitHub</a>
 			<video
 				class="view"
-				:srcObject.prop="liveviewMediaStream"
+				:srcObject.prop="configs.liveview.value"
 				autoplay
 				muted
 				playsinline
@@ -101,7 +101,7 @@
 						<dt>liveview</dt>
 						<dd>
 							<button @click="toggleLiveview">
-								{{ configs.liveviewEnabled.value ? 'Stop' : 'Start' }}
+								{{ configs.liveview.value ? 'Stop' : 'Start' }}
 							</button>
 						</dd>
 					</template>
@@ -176,7 +176,6 @@ const {
 	pairedCameras,
 	requestCamera,
 	configs,
-	liveviewMediaStream,
 	toggleLiveview,
 } = useTethr()
 
@@ -197,7 +196,7 @@ const photoURL = ref(TransparentPng)
 
 async function onClickPairedCamera(cam: Tethr) {
 	if (cam.opened) {
-		close(cam)
+		close()
 	} else {
 		open(cam)
 	}

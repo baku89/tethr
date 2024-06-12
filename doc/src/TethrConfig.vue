@@ -4,7 +4,7 @@
 		<dd>
 			<template v-if="config.writable">
 				<template v-if="config.option?.type === 'enum'">
-					<select :value="valueIndex" @change.prevent="update">
+					<select :value="valueIndex" @change.prevent="set">
 						<option
 							v-for="(v, i) in config.option.values"
 							:key="i"
@@ -22,7 +22,7 @@
 						:min="config.option.min"
 						:max="config.option.max"
 						:step="config.option.step"
-						@change="update"
+						@change="set"
 					/>
 				</template>
 			</template>
@@ -60,16 +60,16 @@ const valueIndex = computed(() => {
 	return 0
 })
 
-function update(e: Event) {
+function set(e: Event) {
 	if (!props.config.option) return
 	const str = (e.target as HTMLSelectElement).value
 	if (props.config.option.type === 'enum') {
 		const index = parseInt(str)
 		const value = props.config.option.values[index]
-		props.config.update(value)
+		props.config.set(value)
 	} else {
 		const value = parseFloat(str)
-		props.config.update(value)
+		props.config.set(value)
 	}
 }
 </script>

@@ -2,6 +2,7 @@ import {
 	ConfigDesc,
 	ConfigDescOption,
 	ConfigName,
+	ConfigNameList,
 	ConfigType,
 	Tethr,
 	TethrManager,
@@ -10,7 +11,6 @@ import {
 	onUnmounted,
 	readonly,
 	Ref,
-	ref,
 	shallowReactive,
 	shallowRef,
 	watch,
@@ -97,16 +97,6 @@ export function useTethr() {
 		pairedCameras.value = cameras
 	})
 
-	const liveviewMediaStream = ref<null | MediaStream>(null)
-
-	function onDisconnect() {
-		camera.value = null
-	}
-
-	function onLivewviewStreamUpdate(ms: MediaStream | null) {
-		liveviewMediaStream.value = ms
-	}
-
 	async function open(cam: Tethr) {
 		if (camera.value) {
 			close()
@@ -114,15 +104,16 @@ export function useTethr() {
 
 		await cam.open()
 		camera.value = cam
-		cam.on('disconnect', onDisconnect)
-		cam.on('liveviewStreamUpdate', onLivewviewStreamUpdate)
+
+		cam.on('disconnect', () => {
+			camera.value = null
+		})
 	}
 
 	async function close() {
 		if (!camera.value) return
 
-		camera.value.off('disconnect', onDisconnect)
-		camera.value.off('liveviewStreamUpdate', onLivewviewStreamUpdate)
+		camera.value.removeAllListeners()
 		await camera.value.close()
 
 		camera.value = null
@@ -145,11 +136,9 @@ export function useTethr() {
 
 	async function toggleLiveview() {
 		if (!camera.value) return
-		const enabled = await camera.value.getLiveviewEnabled()
+		const liveview = await camera.value.getLiveview()
 
-		if (enabled === null) return
-
-		if (enabled) {
+		if (liveview) {
 			await camera.value.stopLiveview()
 		} else {
 			await camera.value.startLiveview()
@@ -169,44 +158,10 @@ export function useTethr() {
 		open,
 		close,
 		camera,
-		liveviewMediaStream,
 		toggleLiveview,
 		// DPC
-		configs: {
-			manufacturer: useTethrConfig(camera, 'manufacturer'),
-			model: useTethrConfig(camera, 'model'),
-			serialNumber: useTethrConfig(camera, 'serialNumber'),
-			exposureMode: useTethrConfig(camera, 'exposureMode'),
-			driveMode: useTethrConfig(camera, 'driveMode'),
-			aperture: useTethrConfig(camera, 'aperture'),
-			shutterSpeed: useTethrConfig(camera, 'shutterSpeed'),
-			iso: useTethrConfig(camera, 'iso'),
-			exposureComp: useTethrConfig(camera, 'exposureComp'),
-			whiteBalance: useTethrConfig(camera, 'whiteBalance'),
-			colorTemperature: useTethrConfig(camera, 'colorTemperature'),
-			colorMode: useTethrConfig(camera, 'colorMode'),
-			imageSize: useTethrConfig(camera, 'imageSize'),
-			imageAspect: useTethrConfig(camera, 'imageAspect'),
-			imageQuality: useTethrConfig(camera, 'imageQuality'),
-			captureDelay: useTethrConfig(camera, 'captureDelay'),
-			timelapseNumber: useTethrConfig(camera, 'timelapseNumber'),
-			timelapseInterval: useTethrConfig(camera, 'timelapseInterval'),
-			facingMode: useTethrConfig(camera, 'facingMode'),
-			focalLength: useTethrConfig(camera, 'focalLength'),
-			focusDistance: useTethrConfig(camera, 'focusDistance'),
-			focusMeteringMode: useTethrConfig(camera, 'focusMeteringMode'),
-			focusPeaking: useTethrConfig(camera, 'focusPeaking'),
-			liveviewMagnifyRatio: useTethrConfig(camera, 'liveviewMagnifyRatio'),
-			liveviewEnabled: useTethrConfig(camera, 'liveviewEnabled'),
-			liveviewSize: useTethrConfig(camera, 'liveviewSize'),
-			destinationToSave: useTethrConfig(camera, 'destinationToSave'),
-			batteryLevel: useTethrConfig(camera, 'batteryLevel'),
-			canTakePhoto: useTethrConfig(camera, 'canTakePhoto'),
-			canRunAutoFocus: useTethrConfig(camera, 'canRunAutoFocus'),
-			canRunManualFocus: useTethrConfig(camera, 'canRunManualFocus'),
-			canStartLiveview: useTethrConfig(camera, 'canStartLiveview'),
-			manualFocusOptions: useTethrConfig(camera, 'manualFocusOptions'),
-			shutterSound: useTethrConfig(camera, 'shutterSound'),
-		},
+		configs: Object.fromEntries(
+			ConfigNameList.map(name => [name, useTethrConfig(camera, name)])
+		) as {[N in ConfigName]: TethrConfig<ConfigType[N]>},
 	}
 }
