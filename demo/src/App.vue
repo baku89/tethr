@@ -27,7 +27,7 @@
 			</dl>
 			<ul class="webcam-list">
 				<li v-for="(cam, i) in pairedCameras" :key="i">
-					<button @click="onClickCamera(cam)">
+					<button @click="onClickPairedCamera(cam)">
 						[{{ cam.type }}] {{ cam.name }}
 					</button>
 				</li>
@@ -126,7 +126,7 @@
 <script lang="ts" setup>
 import {saveAs} from 'file-saver'
 import {Tethr, TethrObject} from 'tethr'
-import {ref} from 'vue'
+import {ref, watchEffect} from 'vue'
 
 import TethrConfig from './TethrConfig.vue'
 import {useTethr} from './useTethr'
@@ -191,13 +191,17 @@ async function takePhoto() {
 	}
 }
 
-async function onClickCamera(cam: Tethr) {
+async function onClickPairedCamera(cam: Tethr) {
 	if (cam.opened) {
 		closeCamera(cam)
 	} else {
 		openCamera(cam)
 	}
 }
+
+watchEffect(() => {
+	;(window as any).cam = camera.value
+})
 </script>
 
 <style lang="stylus" scoped>
