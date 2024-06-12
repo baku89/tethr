@@ -72,6 +72,12 @@ type ConfigSetters = {
 	) => Promise<OperationResult>
 }
 
+type ConfigGetters = {
+	[N in ConfigName as `get${Capitalize<N>}`]: () => Promise<
+		ConfigType[N] | null
+	>
+}
+
 type ConfigDescGetters = {
 	[N in ConfigName as `get${Capitalize<N>}Desc`]: () => Promise<
 		ConfigDesc<ConfigType[N]>
@@ -96,7 +102,7 @@ export function readonlyConfigDesc<T>(value: T): ConfigDesc<T> {
 
 export abstract class Tethr
 	extends EventEmitter<EventTypes>
-	implements ConfigSetters, ConfigDescGetters
+	implements ConfigSetters, ConfigGetters, ConfigDescGetters
 {
 	constructor() {
 		super()
@@ -200,6 +206,9 @@ export abstract class Tethr
 	async setAperture(value: Aperture): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getAperture() {
+		return (await this.getApertureDesc()).value
+	}
 	async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
 		return UnsupportedConfigDesc
 	}
@@ -207,6 +216,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setAutoFocusFrameCenter(value: vec2): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getAutoFocusFrameCenter() {
+		return (await this.getAutoFocusFrameCenterDesc()).value
 	}
 	async getAutoFocusFrameCenterDesc(): Promise<ConfigDesc<vec2>> {
 		return UnsupportedConfigDesc
@@ -216,6 +228,9 @@ export abstract class Tethr
 	async setAutoFocusFrameSize(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getAutoFocusFrameSize() {
+		return (await this.getAutoFocusFrameSizeDesc()).value
+	}
 	async getAutoFocusFrameSizeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
@@ -223,6 +238,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setBatteryLevel(value: BatteryLevel): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getBatteryLevel() {
+		return (await this.getBatteryLevelDesc()).value
 	}
 	async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
 		return UnsupportedConfigDesc
@@ -232,6 +250,9 @@ export abstract class Tethr
 	async setBurstInterval(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getBurstInterval() {
+		return (await this.getBurstIntervalDesc()).value
+	}
 	async getBurstIntervalDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
@@ -239,6 +260,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setBurstNumber(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getBurstNumber() {
+		return (await this.getBurstNumberDesc()).value
 	}
 	async getBurstNumberDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
@@ -248,6 +272,9 @@ export abstract class Tethr
 	async setCanRunAutoFocus(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getCanRunAutoFocus() {
+		return (await this.getCanRunAutoFocusDesc()).value
+	}
 	async getCanRunAutoFocusDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
@@ -255,6 +282,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setCanRunManualFocus(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getCanRunManualFocus() {
+		return (await this.getCanRunManualFocusDesc()).value
 	}
 	async getCanRunManualFocusDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
@@ -264,6 +294,9 @@ export abstract class Tethr
 	async setCanStartLiveview(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getCanStartLiveview() {
+		return (await this.getCanStartLiveviewDesc()).value
+	}
 	async getCanStartLiveviewDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
@@ -271,6 +304,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setCanTakePhoto(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getCanTakePhoto() {
+		return (await this.getCanTakePhotoDesc()).value
 	}
 	async getCanTakePhotoDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
@@ -280,6 +316,9 @@ export abstract class Tethr
 	async setCaptureDelay(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getCaptureDelay() {
+		return (await this.getCaptureDelayDesc()).value
+	}
 	async getCaptureDelayDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
@@ -287,6 +326,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setColorMode(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getColorMode() {
+		return (await this.getColorModeDesc()).value
 	}
 	async getColorModeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
@@ -296,6 +338,9 @@ export abstract class Tethr
 	async setColorTemperature(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getColorTemperature() {
+		return (await this.getColorTemperatureDesc()).value
+	}
 	async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
@@ -303,6 +348,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setCompressionSetting(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getCompressionSetting() {
+		return (await this.getCompressionSettingDesc()).value
 	}
 	async getCompressionSettingDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
@@ -312,6 +360,9 @@ export abstract class Tethr
 	async setContrast(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getContrast() {
+		return (await this.getContrastDesc()).value
+	}
 	async getContrastDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
@@ -319,6 +370,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setDateTime(value: Date): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getDateTime() {
+		return (await this.getDateTimeDesc()).value
 	}
 	async getDateTimeDesc(): Promise<ConfigDesc<Date>> {
 		return UnsupportedConfigDesc
@@ -328,6 +382,9 @@ export abstract class Tethr
 	async setDestinationToSave(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getDestinationToSave() {
+		return (await this.getDestinationToSaveDesc()).value
+	}
 	async getDestinationToSaveDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
@@ -335,6 +392,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setDigitalZoom(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getDigitalZoom() {
+		return (await this.getDigitalZoomDesc()).value
 	}
 	async getDigitalZoomDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
@@ -344,6 +404,9 @@ export abstract class Tethr
 	async setDriveMode(value: DriveMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getDriveMode() {
+		return (await this.getDriveModeDesc()).value
+	}
 	async getDriveModeDesc(): Promise<ConfigDesc<DriveMode>> {
 		return UnsupportedConfigDesc
 	}
@@ -352,6 +415,9 @@ export abstract class Tethr
 	async setExposureComp(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getExposureComp() {
+		return (await this.getExposureCompDesc()).value
+	}
 	async getExposureCompDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
@@ -359,6 +425,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setExposureMeteringMode(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getExposureMeteringMode() {
+		return (await this.getExposureMeteringModeDesc()).value
 	}
 	async getExposureMeteringModeDesc(): Promise<
 		ConfigDesc<ExposureMeteringMode>
@@ -370,6 +439,9 @@ export abstract class Tethr
 	async setExposureMode(value: ExposureMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getExposureMode() {
+		return (await this.getExposureModeDesc()).value
+	}
 	async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
 		return UnsupportedConfigDesc
 	}
@@ -377,6 +449,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setFacingMode(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getFacingMode() {
+		return (await this.getFacingModeDesc()).value
 	}
 	async getFacingModeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
@@ -386,6 +461,9 @@ export abstract class Tethr
 	async setFlashMode(value: FlashMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getFlashMode() {
+		return (await this.getFlashModeDesc()).value
+	}
 	async getFlashModeDesc(): Promise<ConfigDesc<FlashMode>> {
 		return UnsupportedConfigDesc
 	}
@@ -394,12 +472,19 @@ export abstract class Tethr
 	async setFocalLength(value: FocalLength): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getFocalLength() {
+		return (await this.getFocalLengthDesc()).value
+	}
 	async getFocalLengthDesc(): Promise<ConfigDesc<FocalLength>> {
 		return UnsupportedConfigDesc
 	}
+
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setFocusDistance(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getFocusDistance() {
+		return (await this.getFocusDistanceDesc()).value
 	}
 	async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
@@ -411,6 +496,9 @@ export abstract class Tethr
 	): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getFocusMeteringMode() {
+		return (await this.getFocusMeteringModeDesc()).value
+	}
 	async getFocusMeteringModeDesc(): Promise<ConfigDesc<FocusMeteringMode>> {
 		return UnsupportedConfigDesc
 	}
@@ -419,27 +507,30 @@ export abstract class Tethr
 	async setFocusMode(value: FocusMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getFocusMode() {
+		return (await this.getFocusModeDesc()).value
+	}
 	async getFocusModeDesc(): Promise<ConfigDesc<FocusMode>> {
-		return {
-			writable: false,
-			value: null,
-		}
+		return UnsupportedConfigDesc
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setFocusPeaking(value: FocusPeaking): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getFocusPeaking() {
+		return (await this.getFocusPeakingDesc()).value
+	}
 	async getFocusPeakingDesc(): Promise<ConfigDesc<FocusPeaking>> {
-		return {
-			writable: false,
-			value: null,
-		}
+		return UnsupportedConfigDesc
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setFunctionalMode(value: FunctionalMode): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getFunctionalMode() {
+		return (await this.getFunctionalModeDesc()).value
 	}
 	async getFunctionalModeDesc(): Promise<ConfigDesc<FunctionalMode>> {
 		return UnsupportedConfigDesc
@@ -449,6 +540,9 @@ export abstract class Tethr
 	async setImageAspect(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getImageAspect() {
+		return (await this.getImageAspectDesc()).value
+	}
 	async getImageAspectDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
@@ -456,6 +550,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setImageQuality(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getImageQuality() {
+		return (await this.getImageQualityDesc()).value
 	}
 	async getImageQualityDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
@@ -465,6 +562,9 @@ export abstract class Tethr
 	async setImageSize(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getImageSize() {
+		return (await this.getImageSizeDesc()).value
+	}
 	async getImageSizeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
@@ -472,6 +572,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setIso(value: ISO): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getIso() {
+		return (await this.getIsoDesc()).value
 	}
 	async getIsoDesc(): Promise<ConfigDesc<ISO>> {
 		return UnsupportedConfigDesc
@@ -481,6 +584,9 @@ export abstract class Tethr
 	async setLiveviewEnabled(value: boolean): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getLiveviewEnabled() {
+		return (await this.getLiveviewEnabledDesc()).value
+	}
 	async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
 		return UnsupportedConfigDesc
 	}
@@ -489,6 +595,9 @@ export abstract class Tethr
 	async setLiveviewMagnifyRatio(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getLiveviewMagnifyRatio() {
+		return (await this.getLiveviewMagnifyRatioDesc()).value
+	}
 	async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
@@ -496,6 +605,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setLiveviewSize(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getLiveviewSize() {
+		return (await this.getLiveviewSizeDesc()).value
 	}
 	async getLiveviewSizeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
@@ -507,6 +619,9 @@ export abstract class Tethr
 	): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getManualFocusOptions() {
+		return (await this.getManualFocusOptionsDesc()).value
+	}
 	async getManualFocusOptionsDesc(): Promise<ConfigDesc<ManualFocusOption[]>> {
 		return UnsupportedConfigDesc
 	}
@@ -514,6 +629,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setManufacturer(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getManufacturer() {
+		return (await this.getManufacturerDesc()).value
 	}
 	async getManufacturerDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
@@ -523,6 +641,9 @@ export abstract class Tethr
 	async setModel(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getModel() {
+		return (await this.getModelDesc()).value
+	}
 	async getModelDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
@@ -530,6 +651,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setSerialNumber(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getSerialNumber() {
+		return (await this.getSerialNumberDesc()).value
 	}
 	async getSerialNumberDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
@@ -539,6 +663,9 @@ export abstract class Tethr
 	async setSharpness(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getSharpness() {
+		return (await this.getSharpnessDesc()).value
+	}
 	async getSharpnessDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
@@ -546,6 +673,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setShutterSpeed(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getShutterSpeed() {
+		return (await this.getShutterSpeedDesc()).value
 	}
 	async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
@@ -555,6 +685,9 @@ export abstract class Tethr
 	async setShutterSound(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getShutterSound() {
+		return (await this.getShutterSoundDesc()).value
+	}
 	async getShutterSoundDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
@@ -562,6 +695,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setTimelapseInterval(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getTimelapseInterval() {
+		return (await this.getTimelapseIntervalDesc()).value
 	}
 	async getTimelapseIntervalDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
@@ -571,6 +707,9 @@ export abstract class Tethr
 	async setTimelapseNumber(value: number): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+	async getTimelapseNumber() {
+		return (await this.getTimelapseNumberDesc()).value
+	}
 	async getTimelapseNumberDesc(): Promise<ConfigDesc<number>> {
 		return UnsupportedConfigDesc
 	}
@@ -578,6 +717,9 @@ export abstract class Tethr
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setWhiteBalance(value: WhiteBalance): Promise<OperationResult> {
 		return UnsupportedOperationResult
+	}
+	async getWhiteBalance() {
+		return (await this.getWhiteBalanceDesc()).value
 	}
 	async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
 		return UnsupportedConfigDesc
