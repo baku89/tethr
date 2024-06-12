@@ -21,8 +21,8 @@ Tethr addreses this issue by acting as a bridge and offering a standarized and c
 ## Installation in Your Package
 
 ```
-npm install https://github.com/baku89/tethr
-yarn add https://github.com/baku89/tethr
+npm install tethr
+yarn add tethr
 ```
 
 ## Supported Cameras
