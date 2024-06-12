@@ -2,25 +2,52 @@ import {BiMap} from 'bim'
 import {vec2} from 'linearly'
 
 /**
- * Aperture value. `'auto'` means auto aperture.
+ * Aperture value. `'auto'` means auto aperture. The corresponding property in PTP spec is `fNumber`.
  * @example `'auto', 5.6, 9`
+ * @category Config
  */
 export type Aperture = 'auto' | number
 
 /**
  * Battery level represented as a number between `0` and `100`. `100` means full battery.
  * . `'ac'` means AC power, `'low'` means low battery.
+ * @ccategory Config
  */
 export type BatteryLevel = 'ac' | 'low' | number
 
+/**
+ * Color mode.
+ * @category Config
+ */
+export type ColorMode = string
+
+/**
+ * Drive mode. The corresponding property in PTP spec is `stillCaptureMode`.
+ * @category Config
+ */
 export type DriveMode = 'normal' | 'burst' | 'timelapse'
 
+/**
+ * Exposure bias compensation.
+ * @example `'-5', '0', '1 1/3'`
+ * @category Config
+ */
+export type ExposureComp = string
+
+/**
+ * Exposure metering mode.
+ * @category Config
+ */
 export type ExposureMeteringMode =
 	| 'average'
 	| 'center-weighted-average'
 	| 'multi-spot'
 	| 'center-spot'
 
+/**
+ * Exposure program mode. The corresponding property in PTP spec is `exposureProgramMode`.
+ * @category Config
+ */
 export type ExposureMode =
 	| 'P'
 	| 'A'
@@ -33,6 +60,10 @@ export type ExposureMode =
 	| `C${1 | 2 | 3}`
 	| `vendor:${string}`
 
+/**
+ * Color mode.
+ * @category Config
+ */
 export type FlashMode =
 	| 'auto'
 	| 'off'
@@ -41,8 +72,16 @@ export type FlashMode =
 	| 'red eye fill'
 	| 'external sync'
 
+/**
+ * Focus mode.
+ * @category Config
+ */
 export type FocusMode = 'af' | 'mf'
 
+/**
+ * Functional mode. `'standard'` means normal mode, `'sleep'` means sleep mode.
+ * @category Config
+ */
 export type FunctionalMode = 'standard' | 'sleep'
 
 export type FocusMeteringMode =
@@ -51,16 +90,65 @@ export type FocusMeteringMode =
 	| `vendor:${string}`
 
 /**
- * Focus peaking mode. `false` means disabled.
+ * Focus peaking mode. This usually corresponds to the color of the peaking. `false` means disabled.
+ * @example `false, 'red', 'white'`
+ * @category Config
  */
 export type FocusPeaking = false | string
 
+/**
+ * Focal length in millimeters. Note that it is not 35mm equivalent focal length.
+ * @category Config
+ */
 export type FocalLength = number | 'spherical'
 
+/**
+ * Image aspect.
+ * @example `'3:2', '16:9', 'a size'`
+ * @category Config
+ */
+export type ImageAspect = `${number}:${number}` | 'a size'
+
+/**
+ * Image quality.
+ * @category Config
+ */
+export type ImageQuality = string
+
+/**
+ * Image size.
+ * @example `'L', 'M', 'S'`
+ * @category Config
+ */
+export type ImageSize = string
+
+/**
+ * ISO sensitivity.
+ * @category Config
+ */
 export type ISO = 'auto' | number
 
+/**
+ * Manual focus option.
+ */
 export type ManualFocusOption = `${'near' | 'far'}:${1 | 2 | 3}`
 
+/**
+ * Shutter speed.
+ * @example `'auto', 'bulb', 'sync', '1/100', '15'`
+ * @category Config
+ */
+export type ShutterSpeed =
+	| 'auto'
+	| 'bulb'
+	| 'sync'
+	| `${number}/${number}`
+	| `${number}`
+
+/**
+ * White balance.
+ * @category Config
+ */
 export type WhiteBalance =
 	| 'auto'
 	| 'auto cool'
@@ -79,7 +167,7 @@ export type WhiteBalance =
 	| `vendor:${string}`
 
 export type ConfigType = {
-	aperture: Aperture // fNumber
+	aperture: Aperture
 	autoFocusFrameCenter: vec2
 	autoFocusFrameSize: string
 	batteryLevel: BatteryLevel
@@ -90,16 +178,16 @@ export type ConfigType = {
 	canStartLiveview: boolean
 	canTakePhoto: boolean
 	captureDelay: number
-	colorMode: string
-	colorTemperature: number // Added
+	colorMode: ColorMode
+	colorTemperature: number
 	contrast: number
 	dateTime: Date
 	destinationToSave: string
 	digitalZoom: number
-	driveMode: DriveMode // stillCaptureMode
-	exposureComp: string // exposureBiasCompensation
+	driveMode: DriveMode
+	exposureComp: ExposureComp
 	exposureMeteringMode: ExposureMeteringMode
-	exposureMode: ExposureMode // exposureProgramMode
+	exposureMode: ExposureMode
 	facingMode: string
 	flashMode: FlashMode
 	focalLength: FocalLength
@@ -108,19 +196,19 @@ export type ConfigType = {
 	focusMode: FocusMode
 	focusPeaking: FocusPeaking
 	functionalMode: FunctionalMode
-	imageAspect: string // Added e.g. 16:9, 3:2...
-	imageQuality: string // Added e.g. JPEG, JPEG+RAW...
-	imageSize: string // e.g. L, M, S, 1024x768...
-	iso: ISO // added
-	liveviewEnabled: boolean // added
-	liveviewMagnifyRatio: number // added
-	liveviewSize: string // ad
+	imageAspect: ImageAspect
+	imageQuality: ImageQuality
+	imageSize: ImageSize
+	iso: ISO
+	liveviewEnabled: boolean
+	liveviewMagnifyRatio: number
+	liveviewSize: string
 	manualFocusOptions: ManualFocusOption[]
 	manufacturer: string
 	model: string
 	serialNumber: string
 	sharpness: number
-	shutterSpeed: string
+	shutterSpeed: ShutterSpeed
 	shutterSound: number
 	timelapseInterval: number
 	timelapseNumber: number
@@ -252,17 +340,3 @@ export const DriveModeTable = new BiMap<number, DriveMode>([
 	[0x2, 'burst'],
 	[0x3, 'timelapse'],
 ])
-
-// Utility functions
-export function computeShutterSpeedSeconds(ss: string) {
-	if (ss === 'bulk' || ss === 'sync') {
-		return Infinity
-	}
-
-	if (ss.includes('/')) {
-		const [fraction, denominator] = ss.split('/')
-		return parseInt(fraction) / parseInt(denominator)
-	}
-
-	return parseFloat(ss)
-}

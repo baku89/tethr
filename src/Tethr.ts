@@ -8,6 +8,7 @@ import {
 	ConfigNameList,
 	ConfigType,
 	DriveMode,
+	ExposureComp,
 	ExposureMeteringMode,
 	ExposureMode,
 	FlashMode,
@@ -16,8 +17,12 @@ import {
 	FocusMode,
 	FocusPeaking,
 	FunctionalMode,
+	ImageAspect,
+	ImageQuality,
+	ImageSize,
 	ISO,
 	ManualFocusOption,
+	ShutterSpeed,
 	WhiteBalance,
 } from './configs'
 import {TethrObject} from './TethrObject'
@@ -412,18 +417,20 @@ export abstract class Tethr
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setExposureComp(value: string): Promise<OperationResult> {
+	async setExposureComp(value: ExposureComp): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getExposureComp() {
 		return (await this.getExposureCompDesc()).value
 	}
-	async getExposureCompDesc(): Promise<ConfigDesc<string>> {
+	async getExposureCompDesc(): Promise<ConfigDesc<ExposureComp>> {
 		return UnsupportedConfigDesc
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setExposureMeteringMode(value: string): Promise<OperationResult> {
+	async setExposureMeteringMode(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		value: ExposureMeteringMode
+	): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getExposureMeteringMode() {
@@ -537,18 +544,18 @@ export abstract class Tethr
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setImageAspect(value: string): Promise<OperationResult> {
+	async setImageAspect(value: ImageAspect): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getImageAspect() {
 		return (await this.getImageAspectDesc()).value
 	}
-	async getImageAspectDesc(): Promise<ConfigDesc<string>> {
+	async getImageAspectDesc(): Promise<ConfigDesc<ImageAspect>> {
 		return UnsupportedConfigDesc
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setImageQuality(value: string): Promise<OperationResult> {
+	async setImageQuality(value: ImageQuality): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getImageQuality() {
@@ -559,13 +566,13 @@ export abstract class Tethr
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setImageSize(value: string): Promise<OperationResult> {
+	async setImageSize(value: ImageSize): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getImageSize() {
 		return (await this.getImageSizeDesc()).value
 	}
-	async getImageSizeDesc(): Promise<ConfigDesc<string>> {
+	async getImageSizeDesc(): Promise<ConfigDesc<ImageSize>> {
 		return UnsupportedConfigDesc
 	}
 
@@ -671,13 +678,13 @@ export abstract class Tethr
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setShutterSpeed(value: string): Promise<OperationResult> {
+	async setShutterSpeed(value: ShutterSpeed): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 	async getShutterSpeed() {
 		return (await this.getShutterSpeedDesc()).value
 	}
-	async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
+	async getShutterSpeedDesc(): Promise<ConfigDesc<ShutterSpeed>> {
 		return UnsupportedConfigDesc
 	}
 
@@ -726,18 +733,26 @@ export abstract class Tethr
 	}
 
 	/**
-	 * Runs auto focus.
+	 * Runs auto focus. Use {@link getCanRunAutoFocus} to check if the camera supports this action.
 	 * @category Action
 	 */
 	async runAutoFocus(): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 
+	/**
+	 * Runs manual focus. Use {@link getCanRunAutoFocus} to check if the camera supports this action.
+	 * @category Action
+	 */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async runManualFocus(option: ManualFocusOption): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 
+	/**
+	 * Takes a photo. Use {@link getCanTakePhoto} to check if the camera supports this action.
+	 * @category Action
+	 */
 	async takePhoto(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		option?: TakePhotoOption
@@ -745,12 +760,25 @@ export abstract class Tethr
 		return UnsupportedOperationResult
 	}
 
+	/**
+	 * Starts liveview. Use {@link getCanStartLiveview} to check if the camera supports this action.
+	 * @category Action
+	 */
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
 		return UnsupportedOperationResult
 	}
+
+	/**
+	 * Stops liveview.
+	 * @category Action
+	 */
 	async stopLiveview(): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+
+	/**
+	 * Gets a liveview image.
+	 */
 	async getLiveViewImage(): Promise<OperationResult<Blob>> {
 		return UnsupportedOperationResult
 	}

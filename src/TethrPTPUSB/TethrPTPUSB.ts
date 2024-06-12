@@ -8,6 +8,7 @@ import {
 	DriveModeTable,
 	ExposureMode,
 	ExposureModeTable,
+	ImageSize,
 	ISO,
 	WhiteBalance,
 	WhiteBalanceTable,
@@ -290,7 +291,7 @@ export class TethrPTPUSB extends Tethr {
 		})
 	}
 
-	setImageSizeValue(value: string) {
+	setImageSize(value: ImageSize) {
 		return this.setDevicePropValue({
 			devicePropCode: DevicePropCode.ImageSize,
 			datatypeCode: DatatypeCode.String,

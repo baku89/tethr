@@ -8,12 +8,13 @@ import {FocalLength} from '..'
 import {
 	Aperture,
 	BatteryLevel,
-	computeShutterSpeedSeconds,
 	ConfigName,
 	ExposureMode,
 	FocusMeteringMode,
 	FocusPeaking,
+	ImageAspect,
 	ISO,
+	ShutterSpeed,
 	WhiteBalance,
 } from '../configs'
 import {decodeIFD, encodeIFD, IFDType} from '../IFD'
@@ -29,7 +30,7 @@ import {
 } from '../Tethr'
 import {TethrObject} from '../TethrObject'
 import {TethrStorage} from '../TethrStorage'
-import {isntNil} from '../util'
+import {computeShutterSpeedSeconds, isntNil} from '../util'
 import {TethrPTPUSB} from '.'
 
 enum OpCodeSigma {
@@ -782,14 +783,14 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}*/
 
-	async setImageAspect(imageAspect: string): Promise<OperationResult> {
+	async setImageAspect(imageAspect: ImageAspect): Promise<OperationResult> {
 		const id = this.imageAspectTable.getKey(imageAspect)
 		if (id === undefined) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup5, 3, id)
 	}
 
-	async getImageAspectDesc(): Promise<ConfigDesc<string>> {
+	async getImageAspectDesc(): Promise<ConfigDesc<ImageAspect>> {
 		const {imageAspect} = await this.getCamStatus()
 
 		const value = this.imageAspectTable.get(imageAspect) ?? null
@@ -800,7 +801,7 @@ export class TethrSigma extends TethrPTPUSB {
 			value,
 			option: {
 				type: 'enum',
-				values: values.map(v => this.imageAspectTableIFD.get(v) ?? 'Unknown'),
+				values: values.map(v => this.imageAspectTableIFD.get(v)!),
 			},
 		}
 	}
@@ -1033,14 +1034,14 @@ export class TethrSigma extends TethrPTPUSB {
 		)
 	}
 
-	async setShutterSpeed(ss: string): Promise<OperationResult> {
+	async setShutterSpeed(ss: ShutterSpeed): Promise<OperationResult> {
 		const byte = this.shutterSpeedOneThirdTable.getKey(ss)
 		if (!byte) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup1, 0, byte)
 	}
 
-	async getShutterSpeedDesc(): Promise<ConfigDesc<string>> {
+	async getShutterSpeedDesc(): Promise<ConfigDesc<ShutterSpeed>> {
 		const {shutterSpeed: range, notApexShutterSpeed} =
 			await this.getCamCanSetInfo5()
 
@@ -1805,7 +1806,7 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x11, 'warm gold'],
 	])
 
-	private imageAspectTable = new BiMap<number, string>([
+	private imageAspectTable = new BiMap<number, ImageAspect>([
 		[1, '21:9'],
 		[2, '16:9'],
 		[3, '3:2'],
@@ -1815,7 +1816,7 @@ export class TethrSigma extends TethrPTPUSB {
 		[7, 'a size'],
 	])
 
-	private imageAspectTableIFD = new BiMap<number, string>([
+	private imageAspectTableIFD = new BiMap<number, ImageAspect>([
 		[1, '21:9'],
 		[2, '16:9'],
 		[3, '3:2'],
@@ -1913,7 +1914,7 @@ export class TethrSigma extends TethrPTPUSB {
 		[0b11111101, '-1/3'],
 	])
 
-	private shutterSpeedOneThirdTable = new BiMap<number, string>([
+	private shutterSpeedOneThirdTable = new BiMap<number, ShutterSpeed>([
 		[0b00001000, 'bulb'],
 		[0b00010000, '30'],
 		[0b00010011, '25'],
@@ -1985,7 +1986,7 @@ export class TethrSigma extends TethrPTPUSB {
 		[0b10110000, '1/32000'],
 	])
 
-	private shutterSpeedHalfTable = new BiMap<number, string>([
+	private shutterSpeedHalfTable = new BiMap<number, ShutterSpeed>([
 		[0b00001000, 'bulb'],
 		[0b00010001, '30'],
 		[0b00010100, '20'],

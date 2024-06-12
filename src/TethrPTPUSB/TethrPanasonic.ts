@@ -3,10 +3,14 @@ import {times} from 'lodash'
 
 import {
 	Aperture,
+	ColorMode,
 	ConfigName,
+	ExposureComp,
 	ExposureMode,
+	ImageAspect,
 	ISO,
 	ManualFocusOption,
+	ShutterSpeed,
 	WhiteBalance,
 } from '../configs'
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
@@ -166,7 +170,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	setColorModeDesc(value: string) {
+	setColorMode(value: ColorMode) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.PhotoStyle_Param,
 
@@ -198,7 +202,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	setExposureComp(value: string) {
+	setExposureComp(value: ExposureComp) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.Exposure_Param,
 			encode: v => {
@@ -258,12 +262,12 @@ export class TethrPanasonic extends TethrPTPUSB {
 	}
 
 	async getManualFocusOptionsDesc() {
-		return readonlyConfigDesc([
+		return readonlyConfigDesc<ManualFocusOption[]>([
 			'near:2',
 			'near:1',
 			'far:1',
 			'far:2',
-		] as ManualFocusOption[])
+		])
 	}
 
 	async getCanTakePhotoDesc() {
@@ -299,10 +303,10 @@ export class TethrPanasonic extends TethrPTPUSB {
 		})
 	}
 
-	setImageAspect(value: string) {
+	setImageAspect(value: ImageAspect) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.ImageMode_ImageAspect,
-			encode: (value: string) => {
+			encode: (value: ImageAspect) => {
 				return this.imageAspectTable.getKey(value) ?? null
 			},
 			valueSize: 2,
@@ -469,7 +473,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	setShutterSpeed(value: string) {
+	setShutterSpeed(value: ShutterSpeed) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.ShutterSpeed_Param,
 			encode: (value: string) => {
@@ -506,9 +510,9 @@ export class TethrPanasonic extends TethrPTPUSB {
 						return null
 				}
 				if ((value & 0x80000000) === 0x00000000) {
-					return '1/' + value / 1000
+					return `1/${value / 1000}` as const
 				} else {
-					return ((value & 0x7fffffff) / 1000).toString()
+					return `${(value & 0x7fffffff) / 1000}` as const
 				}
 			},
 			valueSize: 4,
@@ -948,7 +952,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		[22, 'MY PHOTOSTYLE 4'],
 	])
 
-	protected imageAspectTable = new BiMap<number, string>([
+	protected imageAspectTable = new BiMap<number, ImageAspect>([
 		[1, '4:3'],
 		[2, '3:2'],
 		[3, '16:9'],

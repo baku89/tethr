@@ -1,3 +1,5 @@
+import {ShutterSpeed} from './configs'
+
 export function toHexString(
 	data: number | ArrayBuffer,
 	bytes: number | 'auto' = 'auto'
@@ -54,4 +56,17 @@ export function sliceJpegData(buffer: ArrayBuffer): ArrayBuffer {
 		throw new Error('EOI not found')
 
 	return buffer.slice(start, end)
+}
+
+export function computeShutterSpeedSeconds(ss: ShutterSpeed) {
+	if (ss === 'bulb' || ss === 'sync') {
+		return Infinity
+	}
+
+	if (ss.includes('/')) {
+		const [fraction, denominator] = ss.split('/')
+		return parseInt(fraction) / parseInt(denominator)
+	}
+
+	return parseFloat(ss)
 }

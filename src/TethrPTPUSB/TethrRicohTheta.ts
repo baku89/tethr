@@ -97,10 +97,10 @@ export class TethrRicohTheta extends TethrPTPUSB {
 				const fraction = Number(num & BigInt(0xffffffff))
 
 				if (denominator === 1 || denominator === 10) {
-					return (fraction / denominator).toString()
+					return `${fraction / denominator}` as const
 				}
 
-				return fraction + '/' + denominator
+				return `${fraction}/${denominator}` as const
 			},
 		})
 	}
