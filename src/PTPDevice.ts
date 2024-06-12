@@ -316,7 +316,6 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 			if (res1.type === PTPType.Response) {
 				if (expectedResCodes.includes(res1.code)) {
-					this.#console.groupEnd()
 					return {
 						resCode: res1.code,
 						parameters: [],
@@ -396,7 +395,12 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			'params=' + parameters.map(v => toHexString(v, 4))
 		)
 
-		if (sent.status !== 'ok') throw new Error()
+		if (sent.status !== 'ok') {
+			if (sent.status === 'stall') {
+				await this.usb.clearHalt('out', this.#endpointNumberBulkOut)
+			}
+			throw new Error(`transferOutBulk failed: ${sent.status}`)
+		}
 	}
 
 	async #transferOutData(
@@ -430,6 +434,10 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			'payload=' + toHexString(data)
 		)
 
+		if (sent.status === 'stall') {
+			await this.usb.clearHalt('out', this.#endpointNumberBulkOut)
+		}
+
 		return sent.status === 'ok'
 	}
 
@@ -445,7 +453,12 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		)
 
 		// Error checking
-		if (status !== 'ok') throw new Error(`BulkIn returned status: ${status}`)
+		if (status !== 'ok') {
+			if (status === 'stall') {
+				await this.usb.clearHalt('in', this.#endpointNumberBulkIn)
+			}
+			throw new Error(`BulkIn returned status: ${status}`)
+		}
 		if (!data || data.byteLength < 12) throw new Error('Invalid bulkIn data')
 
 		// Unpack packet
@@ -487,8 +500,12 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			)
 
 			// Error checking
-			if (status !== 'ok')
+			if (status !== 'ok') {
+				if (status === 'stall') {
+					await this.usb.clearHalt('in', this.#endpointerNumberInterruptIn)
+				}
 				throw new Error(`InterruptIn returned status: ${status}`)
+			}
 			if (!data || data.byteLength < 12) {
 				return
 			}
