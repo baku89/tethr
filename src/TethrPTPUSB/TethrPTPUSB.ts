@@ -34,6 +34,7 @@ import {
 	readonlyConfigDesc,
 	TakePhotoOption,
 	Tethr,
+	UnsupportedOperationResult,
 } from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {TethrStorage} from '../TethrStorage'
@@ -406,9 +407,8 @@ export class TethrPTPUSB extends Tethr {
 	async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
-		const {operationsSupported} = await this.getDeviceInfo()
-		if (!operationsSupported.includes(OpCode.InitiateCapture)) {
-			return {status: 'unsupported'}
+		if (!(await this.getCanTakePhoto())) {
+			return UnsupportedOperationResult
 		}
 
 		await this.device.sendCommand({

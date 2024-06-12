@@ -44,7 +44,7 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 		})
 
 		// Detect webcam changes
-		navigator.mediaDevices.addEventListener('devicechange', async e => {
+		navigator.mediaDevices.addEventListener('devicechange', async () => {
 			await this.#refreshPairedWebcam()
 			this.#emitPairedCameras()
 		})
