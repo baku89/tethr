@@ -1,9 +1,7 @@
 import {DeviceInfo} from '../DeviceInfo'
 import {PTPDevice} from '../PTPDevice'
-import {TethrPanasonic} from './TethrPanasonic'
+import {getVendorSpecificPTPUSBClass} from './getVendorSpecificPTPUSB'
 import {TethrPTPUSB} from './TethrPTPUSB'
-import {TethrRicohTheta} from './TethrRicohTheta'
-import {TethrSigma} from './TethrSigma'
 
 /**
  * Try to initialize the given usb device as a PTP camera.
@@ -17,10 +15,9 @@ export async function initTethrUSBPTP(
 	let info: DeviceInfo
 
 	try {
-		if (device.opened) {
-			await device.close()
+		if (!device.opened) {
+			await device.open()
 		}
-		await device.open()
 		info = await TethrPTPUSB.getDeviceInfo(device)
 	} catch (err) {
 		if (
@@ -35,36 +32,9 @@ export async function initTethrUSBPTP(
 		return null
 	}
 
-	let tethr: TethrPTPUSB | null = null
+	const TethrVendor = getVendorSpecificPTPUSBClass(info) ?? TethrPTPUSB
 
-	switch (info.vendorExtensionID) {
-		case 0x00000006: // Microsoft / Sigma / Ricoh
-			if (info.vendorExtensionDesc === 'SIGMA') {
-				tethr = new TethrSigma(device)
-			} else if (info.model.match(/theta/i)) {
-				tethr = new TethrRicohTheta(device)
-			}
-			break
-		case 0x0000001c: // Panasnoic
-			tethr = new TethrPanasonic(device)
-			break
-	}
-
-	if (!tethr) {
-		tethr = new TethrPTPUSB(device)
-	}
-
-	// Though this is a little bit dirty, it is required to check whether
-	// the Open/CloseSession command works since some of PTP devices don't support
-	// any commands other than GetDeviceInfo.
-	try {
-		// await tethr.open()
-		// await tethr.close()
-	} catch {
-		return null
-	}
-
-	return tethr
+	return new TethrVendor(device)
 }
 
 export {TethrPTPUSB}
