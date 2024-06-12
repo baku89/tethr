@@ -1,6 +1,5 @@
 import EventEmitter from 'eventemitter3'
 import PQueue from 'p-queue'
-import promiseTimeout from 'p-timeout'
 import sleep from 'sleep-promise'
 
 import {ResCode} from './PTPDatacode'
@@ -18,6 +17,11 @@ const PTPCommandMaxByteLength = 12 + 4 * 3
 const PTPDefaultTimeoutMs = 10000
 const PTPTryCount = 30
 const PTPTryAgainIntervalMs = 100
+
+const PTPQueueOptions = {
+	timeout: PTPDefaultTimeoutMs,
+	throwOnTimeout: true,
+} as const
 
 interface PTPSendCommandOption {
 	label?: string
@@ -162,51 +166,40 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		this.off(`ptpevent:${eventName}`, callback)
 	}
 
-	sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse> => {
-		const queue = () =>
-			promiseTimeout(
-				new Promise<PTPResponse>((resolve, reject) => {
-					this.#console.groupCollapsed(`Send Command [${option.label}]`)
-
-					this.sendCommandNow(option).then(resolve).catch(reject)
-				}),
-				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
-			).finally(this.#console.groupEnd)
-
-		return this.#queue.add(queue) as Promise<PTPResponse>
+	sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse | void> => {
+		return this.#queue.add(async () => {
+			try {
+				this.#console.groupCollapsed(`Send Command [${option.label}]`)
+				return await this.#sendCommandNow(option)
+			} finally {
+				this.#console.groupEnd()
+			}
+		}, PTPQueueOptions)
 	}
 
 	sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
-		const queue = () =>
-			promiseTimeout(
-				new Promise<PTPResponse>((resolve, reject) => {
-					this.#console.groupCollapsed(`Receive Data [${option.label}]`)
-
-					this.sendDataNow(option).then(resolve).catch(reject)
-				}),
-				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
-			).finally(this.#console.groupEnd)
-
-		return this.#queue.add(queue) as Promise<PTPResponse>
+		return this.#queue.add(async () => {
+			try {
+				this.#console.groupCollapsed(`Send Data [${option.label}]`)
+				return await this.#sendDataNow(option)
+			} finally {
+				this.#console.groupEnd()
+			}
+		}, PTPQueueOptions)
 	}
 
 	receiveData = (option: PTPReceiveDataOption): Promise<PTPDataResponse> => {
-		const queue = () =>
-			promiseTimeout(
-				new Promise<PTPDataResponse>((resolve, reject) => {
-					this.#console.groupCollapsed(`Receive Data [${option.label}]`)
-
-					this.receiveDataNow(option).then(resolve).catch(reject)
-				}),
-				{milliseconds: PTPDefaultTimeoutMs, message: 'Timeout'}
-			).finally(this.#console.groupEnd)
-
-		return this.#queue.add(queue) as Promise<PTPDataResponse>
+		return this.#queue.add(async () => {
+			try {
+				this.#console.groupCollapsed(`Receive Data [${option.label}]`)
+				return await this.#receiveDataNow(option)
+			} finally {
+				this.#console.groupEnd()
+			}
+		}, PTPQueueOptions) as Promise<PTPDataResponse>
 	}
 
-	private sendCommandNow = async (
-		option: PTPSendCommandOption
-	): Promise<PTPResponse> => {
+	async #sendCommandNow(option: PTPSendCommandOption): Promise<PTPResponse> {
 		const {opcode, parameters, expectedResCodes} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
@@ -253,9 +246,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		throw new Error('Cannot send command')
 	}
 
-	private sendDataNow = async (
-		option: PTPSendDataOption
-	): Promise<PTPResponse> => {
+	async #sendDataNow(option: PTPSendDataOption): Promise<PTPResponse> {
 		const {opcode, data, parameters, expectedResCodes} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
@@ -303,9 +294,9 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		throw new Error('Cannot send data')
 	}
 
-	private receiveDataNow = async (
+	async #receiveDataNow(
 		option: PTPReceiveDataOption
-	): Promise<PTPDataResponse> => {
+	): Promise<PTPDataResponse> {
 		const {opcode, parameters, expectedResCodes, maxByteLength} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
