@@ -6,7 +6,7 @@
 		"lib": ["esnext", "dom", "dom.iterable"],
 		"paths": {
 			"tethr": ["../core/src"],
-			"@tethr/*": ["../integrations/*"],
+			"@tethr/vue3": ["../integrations/vue3/src"],
 		},
 	},
 	"files": ["../node_modules/@types/wicg-file-system-access/index.d.ts"],
