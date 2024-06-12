@@ -20,7 +20,7 @@ Tethr addreses this issue by acting as a bridge and offering a standarized and c
 
 ## Installation in Your Package
 
-```
+```bash
 npm install tethr
 yarn add tethr
 ```
