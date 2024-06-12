@@ -199,7 +199,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getApertureDesc(): Promise<ConfigDesc<Aperture>> {
-		const {fValue: range} = await this.getCamCanSetInfo5()
+		const {fValue: range} = await this.getCamCanSetInfo()
 		const value = await this.getAperture()
 
 		if (range.length === 0) {
@@ -240,7 +240,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async #getLVCoordinateSize() {
-		const {focusValidArea} = await this.getCamCanSetInfo5()
+		const {focusValidArea} = await this.getCamCanSetInfo()
 
 		const [lvTop, lvBottom, lvLeft, lvRight] = focusValidArea
 
@@ -279,7 +279,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const {distanceMeasurementFramePosition} = await this.getCamStatus()
 
 		const {distanceMeasurementFrameMovementAmount, focusValidArea} =
-			await this.getCamCanSetInfo5()
+			await this.getCamCanSetInfo()
 
 		const [lvY, lvX] = new Uint16Array(distanceMeasurementFramePosition)
 		const [lvStepY, lvStepX] = distanceMeasurementFrameMovementAmount
@@ -349,7 +349,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const {
 			distanceMeasurementFrameSize: [sizeCount],
-		} = await this.getCamCanSetInfo5()
+		} = await this.getCamCanSetInfo()
 
 		const values = ['large', 'medium', 'small'].slice(0, sizeCount)
 
@@ -408,7 +408,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getCanRunAutoFocusDesc() {
-		const {focusMode} = await this.getCamCanSetInfo5()
+		const {focusMode} = await this.getCamCanSetInfo()
 
 		// 3 == AF-S
 		const canRun = focusMode.includes(3)
@@ -417,7 +417,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getCanStartLiveviewDesc() {
-		const {lvImageTransfer} = await this.getCamCanSetInfo5()
+		const {lvImageTransfer} = await this.getCamCanSetInfo()
 		return readonlyConfigDesc(lvImageTransfer.length > 0)
 	}
 
@@ -434,7 +434,7 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 
 		const {colorMode} = await this.getCamStatus()
-		const {colorMode: colorModeOptions} = await this.getCamCanSetInfo5()
+		const {colorMode: colorModeOptions} = await this.getCamCanSetInfo()
 
 		// NOTE: the colorModeOptions lacks Warm Gold (0xf0).
 		// it must be manually added only if the firmware is 5.0,
@@ -472,7 +472,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getColorTemperatureDesc(): Promise<ConfigDesc<number>> {
-		const {colorTemerature: range} = await this.getCamCanSetInfo5()
+		const {colorTemerature: range} = await this.getCamCanSetInfo()
 		const value = await this.getColorTemperature()
 
 		if (range.length !== 3) {
@@ -533,7 +533,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
-		const {exposureMode} = await this.getCamCanSetInfo5()
+		const {exposureMode} = await this.getCamCanSetInfo()
 		const value = await this.getExposureMode()
 
 		const values = exposureMode
@@ -563,7 +563,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getExposureCompDesc(): Promise<ConfigDesc<string>> {
-		const {exposureComp: range} = await this.getCamCanSetInfo5()
+		const {exposureComp: range} = await this.getCamCanSetInfo()
 		const value = await this.getExposureComp()
 
 		if (range.length < 3 || (range[0] === 0 && range[1] === 0)) {
@@ -652,7 +652,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getFocusDistanceDesc(): Promise<ConfigDesc<number>> {
-		const {focusPosition: range} = await this.getCamCanSetInfo5()
+		const {focusPosition: range} = await this.getCamCanSetInfo()
 		const focusPosition = (await this.getCamStatus()).focusPosition[0]
 
 		// Small value means far direction, so invert the min/max and normalize it
@@ -681,7 +681,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async setFocusDistance(value: number): Promise<OperationResult> {
-		const {focusPosition: range} = await this.getCamCanSetInfo5()
+		const {focusPosition: range} = await this.getCamCanSetInfo()
 
 		const focusPosition = scalar.round(scalar.lerp(range[1], range[0], value))
 
@@ -703,7 +703,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getFocusMeteringModeDesc(): Promise<ConfigDesc<FocusMeteringMode>> {
-		const {focusArea: ids} = await this.getCamCanSetInfo5()
+		const {focusArea: ids} = await this.getCamCanSetInfo()
 
 		const id = (await this.getCamStatus()).focusArea[0]
 
@@ -795,7 +795,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const value = this.imageAspectTable.get(imageAspect) ?? null
 
-		const {imageAspect: values} = await this.getCamCanSetInfo5()
+		const {imageAspect: values} = await this.getCamCanSetInfo()
 		return {
 			writable: values.length > 0,
 			value,
@@ -909,7 +909,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	async getImageSizeDesc(): Promise<ConfigDesc<string>> {
 		const {resolution} = await this.getCamStatus()
-		const {stillImageResolution} = await this.getCamCanSetInfo5()
+		const {stillImageResolution} = await this.getCamCanSetInfo()
 
 		const value = this.imageSizeTable.get(resolution)
 		const values = stillImageResolution.map(v =>
@@ -969,7 +969,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getIsoDesc(): Promise<ConfigDesc<ISO>> {
-		const {isoManual} = await this.getCamCanSetInfo5()
+		const {isoManual} = await this.getCamCanSetInfo()
 		const value = await this.getIso()
 
 		const [svMin, svMax] = isoManual
@@ -1012,7 +1012,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const {lvMagnifyRatio} = await this.getCamStatus()
 		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
 
-		const {lvMagnificationRate: values} = await this.getCamCanSetInfo5()
+		const {lvMagnificationRate: values} = await this.getCamCanSetInfo()
 
 		return {
 			writable: values.length > 0,
@@ -1043,7 +1043,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	async getShutterSpeedDesc(): Promise<ConfigDesc<ShutterSpeed>> {
 		const {shutterSpeed: range, notApexShutterSpeed} =
-			await this.getCamCanSetInfo5()
+			await this.getCamCanSetInfo()
 
 		const value = await this.getShutterSpeed()
 
@@ -1103,7 +1103,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const {
 			shutterSound: [min, max, step],
-		} = await this.getCamCanSetInfo5()
+		} = await this.getCamCanSetInfo()
 
 		return {
 			writable: true,
@@ -1134,7 +1134,7 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async getWhiteBalanceDesc(): Promise<ConfigDesc<WhiteBalance>> {
-		const {whiteBalance} = await this.getCamCanSetInfo5()
+		const {whiteBalance} = await this.getCamCanSetInfo()
 		const value = await this.getWhiteBalance()
 
 		const values = whiteBalance
@@ -1426,7 +1426,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const {data} = await this.device.receiveData({
 			label: 'SigmaFP GetCamStatus2',
 			opcode: OpCodeSigma.GetCamStatus2,
-			parameters: [0b0000, 0b1111111, 0b0],
+			parameters: [0b10000, 0b1111111, 0b0],
 		})
 
 		const decoded = decodeIFD(data, {
@@ -1456,6 +1456,10 @@ export class TethrSigma extends TethrPTPUSB {
 			},
 			camDataGroupMovie: {
 				tag: OpCodeSigma.GetCamDataGroupMovie,
+				type: IFDType.Undefined,
+			},
+			camCanSetInfo5: {
+				tag: OpCodeSigma.GetCamCanSetInfo5,
 				type: IFDType.Undefined,
 			},
 		})
@@ -1561,25 +1565,7 @@ export class TethrSigma extends TethrPTPUSB {
 			focusPosition: {tag: 81, type: IFDType.Short},
 		})
 
-		return {
-			...group1,
-			...group2,
-			...group3,
-			...group4,
-			...group5,
-			...groupFocus,
-		}
-	}
-
-	@MemoizeExpiring(SigmaExpirationMs)
-	private async getCamCanSetInfo5() {
-		const {data} = await this.device.receiveData({
-			label: 'SigmaFP GetCamCanSetInfo5',
-			opcode: OpCodeSigma.GetCamCanSetInfo5,
-			parameters: [0x0],
-		})
-
-		return decodeIFD(data, {
+		const setInfo = decodeIFD(decoded.camCanSetInfo5, {
 			imageQuality: {tag: 11, type: IFDType.Byte},
 			dngImageQuality: {tag: 12, type: IFDType.Byte},
 			stillImageResolution: {tag: 20, type: IFDType.Byte},
@@ -1611,6 +1597,20 @@ export class TethrSigma extends TethrPTPUSB {
 			afVolume: {tag: 802, type: IFDType.Byte},
 			timerVolume: {tag: 803, type: IFDType.Byte},
 		})
+
+		return {
+			...group1,
+			...group2,
+			...group3,
+			...group4,
+			...group5,
+			...groupFocus,
+			setInfo,
+		}
+	}
+
+	private async getCamCanSetInfo() {
+		return (await this.getCamStatus()).setInfo
 	}
 
 	private async setCamData(
