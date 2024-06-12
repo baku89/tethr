@@ -216,9 +216,9 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		for (let i = 0; i < PTPTryCount; i++) {
 			const id = this.generateTransactionId()
 
-			await this.transferOutCommand(opcode, id, parameters)
+			await this.#transferOutCommand(opcode, id, parameters)
 
-			const res = await this.waitBulkIn(id, PTPCommandMaxByteLength)
+			const res = await this.#waitBulkIn(id, PTPCommandMaxByteLength)
 
 			// Error checking
 			if (res.type !== PTPType.Response) {
@@ -265,10 +265,10 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		for (let i = 0; i < PTPTryCount; i++) {
 			const id = this.generateTransactionId()
 
-			await this.transferOutCommand(opcode, id, parameters)
-			await this.transferOutData(opcode, id, data)
+			await this.#transferOutCommand(opcode, id, parameters)
+			await this.#transferOutData(opcode, id, data)
 
-			const res = await this.waitBulkIn(id, PTPCommandMaxByteLength)
+			const res = await this.#waitBulkIn(id, PTPCommandMaxByteLength)
 
 			// Error checking
 			if (res.type !== PTPType.Response) {
@@ -316,8 +316,8 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		for (let i = 0; i < PTPTryCount; i++) {
 			const id = this.generateTransactionId()
 
-			await this.transferOutCommand(opcode, id, parameters)
-			const res1 = await this.waitBulkIn(id, maxByteLength)
+			await this.#transferOutCommand(opcode, id, parameters)
+			const res1 = await this.#waitBulkIn(id, maxByteLength)
 
 			if (res1.type === PTPType.Response) {
 				if (expectedResCodes.includes(res1.code)) {
@@ -334,7 +334,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				throw new Error(`Cannot receive data code=${toHexString(res1.code)}`)
 			}
 
-			const res2 = await this.waitBulkIn(id, PTPCommandMaxByteLength)
+			const res2 = await this.#waitBulkIn(id, PTPCommandMaxByteLength)
 
 			if (res2.type !== PTPType.Response) {
 				throw new Error(
@@ -371,11 +371,11 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		})
 	}
 
-	private transferOutCommand = async (
+	async #transferOutCommand(
 		opcode: number,
 		transactionId: number,
 		parameters: number[]
-	) => {
+	) {
 		if (!this.usb) throw new Error('Device is not opened')
 
 		const length = 12 + parameters.length * 4
@@ -404,11 +404,11 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		if (sent.status !== 'ok') throw new Error()
 	}
 
-	private transferOutData = async (
+	async #transferOutData(
 		opcode: number,
 		transactionId: number,
 		data: ArrayBuffer
-	) => {
+	) {
 		if (!this.usb) return false
 
 		const dataView = new PTPDataView()
@@ -438,10 +438,10 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		return sent.status === 'ok'
 	}
 
-	private waitBulkIn = async (
+	async #waitBulkIn(
 		expectedTransactionId: number,
 		maxByteLength: number
-	): Promise<BulkInInfo> => {
+	): Promise<BulkInInfo> {
 		if (!this.usb || !this.usb.opened) throw new Error()
 
 		const {data, status} = await this.usb.transferIn(
