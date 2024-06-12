@@ -6,7 +6,7 @@
 		"lib": ["esnext", "dom", "dom.iterable"],
 		"paths": {
 			"tethr": ["../core/src"],
-			"@tethr/vue3": ["../integrations/vue3"],
+			"@tethr/*": ["../integrations/*"],
 		},
 	},
 	"references": [{"path": ".."}],

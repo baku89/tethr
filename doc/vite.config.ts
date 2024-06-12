@@ -9,7 +9,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			tethr: path.resolve('../core/src'),
-			'@tethr/vue3': path.resolve('../integrations/vue3'),
+			'@tethr': path.join(__dirname, '../integrations'),
 		},
 	},
 	define: {
