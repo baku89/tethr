@@ -469,7 +469,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		this.#console.info(
 			'transferInBulk',
-			'type=' + PTPBlockType[type] ?? type,
+			'type=' + PTPBlockType[type],
 			'code=' + toHexString(code, 2),
 			'id=' + transactionId,
 			'payload=',
