@@ -61,7 +61,7 @@ async function test() {
 
 	await cam.open()
 
-	await cam.get('model')
+	cam.name
 	// -> 'Lumix S5'
 
 	await cam.set('shutterSpeed', '1/1000')
@@ -160,9 +160,13 @@ The `configName` mentioned in the subsequent sample code can be replaced with th
 You can retrieve and modify configs like code shown below:
 
 ```ts
-// 1. Specify a name of config as the first argument
-tethr.get('configName'): Promise<ConfigType | null>
-tethr.set('configName', value): Promise<OperationResult>
+// Getters
+await camera.get('configName'): Promise<ConfigType | null>
+await camera.getConfigName(): Promise<ConfigType | null>
+
+// Setters
+await camera.set('configName', value): Promise<OperationResult>
+await camera.setConfigName(value): Promise<OperationResult>
 
 // Setters return the following object:
 interface OperationResult {
@@ -172,9 +176,12 @@ interface OperationResult {
 
 ### Config Descriptor
 
-If you want to obtain information about a config, such as its writability and a list of valid values, you can use the `cam.getDesc('configName')` methods. These methods return a descriptor object.
+If you want to obtain information about a config, such as its writability and a list of valid values.
 
 ```ts
+await camera.getDesc('configName'): Promise<ConfigDesc<ConfigType>>
+await camera.getConfigNameDesc(): Promise<ConfigDesc<ConfigType>>
+
 interface ConfigDesc<ConfigType> {
 	writable: boolean
 	value: ConfigType | null
@@ -189,15 +196,23 @@ interface ConfigDesc<ConfigType> {
 Whenever a config is changed, a correspoinding `configNameChange` event will be fired. Since Tethr class inherits from [EventEmitter](https://github.com/primus/eventemitter3), you can monitor the value change using the following pattern:
 
 ```ts
-tethr.on('apertureChange', (newValue: Aperture) => {
+camera.on('apertureChange', (newValue: Aperture) => {
 	// Handle the value change here
 })
 
 // Or watch once
-tethr.once('shutterSpeedChange', callback)
+camera.once('shutterSpeedChange', callback)
 
 // Delete event listener
-tethr.off('apertureChange', callback)
+camera.off('apertureChange', callback)
+
+// Or you can watch all config changes
+camera.on(
+	'change',
+	(configName: ConfigName, newValue: ConfigType[ConfigName]) => {
+		// Handle the value change here
+	}
+)
 ```
 
 An event `configNameChange` is triggered in the the following:
@@ -212,7 +227,7 @@ An event `configNameChange` is triggered in the the following:
 git clone https://github.com/baku89/tethr tethr
 cd tethr
 yarn install
-yarn dev # Then open https://localhost:1234 in a browser
+yarn dev
 ```
 
 ## License
