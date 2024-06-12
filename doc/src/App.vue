@@ -17,10 +17,10 @@
 			<dl>
 				<dt>Connect to</dt>
 				<dd class="connect-to">
-					<button class="connect-button" @click="requestCameras('usbptp')">
+					<button class="connect-button" @click="requestCamera('usbptp')">
 						USB
 					</button>
-					<button class="connect-button" @click="requestCameras('webcam')">
+					<button class="connect-button" @click="requestCamera('webcam')">
 						Webcam
 					</button>
 				</dd>
@@ -133,6 +133,9 @@ import TethrConfig from './TethrConfig.vue'
 
 const folderHandler = ref<FileSystemDirectoryHandle | null>(null)
 
+const TransparentPng =
+	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+
 async function setupSaveFolder() {
 	const handler = await window.showDirectoryPicker({
 		id: 'saveFile',
@@ -167,14 +170,13 @@ async function onSave(object: TethrObject) {
 }
 
 const {
-	pairedCameras,
 	camera,
-	openCamera,
-	closeCamera,
-	requestCameras,
+	open,
+	close,
+	pairedCameras,
+	requestCamera,
 	configs,
 	liveviewMediaStream,
-	photoURL,
 	toggleLiveview,
 } = useTethr()
 
@@ -191,11 +193,13 @@ async function takePhoto() {
 	}
 }
 
+const photoURL = ref(TransparentPng)
+
 async function onClickPairedCamera(cam: Tethr) {
 	if (cam.opened) {
-		closeCamera(cam)
+		close(cam)
 	} else {
-		openCamera(cam)
+		open(cam)
 	}
 }
 

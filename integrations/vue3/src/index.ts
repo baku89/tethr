@@ -6,48 +6,76 @@ import {
 	Tethr,
 	TethrManager,
 } from 'tethr'
-import {onUnmounted, reactive, readonly, Ref, ref, shallowRef, watch} from 'vue'
+import {
+	onUnmounted,
+	readonly,
+	Ref,
+	ref,
+	shallowReactive,
+	shallowRef,
+	watch,
+} from 'vue'
 
-const TransparentPng =
-	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+import {useDebounceAsync} from './useDebounceAsync'
 
 export interface TethrConfig<T> {
 	writable: boolean
 	value: T | null
-	update: (value: T) => void
+	target: T | null
+	set: (value: T) => void
 	option?: ConfigDescOption<T>
 }
 
-export function useTethrConfig<N extends ConfigName>(
+function useTethrConfig<N extends ConfigName>(
 	camera: Ref<Tethr | null>,
 	name: N
-) {
-	const config = reactive({
+): TethrConfig<ConfigType[N]> {
+	const config = shallowReactive<TethrConfig<ConfigType[N]>>({
 		writable: false,
 		value: null,
-		update: () => null,
+		target: null,
+		set: () => null,
 		option: undefined,
-	}) as TethrConfig<ConfigType[N]>
+	})
 
 	watch(
 		camera,
-		async cam => {
-			if (!cam) {
+		async camera => {
+			if (!camera) {
 				config.writable = false
 				config.value = null
 				config.option = undefined
 				return
 			}
 
-			const desc = await cam.getDesc(name)
+			const desc = await camera.getDesc(name)
 
 			config.writable = desc.writable
 			config.value = desc.value
 			config.option = desc.option
 
-			config.update = (value: ConfigType[N]) => cam.set(name, value)
+			const {fn: set} = useDebounceAsync(
+				(value: ConfigType[N]) => {
+					config.value = value
+					return camera.set(name, value)
+				},
+				{
+					onQueue(value) {
+						config.target = value
+					},
+					onFinish() {
+						config.target = null
+					},
+				}
+			)
 
-			cam.on(`${name}Change` as any, (desc: ConfigDesc<ConfigType[N]>) => {
+			config.set = set
+
+			camera.on(`${name}Change` as any, (desc: ConfigDesc<ConfigType[N]>) => {
+				const isSetting = config.target !== null && config.target !== desc.value
+
+				if (isSetting) return
+
 				config.value = desc.value
 				config.writable = desc.writable
 				config.option = desc.option
@@ -56,23 +84,20 @@ export function useTethrConfig<N extends ConfigName>(
 		{immediate: true}
 	)
 
-	return readonly(config)
+	return readonly(config) as TethrConfig<ConfigType[N]>
 }
 
 export function useTethr() {
 	const manager = new TethrManager()
 
 	const pairedCameras = shallowRef<Tethr[]>([])
+	const camera = shallowRef<Tethr | null>(null)
 
 	manager.addListener('pairedCameraChange', cameras => {
 		pairedCameras.value = cameras
 	})
 
-	const camera = shallowRef<Tethr | null>(null)
-
 	const liveviewMediaStream = ref<null | MediaStream>(null)
-
-	const photoURL = ref(TransparentPng)
 
 	function onDisconnect() {
 		camera.value = null
@@ -82,9 +107,9 @@ export function useTethr() {
 		liveviewMediaStream.value = ms
 	}
 
-	async function openCamera(cam: Tethr) {
+	async function open(cam: Tethr) {
 		if (camera.value) {
-			await closeCamera(camera.value)
+			close()
 		}
 
 		await cam.open()
@@ -93,25 +118,21 @@ export function useTethr() {
 		cam.on('liveviewStreamUpdate', onLivewviewStreamUpdate)
 	}
 
-	async function closeCamera(cam: Tethr) {
+	async function close() {
 		if (!camera.value) return
 
 		camera.value.off('disconnect', onDisconnect)
 		camera.value.off('liveviewStreamUpdate', onLivewviewStreamUpdate)
 		await camera.value.close()
 
-		if (camera.value === cam) {
-			camera.value = null
-		}
+		camera.value = null
 	}
 
-	async function requestCameras(type: 'usbptp' | 'webcam') {
+	async function requestCamera(type: 'usbptp' | 'webcam') {
 		let cam: Tethr | null
 		try {
 			cam = await manager.requestCamera(type)
-			if (!cam) {
-				return
-			}
+			if (!cam) return
 		} catch (err) {
 			if (err instanceof Error) {
 				alert(err.message)
@@ -119,20 +140,19 @@ export function useTethr() {
 			return
 		}
 
-		await openCamera(cam)
+		await open(cam)
 	}
 
 	async function toggleLiveview() {
 		if (!camera.value) return
-		const enabled = await camera.value.get('liveviewEnabled')
+		const enabled = await camera.value.getLiveviewEnabled()
+
+		if (enabled === null) return
+
 		if (enabled) {
 			await camera.value.stopLiveview()
-			liveviewMediaStream.value = null
 		} else {
-			const result = await camera.value.startLiveview()
-			if (result.status === 'ok') {
-				liveviewMediaStream.value = result.value
-			}
+			await camera.value.startLiveview()
 		}
 	}
 
@@ -145,10 +165,12 @@ export function useTethr() {
 
 	return {
 		pairedCameras,
-		openCamera,
-		closeCamera,
+		requestCamera,
+		open,
+		close,
 		camera,
-		requestCameras,
+		liveviewMediaStream,
+		toggleLiveview,
 		// DPC
 		configs: {
 			manufacturer: useTethrConfig(camera, 'manufacturer'),
@@ -186,8 +208,5 @@ export function useTethr() {
 			manualFocusOptions: useTethrConfig(camera, 'manualFocusOptions'),
 			shutterSound: useTethrConfig(camera, 'shutterSound'),
 		},
-		liveviewMediaStream,
-		photoURL,
-		toggleLiveview,
 	}
 }
