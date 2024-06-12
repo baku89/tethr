@@ -9,5 +9,5 @@
 			"@tethr/*": ["../integrations/*"],
 		},
 	},
-	"references": [{"path": ".."}],
+	"files": ["../node_modules/@types/wicg-file-system-access/index.d.ts"],
 }
