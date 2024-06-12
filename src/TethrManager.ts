@@ -19,7 +19,6 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	}
 
 	async #init() {
-		console.log(this.#ptpusbCameras, this.#webcamCameras)
 		await Promise.allSettled([
 			this.#initPairedUSBPTPCameras(),
 			this.#refreshPairedWebcam(),
