@@ -67,7 +67,6 @@ type EventTypes = {
 } & {
 	change: [name: ConfigName, value: ConfigType[ConfigName]]
 	disconnect: void
-	liveviewStreamUpdate: MediaStream
 	progress: {progress: number}
 }
 
@@ -588,13 +587,13 @@ export abstract class Tethr
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setLiveviewEnabled(value: boolean): Promise<OperationResult> {
+	async setLiveview(value: MediaStream): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
-	async getLiveviewEnabled() {
-		return (await this.getLiveviewEnabledDesc()).value
+	async getLiveview() {
+		return (await this.getLiveviewDesc()).value
 	}
-	async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
+	async getLiveviewDesc(): Promise<ConfigDesc<MediaStream>> {
 		return UnsupportedConfigDesc
 	}
 
@@ -773,13 +772,6 @@ export abstract class Tethr
 	 * @category Action
 	 */
 	async stopLiveview(): Promise<OperationResult> {
-		return UnsupportedOperationResult
-	}
-
-	/**
-	 * Gets a liveview image.
-	 */
-	async getLiveViewImage(): Promise<OperationResult<Blob>> {
 		return UnsupportedOperationResult
 	}
 }

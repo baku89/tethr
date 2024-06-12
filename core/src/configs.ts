@@ -200,7 +200,7 @@ export type ConfigType = {
 	imageQuality: ImageQuality
 	imageSize: ImageSize
 	iso: ISO
-	liveviewEnabled: boolean
+	liveview: MediaStream
 	liveviewMagnifyRatio: number
 	liveviewSize: string
 	manualFocusOptions: ManualFocusOption[]
@@ -255,7 +255,7 @@ export const ConfigNameList: ConfigName[] = (() => {
 		'imageQuality',
 		'imageSize',
 		'iso',
-		'liveviewEnabled',
+		'liveview',
 		'liveviewMagnifyRatio',
 		'liveviewSize',
 		'manualFocusOptions',

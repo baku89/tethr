@@ -142,7 +142,7 @@ This is a list of ConfigName and their value types:
 | imageQuality         | `string`               | `'fine'`, `'raw,fine'`, `'raw'` (comma-separated)                                          |
 | imageSize            | `string`               | `'L'`, `'M'`, `'S'`, `'1024x768'`                                                          |
 | iso                  | `ISO`                  | `160`, `3200`, `'auto'`                                                                    |
-| liveviewEnabled      | `boolean`              |                                                                                            |
+| liveview             | `MediaStream`          |                                                                                            |
 | liveviewMagnifyRatio | `number`               |                                                                                            |
 | liveviewSize         | `string`               |                                                                                            |
 | manualFocusOptions   | `ManualFocusOption[]`  | `['near:2', 'near:1', 'far:1', 'far:2']` (`3` at max speed)                                |

@@ -5,6 +5,7 @@ import sleep from 'sleep-promise'
 import {MemoizeExpiring} from 'typescript-memoize'
 
 import {FocalLength} from '..'
+import {CanvasMediaStream} from '../CanvasMediaStream'
 import {
 	Aperture,
 	BatteryLevel,
@@ -128,7 +129,6 @@ const ConfigListSigma: ConfigName[] = [
 	'imageAspect',
 	'imageQuality',
 	'imageSize',
-	'liveviewEnabled',
 	'liveviewMagnifyRatio',
 	'shutterSpeed',
 	'shutterSound',
@@ -994,13 +994,6 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	async getLiveviewEnabledDesc(): Promise<ConfigDesc<boolean>> {
-		return {
-			writable: false,
-			value: this.#liveviewEnabled,
-		}
-	}
-
 	async setLiveviewMagnifyRatio(value: number): Promise<OperationResult> {
 		const id = this.liveviewMagnifyRatioTable.getKey(value)
 		if (!id) return {status: 'invalid parameter'}
@@ -1241,9 +1234,6 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	#liveviewEnabled = false
-	#liveviewImageResult: OperationResult<Blob> = {status: 'busy'}
-
 	async #getLiveViewImage(): Promise<OperationResult<Blob>> {
 		const {resCode, data} = await this.device.receiveData({
 			label: 'SigmaFP GetViewFrame',
@@ -1256,70 +1246,38 @@ export class TethrSigma extends TethrPTPUSB {
 
 		// Might be quirky but somehow works
 		const jpegData = data.slice(10)
-		return (this.#liveviewImageResult = {
+		return {
 			status: 'ok',
 			value: new Blob([jpegData], {type: 'image/jpg'}),
-		})
-	}
-
-	async getLiveViewImage(): Promise<OperationResult<Blob>> {
-		if (this.#liveviewEnabled) {
-			return this.#liveviewImageResult
 		}
-
-		return await this.#getLiveViewImage()
 	}
 
-	#ctx: CanvasRenderingContext2D | null = null
+	#canvasMediaStream = new CanvasMediaStream()
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
-		if (!this.#ctx) {
-			const canvas = document.createElement('canvas')
-			const ctx = canvas.getContext('2d')
-			if (!ctx) return {status: 'general error'}
-			this.#ctx = ctx
-		}
+		const stream = this.#canvasMediaStream.begin()
+		this.device.on('idle', this.#updateLiveviewFrame)
 
-		const canvas = this.#ctx.canvas
-		const ctx = this.#ctx
-
-		this.#liveviewEnabled = true
-		this.emit('liveviewEnabledChange', await this.getDesc('liveviewEnabled'))
-
-		const updateFrame = async () => {
-			if (!this.#liveviewEnabled || !this.opened) return
-
-			if (this.#isCapturing) return
-
-			const lvImage = await this.#getLiveViewImage()
-
-			if (lvImage.status !== 'ok') return
-
-			const bitmap = await createImageBitmap(lvImage.value)
-
-			const sizeChanged =
-				canvas.width !== bitmap.width || canvas.height !== bitmap.height
-
-			if (sizeChanged) {
-				canvas.width = bitmap.width
-				canvas.height = bitmap.height
-			}
-
-			ctx.drawImage(bitmap, 0, 0)
-		}
-
-		this.device.on('idle', updateFrame)
-
-		const stream = ctx.canvas.captureStream(60)
-		this.emit('liveviewStreamUpdate', stream)
+		this.emit('liveviewChange', readonlyConfigDesc(stream))
 
 		return {status: 'ok', value: stream}
 	}
 
+	#updateLiveviewFrame = async () => {
+		const lvImage = await this.#getLiveViewImage()
+
+		if (lvImage.status !== 'ok') return
+
+		const bitmap = await createImageBitmap(lvImage.value)
+
+		this.#canvasMediaStream.updateWithImage(bitmap)
+	}
+
 	async stopLiveview(): Promise<OperationResult> {
-		this.#liveviewEnabled = false
-		this.emit('liveviewStreamUpdate', null)
-		this.emit('liveviewEnabledChange', await this.getDesc('liveviewEnabled'))
+		this.#canvasMediaStream.end()
+		this.device.off('idle', this.#updateLiveviewFrame)
+
+		this.emit('liveviewChange', readonlyConfigDesc(null))
 
 		return {status: 'ok'}
 	}

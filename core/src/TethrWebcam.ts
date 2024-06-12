@@ -20,7 +20,6 @@ type CaptureHandler =
 	  }
 
 export class TethrWebcam extends Tethr {
-	#liveviewEnabled = false
 	#mediaDeviceInfo: MediaDeviceInfo
 	#media: MediaStream | null = null
 	#captureHandler: CaptureHandler | null = null
@@ -83,6 +82,7 @@ export class TethrWebcam extends Tethr {
 	async close() {
 		this.#media?.getTracks().forEach(t => t.stop())
 		this.#media = null
+		this.emit('liveviewChange', null)
 	}
 
 	get opened() {
@@ -129,7 +129,7 @@ export class TethrWebcam extends Tethr {
 		this.#media = await navigator.mediaDevices.getUserMedia({
 			video: {deviceId: {exact: deviceId}},
 		})
-		this.emit('liveviewStreamUpdate', this.#media)
+		this.emit('liveviewChange', this.#media)
 
 		// Setup other variables
 		const videoTrack = this.#media.getVideoTracks()[0]
@@ -167,8 +167,8 @@ export class TethrWebcam extends Tethr {
 		return readonlyConfigDesc('Webcam')
 	}
 
-	async getLiveviewEnabledDesc() {
-		return readonlyConfigDesc(this.#liveviewEnabled)
+	async getLiveviewdDesc() {
+		return readonlyConfigDesc(this.#media)
 	}
 
 	// Actions
@@ -232,20 +232,13 @@ export class TethrWebcam extends Tethr {
 		return {status: 'ok', value: [tethrObject]}
 	}
 
-	async getLiveViewImage(): Promise<OperationResult<Blob>> {
-		const result = await this.takePhoto()
-		if (result.status !== 'ok') return result
-		return {status: 'ok', value: result.value[0].blob}
-	}
-
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
 		if (!this.#media) {
 			return {status: 'general error'}
 		}
 
-		this.#liveviewEnabled = true
-		this.emit('liveviewStreamUpdate', this.#media)
-		this.emit('liveviewEnabledChange', readonlyConfigDesc(true))
+		this.emit('liveviewChange', readonlyConfigDesc(this.#media))
+
 		return {
 			status: 'ok',
 			value: this.#media,
@@ -253,9 +246,6 @@ export class TethrWebcam extends Tethr {
 	}
 
 	async stopLiveview(): Promise<OperationResult> {
-		this.#liveviewEnabled = false
-		this.emit('liveviewStreamUpdate', null)
-		this.emit('liveviewEnabledChange', readonlyConfigDesc(false))
 		return {status: 'ok'}
 	}
 }
