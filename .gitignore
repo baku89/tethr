@@ -4,7 +4,7 @@ node_modules
 
 lib
 *.tsbuildinfo
-demo/dist
+doc/dist
 
 *.log
 .vscode/launch.json

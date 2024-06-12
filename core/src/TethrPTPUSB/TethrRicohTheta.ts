@@ -1,5 +1,4 @@
 import {BiMap} from 'bim'
-import {ConfigDesc} from 'src/Tethr'
 
 import {
 	ExposureMode,
@@ -9,6 +8,7 @@ import {
 	WhiteBalanceTable,
 } from '../configs'
 import {DatatypeCode, DevicePropCode} from '../PTPDatacode'
+import {ConfigDesc} from '../Tethr'
 import {TethrPTPUSB} from './TethrPTPUSB'
 
 enum DevicePropCodeRicohTheta {

@@ -124,12 +124,12 @@
 </template>
 
 <script lang="ts" setup>
+import {useTethr} from '@tethr/vue3'
 import {saveAs} from 'file-saver'
 import {Tethr, TethrObject} from 'tethr'
 import {ref, watchEffect} from 'vue'
 
 import TethrConfig from './TethrConfig.vue'
-import {useTethr} from './useTethr'
 
 const folderHandler = ref<FileSystemDirectoryHandle | null>(null)
 
@@ -274,3 +274,4 @@ dl
 	button
 		width 100%
 </style>
+../../integrations/vue3/useTethr

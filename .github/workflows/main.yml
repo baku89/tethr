@@ -43,7 +43,7 @@ jobs:
       - name: Build
         uses: borales/actions-yarn@v4
         with:
-          cmd: build:demo
+          cmd: build:doc
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
@@ -51,7 +51,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload dist repository
-          path: './demo/dist'
+          path: './doc/dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1

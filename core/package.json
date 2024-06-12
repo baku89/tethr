@@ -1,0 +1,48 @@
+{
+	"name": "tethr",
+	"author": "Baku Hashimoto <mail@baku89.com> (https://baku89.com)",
+	"version": "0.2.0",
+	"description": "Controlls USB-connected cameras, webcam, and smartphone camera from browser",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"repository": "https://github.com/baku89/tethr",
+	"sideEffects": false,
+	"keywords": [
+		"camera",
+		"webcam",
+		"tethered",
+		"photo",
+		"gphoto2",
+		"shooting",
+		"dslr",
+		"webusb",
+		"ptp"
+	],
+	"scripts": {
+		"build": "tsc",
+		"prepare": "npm run build"
+	},
+	"files": [
+		"lib"
+	],
+	"homepage": "https://baku89.github.io/tethr/",
+	"license": "MIT",
+	"dependencies": {
+		"bim": "^1.3.3",
+		"date-format-parse": "^0.2.7",
+		"eventemitter3": "^5.0.1",
+		"lodash": "^4.17.21",
+		"p-queue": "^8.0.1",
+		"p-timeout": "^6.1.2",
+		"sleep-promise": "^9.1.0",
+		"typescript-memoize": "^1.1.1"
+	},
+	"devDependencies": {
+		"@types/lodash": "^4.14.202",
+		"@types/w3c-image-capture": "^1.0.10",
+		"@types/w3c-web-usb": "^1.0.10",
+		"@typescript-eslint/eslint-plugin": "^6.19.1",
+		"@typescript-eslint/parser": "^6.19.1",
+		"linearly": "^0.21.0"
+	}
+}

@@ -1,0 +1,13 @@
+{
+	"extends": ["@vue/tsconfig/tsconfig.dom", "../tsconfig"],
+	"include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+	"compilerOptions": {
+		"baseUrl": ".",
+		"lib": ["esnext", "dom", "dom.iterable"],
+		"paths": {
+			"tethr": ["../core/src"],
+			"@tethr/vue3": ["../integrations/vue3"],
+		},
+	},
+	"references": [{"path": ".."}],
+}

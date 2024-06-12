@@ -8,7 +8,8 @@ export default defineConfig({
 	plugins: [vue()],
 	resolve: {
 		alias: {
-			tethr: path.resolve('./src'),
+			tethr: path.resolve('../core/src'),
+			'@tethr/vue3': path.resolve('../integrations/vue3'),
 		},
 	},
 	define: {
