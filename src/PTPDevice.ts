@@ -6,7 +6,7 @@ import {ResCode} from './PTPDatacode'
 import {PTPDataView} from './PTPDataView'
 import {toHexString} from './util'
 
-enum PTPType {
+enum PTPBlockType {
 	Command = 0x1,
 	Data = 0x2,
 	Response = 0x3,
@@ -55,7 +55,7 @@ export interface PTPEvent {
 type PTPEventCallback = (event: PTPEvent) => void
 
 interface BulkInInfo {
-	type: PTPType
+	type: PTPBlockType
 	code: number
 	transactionId: number
 	payload: ArrayBuffer
@@ -218,9 +218,9 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			const res = await this.#waitBulkIn(id, PTPCommandMaxByteLength)
 
 			// Error checking
-			if (res.type !== PTPType.Response) {
+			if (res.type !== PTPBlockType.Response) {
 				throw new Error(
-					`Expected response type: ${PTPType.Response}, got: ${res.type}`
+					`Expected response type: ${PTPBlockType.Response}, got: ${res.type}`
 				)
 			}
 
@@ -266,9 +266,9 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			const res = await this.#waitBulkIn(id, PTPCommandMaxByteLength)
 
 			// Error checking
-			if (res.type !== PTPType.Response) {
+			if (res.type !== PTPBlockType.Response) {
 				throw new Error(
-					`Expected response type: ${PTPType.Response}, got: ${res.type}`
+					`Expected response type: ${PTPBlockType.Response}, got: ${res.type}`
 				)
 			}
 
@@ -314,7 +314,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			await this.#transferOutCommand(opcode, id, parameters)
 			const res1 = await this.#waitBulkIn(id, maxByteLength)
 
-			if (res1.type === PTPType.Response) {
+			if (res1.type === PTPBlockType.Response) {
 				if (expectedResCodes.includes(res1.code)) {
 					return {
 						resCode: res1.code,
@@ -324,15 +324,15 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				}
 			}
 
-			if (res1.type !== PTPType.Data) {
+			if (res1.type !== PTPBlockType.Data) {
 				throw new Error(`Cannot receive data code=${toHexString(res1.code)}`)
 			}
 
 			const res2 = await this.#waitBulkIn(id, PTPCommandMaxByteLength)
 
-			if (res2.type !== PTPType.Response) {
+			if (res2.type !== PTPBlockType.Response) {
 				throw new Error(
-					`Expected response type: ${PTPType.Response}, but got: ${res2.type}`
+					`Expected response type: ${PTPBlockType.Response}, but got: ${res2.type}`
 				)
 			}
 			// When the device is busy, try again
@@ -377,7 +377,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const dataView = new PTPDataView()
 
 		dataView.writeUint32(length)
-		dataView.writeUint16(PTPType.Command)
+		dataView.writeUint16(PTPBlockType.Command)
 		dataView.writeUint16(opcode)
 		dataView.writeUint32(transactionId)
 
@@ -415,7 +415,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const length = 12 + data.byteLength
 
 		dataView.writeUint32(length)
-		dataView.writeUint16(PTPType.Data)
+		dataView.writeUint16(PTPBlockType.Data)
 		dataView.writeUint16(opcode)
 		dataView.writeUint32(transactionId)
 
@@ -469,7 +469,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		this.#console.info(
 			'transferInBulk',
-			'type=' + PTPType[type] ?? type,
+			'type=' + PTPBlockType[type] ?? type,
 			'code=' + toHexString(code, 2),
 			'id=' + transactionId,
 			'payload=',
@@ -520,7 +520,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 			this.#console.info(
 				'transferInInterrupt',
-				'type=' + PTPType[type],
+				'type=' + PTPBlockType[type],
 				'code=' + eventName,
 				'id=' + transactionId,
 				'parameters=' + [...parameters].map(v => toHexString(v, 4))
