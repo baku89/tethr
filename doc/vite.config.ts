@@ -9,7 +9,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			tethr: path.resolve('../core/src'),
-			'@tethr': path.join(__dirname, '../integrations'),
+			'@tethr': path.resolve('../integrations'),
 		},
 	},
 	define: {
