@@ -63,6 +63,7 @@ interface BulkInInfo {
 
 interface EventTypes {
 	[name: `ptpevent:${string}`]: PTPEvent
+	idle: void
 	disconnect: void
 }
 
@@ -90,6 +91,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		super()
 
 		this.setLog(log)
+		this.#queue.on('idle', () => this.emit('idle'))
 	}
 
 	open = async (): Promise<void> => {
@@ -136,6 +138,8 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	}
 
 	close = async (): Promise<void> => {
+		this.#queue.clear()
+
 		if (this.usb && this.usb.opened) {
 			await this.usb.close()
 		}
