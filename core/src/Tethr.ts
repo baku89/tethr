@@ -132,7 +132,8 @@ export abstract class Tethr
 			await Promise.all(
 				ConfigNameList.map(async name => {
 					const desc = await this.getDesc(name)
-					if (desc.value === null) return null
+					// Export only writable configs
+					if (desc.value === null || !desc.writable) return null
 					return [name, desc.value] as const
 				})
 			)
@@ -145,22 +146,11 @@ export abstract class Tethr
 	 * Apply all writable configs.
 	 */
 	async importConfigs(configs: Partial<ConfigType>) {
-		const sortedConfigs = Object.entries(configs).sort(([a], [b]) => {
-			const ai = ConfigNameList.indexOf(a as ConfigName)
-			const bi = ConfigNameList.indexOf(b as ConfigName)
-			return ai - bi
-		}) as [ConfigName, ConfigType[ConfigName]][]
+		for (const name of ConfigNameList) {
+			const value = configs[name]
+			if (value === undefined) continue
 
-		for (const [name, value] of sortedConfigs) {
-			// NOTE: this might be converted to parallel execution in the future
-			try {
-				await this.set(name, value)
-			} finally {
-				null
-			}
-
-			// The delay is necessary to avoid "busy" error
-			// await sleep(25)
+			await this.set(name, value)
 		}
 	}
 
