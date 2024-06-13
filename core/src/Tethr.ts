@@ -104,6 +104,8 @@ export function readonlyConfigDesc<T>(value: T): ConfigDesc<T> {
 	}
 }
 
+export type TethrDeviceType = 'ptpusb' | 'webcam'
+
 export abstract class Tethr
 	extends EventEmitter<EventTypes>
 	implements ConfigSetters, ConfigGetters, ConfigDescGetters
@@ -126,7 +128,7 @@ export abstract class Tethr
 	abstract close(): Promise<void>
 
 	abstract get opened(): boolean
-	abstract get type(): 'usbptp' | 'webcam'
+	abstract get type(): TethrDeviceType
 	abstract get name(): string
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
