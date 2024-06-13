@@ -3,6 +3,9 @@
 	"compilerOptions": {
 		"outDir": "./lib/",
 		"rootDir": "src",
+		"paths": {
+			"tethr": ["../../core/src"],
+		},
 	},
 	"include": ["src/**/*"],
 }

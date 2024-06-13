@@ -26,7 +26,11 @@ import {
 	WhiteBalance,
 } from './configs'
 import {TethrObject} from './TethrObject'
-import {isntNil} from './util'
+import {
+	isntNil,
+	UnsupportedConfigDesc,
+	UnsupportedOperationResult,
+} from './util'
 
 export type OperationResultStatus =
 	| 'ok'
@@ -86,22 +90,6 @@ type ConfigDescGetters = {
 	[N in ConfigName as `get${Capitalize<N>}Desc`]: () => Promise<
 		ConfigDesc<ConfigType[N]>
 	>
-}
-
-export const UnsupportedConfigDesc: ConfigDesc<any> = {
-	writable: false,
-	value: null,
-}
-
-export const UnsupportedOperationResult = {
-	status: 'unsupported',
-} as const
-
-export function readonlyConfigDesc<T>(value: T): ConfigDesc<T> {
-	return {
-		writable: false,
-		value,
-	}
 }
 
 export type TethrDeviceType = 'ptpusb' | 'webcam'

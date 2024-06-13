@@ -1,14 +1,8 @@
 import {BiMap} from 'bim'
 
-import {ConfigDesc} from '.'
-import {
-	OperationResult,
-	readonlyConfigDesc,
-	TakePhotoOption,
-	Tethr,
-	UnsupportedConfigDesc,
-} from './Tethr'
+import {ConfigDesc, OperationResult, TakePhotoOption, Tethr} from './Tethr'
 import {TethrObject} from './TethrObject'
+import {readonlyConfigDesc, UnsupportedConfigDesc} from './util'
 
 type CaptureHandler =
 	| {type: 'imageCapture'; imageCapture: ImageCapture}

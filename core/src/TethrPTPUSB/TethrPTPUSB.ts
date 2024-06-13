@@ -31,14 +31,17 @@ import {
 	ConfigDesc,
 	ConfigDescOption,
 	OperationResult,
-	readonlyConfigDesc,
 	TakePhotoOption,
 	Tethr,
-	UnsupportedOperationResult,
 } from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {TethrStorage} from '../TethrStorage'
-import {isntNil, toHexString} from '../util'
+import {
+	isntNil,
+	readonlyConfigDesc,
+	toHexString,
+	UnsupportedOperationResult,
+} from '../util'
 
 type DevicePropScheme<T, D extends DatatypeCode> = {
 	devicePropCode: number
