@@ -1258,7 +1258,9 @@ export class TethrSigma extends TethrPTPUSB {
 	#canvasMediaStream = new CanvasMediaStream()
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
-		const stream = this.#canvasMediaStream.begin()
+		const stream = await this.#canvasMediaStream.begin(
+			this.#updateLiveviewFrame
+		)
 		this.device.on('idle', this.#updateLiveviewFrame)
 
 		this.emit('liveviewChange', readonlyConfigDesc(stream))

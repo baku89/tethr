@@ -579,22 +579,24 @@ export class TethrPanasonic extends TethrPTPUSB {
 	#canvasMediaStream = new CanvasMediaStream()
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
-		const stream = this.#canvasMediaStream.begin()
-
 		await this.device.sendCommand({
 			label: 'Panasonic Liveview',
 			opcode: OpCodePanasonic.Liveview,
 			parameters: [0x0d000010],
 		})
 
+		const stream = await this.#canvasMediaStream.begin(
+			this.#updateLiveviewFrame
+		)
+
 		this.emit('liveviewChange', readonlyConfigDesc(stream))
 
-		this.device.on('idle', this.#updateLiveview)
+		this.device.on('idle', this.#updateLiveviewFrame)
 
 		return {status: 'ok', value: stream}
 	}
 
-	#updateLiveview = async () => {
+	#updateLiveviewFrame = async () => {
 		const image = await this.#getLiveviewImage()
 		if (!image) return
 
@@ -610,7 +612,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			parameters: [0x0d000011],
 		})
 
-		this.device.off('idle', this.#updateLiveview)
+		this.device.off('idle', this.#updateLiveviewFrame)
 		this.emit('liveviewChange', readonlyConfigDesc(null))
 
 		return {status: 'ok'}

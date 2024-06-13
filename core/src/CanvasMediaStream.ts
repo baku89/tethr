@@ -4,7 +4,11 @@ export class CanvasMediaStream {
 	#ctx: CanvasRenderingContext2D | null = null
 	#stream: MediaStream | null = null
 
-	begin(frameRequestRate = 60, size?: vec2) {
+	async begin(
+		initialDraw: () => PromiseLike<void>,
+		frameRequestRate = 60,
+		size?: vec2
+	) {
 		if (!this.#ctx) {
 			const canvas = document.createElement('canvas')
 			if (size) {
@@ -13,6 +17,8 @@ export class CanvasMediaStream {
 			}
 			this.#ctx = canvas.getContext('2d')!
 		}
+
+		await initialDraw()
 
 		this.#stream = this.#ctx.canvas.captureStream(frameRequestRate)
 		return this.#stream
@@ -36,6 +42,6 @@ export class CanvasMediaStream {
 	}
 
 	end() {
-		this.#stream?.stop()
+		this.#stream?.getTracks().forEach(track => track.stop())
 	}
 }
