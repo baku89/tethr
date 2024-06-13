@@ -17,7 +17,7 @@
 			<dl>
 				<dt>Connect to</dt>
 				<dd class="connect-to">
-					<button class="connect-button" @click="requestCamera('usbptp')">
+					<button class="connect-button" @click="requestCamera('ptpusb')">
 						USB
 					</button>
 					<button class="connect-button" @click="requestCamera('webcam')">

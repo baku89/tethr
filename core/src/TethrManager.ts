@@ -1,13 +1,12 @@
 import EventEmitter from 'eventemitter3'
 
-import {Tethr} from './Tethr'
+import {Tethr, TethrDeviceType} from './Tethr'
 import {initTethrUSBPTP, TethrPTPUSB} from './TethrPTPUSB'
 import {TethrWebcam} from './TethrWebcam'
 
 type TethrManagerEvents = {
 	pairedCameraChange: (cameras: Tethr[]) => void
 }
-
 export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	#ptpusbCameras: Map<USBDevice, TethrPTPUSB> = new Map()
 	#webcamCameras: Map<string, TethrWebcam> = new Map()
@@ -109,11 +108,11 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	 * @param type The type of camera to request
 	 * @returns A list of cameras that were successfully connected to
 	 */
-	async requestCamera(type: 'usbptp' | 'webcam'): Promise<Tethr | null> {
+	async requestCamera(type: TethrDeviceType): Promise<Tethr | null> {
 		let camera: Tethr | null = null
 
 		switch (type) {
-			case 'usbptp': {
+			case 'ptpusb': {
 				const ptpusbCamera = await this.requestUSBPTPCamera()
 				if (ptpusbCamera) {
 					this.#ptpusbCameras.set(ptpusbCamera.device.usb, ptpusbCamera)

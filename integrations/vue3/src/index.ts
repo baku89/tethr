@@ -5,6 +5,7 @@ import {
 	ConfigNameList,
 	ConfigType,
 	Tethr,
+	TethrDeviceType,
 	TethrManager,
 } from 'tethr'
 import {
@@ -119,7 +120,7 @@ export function useTethr() {
 		camera.value = null
 	}
 
-	async function requestCamera(type: 'usbptp' | 'webcam') {
+	async function requestCamera(type: TethrDeviceType) {
 		let cam: Tethr | null
 		try {
 			cam = await manager.requestCamera(type)
