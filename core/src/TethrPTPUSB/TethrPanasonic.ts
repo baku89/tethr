@@ -17,14 +17,9 @@ import {
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPDevice, PTPEvent} from '../PTPDevice'
-import {
-	ConfigDesc,
-	OperationResult,
-	readonlyConfigDesc,
-	TakePhotoOption,
-} from '../Tethr'
+import {ConfigDesc, OperationResult, TakePhotoOption} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
-import {isntNil} from '../util'
+import {isntNil, readonlyConfigDesc} from '../util'
 import {TethrPTPUSB} from './TethrPTPUSB'
 
 enum OpCodePanasonic {

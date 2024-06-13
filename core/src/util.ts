@@ -1,4 +1,5 @@
 import {ShutterSpeed} from './configs'
+import {ConfigDesc} from './Tethr'
 
 export function toHexString(
 	data: number | ArrayBuffer,
@@ -69,4 +70,20 @@ export function computeShutterSpeedSeconds(ss: ShutterSpeed) {
 	}
 
 	return parseFloat(ss)
+}
+
+export const UnsupportedConfigDesc: ConfigDesc<any> = {
+	writable: false,
+	value: null,
+}
+
+export const UnsupportedOperationResult = {
+	status: 'unsupported',
+} as const
+
+export function readonlyConfigDesc<T>(value: T): ConfigDesc<T> {
+	return {
+		writable: false,
+		value,
+	}
 }
