@@ -25,13 +25,16 @@ import {
 	ConfigDesc,
 	OperationResult,
 	OperationResultStatus,
-	readonlyConfigDesc,
 	TakePhotoOption,
-	UnsupportedConfigDesc,
 } from '../Tethr'
 import {TethrObject} from '../TethrObject'
 import {TethrStorage} from '../TethrStorage'
-import {computeShutterSpeedSeconds, isntNil} from '../util'
+import {
+	computeShutterSpeedSeconds,
+	isntNil,
+	readonlyConfigDesc,
+	UnsupportedConfigDesc,
+} from '../util'
 import {TethrPTPUSB} from '.'
 
 enum OpCodeSigma {
