@@ -9,7 +9,7 @@ type TethrManagerEvents = {
 }
 export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	#ptpusbCameras: Map<USBDevice, TethrPTPUSB> = new Map()
-	#webcamCameras: Map<string, TethrWebcam> = new Map()
+	#webcam: TethrWebcam | null = null
 
 	constructor() {
 		super()
@@ -70,34 +70,21 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	async #refreshPairedWebcam(): Promise<TethrWebcam | null> {
 		const devices = await this.enumerateWebcamDeviceInfo()
 
-		let camera: TethrWebcam | null = null
+		const videoDevices = devices.filter(
+			device => device.kind === 'videoinput' && device.deviceId !== ''
+		)
 
-		const prevCameras = this.#webcamCameras
-
-		this.#webcamCameras = new Map()
-
-		for (const device of devices) {
-			if (device.kind !== 'videoinput' || device.deviceId === '') {
-				continue
-			}
-
-			const prevCamera = prevCameras.get(device.deviceId)
-
-			if (prevCamera) {
-				this.#webcamCameras.set(device.deviceId, prevCamera)
-			} else {
-				camera = new TethrWebcam(device)
-				this.#webcamCameras.set(device.deviceId, camera)
-			}
+		if (!this.#webcam && videoDevices.length > 0) {
+			this.#webcam = new TethrWebcam()
 		}
 
-		return camera ?? [...this.#webcamCameras.values()][0] ?? null
+		return this.#webcam
 	}
 
 	#emitPairedCameras() {
 		const cameras = [
 			...this.#ptpusbCameras.values(),
-			...this.#webcamCameras.values(),
+			...(this.#webcam ? [this.#webcam] : []),
 		]
 
 		this.emit('pairedCameraChange', cameras)

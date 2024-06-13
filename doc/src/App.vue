@@ -28,7 +28,7 @@
 			<ul class="webcam-list">
 				<li v-for="(cam, i) in pairedCameras" :key="i">
 					<button @click="onClickPairedCamera(cam)">
-						[{{ cam.type }}] {{ cam.name }}
+						{{ cam.name }}
 					</button>
 				</li>
 			</ul>
