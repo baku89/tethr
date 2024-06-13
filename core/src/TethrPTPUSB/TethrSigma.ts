@@ -1601,7 +1601,7 @@ export class TethrSigma extends TethrPTPUSB {
 			await sleep(25)
 		}
 
-		await this.checkConfigChange()
+		setTimeout(() => this.checkConfigChange(), 0)
 
 		return {status: 'ok'}
 	}
