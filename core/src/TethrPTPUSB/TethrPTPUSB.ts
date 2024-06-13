@@ -109,8 +109,8 @@ export class TethrPTPUSB extends Tethr {
 		return this._opened
 	}
 
-	get type(): 'usbptp' {
-		return 'usbptp'
+	get type(): 'ptpusb' {
+		return 'ptpusb'
 	}
 
 	get name(): string {
