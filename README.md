@@ -57,16 +57,16 @@ async function test() {
 	const manager = new TethrManager()
 
 	// It will display a prompt to select a USB camera
-	const camera = await manager.requestCamera('usb')
+	const camera = await manager.requestCamera('ptpusb')
 
-	await cam.open()
+	await camera.open()
 
-	cam.name
+	camera.name
 	// -> 'Lumix S5'
 
-	await cam.set('shutterSpeed', '1/1000')
+	await camera.set('shutterSpeed', '1/1000')
 
-	const exposureModeDesc = await cam.getDesc('exposureMode')
+	const exposureModeDesc = await camera.getDesc('exposureMode')
 	console.log(exposureModeDesc)
 	/* -> {
 	value: 'M',
@@ -77,14 +77,14 @@ async function test() {
 	}
 } */
 
-	const autoFocusResult = await cam.runAutoFocus()
+	const autoFocusResult = await camera.runAutoFocus()
 	// -> {status: 'ok'}
 
 	if (!autoFocusResult.status !== 'ok') {
 		console.warn('AF failed')
 	}
 
-	const takePhotoResult = await cam.takePhoto({download: true})
+	const takePhotoResult = await camera.takePhoto({download: true})
 
 	if (takePhotoResult.status === 'ok') {
 		const url = URL.createURLObject(takePhotoResult.value[0])
@@ -92,7 +92,7 @@ async function test() {
 	}
 
 	// Get storage informations
-	const storages = await cam.getStorages()
+	const storages = await camera.getStorages()
 
 	for (const storage of storages) {
 		console.log('Storage ID= ' + storage.id)
@@ -100,7 +100,7 @@ async function test() {
 		console.log('free space in images=' + storage.freeSpaceInImages)
 	}
 
-	await cam.close()
+	await camera.close()
 }
 ```
 
