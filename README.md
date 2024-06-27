@@ -42,6 +42,11 @@ Here's a list of camera models currently supported by the library:
 
 \*\* LV: Liveview, AF: Auto Focus, MF: Manual Focus
 
+If you want to implement a support code for a new camera model, or ask someone for support instead, please refer to the contribution guide shown below.
+
+- [Guide for supporting a new camera](https://github.com/baku89/tethr/wiki/Guide-for-supporting-a-new-camera)
+- [新しいカメラをサポートする](https://github.com/baku89/tethr/wiki/%E6%96%B0%E3%81%97%E3%81%84%E3%82%AB%E3%83%A1%E3%83%A9%E3%82%92%E3%82%B5%E3%83%9D%E3%83%BC%E3%83%88%E3%81%99%E3%82%8B) (Japanese)
+
 ## Sample Code
 
 The project is in the early stages of development and lacks complete documentation. Here is a code sample to provide you with an understanding of how to utilize the library. it's important to note that all camera operations are asynchronous, and Tethr's instance methods return [Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
