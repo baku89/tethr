@@ -127,11 +127,11 @@
 import {useTethr} from '@tethr/vue3'
 import {saveAs} from 'file-saver'
 import {Tethr, TethrObject} from 'tethr'
-import {ref, watchEffect} from 'vue'
+import {ref, shallowRef, watchEffect} from 'vue'
 
 import TethrConfig from './TethrConfig.vue'
 
-const folderHandler = ref<FileSystemDirectoryHandle | null>(null)
+const folderHandler = shallowRef<FileSystemDirectoryHandle | null>(null)
 
 const TransparentPng =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
