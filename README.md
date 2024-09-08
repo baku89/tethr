@@ -74,13 +74,13 @@ async function test() {
 	const exposureModeDesc = await camera.getDesc('exposureMode')
 	console.log(exposureModeDesc)
 	/* -> {
-	value: 'M',
-	writable: false // Because this can be set by physical dial on a camera
-	option: {
-		type: 'enum',
-		values: ['M', 'S', 'A', 'P']
-	}
-} */
+		value: 'M',
+		writable: false // Because this can be set by the physical dial on a camera
+		option: {
+			type: 'enum',
+			values: ['M', 'S', 'A', 'P']
+		}
+	} */
 
 	const autoFocusResult = await camera.runAutoFocus()
 	// -> {status: 'ok'}
