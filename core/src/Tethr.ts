@@ -570,6 +570,10 @@ export abstract class Tethr
 	async setLiveview(value: MediaStream): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
+
+	/**
+	 * Get the liveview stream when liveview is running. Use {@link getCanStartLiveview} to check if the camera supports this action, and {@link startLiveview} or {@link stopLiveview} to control liveview.
+	 */
 	async getLiveview() {
 		return (await this.getLiveviewDesc()).value
 	}
