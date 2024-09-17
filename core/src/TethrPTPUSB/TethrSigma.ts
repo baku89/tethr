@@ -363,7 +363,7 @@ export class TethrSigma extends TethrPTPUSB {
 			value,
 			option: {
 				type: 'enum',
-				values: values,
+				values,
 			},
 		}
 	}
