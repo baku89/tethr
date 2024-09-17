@@ -242,13 +242,13 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	async #getLVCoordinateSize() {
+	async #getLVCoordinateSize(): Promise<vec2> {
 		const {focusValidArea} = await this.getCamCanSetInfo()
 
 		const [lvTop, lvBottom, lvLeft, lvRight] = focusValidArea
 
 		// Assume the margins are symmetrical
-		return [lvLeft + lvRight, lvTop + lvBottom] as vec2
+		return [lvLeft + lvRight, lvTop + lvBottom]
 	}
 
 	async #enableSpotAutoFocus() {
@@ -313,7 +313,10 @@ export class TethrSigma extends TethrPTPUSB {
 
 	async setAutoFocusFrameCenter(center: vec2): Promise<OperationResult> {
 		if (!(await this.get('canRunAutoFocus'))) {
-			return {status: 'invalid parameter'}
+			return {
+				status: 'invalid parameter',
+				message: 'Auto focus is not available',
+			}
 		}
 
 		await this.#enableSpotAutoFocus()
@@ -363,7 +366,7 @@ export class TethrSigma extends TethrPTPUSB {
 			value,
 			option: {
 				type: 'enum',
-				values,
+				values: values.reverse(),
 			},
 		}
 	}
