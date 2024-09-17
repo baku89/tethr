@@ -1228,11 +1228,16 @@ export class TethrSigma extends TethrPTPUSB {
 			SnapCaptureMode.StartAF
 		)
 
-		if (!startAFSucceed) return {status: 'general error'}
+		if (!startAFSucceed) {
+			await this.executeSnapCommand(SnapCaptureMode.StopAF)
+			return {status: 'general error'}
+		}
 
 		const stopAFSucceed = await this.executeSnapCommand(SnapCaptureMode.StopAF)
 
-		if (!stopAFSucceed) return {status: 'general error'}
+		if (!stopAFSucceed) {
+			return {status: 'general error'}
+		}
 
 		return {status: 'ok'}
 	}
