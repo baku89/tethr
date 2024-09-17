@@ -131,8 +131,8 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		this.#endpointNumberBulkIn = endpointIn.endpointNumber
 		this.#endpointerNumberInterruptIn = endpointEvent.endpointNumber
 
-		this.listenInterruptIn()
-		this.listenDisconnect()
+		this.#listenInterruptIn()
+		this.#listenDisconnect()
 
 		this.#opened = true
 	}
@@ -211,7 +211,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		}
 
 		for (let i = 0; i < PTPTryCount; i++) {
-			const id = this.generateTransactionId()
+			const id = this.#generateTransactionId()
 
 			await this.#transferOutCommand(opcode, id, parameters)
 
@@ -258,7 +258,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		}
 
 		for (let i = 0; i < PTPTryCount; i++) {
-			const id = this.generateTransactionId()
+			const id = this.#generateTransactionId()
 
 			await this.#transferOutCommand(opcode, id, parameters)
 			await this.#transferOutData(opcode, id, data)
@@ -309,7 +309,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		}
 
 		for (let i = 0; i < PTPTryCount; i++) {
-			const id = this.generateTransactionId()
+			const id = this.#generateTransactionId()
 
 			await this.#transferOutCommand(opcode, id, parameters)
 			const res1 = await this.#waitBulkIn(id, maxByteLength)
@@ -493,7 +493,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		}
 	}
 
-	private listenInterruptIn = async () => {
+	#listenInterruptIn = async () => {
 		if (!this.usb || !this.usb.opened) {
 			throw new Error('Device is not opened')
 		}
@@ -544,11 +544,11 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			}
 			throw err
 		} finally {
-			setTimeout(this.listenInterruptIn, 0)
+			setTimeout(this.#listenInterruptIn, 0)
 		}
 	}
 
-	private listenDisconnect() {
+	#listenDisconnect() {
 		navigator.usb.addEventListener('disconnect', ev => {
 			if (ev.device === this.usb) {
 				this.emit('disconnect')
@@ -556,7 +556,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		})
 	}
 
-	private generateTransactionId = (): number => {
+	#generateTransactionId = (): number => {
 		this.#transactionId += 1
 		if (this.#transactionId > 0xfffffffe) {
 			this.#transactionId = 1
