@@ -1,5 +1,6 @@
 import {DeviceInfo} from '../DeviceInfo'
 import {PTPDevice} from '../PTPDevice'
+import {OperationResult} from '../Tethr'
 import {getVendorSpecificPTPUSBClass} from './getVendorSpecificPTPUSB'
 import {TethrPTPUSB} from './TethrPTPUSB'
 
@@ -10,7 +11,7 @@ import {TethrPTPUSB} from './TethrPTPUSB'
  */
 export async function initTethrUSBPTP(
 	usb: USBDevice
-): Promise<TethrPTPUSB | null> {
+): Promise<OperationResult<TethrPTPUSB>> {
 	const device = new PTPDevice(usb)
 	let info: DeviceInfo
 
@@ -20,21 +21,29 @@ export async function initTethrUSBPTP(
 		}
 		info = await TethrPTPUSB.getDeviceInfo(device)
 	} catch (err) {
+		let message = 'Unable to connect to camera'
 		if (
 			err instanceof DOMException &&
 			err.message.match(/Unable to claim interface/) &&
 			navigator.userAgent.match(/mac/i)
 		) {
-			throw new Error(
-				`Unable to claim interface. On macOS, you need run "while ; do; kill -9 $(ps aux | grep '[p]tpcamera' | awk '{print $2}'); done" in Terminal during connecting to a camera via USB.`
-			)
+			message = `Unable to claim interface. On macOS, you need run "while ; do; kill -9 $(ps aux | grep "[p]tpcamera" | awk '{print $2}'); sleep 1; done" in Terminal during connecting to a camera via USB.`
+		} else if (err instanceof Error) {
+			message = err.message
 		}
-		return null
+
+		return {
+			status: 'general error',
+			message,
+		}
 	}
 
 	const TethrVendor = getVendorSpecificPTPUSBClass(info) ?? TethrPTPUSB
 
-	return new TethrVendor(device)
+	return {
+		status: 'ok',
+		value: new TethrVendor(device),
+	}
 }
 
 export {TethrPTPUSB}
