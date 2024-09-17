@@ -40,9 +40,9 @@ export type OperationResultStatus =
 	| 'general error'
 
 export type OperationResult<T = void> = T extends void
-	? {status: OperationResultStatus}
+	? {status: OperationResultStatus; message?: string}
 	:
-			| {status: Exclude<OperationResultStatus, 'ok'>}
+			| {status: Exclude<OperationResultStatus, 'ok'>; message?: string}
 			| {
 					status: 'ok'
 					value: T
