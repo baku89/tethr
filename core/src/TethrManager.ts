@@ -82,12 +82,14 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	}
 
 	#emitPairedCameras() {
-		const cameras = [
+		this.emit('pairedCameraChange', this.pairedCameras)
+	}
+
+	get pairedCameras(): Tethr[] {
+		return [
 			...this.#ptpusbCameras.values(),
 			...(this.#webcam ? [this.#webcam] : []),
 		]
-
-		this.emit('pairedCameraChange', cameras)
 	}
 
 	/**
