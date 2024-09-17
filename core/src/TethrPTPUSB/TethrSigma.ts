@@ -228,7 +228,7 @@ export class TethrSigma extends TethrPTPUSB {
 		const fMin = minBy(apertures, a => Math.abs(a - fMinRaw))
 		const fMax = minBy(apertures, a => Math.abs(a - fMaxRaw))
 
-		if (!fMin || !fMax) throw new Error()
+		if (!fMin || !fMax) throw new Error('Invalid aperture range')
 
 		const values = apertures.filter(a => fMin <= a && a <= fMax)
 
@@ -619,7 +619,9 @@ export class TethrSigma extends TethrPTPUSB {
 				thirds = match2[2] === '1/3' ? 1 : 2
 			}
 
-			if (!match1 && !match2) throw new Error()
+			if (!match1 && !match2) {
+				throw new Error(`Cannot parse ${v} as exposure compensation`)
+			}
 
 			return (negative ? -1 : 1) * (digits + thirds / 3)
 		}
@@ -1074,7 +1076,9 @@ export class TethrSigma extends TethrPTPUSB {
 			Math.abs(computeShutterSpeedSeconds(e[1]) - ssMaxRaw)
 		)
 
-		if (!ssMinEntry || !ssMaxEntry) throw new Error()
+		if (!ssMinEntry || !ssMaxEntry) {
+			throw new Error('Invalid shutter speed range')
+		}
 
 		const ssMinIndex = ssMinEntry[0]
 		const ssMaxIndex = ssMaxEntry[0]

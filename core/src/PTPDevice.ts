@@ -445,7 +445,9 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		expectedTransactionId: number,
 		maxByteLength: number
 	): Promise<BulkInInfo> {
-		if (!this.usb || !this.usb.opened) throw new Error()
+		if (!this.usb || !this.usb.opened) {
+			throw new Error('Device is not opened')
+		}
 
 		const {data, status} = await this.usb.transferIn(
 			this.#endpointNumberBulkIn,
@@ -491,7 +493,9 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	}
 
 	private listenInterruptIn = async () => {
-		if (!this.usb || !this.usb.opened) return
+		if (!this.usb || !this.usb.opened) {
+			throw new Error('Device is not opened')
+		}
 
 		try {
 			const {data, status} = await this.usb.transferIn(
