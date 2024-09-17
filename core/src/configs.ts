@@ -84,6 +84,10 @@ export type FocusMode = 'af' | 'mf'
  */
 export type FunctionalMode = 'standard' | 'sleep'
 
+/**
+ * Which automatic focus is used.
+ * @category Config
+ */
 export type FocusMeteringMode =
 	| 'center spot'
 	| 'multi spot'
