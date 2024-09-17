@@ -694,7 +694,7 @@ export class TethrPTPUSB extends Tethr {
 			const storageInfo = new PTPDataView(data)
 
 			const storage: TethrStorage = {
-				id: id,
+				id,
 				type: PTPStorageTypeCode[storageInfo.readUint16()],
 				filesystemType: PTPFilesystemTypeCode[storageInfo.readUint16()],
 				accessCapability: PTPAccessCapabilityCode[storageInfo.readUint16()],
