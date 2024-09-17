@@ -474,6 +474,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			'type=' + PTPBlockType[type],
 			'code=' + toHexString(code, 2),
 			'id=' + transactionId,
+			'expectedId=' + expectedTransactionId,
 			'payload=',
 			payload
 		)
