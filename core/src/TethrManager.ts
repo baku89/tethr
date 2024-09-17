@@ -122,7 +122,9 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	async #requestUSBPTPCamera(): Promise<OperationResult<TethrPTPUSB>> {
 		let usbDevice: USBDevice
 		try {
-			usbDevice = await navigator.usb.requestDevice({filters: []})
+			usbDevice = await navigator.usb.requestDevice({
+				filters: [{classCode: 6}], // Still Image class
+			})
 		} catch (err) {
 			return {status: 'general error', message: 'Unable to connect to camera'}
 		}
