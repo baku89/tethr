@@ -214,7 +214,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 					thirds = !match1[3] ? 0 : match1[3] === ' 1/3' ? 1 : 2
 				}
 
-				const match2 = match1 && v.match(/^([+-]?)(1\/3|2\/3)$/)
+				const match2 = !match1 && v.match(/^([+-]?)(1\/3|2\/3)$/)
 
 				if (match2) {
 					negative = match2[1] === '-'
