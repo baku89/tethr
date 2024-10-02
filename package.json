@@ -1,24 +1,26 @@
 {
-	"name": "@tethr/monorepo",
-	"version": "0.0.0",
-	"private": true,
-	"scripts": {
-		"dev": "npm run dev --w doc",
-		"build": "npm run build --w core",
-		"build:doc": "npm run build --w doc"
-	},
-	"workspaces": [
-		"core",
-		"doc",
-		"integrations/*"
-	],
-	"devDependencies": {
-		"typescript": "^5.4.5",
-		"eslint": "^8.56.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-import": "^2.29.1",
-		"eslint-plugin-simple-import-sort": "^10.0.0",
-		"eslint-plugin-unused-imports": "^3.0.0",
-		"prettier": "^3.2.4"
-	}
+  "name": "@tethr/monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --w doc",
+    "build": "npm run build --w core",
+    "build:doc": "npm run build --w doc"
+  },
+  "workspaces": [
+    "core",
+    "doc",
+    "integrations/*"
+  ],
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "eslint-plugin-unused-imports": "^3.0.0",
+    "lerna": "^8.1.8",
+    "prettier": "^3.2.4",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {}
 }
