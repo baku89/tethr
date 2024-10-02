@@ -33,12 +33,12 @@ In addition, the library offers fallback functionality to web cameras in situati
 
 Here's a list of camera models currently supported by the library:
 
-| Vendor    | Camera   | Features                    |
-| --------- | -------- | --------------------------- |
+| Vendor    | Camera      | Features                    |
+| --------- | ----------- | --------------------------- |
 | Panasonic | S5, DC-G9M2 | Shutter, LV, AF, MF, Config |
-| Sigma     | fp, fp L | Shutter, LV, AF, MF, Config |
-| Ricoh     | Theta S  | Shutter, Config             |
-| WebCam    |          | Shutter, LV, Config         |
+| Sigma     | fp, fp L    | Shutter, LV, AF, MF, Config |
+| Ricoh     | Theta S     | Shutter, Config             |
+| WebCam    |             | Shutter, LV, Config         |
 
 \*\* LV: Liveview, AF: Auto Focus, MF: Manual Focus
 
@@ -233,6 +233,14 @@ git clone https://github.com/baku89/tethr tethr
 cd tethr
 yarn install
 yarn dev
+```
+
+### Publish with Lerna (for maintainers)
+
+```
+npm i -g lerna
+lerna version --no-private
+lerna publish from-git
 ```
 
 ## License
