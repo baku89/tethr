@@ -14,7 +14,5 @@
 	],
 	"homepage": "https://baku89.github.io/tethr/",
 	"license": "MIT",
-	"dependencies": {
-		"vue": "^3.5.3"
-	}
+	"dependencies": {}
 }
