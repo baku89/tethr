@@ -106,9 +106,12 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		if (!configuration) throw new Error('Cannot configure PTPDevice')
 
-		// Claim interface (Ignore error)
 		const usbInterface = configuration.interfaces[0]
 		const interfaceNum = usbInterface.interfaceNumber
+
+		await this.usb.reset()
+		await this.usb.releaseInterface(interfaceNum)
+
 		await this.usb.claimInterface(interfaceNum)
 
 		// Determine endpoints number
@@ -172,35 +175,23 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 	sendCommand = (option: PTPSendCommandOption): Promise<PTPResponse | void> => {
 		return this.#queue.add(async () => {
-			try {
-				this.#console.groupCollapsed(`Send Command [${option.label}]`)
-				return await this.#sendCommandNow(option)
-			} finally {
-				this.#console.groupEnd()
-			}
+			this.#console.groupCollapsed(`Send Command [${option.label}]`)
+			return this.#sendCommandNow(option).finally(this.#console.groupEnd)
 		}, PTPQueueOptions)
 	}
 
 	sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
 		return this.#queue.add(async () => {
-			try {
-				this.#console.groupCollapsed(`Send Data [${option.label}]`)
-				return await this.#sendDataNow(option)
-			} finally {
-				this.#console.groupEnd()
-			}
+			this.#console.groupCollapsed(`Send Data [${option.label}]`)
+			return await this.#sendDataNow(option).finally(this.#console.groupEnd)
 		}, PTPQueueOptions)
 	}
 
 	receiveData = (option: PTPReceiveDataOption): Promise<PTPDataResponse> => {
 		return this.#queue.add(async () => {
-			try {
-				this.#console.groupCollapsed(`Receive Data [${option.label}]`)
-				return await this.#receiveDataNow(option)
-			} finally {
-				this.#console.groupEnd()
-			}
-		}, PTPQueueOptions) as Promise<PTPDataResponse>
+			this.#console.groupCollapsed(`Receive Data [${option.label}]`)
+			return await this.#receiveDataNow(option).finally(this.#console.groupEnd)
+		}, PTPQueueOptions)
 	}
 
 	async #sendCommandNow(option: PTPSendCommandOption): Promise<PTPResponse> {
@@ -304,7 +295,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const {opcode, parameters, expectedResCodes, maxByteLength} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
-			maxByteLength: 10_000, // = 10KB. Looks enough for non-media data transfer
+			maxByteLength: 10_000_000, // = 10MB. Increased for media data transfer
 			...option,
 		}
 
@@ -344,8 +335,6 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 				await sleep(PTPTryAgainIntervalMs)
 				continue
 			}
-
-			// Check rescode
 
 			return {
 				resCode: res2.code,
