@@ -74,7 +74,7 @@ export class TethrWebcam extends Tethr {
 	async close() {
 		this.#media?.getTracks().forEach(t => t.stop())
 		this.#media = null
-		this.emit('liveviewChange', null)
+		this.emit('liveviewChange', readonlyConfigDesc(null))
 	}
 
 	get opened() {
@@ -121,7 +121,7 @@ export class TethrWebcam extends Tethr {
 		this.#media = await navigator.mediaDevices.getUserMedia({
 			video: {deviceId: {exact: deviceId}},
 		})
-		this.emit('liveviewChange', this.#media)
+		this.emit('liveviewChange', readonlyConfigDesc(this.#media))
 
 		// Setup other variables
 		const videoTrack = this.#media.getVideoTracks()[0]
@@ -159,8 +159,8 @@ export class TethrWebcam extends Tethr {
 		return readonlyConfigDesc('Webcam')
 	}
 
-	async getLiveviewdDesc() {
-		return readonlyConfigDesc(this.#media)
+	async getLiveviewDesc() {
+		return this.#media ? readonlyConfigDesc(this.#media) : UnsupportedConfigDesc
 	}
 
 	// Actions
