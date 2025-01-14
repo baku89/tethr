@@ -35,7 +35,6 @@
 		"linearly": "^0.21.0",
 		"lodash": "^4.17.21",
 		"p-queue": "^8.0.1",
-		"p-timeout": "^6.1.2",
 		"sleep-promise": "^9.1.0",
 		"typescript-memoize": "^1.1.1"
 	},
