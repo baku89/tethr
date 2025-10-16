@@ -2,7 +2,7 @@ import {ShutterSpeed} from './configs'
 import {ConfigDesc} from './Tethr'
 
 export function toHexString(
-	data: number | ArrayBuffer,
+	data: number | ArrayBufferLike,
 	bytes: number | 'auto' = 'auto'
 ): string {
 	if (typeof data === 'number') {
@@ -23,7 +23,7 @@ export function toHexString(
 }
 
 export function isntNil<T>(value: T): value is NonNullable<T> {
-	return value != null
+	return value !== null
 }
 
 export function sliceJpegData(buffer: ArrayBuffer): ArrayBuffer {
