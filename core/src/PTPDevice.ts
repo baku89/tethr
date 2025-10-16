@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import PQueue from 'p-queue'
-import sleep from 'sleep-promise'
+import sleep from 'p-sleep'
 
 import {ResCode} from './PTPDatacode'
 import {PTPDataView} from './PTPDataView'
@@ -17,6 +17,13 @@ const PTPCommandMaxByteLength = 12 + 4 * 3
 const PTPDefaultTimeoutMs = 10000
 const PTPTryCount = 30
 const PTPTryAgainIntervalMs = 100
+
+// When packet loss or out-of-order packets occur, we may receive containers
+// with unexpected transaction IDs. To make the communication robust, we try
+// to resync by discarding a limited number of mismatched packets and clearing
+// halts on the IN endpoint instead of failing immediately.
+const PTPResyncMaxSkips = 8
+const PTPResyncClearHaltEvery = 4
 
 const PTPQueueOptions = {
 	timeout: PTPDefaultTimeoutMs,
@@ -438,47 +445,76 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 			throw new Error('Device is not opened')
 		}
 
-		const {data, status} = await this.usb.transferIn(
-			this.#endpointNumberBulkIn,
-			maxByteLength
-		)
+		let mismatches = 0
 
-		// Error checking
-		if (status !== 'ok') {
-			if (status === 'stall') {
-				await this.usb.clearHalt('in', this.#endpointNumberBulkIn)
-			}
-			throw new Error(`BulkIn returned status: ${status}`)
-		}
-		if (!data || data.byteLength < 12) throw new Error('Invalid bulkIn data')
-
-		// Unpack packet
-		const type = data.getUint16(4, true)
-		const code = data.getUint16(6, true)
-		const transactionId = data.getUint32(8, true)
-		const payload = data.buffer.slice(12)
-
-		this.#console.info(
-			'transferInBulk',
-			'type=' + PTPBlockType[type],
-			'code=' + toHexString(code, 2),
-			'id=' + transactionId,
-			'expectedId=' + expectedTransactionId,
-			'payload=',
-			payload
-		)
-
-		if (transactionId !== expectedTransactionId)
-			throw new Error(
-				`Transaction ID mismatch. Expected=${expectedTransactionId},` +
-					` got=${transactionId}`
+		while (true) {
+			const {data, status} = await this.usb.transferIn(
+				this.#endpointNumberBulkIn,
+				maxByteLength
 			)
 
-		return {
-			type,
-			code,
-			transactionId,
-			payload,
+			// Error checking
+			if (status !== 'ok') {
+				if (status === 'stall') {
+					await this.usb.clearHalt('in', this.#endpointNumberBulkIn)
+					mismatches += 1
+					if (mismatches >= PTPResyncMaxSkips) {
+						throw new Error('BulkIn stalled repeatedly')
+					}
+					continue
+				}
+				throw new Error(`BulkIn returned status: ${status}`)
+			}
+			if (!data || data.byteLength < 12) {
+				mismatches += 1
+				if (mismatches % PTPResyncClearHaltEvery === 0) {
+					await this.usb.clearHalt('in', this.#endpointNumberBulkIn)
+				}
+				if (mismatches >= PTPResyncMaxSkips) {
+					throw new Error('Invalid bulkIn data')
+				}
+				continue
+			}
+
+			// Unpack packet
+			const type = data.getUint16(4, true)
+			const code = data.getUint16(6, true)
+			const transactionId = data.getUint32(8, true)
+			// Ensure ArrayBuffer payload (avoid SharedArrayBuffer type widening)
+			const viewBytes = new Uint8Array(data.buffer, 12)
+			const payloadCopy = new Uint8Array(viewBytes.byteLength)
+			payloadCopy.set(viewBytes)
+			const payload = payloadCopy.buffer
+
+			this.#console.info(
+				'transferInBulk',
+				'type=' + PTPBlockType[type],
+				'code=' + toHexString(code, 2),
+				'id=' + transactionId,
+				'expectedId=' + expectedTransactionId,
+				'payload=',
+				payload
+			)
+
+			if (transactionId !== expectedTransactionId) {
+				mismatches += 1
+				if (mismatches % PTPResyncClearHaltEvery === 0) {
+					await this.usb.clearHalt('in', this.#endpointNumberBulkIn)
+				}
+				if (mismatches >= PTPResyncMaxSkips) {
+					throw new Error(
+						`Transaction ID mismatch after ${mismatches} skips. Expected=${expectedTransactionId}, got=${transactionId}`
+					)
+				}
+				continue
+			}
+
+			return {
+				type,
+				code,
+				transactionId,
+				payload,
+			}
 		}
 	}
 
