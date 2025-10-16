@@ -125,7 +125,7 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 			usbDevice = await navigator.usb.requestDevice({
 				filters: [{classCode: 6}], // Still Image class
 			})
-		} catch (err) {
+		} catch {
 			return {status: 'general error', message: 'Unable to connect to camera'}
 		}
 
