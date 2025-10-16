@@ -100,7 +100,7 @@ export function useTethr() {
 
 	async function open(cam: Tethr) {
 		if (camera.value) {
-			close()
+			await close()
 		}
 
 		await cam.open()
