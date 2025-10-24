@@ -447,7 +447,7 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		let mismatches = 0
 
-		while (true) {
+		for (;;) {
 			const {data, status} = await this.usb.transferIn(
 				this.#endpointNumberBulkIn,
 				maxByteLength

@@ -146,7 +146,7 @@ export class PTPDataView {
 		return this.readArray(this.readUint32)
 	}
 
-	peekRest = (): ArrayBuffer => {
+	peekRest = (): ArrayBufferLike => {
 		return this.buffer.slice(this.currentByteOffset)
 	}
 
@@ -220,8 +220,8 @@ export class PTPDataView {
 		this.writeUint8(checksum)
 	}
 
-	toBuffer() {
-		return this.buffer.slice(0, this.currentByteLength)
+	toBuffer(): ArrayBuffer {
+		return this.buffer.slice(0, this.currentByteLength) as ArrayBuffer
 	}
 
 	private updateByteLength() {
