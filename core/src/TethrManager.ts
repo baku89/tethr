@@ -104,6 +104,8 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 					const ptpcamera = result.value
 					this.#ptpusbCameras.set(ptpcamera.device.usb, ptpcamera)
 					camera = ptpcamera
+				} else {
+					alert(result.message)
 				}
 				break
 			}
