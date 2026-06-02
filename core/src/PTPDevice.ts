@@ -519,8 +519,11 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 	}
 
 	#listenInterruptIn = async () => {
-		if (!this.usb || !this.usb.opened) {
-			throw new Error('Device is not opened')
+		// Stop the loop once the device is closed/disconnected instead of
+		// throwing (which would leave an unhandled rejection) or rescheduling
+		// forever against a dead endpoint (which busy-loops the main thread).
+		if (!this.#opened || !this.usb || !this.usb.opened) {
+			return
 		}
 
 		try {
@@ -560,22 +563,32 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		} catch (err) {
 			// If the error has risen because of disconnection of the device,
 			// just ignore the error.
+			if (!this.#opened || !this.usb || !this.usb.opened) {
+				return
+			}
 			if (
 				err instanceof DOMException &&
-				err.message.match(/The transfer was cancelled./) &&
-				!this.#opened
+				err.message.match(/The transfer was cancelled./)
 			) {
 				return
 			}
 			throw err
 		} finally {
-			setTimeout(this.#listenInterruptIn, 0)
+			// Only keep polling while the device is still open; otherwise the
+			// loop would spin forever after a disconnect.
+			if (this.#opened && this.usb && this.usb.opened) {
+				setTimeout(this.#listenInterruptIn, 0)
+			}
 		}
 	}
 
 	#listenDisconnect() {
 		navigator.usb.addEventListener('disconnect', ev => {
 			if (ev.device === this.usb) {
+				// Tear down internal state so the bulk/interrupt loops stop
+				// instead of hammering the now-dead device and freezing the UI.
+				this.#opened = false
+				this.#queue.clear()
 				this.emit('disconnect')
 			}
 		})

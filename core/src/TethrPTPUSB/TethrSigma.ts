@@ -1284,13 +1284,27 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	#updateLiveviewFrame = async () => {
-		const lvImage = await this.#getLiveViewImage()
+		// If the device went away (e.g. the camera was powered off mid-liveview),
+		// detach this loop instead of repeatedly querying the dead endpoint, which
+		// would otherwise busy-loop via the queue's `idle` event and freeze the UI.
+		if (!this.device.opened) {
+			this.device.off('idle', this.#updateLiveviewFrame)
+			return
+		}
 
-		if (lvImage.status !== 'ok') return
+		try {
+			const lvImage = await this.#getLiveViewImage()
 
-		const bitmap = await createImageBitmap(lvImage.value)
+			if (lvImage.status !== 'ok') return
 
-		this.#canvasMediaStream.updateWithImage(bitmap)
+			const bitmap = await createImageBitmap(lvImage.value)
+
+			this.#canvasMediaStream.updateWithImage(bitmap)
+		} catch {
+			// A failed frame fetch (typically a disconnect) must not bubble up as
+			// an unhandled rejection; the `device.opened` guard above stops the
+			// loop on the next tick.
+		}
 	}
 
 	async getLiveview(): Promise<MediaStream | null> {
