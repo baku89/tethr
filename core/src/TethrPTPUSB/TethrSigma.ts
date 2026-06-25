@@ -141,6 +141,14 @@ const ConfigListSigma: ConfigName[] = [
 const SigmaExpirationMs = 16
 const SigmaCheckConfigIntervalMs = 1000
 
+// While live view runs, poll only the configs that can change *without* the
+// host setting them — the physical zoom / focus rings — and on a shorter
+// interval. Polling the whole config list floods the single-slot PTP queue and
+// stalls every live-view frame (it dropped the stream from ~30fps to ~1fps),
+// but these read-only physical values still need to refresh reasonably often.
+const SigmaLiveviewPollIntervalMs = 400
+const SigmaLiveviewPollConfigs: ConfigName[] = ['focalLength', 'focusDistance']
+
 export class TethrSigma extends TethrPTPUSB {
 	#isCapturing = false
 
@@ -167,11 +175,23 @@ export class TethrSigma extends TethrPTPUSB {
 		const checkPropChangeInterval = () => {
 			if (!this.opened) return
 
+			// Don't poll during capture. While live view runs, poll only the
+			// physical read-only values (zoom / focus rings) so the full config
+			// sweep doesn't flood the single-slot PTP queue and stall live-view
+			// frames. Host-set configs still refresh via setCamData()'s explicit
+			// checkConfigChange().
 			if (!this.#isCapturing) {
-				this.checkConfigChange()
+				this.checkConfigChange(
+					this.#liveviewActive ? SigmaLiveviewPollConfigs : ConfigListSigma
+				)
 			}
 
-			setTimeout(checkPropChangeInterval, SigmaCheckConfigIntervalMs)
+			setTimeout(
+				checkPropChangeInterval,
+				this.#liveviewActive
+					? SigmaLiveviewPollIntervalMs
+					: SigmaCheckConfigIntervalMs
+			)
 		}
 
 		checkPropChangeInterval()
@@ -1269,41 +1289,59 @@ export class TethrSigma extends TethrPTPUSB {
 
 	#canvasMediaStream = new CanvasMediaStream()
 	#liveviewStream: MediaStream | null = null
+	#liveviewActive = false
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
-		const stream = await this.#canvasMediaStream.begin(
-			this.#updateLiveviewFrame
-		)
-		this.device.on('idle', this.#updateLiveviewFrame)
+		const stream = await this.#canvasMediaStream.begin(async () => {
+			await this.#updateLiveviewFrame()
+		})
 
 		this.#liveviewStream = stream
+		this.#liveviewActive = true
 
 		this.emit('liveviewChange', readonlyConfigDesc(stream))
+
+		// Drive live view with a self-rescheduling loop rather than the PTP
+		// queue's `idle` event. The `idle` event only fires when the queue fully
+		// drains; once any other traffic (the per-second config polling, capture,
+		// etc.) shares the queue it stops re-firing reliably, which froze live
+		// view after the very first frame. This loop keeps requesting frames on
+		// its own — each request still goes through the queue, so it interleaves
+		// naturally with other operations.
+		this.#runLiveviewLoop()
 
 		return {status: 'ok', value: stream}
 	}
 
-	#updateLiveviewFrame = async () => {
-		// If the device went away (e.g. the camera was powered off mid-liveview),
-		// detach this loop instead of repeatedly querying the dead endpoint, which
-		// would otherwise busy-loop via the queue's `idle` event and freeze the UI.
-		if (!this.device.opened) {
-			this.device.off('idle', this.#updateLiveviewFrame)
-			return
+	#runLiveviewLoop = async () => {
+		while (this.#liveviewActive && this.device.opened) {
+			const delivered = await this.#updateLiveviewFrame()
+
+			// Yield between frames. Back off when no frame was delivered — the
+			// camera is busy (autofocus / capture) or hit a transient error — so
+			// we don't spin the CPU or flood the queue with no-op frame requests
+			// (which is what used to freeze the whole app during autofocus).
+			await sleep(delivered ? 0 : 200)
 		}
+	}
+
+	#updateLiveviewFrame = async (): Promise<boolean> => {
+		if (!this.device.opened) return false
 
 		try {
 			const lvImage = await this.#getLiveViewImage()
 
-			if (lvImage.status !== 'ok') return
+			if (lvImage.status !== 'ok') return false
 
 			const bitmap = await createImageBitmap(lvImage.value)
 
 			this.#canvasMediaStream.updateWithImage(bitmap)
+
+			return true
 		} catch {
 			// A failed frame fetch (typically a disconnect) must not bubble up as
-			// an unhandled rejection; the `device.opened` guard above stops the
-			// loop on the next tick.
+			// an unhandled rejection; the loop's `device.opened` check stops it.
+			return false
 		}
 	}
 
@@ -1312,8 +1350,8 @@ export class TethrSigma extends TethrPTPUSB {
 	}
 
 	async stopLiveview(): Promise<OperationResult> {
+		this.#liveviewActive = false
 		this.#canvasMediaStream.end()
-		this.device.off('idle', this.#updateLiveviewFrame)
 
 		this.#liveviewStream = null
 
@@ -1680,7 +1718,16 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const {imageDBHead} = await this.getCamCaptStatus()
 
-		for (let restTries = 50; restTries > 0; restTries--) {
+		// Poll until the capture completes. A long exposure — plus the SIGMA's
+		// in-camera dark-frame noise reduction, which takes roughly as long again
+		// (a 30s exposure can need ~60s total) — easily exceeds the old 25s
+		// (50 × 500ms) budget, which made long captures fail. Wait up to a few
+		// minutes instead. The loop still returns immediately on an explicit
+		// success/failure status, so this only stretches genuinely long captures.
+		const pollIntervalMs = 500
+		const maxTries = Math.ceil((5 * 60 * 1000) / pollIntervalMs)
+
+		for (let restTries = maxTries; restTries > 0; restTries--) {
 			const {status} = await this.getCamCaptStatus(imageDBHead)
 
 			const isFailure = (status & 0xf000) === 0x6000
@@ -1691,7 +1738,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 			if (status === CaptStatus.compImageCreate) return true
 
-			await sleep(500)
+			await sleep(pollIntervalMs)
 		}
 
 		return false
@@ -1740,8 +1787,10 @@ export class TethrSigma extends TethrPTPUSB {
 
 	#prevConfigValue = new Map<ConfigName, ConfigDesc<any>>()
 
-	private async checkConfigChange() {
-		for (const name of ConfigListSigma) {
+	private async checkConfigChange(
+		names: readonly ConfigName[] = ConfigListSigma
+	) {
+		for (const name of names) {
 			const desc = await this.getDesc(name)
 
 			const prev = this.#prevConfigValue.get(name)
