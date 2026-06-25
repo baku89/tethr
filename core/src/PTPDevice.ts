@@ -116,8 +116,23 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		const usbInterface = configuration.interfaces[0]
 		const interfaceNum = usbInterface.interfaceNumber
 
-		await this.usb.reset()
-		await this.usb.releaseInterface(interfaceNum)
+		// reset() re-enumerates the device; on a reconnect (e.g. the camera
+		// briefly dropped during autofocus) the interface can still be mid
+		// state-change right afterwards, which makes releaseInterface throw
+		// "An operation that changes interface state is in progress." Neither
+		// reset nor the defensive releaseInterface is essential — claimInterface
+		// is the only call we actually need — so tolerate their failure and let
+		// the claim itself be the hard requirement.
+		try {
+			await this.usb.reset()
+		} catch {
+			// ignore — device may not need / support reset on this platform
+		}
+		try {
+			await this.usb.releaseInterface(interfaceNum)
+		} catch {
+			// ignore — no prior claim to release, or state still settling
+		}
 
 		await this.usb.claimInterface(interfaceNum)
 
