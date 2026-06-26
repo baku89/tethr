@@ -1131,16 +1131,16 @@ export class TethrSigma extends TethrPTPUSB {
 		const {lvMagnifyRatio} = await this.getCamStatus()
 		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
 
-		// CanSetInfo5 omits this until live view is running; treat absence as
-		// "not settable right now" instead of throwing on `.length`.
-		const {lvMagnificationRate: values = []} = await this.getCamCanSetInfo()
-
+		// The magnification steps are fixed (x1 / x4 / x8), so offer them all.
+		// CanSetInfo5's `lvMagnificationRate` is empty unless live view is in a
+		// magnifiable state, which left the dropdown with no options and — via a
+		// false `writable` — rendered as an editable field instead of a picker.
 		return {
-			writable: values.length > 0,
+			writable: true,
 			value,
 			option: {
 				type: 'enum',
-				values,
+				values: [...this.liveviewMagnifyRatioTable.values()],
 			},
 		}
 	}
