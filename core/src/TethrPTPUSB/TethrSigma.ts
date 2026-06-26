@@ -2331,18 +2331,22 @@ export class TethrSigma extends TethrPTPUSB {
 		[0x0c, 'vendor:custom3'], // Custom 3
 		// // [0x0d, null], // CustomCapture 3
 		[0x0e, 'manual'], // Custom Temperature
-		[0x0f, 'vendor:auto ambience'], // Auto (Light Source Priority)
+		[0x0f, 'auto ambience'], // Auto (Light Source Priority)
 	])
 
+	// CanSetInfo5 (IFD tag 301) enumerates WB with its own codes, distinct from
+	// the GetCamData status byte above. Names must match whiteBalanceTable so the
+	// options round-trip through get/set. Codes 9-11 (Custom 1-3) are intentionally
+	// omitted — unmapped values are dropped by the isntNil filter in getWhiteBalanceDesc.
 	private whiteBalanceTableIFD = new Map<number, WhiteBalance>([
 		[0x1, 'auto'],
 		[0x2, 'auto ambience'],
 		[0x3, 'daylight'],
 		[0x4, 'shade'],
-		[0x5, 'tungsten'],
+		[0x5, 'incandescent'], // SDK: "Incandescent"
 		[0x6, 'fluorescent'],
 		[0x7, 'flash'],
-		[0x8, 'manual'],
+		[0x8, 'manual'], // COLOR TEMP.
 	])
 
 	private imageSizeTable = new BiMap<number, string>([

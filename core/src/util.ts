@@ -23,7 +23,7 @@ export function toHexString(
 }
 
 export function isntNil<T>(value: T): value is NonNullable<T> {
-	return value !== null
+	return value !== null && value !== undefined
 }
 
 export function sliceJpegData(buffer: ArrayBuffer): ArrayBuffer {
