@@ -616,12 +616,27 @@ export class TethrSigma extends TethrPTPUSB {
 
 	async getExposureMode() {
 		const {exposureMode} = await this.getCamStatus()
-		return this.exposureModeTable.get(exposureMode) ?? null
+		return this.decodeExposureMode(exposureMode)
+	}
+
+	private decodeExposureMode(byte: number): ExposureMode | null {
+		// Strip the ★ read-only flag (0x80).
+		const value = byte & 0x7f
+
+		// Original-fp encoding: a custom-mode bit OR-ed onto the base mode.
+		const customBit = value & 0x70
+		if (customBit) {
+			const custom = this.exposureModeCustomBitTable.get(customBit)
+			if (custom) return custom
+		}
+
+		// fp L sequential encoding, and the plain base modes.
+		return this.exposureModeTable.get(value) ?? null
 	}
 
 	async setExposureMode(exposureMode: ExposureMode): Promise<OperationResult> {
 		const id = this.exposureModeTable.getKey(exposureMode)
-		if (!id) return {status: 'invalid parameter'}
+		if (id === undefined) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup2, 2, id)
 	}
@@ -2224,11 +2239,30 @@ export class TethrSigma extends TethrPTPUSB {
 		[0b01110000, 91],
 	])
 
+	// CanSetInfo5 and the fp/fp L status & set byte enumerate exposure modes
+	// sequentially: 1-4 = P/A/S/M, 5-10 = C1-C6 (SDK Help "Exposure mode" value
+	// list; the original fp documents only C1-C3 (5-7), fp L adds C4-C6). The fp
+	// has no mode dial, so the custom modes are set the same way as P/A/S/M.
 	protected exposureModeTable = new BiMap<number, ExposureMode>([
 		[0x1, 'P'],
 		[0x2, 'A'],
 		[0x3, 'S'],
 		[0x4, 'M'],
+		[0x5, 'C1'],
+		[0x6, 'C2'],
+		[0x7, 'C3'],
+		[0x8, 'C4'],
+		[0x9, 'C5'],
+		[0xa, 'C6'],
+	])
+
+	// The original fp instead reported a custom mode as a *bit* OR-ed onto the
+	// base mode in the GetCamDataGroup2 status byte (0x10/0x20/0x40 = C1/C2/C3,
+	// 0x80 = ★ read-only). We accept that form when decoding for compatibility.
+	private exposureModeCustomBitTable = new BiMap<number, ExposureMode>([
+		[0x10, 'C1'],
+		[0x20, 'C2'],
+		[0x40, 'C3'],
 	])
 
 	protected focusPeakingTable = new BiMap<number, FocusPeaking>([
