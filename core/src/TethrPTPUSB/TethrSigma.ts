@@ -128,7 +128,7 @@ const ConfigListSigma: ConfigName[] = [
 	'focalLength',
 	'focusDistance',
 	'focusMeteringMode',
-	// 'focusPeaking',
+	'focusPeaking',
 	'exposureComp',
 	'exposureMode',
 	'imageAspect',
@@ -168,6 +168,10 @@ export class TethrSigma extends TethrPTPUSB {
 	// write itself, and ~20 sweeps back-to-back would flood the single-slot PTP
 	// queue and make later writes fail with DeviceBusy.
 	#suppressConfigSweep = false
+
+	// Last focus-peaking value we set. The camera doesn't always report focus
+	// peaking back in DataGroupFocus, so we fall back to this for the read.
+	#focusPeaking: FocusPeaking = false
 
 	/**
 	 * Apply all writable configs, verifying each one.
@@ -855,20 +859,29 @@ export class TethrSigma extends TethrPTPUSB {
 		return {status: 'ok'}
 	}
 
-	/*
+	async getFocusPeaking(): Promise<FocusPeaking> {
+		const {focusPeaking} = await this.getCamStatus()
+
+		// `focusPeaking` is a Byte array when the camera reports it, otherwise
+		// undefined — fall back to the value we last set.
+		const id = (focusPeaking as number[] | undefined)?.[0]
+		if (id === undefined) return this.#focusPeaking
+
+		return this.focusPeakingTable.get(id) ?? false
+	}
+
 	async getFocusPeakingDesc(): Promise<ConfigDesc<FocusPeaking>> {
-		// TODO: There's no way to retrieve and configure this value in the latest firmware
-		const value = 0
-		const {focusPeaking: values} = await this.getCamCanSetInfo5()
+		const {focusPeaking: values = []} = await this.getCamCanSetInfo()
+		const value = await this.getFocusPeaking()
 
 		return {
 			writable: values.length > 0,
-			value: this.focusPeakingTable.get(value) ?? false,
+			value,
 			option: {
 				type: 'enum',
 				values: values
-					.sort()
-					.map(v => this.focusPeakingTable.get(v)) as FocusPeaking[],
+					.map(v => this.focusPeakingTable.get(v))
+					.filter(isntNil),
 			},
 		}
 	}
@@ -877,22 +890,24 @@ export class TethrSigma extends TethrPTPUSB {
 		const id = this.focusPeakingTable.getKey(focusPeaking)
 		if (id === undefined) return {status: 'invalid parameter'}
 
-		// const data = encodeIFD({
-		// 	focusPeaking: {tag: 702, type: IFDType.Byte, value: [id]},
-		// })
+		// Focus peaking has no DataGroup status field; it's set through the focus
+		// group by its CanSetInfo tag (702), like the other focus-group settings.
+		await this.device.sendData({
+			label: 'SigmaFP SetCamDataGroupFocus',
+			opcode: OpCodeSigma.SetCamDataGroupFocus,
+			data: encodeIFD({
+				focusPeaking: {tag: 702, type: IFDType.Byte, value: [id]},
+			}),
+		})
 
-		// try {
-		// 	await this.device.sendData({
-		// 		label: 'SigmaFP SetCamDataGroupFocus',
-		// 		opcode: OpCodeSigma.SetCamDataGroup,
-		// 		data,
-		// 	})
-		// } catch (err) {
-		// 	return {status: 'invalid parameter'}
-		// }
+		this.#focusPeaking = focusPeaking
+
+		if (!this.#suppressConfigSweep) {
+			setTimeout(() => this.checkConfigChange(['focusPeaking']), 0)
+		}
 
 		return {status: 'ok'}
-	}*/
+	}
 
 	async setImageAspect(imageAspect: ImageAspect): Promise<OperationResult> {
 		const id = this.imageAspectTable.getKey(imageAspect)
@@ -1107,7 +1122,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 	async setLiveviewMagnifyRatio(value: number): Promise<OperationResult> {
 		const id = this.liveviewMagnifyRatioTable.getKey(value)
-		if (!id) return {status: 'invalid parameter'}
+		if (id === undefined) return {status: 'invalid parameter'}
 
 		return this.setCamData(OpCodeSigma.SetCamDataGroup4, 5, id)
 	}
@@ -1116,7 +1131,9 @@ export class TethrSigma extends TethrPTPUSB {
 		const {lvMagnifyRatio} = await this.getCamStatus()
 		const value = this.liveviewMagnifyRatioTable.get(lvMagnifyRatio) ?? null
 
-		const {lvMagnificationRate: values} = await this.getCamCanSetInfo()
+		// CanSetInfo5 omits this until live view is running; treat absence as
+		// "not settable right now" instead of throwing on `.length`.
+		const {lvMagnificationRate: values = []} = await this.getCamCanSetInfo()
 
 		return {
 			writable: values.length > 0,
@@ -1682,6 +1699,10 @@ export class TethrSigma extends TethrPTPUSB {
 			preAlwaysAf: {tag: 51, type: IFDType.Byte},
 			afLimit: {tag: 52, type: IFDType.Byte},
 			focusPosition: {tag: 81, type: IFDType.Short},
+			// Focus peaking is documented only in CanSetInfo5 (tag 702), not in
+			// the DataGroupFocus spec, but newer firmware reports it back here too.
+			// decodeIFD just leaves it undefined when the camera omits it.
+			focusPeaking: {tag: 702, type: IFDType.Byte},
 		})
 
 		const setInfo = decodeIFD(decoded.camCanSetInfo5, {
