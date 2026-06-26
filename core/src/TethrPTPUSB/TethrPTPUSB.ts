@@ -33,6 +33,7 @@ import {
 	OperationResult,
 	TakePhotoOption,
 	Tethr,
+	TethrIdentifier,
 } from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {TethrStorage} from '../TethrStorage'
@@ -118,6 +119,14 @@ export class TethrPTPUSB extends Tethr {
 
 	get name(): string {
 		return this.device.usb.productName ?? 'Generic PTP Camera'
+	}
+
+	get identifier(): TethrIdentifier {
+		const {vendorId, productId, serialNumber} = this.device.usb
+		return {
+			type: 'ptpusb',
+			usb: {vendorId, productId, serialNumber: serialNumber || undefined},
+		}
 	}
 
 	setLog(log: boolean) {

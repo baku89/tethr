@@ -4,13 +4,16 @@ import {
 	ConfigName,
 	ConfigNameList,
 	ConfigType,
+	isUserCancelledError,
 	Tethr,
 	TethrDeviceType,
+	TethrIdentifier,
 	TethrManager,
 } from 'tethr'
 import {
 	onUnmounted,
 	readonly,
+	ref,
 	Ref,
 	shallowReactive,
 	shallowRef,
@@ -94,6 +97,11 @@ export function useTethr() {
 	const pairedCameras = shallowRef<Tethr[]>([])
 	const camera = shallowRef<Tethr | null>(null)
 
+	// True while a connection is being established. Exposed so consumers (e.g.
+	// auto-reconnect) can avoid racing an in-flight connect: requestCamera mutates
+	// pairedCameras before the camera is actually opened.
+	const isConnecting = ref(false)
+
 	manager.addListener('pairedCameraChange', cameras => {
 		pairedCameras.value = cameras
 	})
@@ -120,19 +128,22 @@ export function useTethr() {
 		camera.value = null
 	}
 
-	async function requestCamera(type: TethrDeviceType) {
-		let cam: Tethr | null
+	async function requestCamera(
+		query: TethrDeviceType | TethrIdentifier,
+		opts?: {prompt?: boolean}
+	) {
+		if (isConnecting.value) return
+		isConnecting.value = true
 		try {
-			cam = await manager.requestCamera(type)
-			if (!cam) return
+			const cam = await manager.requestCamera(query, opts)
+			if (cam) await open(cam)
 		} catch (err) {
-			if (err instanceof Error) {
+			if (err instanceof Error && !isUserCancelledError(err)) {
 				alert(err.message)
 			}
-			return
+		} finally {
+			isConnecting.value = false
 		}
-
-		await open(cam)
 	}
 
 	async function toggleLiveview() {
@@ -156,6 +167,7 @@ export function useTethr() {
 	return {
 		pairedCameras,
 		requestCamera,
+		isConnecting: readonly(isConnecting),
 		open,
 		close,
 		camera,

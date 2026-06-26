@@ -38,6 +38,8 @@ export type OperationResultStatus =
 	| 'invalid parameter'
 	| 'busy'
 	| 'general error'
+	/** The user dismissed a permission/selection prompt — not a failure. */
+	| 'cancelled'
 
 export type OperationResult<T = void> = T extends void
 	? {status: OperationResultStatus; message?: string}
@@ -94,6 +96,21 @@ type ConfigDescGetters = {
 
 export type TethrDeviceType = 'ptpusb' | 'webcam'
 
+/**
+ * A plain, JSON-serializable descriptor of a camera. Returned by
+ * {@link Tethr.identifier} and accepted by {@link TethrManager.requestCamera} so
+ * an app can persist a connection and later reconnect to the same — or a
+ * same-kind — device. For USB cameras `usb.serialNumber` pins the exact body;
+ * webcams can't be told apart, so only `type` is meaningful for them.
+ */
+export type TethrIdentifier =
+	| {
+			type: 'ptpusb'
+			usb?: {vendorId: number; productId: number; serialNumber?: string}
+			model?: string
+	  }
+	| {type: 'webcam'; model?: string}
+
 export abstract class Tethr
 	extends EventEmitter<EventTypes>
 	implements ConfigSetters, ConfigGetters, ConfigDescGetters
@@ -118,6 +135,9 @@ export abstract class Tethr
 	abstract get opened(): boolean
 	abstract get type(): TethrDeviceType
 	abstract get name(): string
+
+	/** A JSON-serializable descriptor for reconnecting to this camera later. */
+	abstract get identifier(): TethrIdentifier
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	setLog(log: boolean) {

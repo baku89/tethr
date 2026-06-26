@@ -1,6 +1,12 @@
 import {BiMap} from 'bim'
 
-import {ConfigDesc, OperationResult, TakePhotoOption, Tethr} from './Tethr'
+import {
+	ConfigDesc,
+	OperationResult,
+	TakePhotoOption,
+	Tethr,
+	TethrIdentifier,
+} from './Tethr'
 import {TethrObject} from './TethrObject'
 import {readonlyConfigDesc, UnsupportedConfigDesc} from './util'
 
@@ -87,6 +93,10 @@ export class TethrWebcam extends Tethr {
 
 	get name() {
 		return 'Webcam'
+	}
+
+	get identifier(): TethrIdentifier {
+		return {type: 'webcam'}
 	}
 
 	// Configs
