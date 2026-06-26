@@ -10,6 +10,8 @@ import {
 	Aperture,
 	BatteryLevel,
 	ConfigName,
+	ConfigNameList,
+	ConfigType,
 	ExposureMode,
 	FocusMeteringMode,
 	FocusPeaking,
@@ -141,6 +143,15 @@ const ConfigListSigma: ConfigName[] = [
 const SigmaExpirationMs = 16
 const SigmaCheckConfigIntervalMs = 1000
 
+// importConfigs() tuning. The fp commits each write asynchronously and rebuilds
+// its "what's settable right now" table afterwards, so we set → read back →
+// retry each config, pausing between attempts to let the camera settle (and to
+// free the single-slot PTP bus). The retry budget (tries × settle) reaches the
+// ~500ms that white balance historically needed, while easy configs cost one
+// settle.
+const SigmaImportSettleMs = 100
+const SigmaImportMaxTries = 5
+
 // While live view runs, poll only the configs that can change *without* the
 // host setting them — the physical zoom / focus rings — and on a shorter
 // interval. Polling the whole config list floods the single-slot PTP queue and
@@ -151,6 +162,63 @@ const SigmaLiveviewPollConfigs: ConfigName[] = ['focalLength', 'focusDistance']
 
 export class TethrSigma extends TethrPTPUSB {
 	#isCapturing = false
+
+	// While a batch importConfigs() runs, suppress the per-write full-config
+	// sweep that setCamData() normally schedules. The importer verifies every
+	// write itself, and ~20 sweeps back-to-back would flood the single-slot PTP
+	// queue and make later writes fail with DeviceBusy.
+	#suppressConfigSweep = false
+
+	/**
+	 * Apply all writable configs, verifying each one.
+	 *
+	 * The base implementation fires every setter once and trusts the result. On
+	 * the fp that loses writes: the camera commits asynchronously and rebuilds
+	 * its settable table after each change, so a back-to-back burst floods the
+	 * single-slot PTP queue, the camera answers DeviceBusy, and setCamData()
+	 * drops those writes. exposureMode / colorMode / destinationToSave were the
+	 * usual casualties. Here we suppress the per-write sweep, then set → read
+	 * back → retry each config until it sticks (or the camera reports it isn't
+	 * currently settable).
+	 */
+	async importConfigs(configs: Partial<ConfigType>) {
+		this.#suppressConfigSweep = true
+
+		try {
+			for (const name of ConfigNameList) {
+				const value = configs[name]
+				if (value === undefined) continue
+
+				await this.setConfigVerified(name, value)
+			}
+		} finally {
+			this.#suppressConfigSweep = false
+		}
+
+		// Refresh listeners once, now that the burst is over.
+		await this.checkConfigChange()
+	}
+
+	private async setConfigVerified<N extends ConfigName>(
+		name: N,
+		value: ConfigType[N]
+	) {
+		for (let tries = 0; tries < SigmaImportMaxTries; tries++) {
+			const desc = await this.getDesc(name)
+
+			// Not settable in the camera's current state — nothing we can do.
+			if (!desc.writable) return
+
+			// Already at the desired value.
+			if (isEqual(desc.value, value)) return
+
+			await this.set(name, value)
+
+			// Let the fp commit and rebuild its settable table before reading
+			// back to verify (this also frees the bus between attempts).
+			await sleep(SigmaImportSettleMs)
+		}
+	}
 
 	async open() {
 		await super.open()
@@ -1661,6 +1729,7 @@ export class TethrSigma extends TethrPTPUSB {
 
 		const data = this.encodeParameter(dataView.toBuffer())
 
+		let succeed = false
 		for (let i = 0; i < 10; i++) {
 			const {resCode} = await this.device.sendData({
 				label: 'SigmaFP SetCamDataGroup#',
@@ -1669,14 +1738,25 @@ export class TethrSigma extends TethrPTPUSB {
 				expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 			})
 
-			if (resCode === ResCode.OK) break
+			if (resCode === ResCode.OK) {
+				succeed = true
+				break
+			}
 
 			await sleep(25)
 		}
 
-		setTimeout(() => this.checkConfigChange(), 0)
+		// During a batch importConfigs() the importer reads each value back and
+		// retries, so skip the per-write sweep that would otherwise flood the
+		// single-slot PTP queue and push later writes into DeviceBusy.
+		if (!this.#suppressConfigSweep) {
+			setTimeout(() => this.checkConfigChange(), 0)
+		}
 
-		return {status: 'ok'}
+		// Report the truth. A write that never got an OK (the camera stayed
+		// busy through every retry) used to be swallowed as 'ok', so callers
+		// had no way to know it was dropped.
+		return {status: succeed ? 'ok' : 'busy'}
 	}
 
 	@MemoizeExpiring(SigmaExpirationMs)
