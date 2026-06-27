@@ -66,6 +66,7 @@ type DataViewTypeForDatatypeCode<D extends DatatypeCode> =
 
 export class TethrPTPUSB extends Tethr {
 	protected _opened = false
+	private _listenersBound = false
 
 	constructor(readonly device: PTPDevice) {
 		super()
@@ -83,18 +84,29 @@ export class TethrPTPUSB extends Tethr {
 			expectedResCodes: [ResCode.OK, ResCode.SessionAlreadyOpen],
 		})
 
-		this.device.onEventCode(
-			EventCode.DevicePropChanged,
-			this.onDevicePropChanged
-		)
-		this.device.on('disconnect', () => {
-			this._opened = false
-			this.emit('disconnect')
-		})
+		// Bind device/window listeners exactly once. open() runs on every
+		// (re)connect, so doing this unconditionally would stack a duplicate
+		// DevicePropChanged handler, disconnect handler and beforeunload handler
+		// on each call — all firing N times and (being anonymous) never removable.
+		if (!this._listenersBound) {
+			this._listenersBound = true
 
-		window.addEventListener('beforeunload', async () => {
-			await this.close()
-		})
+			this.device.onEventCode(
+				EventCode.DevicePropChanged,
+				this.onDevicePropChanged
+			)
+			this.device.on('disconnect', () => {
+				this._opened = false
+				this.emit('disconnect')
+			})
+
+			// Best-effort only: beforeunload can't await async USB work — the
+			// browser tears the page down without waiting for the returned promise,
+			// so CloseSession usually won't finish. That's fine; PTPDevice.open()
+			// self-heals a dangling session on the next connect. This is just a
+			// courtesy clean shutdown for when the page happens to linger.
+			window.addEventListener('beforeunload', () => void this.close())
+		}
 
 		this._opened = true
 	}
