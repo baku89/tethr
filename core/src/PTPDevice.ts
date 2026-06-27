@@ -156,6 +156,37 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		this.#endpointNumberBulkIn = endpointIn.endpointNumber
 		this.#endpointerNumberInterruptIn = endpointEvent.endpointNumber
 
+		// Recover from a dirty previous session. If the page was reloaded (or the
+		// tab crashed) mid-transfer, the camera's PTP session is still open and a
+		// bulk endpoint can be left halted — the next transferOut then rejects with
+		// "A transfer error has occurred" before our stall handling ever runs. The
+		// USB Still-Image class "Device Reset Request" (bRequest 0x66) aborts any
+		// in-progress transaction and resets the camera's PTP state machine (this is
+		// what Dragonframe's reset does); clearing the bulk halts mops up the rest.
+		// All best-effort: not every camera implements 0x66, and a freshly plugged
+		// device has nothing to clear.
+		try {
+			await this.usb.controlTransferOut({
+				requestType: 'class',
+				recipient: 'interface',
+				request: 0x66, // Device Reset Request
+				value: 0x0,
+				index: interfaceNum,
+			})
+		} catch {
+			// camera may not implement it; the clearHalt calls below are the fallback
+		}
+		try {
+			await this.usb.clearHalt('out', this.#endpointNumberBulkOut)
+		} catch {
+			// no halt to clear
+		}
+		try {
+			await this.usb.clearHalt('in', this.#endpointNumberBulkIn)
+		} catch {
+			// no halt to clear
+		}
+
 		this.#listenInterruptIn()
 		this.#listenDisconnect()
 
