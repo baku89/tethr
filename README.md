@@ -38,9 +38,13 @@ Here's a list of camera models currently supported by the library:
 | Panasonic | S5, DC-G9M2 | Shutter, LV, AF, MF, Config |
 | Sigma     | fp, fp L    | Shutter, LV, AF, MF, Config |
 | Ricoh     | Theta S     | Shutter, Config             |
+| Canon\*   | EOS (PTP)   | Shutter, LV, AF, Config     |
+| Sony\*    | α (PC mode) | Shutter, LV, AF, Config     |
 | WebCam    |             | Shutter, LV, Config         |
 
 \*\* LV: Liveview, AF: Auto Focus, MF: Manual Focus
+
+\* Canon EOS and Sony α support is **experimental and not yet verified on physical hardware**. The implementations follow the [libgphoto2](https://github.com/gphoto/libgphoto2) PTP vendor extensions, but the protocol flows are untested — feedback from real devices is very welcome.
 
 If you want to implement a support code for a new camera model, or ask someone for support instead, please refer to the contribution guide shown below.
 
