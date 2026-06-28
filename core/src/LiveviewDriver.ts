@@ -45,6 +45,10 @@ export class LiveviewDriver {
 	#stream: MediaStream | null = null
 	#active = false
 	#inFlight = false
+	// Incremented on every start(); a loop exits once its captured id is stale,
+	// so a quick stop()→start() can't leave the previous loop running alongside
+	// the new one (the old loop may be parked in sleep() when #active flips).
+	#runId = 0
 
 	#grab: LiveviewDriverOptions['grab']
 	#isOpen: LiveviewDriverOptions['isOpen']
@@ -80,20 +84,21 @@ export class LiveviewDriver {
 		this.#active = true
 		this.#onChange(stream)
 
-		this.#loop()
+		this.#loop(++this.#runId)
 
 		return stream
 	}
 
 	stop() {
 		this.#active = false
+		this.#runId++
 		this.#canvas.end()
 		this.#stream = null
 		this.#onChange(null)
 	}
 
-	async #loop() {
-		while (this.#active && this.#isOpen()) {
+	async #loop(runId: number) {
+		while (this.#active && runId === this.#runId && this.#isOpen()) {
 			const delivered = await this.#tick()
 			await sleep(delivered ? this.#frameGapMs : this.#backoffMs)
 		}

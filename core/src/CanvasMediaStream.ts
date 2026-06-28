@@ -43,5 +43,9 @@ export class CanvasMediaStream {
 
 	end() {
 		this.#stream?.getTracks().forEach(track => track.stop())
+		// Drop the stopped stream and context so a subsequent begin() rebuilds a
+		// fresh canvas + captureStream instead of handing back dead tracks.
+		this.#stream = null
+		this.#ctx = null
 	}
 }

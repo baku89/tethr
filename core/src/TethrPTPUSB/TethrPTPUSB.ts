@@ -672,6 +672,11 @@ export class TethrPTPUSB extends Tethr {
 					controller.error(err)
 				}
 			},
+			cancel() {
+				// Stop pulling further chunks when the consumer aborts (e.g. a
+				// download-to-disk is cancelled) so we don't keep draining the pipe.
+				void chunks.return(undefined)
+			},
 		})
 	}
 
