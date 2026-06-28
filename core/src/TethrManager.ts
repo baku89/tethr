@@ -69,16 +69,16 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	 */
 	async #initPairedUSBPTPCameras() {
 		const usbDevices = await navigator.usb.getDevices()
-		const usbPromises = await Promise.allSettled(
-			usbDevices.map(initTethrUSBPTP)
-		)
+		const results = await Promise.allSettled(usbDevices.map(initTethrUSBPTP))
 
-		for (const promise of usbPromises) {
+		// Key the map by the USBDevice we already hold here, rather than reaching
+		// into the camera's (now transport-private) device — keep the index
+		// association from usbDevices.
+		results.forEach((promise, i) => {
 			if (promise.status === 'fulfilled' && promise.value.status === 'ok') {
-				const camera = promise.value.value
-				this.#ptpusbCameras.set(camera.device.usb, camera)
+				this.#ptpusbCameras.set(usbDevices[i], promise.value.value)
 			}
-		}
+		})
 	}
 
 	async #refreshPairedWebcam(): Promise<TethrWebcam | null> {
@@ -136,9 +136,8 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 			if (!camera && prompt) {
 				const result = await this.#requestUSBPTPCamera(id)
 				if (result.status === 'ok') {
-					const ptpcamera = result.value
-					this.#ptpusbCameras.set(ptpcamera.device.usb, ptpcamera)
-					camera = ptpcamera
+					this.#ptpusbCameras.set(result.value.usb, result.value.camera)
+					camera = result.value.camera
 				} else if (result.status !== 'cancelled') {
 					alert(result.message)
 				}
@@ -176,7 +175,7 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 		// Exact body via USB serial.
 		if (id.usb?.serialNumber) {
 			const m = cameras.find(
-				c => c.device.usb.serialNumber === id.usb!.serialNumber
+				c => c.identifier.usb?.serialNumber === id.usb!.serialNumber
 			)
 			if (m) return m
 		}
@@ -184,8 +183,8 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 		if (id.usb) {
 			const m = cameras.find(
 				c =>
-					c.device.usb.vendorId === id.usb!.vendorId &&
-					c.device.usb.productId === id.usb!.productId
+					c.identifier.usb?.vendorId === id.usb!.vendorId &&
+					c.identifier.usb?.productId === id.usb!.productId
 			)
 			if (m) return m
 		}
@@ -200,7 +199,7 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 
 	async #requestUSBPTPCamera(
 		id?: TethrIdentifier | null
-	): Promise<OperationResult<TethrPTPUSB>> {
+	): Promise<OperationResult<{camera: TethrPTPUSB; usb: USBDevice}>> {
 		// Narrow the picker to the remembered device's model when we have one.
 		const filters =
 			id && id.type === 'ptpusb' && id.usb
@@ -218,7 +217,10 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 			return {status: 'general error', message: 'Unable to connect to camera'}
 		}
 
-		return await initTethrUSBPTP(usbDevice)
+		const result = await initTethrUSBPTP(usbDevice)
+		if (result.status !== 'ok') return result
+
+		return {status: 'ok', value: {camera: result.value, usb: usbDevice}}
 	}
 
 	async #requestWebcam() {

@@ -26,7 +26,7 @@ import {
 	ResCode,
 } from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
-import {PTPDevice, PTPEvent} from '../PTPDevice'
+import {PTPEvent, PTPTransport} from '../PTPDevice'
 import {
 	ConfigDesc,
 	ConfigDescOption,
@@ -68,7 +68,7 @@ export class TethrPTPUSB extends Tethr {
 	protected _opened = false
 	private _listenersBound = false
 
-	constructor(readonly device: PTPDevice) {
+	constructor(protected readonly device: PTPTransport) {
 		super()
 	}
 
@@ -130,14 +130,14 @@ export class TethrPTPUSB extends Tethr {
 	}
 
 	get name(): string {
-		return this.device.usb.productName ?? 'Generic PTP Camera'
+		return this.device.descriptor.productName ?? 'Generic PTP Camera'
 	}
 
 	get identifier(): TethrIdentifier {
-		const {vendorId, productId, serialNumber} = this.device.usb
+		const {vendorId, productId, serialNumber} = this.device.descriptor
 		return {
 			type: 'ptpusb',
-			usb: {vendorId, productId, serialNumber: serialNumber || undefined},
+			usb: {vendorId, productId, serialNumber},
 		}
 	}
 
@@ -750,7 +750,7 @@ export class TethrPTPUSB extends Tethr {
 		return ObjectFormatCode[code].toLowerCase()
 	}
 
-	static async getDeviceInfo(device: PTPDevice): Promise<DeviceInfo> {
+	static async getDeviceInfo(device: PTPTransport): Promise<DeviceInfo> {
 		const {data} = await device.receiveData({
 			label: 'GetDeviceInfo',
 			opcode: OpCode.GetDeviceInfo,

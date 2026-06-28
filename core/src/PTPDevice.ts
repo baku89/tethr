@@ -30,27 +30,48 @@ const PTPQueueOptions = {
 	throwOnTimeout: true,
 } as const
 
-interface PTPSendCommandOption {
+export interface PTPSendCommandOption {
 	label?: string
 	opcode: number
 	parameters?: number[]
 	expectedResCodes?: number[]
+	/**
+	 * Scheduling priority on the shared transaction queue. Higher runs first
+	 * among *pending* (not-yet-started) transactions. Use this to keep the pipe
+	 * fair when liveview and bulk transfers share it:
+	 *
+	 * - {@link PTPPriority.Interactive} (2): user-initiated get/set/actions
+	 * - {@link PTPPriority.Liveview} (1): liveview frame fetches
+	 * - {@link PTPPriority.Bulk} (0, default): large object-download chunks
+	 *
+	 * A long single transfer can't be preempted mid-flight, so pair this with
+	 * chunked transfers (many small {@link PTPPriority.Bulk} items) to leave
+	 * gaps a higher-priority frame can slip into.
+	 */
+	priority?: number
 }
 
-type PTPSendDataOption = PTPSendCommandOption & {
+/** Scheduling lanes for {@link PTPSendCommandOption.priority}. */
+export enum PTPPriority {
+	Bulk = 0,
+	Liveview = 1,
+	Interactive = 2,
+}
+
+export type PTPSendDataOption = PTPSendCommandOption & {
 	data: ArrayBuffer
 }
 
-type PTPReceiveDataOption = PTPSendCommandOption & {
+export type PTPReceiveDataOption = PTPSendCommandOption & {
 	maxByteLength?: number
 }
 
-interface PTPResponse {
+export interface PTPResponse {
 	resCode: number
 	parameters: number[]
 }
 
-type PTPDataResponse = PTPResponse & {
+export type PTPDataResponse = PTPResponse & {
 	data: ArrayBuffer
 }
 
@@ -59,7 +80,52 @@ export interface PTPEvent {
 	parameters: number[]
 }
 
-type PTPEventCallback = (event: PTPEvent) => void
+export type PTPEventCallback = (event: PTPEvent) => void
+
+/**
+ * Transport-independent description of a connected device, used to build a
+ * {@link Tethr.identifier} and a display name without the protocol layer
+ * reaching into a USB-specific object. A USB transport fills this from its
+ * `USBDevice`; a mock/recorded transport fills it from a fixture.
+ */
+export interface PTPDeviceDescriptor {
+	vendorId: number
+	productId: number
+	serialNumber?: string
+	productName?: string
+}
+
+/**
+ * The transport surface the PTP protocol layer ({@link TethrPTPUSB} and its
+ * vendor subclasses) depends on. Decoupling protocol logic from the concrete
+ * {@link PTPDevice} (WebUSB) lets a different transport — a future PTP/IP one,
+ * or a recorded-transcript mock for hardware-free unit tests — be injected in
+ * its place. Everything here is implemented by {@link PTPDevice}.
+ */
+export interface PTPTransport {
+	readonly descriptor: PTPDeviceDescriptor
+
+	open(): Promise<void>
+	close(): Promise<void>
+	get opened(): boolean
+	setLog(log: boolean): void
+
+	sendCommand(option: PTPSendCommandOption): Promise<PTPResponse | void>
+	sendData(option: PTPSendDataOption): Promise<PTPResponse>
+	receiveData(option: PTPReceiveDataOption): Promise<PTPDataResponse>
+
+	onEventCode(eventCode: number, callback: PTPEventCallback): void
+	offEventCode(eventCode: number, callback?: PTPEventCallback): void
+	waitEvent(code: number): Promise<PTPEvent>
+
+	on(event: 'idle' | 'disconnect', callback: () => void): unknown
+	off(event: 'idle' | 'disconnect', callback: () => void): unknown
+
+	/** Number of transactions currently waiting to start (not yet running). */
+	get pendingCount(): number
+	/** Number of transactions currently in flight. */
+	get runningCount(): number
+}
 
 interface BulkInInfo {
 	type: PTPBlockType
@@ -78,7 +144,7 @@ interface PTPDeviceOptions {
 	log?: boolean
 }
 
-export class PTPDevice extends EventEmitter<EventTypes> {
+export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport {
 	#transactionId = 0x00000000
 
 	#endpointNumberBulkOut = 0x0
@@ -99,6 +165,16 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 
 		this.setLog(log)
 		this.#queue.on('idle', () => this.emit('idle'))
+	}
+
+	get descriptor(): PTPDeviceDescriptor {
+		const {vendorId, productId, serialNumber, productName} = this.usb
+		return {
+			vendorId,
+			productId,
+			serialNumber: serialNumber || undefined,
+			productName: productName || undefined,
+		}
 	}
 
 	open = async (): Promise<void> => {
@@ -230,21 +306,35 @@ export class PTPDevice extends EventEmitter<EventTypes> {
 		return this.#queue.add(async () => {
 			this.#console.groupCollapsed(`Send Command [${option.label}]`)
 			return this.#sendCommandNow(option).finally(this.#console.groupEnd)
-		}, PTPQueueOptions)
+		}, this.#queueOptions(option.priority))
 	}
 
 	sendData = (option: PTPSendDataOption): Promise<PTPResponse> => {
 		return this.#queue.add(async () => {
 			this.#console.groupCollapsed(`Send Data [${option.label}]`)
 			return await this.#sendDataNow(option).finally(this.#console.groupEnd)
-		}, PTPQueueOptions)
+		}, this.#queueOptions(option.priority))
 	}
 
 	receiveData = (option: PTPReceiveDataOption): Promise<PTPDataResponse> => {
 		return this.#queue.add(async () => {
 			this.#console.groupCollapsed(`Receive Data [${option.label}]`)
 			return await this.#receiveDataNow(option).finally(this.#console.groupEnd)
-		}, PTPQueueOptions)
+		}, this.#queueOptions(option.priority))
+	}
+
+	#queueOptions(priority = PTPPriority.Interactive) {
+		return {...PTPQueueOptions, priority}
+	}
+
+	/** Number of transactions currently waiting to start (not yet running). */
+	get pendingCount(): number {
+		return this.#queue.size
+	}
+
+	/** Number of transactions currently in flight. */
+	get runningCount(): number {
+		return this.#queue.pending
 	}
 
 	async #sendCommandNow(option: PTPSendCommandOption): Promise<PTPResponse> {
