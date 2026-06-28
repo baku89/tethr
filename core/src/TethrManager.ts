@@ -172,10 +172,17 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 
 		const cameras = [...this.#ptpusbCameras.values()]
 
+		// All paired PTPUSB cameras report a `ptpusb` identifier; narrow the union
+		// to read its `usb` descriptor.
+		const usbOf = (c: TethrPTPUSB) => {
+			const cid = c.identifier
+			return cid.type === 'ptpusb' ? cid.usb : undefined
+		}
+
 		// Exact body via USB serial.
 		if (id.usb?.serialNumber) {
 			const m = cameras.find(
-				c => c.identifier.usb?.serialNumber === id.usb!.serialNumber
+				c => usbOf(c)?.serialNumber === id.usb!.serialNumber
 			)
 			if (m) return m
 		}
@@ -183,8 +190,8 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 		if (id.usb) {
 			const m = cameras.find(
 				c =>
-					c.identifier.usb?.vendorId === id.usb!.vendorId &&
-					c.identifier.usb?.productId === id.usb!.productId
+					usbOf(c)?.vendorId === id.usb!.vendorId &&
+					usbOf(c)?.productId === id.usb!.productId
 			)
 			if (m) return m
 		}

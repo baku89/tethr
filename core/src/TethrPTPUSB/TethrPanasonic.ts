@@ -1,7 +1,7 @@
 import {BiMap} from 'bim'
 import {times} from 'lodash'
 
-import {CanvasMediaStream} from '../CanvasMediaStream'
+import {LiveviewDriver} from '../LiveviewDriver'
 import {
 	Aperture,
 	ColorMode,
@@ -16,7 +16,7 @@ import {
 } from '../configs'
 import {ObjectFormatCode, ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
-import {PTPDevice, PTPEvent} from '../PTPDevice'
+import {PTPEvent, PTPPriority, PTPTransport} from '../PTPDevice'
 import {ConfigDesc, OperationResult, TakePhotoOption} from '../Tethr'
 import {TethrObject, TethrObjectInfo} from '../TethrObject'
 import {isntNil, readonlyConfigDesc} from '../util'
@@ -112,7 +112,7 @@ interface LiveviewSetting {
 }
 
 export class TethrPanasonic extends TethrPTPUSB {
-	constructor(device: PTPDevice) {
+	constructor(device: PTPTransport) {
 		super(device)
 	}
 
@@ -576,7 +576,11 @@ export class TethrPanasonic extends TethrPTPUSB {
 		return {status: 'ok', value: objects}
 	}
 
-	#canvasMediaStream = new CanvasMediaStream()
+	#liveview = new LiveviewDriver({
+		grab: () => this.#getLiveviewImage(),
+		isOpen: () => this.device.opened,
+		onChange: stream => this.emit('liveviewChange', readonlyConfigDesc(stream)),
+	})
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
 		await this.device.sendCommand({
@@ -585,24 +589,13 @@ export class TethrPanasonic extends TethrPTPUSB {
 			parameters: [0x0d000010],
 		})
 
-		const stream = await this.#canvasMediaStream.begin(
-			this.#updateLiveviewFrame
-		)
-
-		this.emit('liveviewChange', readonlyConfigDesc(stream))
-
-		this.device.on('idle', this.#updateLiveviewFrame)
+		const stream = await this.#liveview.start()
 
 		return {status: 'ok', value: stream}
 	}
 
-	#updateLiveviewFrame = async () => {
-		const image = await this.#getLiveviewImage()
-		if (!image) return
-
-		const imageBitmap = await createImageBitmap(image)
-
-		this.#canvasMediaStream.updateWithImage(imageBitmap)
+	async getLiveview(): Promise<MediaStream | null> {
+		return this.#liveview.stream
 	}
 
 	async stopLiveview(): Promise<OperationResult> {
@@ -612,8 +605,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			parameters: [0x0d000011],
 		})
 
-		this.device.off('idle', this.#updateLiveviewFrame)
-		this.emit('liveviewChange', readonlyConfigDesc(null))
+		this.#liveview.stop()
 
 		return {status: 'ok'}
 	}
@@ -723,6 +715,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			opcode: OpCodePanasonic.LiveviewImage,
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 			maxByteLength: 1_000_000, // = 1MB
+			priority: PTPPriority.Liveview,
 		})
 
 		if (resCode !== ResCode.OK) return null

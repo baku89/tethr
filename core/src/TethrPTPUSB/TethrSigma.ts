@@ -5,7 +5,7 @@ import sleep from 'sleep-promise'
 import {MemoizeExpiring} from 'typescript-memoize'
 
 import {FocalLength} from '..'
-import {CanvasMediaStream} from '../CanvasMediaStream'
+import {LiveviewDriver} from '../LiveviewDriver'
 import {
 	Aperture,
 	BatteryLevel,
@@ -23,6 +23,7 @@ import {
 import {decodeIFD, encodeIFD, IFDType} from '../IFD'
 import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
+import {PTPPriority} from '../PTPDevice'
 import {
 	ConfigDesc,
 	OperationResult,
@@ -254,13 +255,13 @@ export class TethrSigma extends TethrPTPUSB {
 			// checkConfigChange().
 			if (!this.#isCapturing) {
 				this.checkConfigChange(
-					this.#liveviewActive ? SigmaLiveviewPollConfigs : ConfigListSigma
+					this.#liveview.active ? SigmaLiveviewPollConfigs : ConfigListSigma
 				)
 			}
 
 			setTimeout(
 				checkPropChangeInterval,
-				this.#liveviewActive
+				this.#liveview.active
 					? SigmaLiveviewPollIntervalMs
 					: SigmaCheckConfigIntervalMs
 			)
@@ -1375,6 +1376,7 @@ export class TethrSigma extends TethrPTPUSB {
 			opcode: OpCodeSigma.GetViewFrame,
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 			maxByteLength: 1_000_000, // = 1MB
+			priority: PTPPriority.Liveview,
 		})
 
 		if (resCode === ResCode.DeviceBusy) return {status: 'busy'}
@@ -1387,76 +1389,26 @@ export class TethrSigma extends TethrPTPUSB {
 		}
 	}
 
-	#canvasMediaStream = new CanvasMediaStream()
-	#liveviewStream: MediaStream | null = null
-	#liveviewActive = false
+	#liveview = new LiveviewDriver({
+		grab: async () => {
+			const result = await this.#getLiveViewImage()
+			return result.status === 'ok' ? result.value : null
+		},
+		isOpen: () => this.device.opened,
+		onChange: stream => this.emit('liveviewChange', readonlyConfigDesc(stream)),
+	})
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
-		const stream = await this.#canvasMediaStream.begin(async () => {
-			await this.#updateLiveviewFrame()
-		})
-
-		this.#liveviewStream = stream
-		this.#liveviewActive = true
-
-		this.emit('liveviewChange', readonlyConfigDesc(stream))
-
-		// Drive live view with a self-rescheduling loop rather than the PTP
-		// queue's `idle` event. The `idle` event only fires when the queue fully
-		// drains; once any other traffic (the per-second config polling, capture,
-		// etc.) shares the queue it stops re-firing reliably, which froze live
-		// view after the very first frame. This loop keeps requesting frames on
-		// its own — each request still goes through the queue, so it interleaves
-		// naturally with other operations.
-		this.#runLiveviewLoop()
-
+		const stream = await this.#liveview.start()
 		return {status: 'ok', value: stream}
 	}
 
-	#runLiveviewLoop = async () => {
-		while (this.#liveviewActive && this.device.opened) {
-			const delivered = await this.#updateLiveviewFrame()
-
-			// Yield between frames. Back off when no frame was delivered — the
-			// camera is busy (autofocus / capture) or hit a transient error — so
-			// we don't spin the CPU or flood the queue with no-op frame requests
-			// (which is what used to freeze the whole app during autofocus).
-			await sleep(delivered ? 0 : 200)
-		}
-	}
-
-	#updateLiveviewFrame = async (): Promise<boolean> => {
-		if (!this.device.opened) return false
-
-		try {
-			const lvImage = await this.#getLiveViewImage()
-
-			if (lvImage.status !== 'ok') return false
-
-			const bitmap = await createImageBitmap(lvImage.value)
-
-			this.#canvasMediaStream.updateWithImage(bitmap)
-
-			return true
-		} catch {
-			// A failed frame fetch (typically a disconnect) must not bubble up as
-			// an unhandled rejection; the loop's `device.opened` check stops it.
-			return false
-		}
-	}
-
 	async getLiveview(): Promise<MediaStream | null> {
-		return this.#liveviewStream
+		return this.#liveview.stream
 	}
 
 	async stopLiveview(): Promise<OperationResult> {
-		this.#liveviewActive = false
-		this.#canvasMediaStream.end()
-
-		this.#liveviewStream = null
-
-		this.emit('liveviewChange', readonlyConfigDesc(null))
-
+		this.#liveview.stop()
 		return {status: 'ok'}
 	}
 
