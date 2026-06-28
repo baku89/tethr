@@ -14,7 +14,8 @@ import {
 	ShutterSpeed,
 	WhiteBalance,
 } from '../configs'
-import {ObjectFormatCode, ResCode} from '../PTPDatacode'
+import {getObjectFormatName} from '../objectFormat'
+import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
 import {PTPEvent, PTPPriority, PTPTransport} from '../PTPDevice'
 import {ConfigDesc, OperationResult, TakePhotoOption} from '../Tethr'
@@ -565,7 +566,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 		const objects: TethrObject[] = []
 
 		for (const info of infos) {
-			const data = await this.getObject(info.id)
+			const data = await this.getObjectBuffer(info.id)
 			const isRaw = info.format === 'raw'
 			const type = isRaw ? 'image/x-panasonic-rw2' : 'image/jpeg'
 
@@ -864,10 +865,10 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
-	protected getObjectFormat(code: number) {
-		return (
-			ObjectFormatCode[code] ?? ObjectFormatCodePanasonic[code]
-		).toLowerCase()
+	protected getObjectFormatNameByCode(code: number): string {
+		return getObjectFormatName(code, c =>
+			(ObjectFormatCodePanasonic[c] as string | undefined)?.toLowerCase()
+		)
 	}
 
 	protected exposureModeTable = new BiMap<number, ExposureMode>([

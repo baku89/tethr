@@ -25,7 +25,8 @@ import {
 	ShutterSpeed,
 	WhiteBalance,
 } from './configs'
-import {TethrObject} from './TethrObject'
+import {TethrObject, TethrObjectInfo} from './TethrObject'
+import {TethrStorage} from './TethrStorage'
 import {
 	isntNil,
 	UnsupportedConfigDesc,
@@ -66,6 +67,25 @@ export type ConfigDesc<T> = {
 
 export interface TakePhotoOption {
 	doDownload?: boolean
+}
+
+/** Filters for {@link Tethr.getObjects}. */
+export interface GetObjectsOptions {
+	/** Limit to one storage. Defaults to all storages. */
+	storageId?: number
+	/**
+	 * List children of this object handle (a folder / Association). Defaults to
+	 * the storage root. Walk `format === 'association'` entries to recurse.
+	 */
+	parent?: number
+	/** Limit to one object format code (e.g. JPEG). Defaults to all formats. */
+	format?: number
+}
+
+/** Options for {@link Tethr.getObject} / {@link Tethr.getObjectStream}. */
+export interface GetObjectOption {
+	/** Per-transfer-chunk progress callback, `0..1`. */
+	onProgress?: (progress: number) => void
 }
 
 type EventTypes = {
@@ -776,6 +796,82 @@ export abstract class Tethr
 	 * @category Action
 	 */
 	async stopLiveview(): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+
+	// Object store (storages, browsing the card, transferring existing media)
+
+	/**
+	 * Lists the camera's storages (memory cards / internal memory).
+	 * @category Object Store
+	 */
+	async getStorages(): Promise<TethrStorage[]> {
+		return []
+	}
+
+	/**
+	 * Lists objects (images, movies, folders) on the camera's storages.
+	 * @category Object Store
+	 */
+	async getObjects(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		options?: GetObjectsOptions
+	): Promise<TethrObjectInfo[]> {
+		return []
+	}
+
+	/**
+	 * Fetches a small thumbnail for an object, for gallery grids. Returns null
+	 * when no thumbnail is available.
+	 * @category Object Store
+	 */
+	async getObjectThumbnail(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		id: number
+	): Promise<Blob | null> {
+		return null
+	}
+
+	/**
+	 * Downloads a full object (e.g. a photo on the card) into a {@link TethrObject}.
+	 * Large transfers are chunked internally and report `progress` events.
+	 * @category Object Store
+	 */
+	async getObject(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		id: number,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		option?: GetObjectOption
+	): Promise<OperationResult<TethrObject>> {
+		return UnsupportedOperationResult
+	}
+
+	/**
+	 * Streams a full object as chunks — pipe huge RAW files straight to disk
+	 * (File System Access API) without holding the whole file in memory.
+	 * @category Object Store
+	 */
+	getObjectStream(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		id: number,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		option?: GetObjectOption
+	): ReadableStream<Uint8Array> {
+		return new ReadableStream({
+			start(controller) {
+				controller.close()
+			},
+		})
+	}
+
+	/**
+	 * Deletes an object from the camera's storage.
+	 * @category Object Store
+	 */
+	async deleteObject(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		id: number
+	): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}
 }

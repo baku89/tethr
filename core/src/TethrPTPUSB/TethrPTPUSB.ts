@@ -18,18 +18,20 @@ import {
 	DatatypeCode,
 	DevicePropCode,
 	EventCode,
-	ObjectFormatCode,
 	OpCode,
 	PTPAccessCapabilityCode,
 	PTPFilesystemTypeCode,
 	PTPStorageTypeCode,
 	ResCode,
 } from '../PTPDatacode'
+import {getMimeForObjectFormat, getObjectFormatName} from '../objectFormat'
 import {PTPDataView} from '../PTPDataView'
-import {PTPEvent, PTPTransport} from '../PTPDevice'
+import {PTPEvent, PTPPriority, PTPTransport} from '../PTPDevice'
 import {
 	ConfigDesc,
 	ConfigDescOption,
+	GetObjectOption,
+	GetObjectsOptions,
 	OperationResult,
 	TakePhotoOption,
 	Tethr,
@@ -447,7 +449,7 @@ export class TethrPTPUSB extends Tethr {
 
 		const objectID = objectAddedEvent.parameters[0]
 		const objectInfo = await this.getObjectInfo(objectID)
-		const objectBuffer = await this.getObject(objectID)
+		const objectBuffer = await this.getObjectBuffer(objectID)
 
 		const tethrObject: TethrObject = {
 			...objectInfo,
@@ -634,14 +636,55 @@ export class TethrPTPUSB extends Tethr {
 		return await TethrPTPUSB.getDeviceInfo(this.device)
 	}
 
-	protected async getObjectHandles(storageId = 0xffffffff): Promise<number[]> {
+	protected async getObjectHandles(
+		storageId = 0xffffffff,
+		format = 0x0,
+		// 0xffffffff = all objects regardless of hierarchy; a handle = that
+		// folder's children; 0x0 = objects in the storage root.
+		parent = 0xffffffff
+	): Promise<number[]> {
 		const {data} = await this.device.receiveData({
 			label: 'GetObjectHandles',
 			opcode: OpCode.GetObjectHandles,
-			parameters: [storageId, 0xffffffff, 0x0],
+			parameters: [storageId, format, parent],
 		})
 
 		return new PTPDataView(data).readUint32Array()
+	}
+
+	async getObjects(options: GetObjectsOptions = {}): Promise<TethrObjectInfo[]> {
+		const {storageId = 0xffffffff, format = 0x0, parent = 0xffffffff} = options
+
+		const handles = await this.getObjectHandles(storageId, format, parent)
+
+		const infos: TethrObjectInfo[] = []
+		for (const handle of handles) {
+			try {
+				infos.push(await this.getObjectInfo(handle))
+			} catch {
+				// Skip objects whose info can't be read rather than failing the
+				// whole listing (some handles are transient / vendor-internal).
+			}
+		}
+		return infos
+	}
+
+	async getObjectThumbnail(id: number): Promise<Blob | null> {
+		try {
+			const {data} = await this.device.receiveData({
+				label: 'GetThumb',
+				opcode: OpCode.GetThumb,
+				parameters: [id],
+				expectedResCodes: [ResCode.OK, ResCode.NoThumbnailPresent],
+			})
+			if (data.byteLength === 0) return null
+
+			const {thumb} = await this.getObjectInfo(id)
+			const type = getMimeForObjectFormat(thumb?.format ?? 'jpeg')
+			return new Blob([data], {type})
+		} catch {
+			return null
+		}
 	}
 
 	protected async getObjectInfo(id: number): Promise<TethrObjectInfo> {
@@ -681,20 +724,131 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
-	protected async getObject(objectID: number): Promise<ArrayBuffer> {
+	/** Chunk size for partial-object transfers (2 MB, as SampleApps commonly use). */
+	protected static readonly ObjectChunkSize = 0x00200000
+
+	/**
+	 * Yields an object's bytes in chunks. A large transfer becomes many small
+	 * {@link PTPPriority.Bulk} queue items, so liveview frames (higher priority)
+	 * can slip between them instead of the whole download blocking the pipe.
+	 * Falls back to a single GetObject when GetPartialObject is unsupported.
+	 */
+	protected async *downloadObjectChunks(
+		objectID: number,
+		onProgress?: (progress: number) => void
+	): AsyncGenerator<Uint8Array> {
 		const {byteLength} = await this.getObjectInfo(objectID)
 
-		const {data} = await this.device.receiveData({
-			label: 'GetObject',
-			opcode: OpCode.GetObject,
-			parameters: [objectID],
-			maxByteLength: byteLength + 1000,
-		})
+		const {operationsSupported} = await this.getDeviceInfo()
+		const canPartial = operationsSupported.includes(OpCode.GetPartialObject)
 
-		return data
+		if (!canPartial || byteLength === 0) {
+			const {data} = await this.device.receiveData({
+				label: 'GetObject',
+				opcode: OpCode.GetObject,
+				parameters: [objectID],
+				maxByteLength: byteLength + 1000,
+				priority: PTPPriority.Bulk,
+			})
+			onProgress?.(1)
+			this.emit('progress', {progress: 1})
+			yield new Uint8Array(data)
+			return
+		}
+
+		const chunkSize = TethrPTPUSB.ObjectChunkSize
+		let loaded = 0
+		for (let offset = 0; offset < byteLength; offset += chunkSize) {
+			const length = Math.min(chunkSize, byteLength - offset)
+			const {data} = await this.device.receiveData({
+				label: 'GetPartialObject',
+				opcode: OpCode.GetPartialObject,
+				parameters: [objectID, offset, length],
+				maxByteLength: length + 64,
+				priority: PTPPriority.Bulk,
+			})
+			loaded += data.byteLength
+			const progress = loaded / byteLength
+			onProgress?.(progress)
+			this.emit('progress', {progress})
+			yield new Uint8Array(data)
+		}
 	}
 
-	protected async getStorages(): Promise<TethrStorage[]> {
+	/** Downloads a whole object as a single buffer (used for captured photos). */
+	protected async getObjectBuffer(objectID: number): Promise<ArrayBuffer> {
+		const chunks: Uint8Array[] = []
+		for await (const chunk of this.downloadObjectChunks(objectID)) {
+			chunks.push(chunk)
+		}
+
+		const total = chunks.reduce((n, c) => n + c.byteLength, 0)
+		const out = new Uint8Array(total)
+		let offset = 0
+		for (const chunk of chunks) {
+			out.set(chunk, offset)
+			offset += chunk.byteLength
+		}
+		return out.buffer
+	}
+
+	async getObject(
+		id: number,
+		option: GetObjectOption = {}
+	): Promise<OperationResult<TethrObject>> {
+		try {
+			const info = await this.getObjectInfo(id)
+
+			const chunks: BlobPart[] = []
+			for await (const chunk of this.downloadObjectChunks(
+				id,
+				option.onProgress
+			)) {
+				chunks.push(chunk)
+			}
+
+			const blob = new Blob(chunks, {
+				type: getMimeForObjectFormat(info.format),
+			})
+			return {status: 'ok', value: {...info, blob}}
+		} catch {
+			return {status: 'general error'}
+		}
+	}
+
+	getObjectStream(
+		id: number,
+		option: GetObjectOption = {}
+	): ReadableStream<Uint8Array> {
+		const chunks = this.downloadObjectChunks(id, option.onProgress)
+		return new ReadableStream<Uint8Array>({
+			async pull(controller) {
+				try {
+					const {value, done} = await chunks.next()
+					if (done) {
+						controller.close()
+					} else {
+						controller.enqueue(value)
+					}
+				} catch (err) {
+					controller.error(err)
+				}
+			},
+		})
+	}
+
+	async deleteObject(id: number): Promise<OperationResult> {
+		const {resCode} = (await this.device.sendCommand({
+			label: 'DeleteObject',
+			opcode: OpCode.DeleteObject,
+			parameters: [id, 0x0],
+			expectedResCodes: [ResCode.OK, ResCode.ObjectWriteProtected],
+		})) ?? {resCode: ResCode.GeneralError}
+
+		return {status: resCode === ResCode.OK ? 'ok' : 'general error'}
+	}
+
+	async getStorages(): Promise<TethrStorage[]> {
 		const {data} = await this.device.receiveData({
 			label: 'GetStorageIDs',
 			opcode: OpCode.GetStorageIDs,
@@ -746,8 +900,8 @@ export class TethrPTPUSB extends Tethr {
 		return ConfigForDevicePropTable.get(code) ?? null
 	}
 
-	protected getObjectFormatNameByCode(code: number) {
-		return ObjectFormatCode[code].toLowerCase()
+	protected getObjectFormatNameByCode(code: number): string {
+		return getObjectFormatName(code)
 	}
 
 	static async getDeviceInfo(device: PTPTransport): Promise<DeviceInfo> {
