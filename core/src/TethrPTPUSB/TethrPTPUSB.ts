@@ -4,6 +4,8 @@ import {
 	Aperture,
 	BatteryLevel,
 	ConfigForDevicePropTable,
+	ConfigName,
+	ConfigType,
 	DriveMode,
 	DriveModeTable,
 	ExposureMode,
@@ -13,6 +15,12 @@ import {
 	WhiteBalance,
 	WhiteBalanceTable,
 } from '../configs'
+import {
+	buildConfigCodeMap,
+	ConfigScheme,
+	ConfigTable,
+	defineConfigs,
+} from '../configScheme'
 import {DeviceInfo} from '../DeviceInfo'
 import {
 	DatatypeCode,
@@ -43,6 +51,7 @@ import {
 	isntNil,
 	readonlyConfigDesc,
 	toHexString,
+	UnsupportedConfigDesc,
 	UnsupportedOperationResult,
 } from '../util'
 
@@ -150,33 +159,15 @@ export class TethrPTPUSB extends Tethr {
 	// Configs
 
 	setAperture(value: Aperture) {
-		return this.setDevicePropValue({
-			devicePropCode: DevicePropCode.FNumber,
-			datatypeCode: DatatypeCode.Uint16,
-			encode(value) {
-				if (value === 'auto') return null
-				return Math.round(value * 100)
-			},
-			value,
-		})
+		return this.setFromScheme('aperture', value)
 	}
 
 	getApertureDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.FNumber,
-			datatypeCode: DatatypeCode.Uint16,
-			decode(data) {
-				return (data / 100) as Aperture
-			},
-		})
+		return this.descFromScheme('aperture')
 	}
 
 	getBatteryLevelDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.BatteryLevel,
-			datatypeCode: DatatypeCode.Uint8,
-			decode: data => data as BatteryLevel,
-		})
+		return this.descFromScheme('batteryLevel')
 	}
 
 	async getCanTakePhotoDesc() {
@@ -186,136 +177,35 @@ export class TethrPTPUSB extends Tethr {
 	}
 
 	setCaptureDelay(value: number) {
-		return this.setDevicePropValue({
-			devicePropCode: DevicePropCode.CaptureDelay,
-			datatypeCode: DatatypeCode.Uint32,
-			encode: data => data,
-			value,
-		})
+		return this.setFromScheme('captureDelay', value)
 	}
 
 	getCaptureDelayDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.CaptureDelay,
-			datatypeCode: DatatypeCode.Uint32,
-			decode: data => data,
-		})
+		return this.descFromScheme('captureDelay')
 	}
 
 	setDriveMode(value: DriveMode) {
-		return this.setDevicePropValue({
-			devicePropCode: DevicePropCode.StillCaptureMode,
-			datatypeCode: DatatypeCode.Uint16,
-			encode(value) {
-				return DriveModeTable.getKey(value) ?? 0x0
-			},
-			value,
-		})
+		return this.setFromScheme('driveMode', value)
 	}
 
 	getDriveModeDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.StillCaptureMode,
-			datatypeCode: DatatypeCode.Uint16,
-			decode: data => {
-				return DriveModeTable.get(data) ?? 'normal'
-			},
-		})
+		return this.descFromScheme('driveMode')
 	}
 
 	setExposureComp(value: string) {
-		return this.setDevicePropValue({
-			devicePropCode: DevicePropCode.ExposureBiasCompensation,
-			datatypeCode: DatatypeCode.Int16,
-			encode(str) {
-				if (str === '0') return 0
-
-				const match = str.match(/^([+-]?)([0-9]+)?\s?(1\/2|1\/3|2\/3)?$/)
-
-				if (!match) return null
-
-				const [, signStr, integerStr, fractionStr] = match
-
-				const sign = signStr === '-' ? -1 : +1
-				const integer = parseInt(integerStr)
-				let fracMills = 0
-				switch (fractionStr) {
-					case '1/3':
-						fracMills = 300
-						break
-					case '1/2':
-						fracMills = 500
-						break
-					case '2/3':
-						fracMills = 700
-						break
-				}
-
-				return sign * (integer * 1000 + fracMills)
-			},
-			value,
-		})
+		return this.setFromScheme('exposureComp', value)
 	}
 
 	getExposureCompDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.ExposureBiasCompensation,
-			datatypeCode: DatatypeCode.Int16,
-			decode(mills) {
-				if (mills === 0) return '0'
-
-				const millsAbs = Math.abs(mills)
-
-				const sign = mills > 0 ? '+' : '-'
-				const integer = Math.floor(millsAbs / 1000)
-				const fracMills = millsAbs % 1000
-
-				let fraction = ''
-
-				switch (fracMills) {
-					case 300:
-						fraction = '1/3'
-						break
-					case 500:
-						fraction = '1/2'
-						break
-					case 700:
-						fraction = '2/3'
-						break
-				}
-
-				if (integer === 0) return `${sign}${fraction}`
-				if (fraction === '') return `${sign}${integer}`
-				return `${sign}${integer} ${fraction}`
-			},
-		})
+		return this.descFromScheme('exposureComp')
 	}
 
-	async setExposureMode(value: ExposureMode) {
-		return this.setDevicePropValue({
-			devicePropCode: DevicePropCode.ExposureProgramMode,
-			datatypeCode: DatatypeCode.Uint16,
-			encode: value => {
-				return (
-					ExposureModeTable.getKey(value) ??
-					parseInt(value.replace('vendor ', ''), 16)
-				)
-			},
-			value,
-		})
+	setExposureMode(value: ExposureMode) {
+		return this.setFromScheme('exposureMode', value)
 	}
 
-	async getExposureModeDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.ExposureProgramMode,
-			datatypeCode: DatatypeCode.Uint16,
-			decode(data) {
-				return (
-					ExposureModeTable.get(data) ??
-					(`vendor ${toHexString(data, 4)}` as ExposureMode)
-				)
-			},
-		})
+	getExposureModeDesc() {
+		return this.descFromScheme('exposureMode')
 	}
 
 	setImageSize(value: ImageSize) {
@@ -335,26 +225,11 @@ export class TethrPTPUSB extends Tethr {
 	}
 
 	setIso(value: ISO) {
-		return this.setDevicePropValue({
-			devicePropCode: DevicePropCode.ExposureIndex,
-			datatypeCode: DatatypeCode.Uint16,
-			encode(iso) {
-				if (iso === 'auto') return 0xffff
-				return iso
-			},
-			value,
-		})
+		return this.setFromScheme('iso', value)
 	}
 
 	getIsoDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.ExposureIndex,
-			datatypeCode: DatatypeCode.Uint16,
-			decode: data => {
-				if (data === 0xffff) return 'auto'
-				return data
-			},
-		})
+		return this.descFromScheme('iso')
 	}
 
 	async getManufacturerDesc() {
@@ -368,64 +243,27 @@ export class TethrPTPUSB extends Tethr {
 	}
 
 	setWhiteBalance(value: WhiteBalance) {
-		return this.setDevicePropValue({
-			devicePropCode: DevicePropCode.WhiteBalance,
-			datatypeCode: DatatypeCode.Uint16,
-			encode(value) {
-				return (
-					WhiteBalanceTable.getKey(value) ??
-					parseInt(value.replace(/^vendor /, ''), 16)
-				)
-			},
-			value,
-		})
+		return this.setFromScheme('whiteBalance', value)
 	}
 
 	getWhiteBalanceDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.WhiteBalance,
-			datatypeCode: DatatypeCode.Uint16,
-			decode: data => {
-				return (
-					WhiteBalanceTable.get(data) ??
-					(`vendor ${toHexString(data, 4)}` as WhiteBalance)
-				)
-			},
-		})
+		return this.descFromScheme('whiteBalance')
 	}
 
 	setTimelapseNumber(value: number) {
-		return this.setDevicePropValue({
-			devicePropCode: DevicePropCode.TimelapseNumber,
-			datatypeCode: DatatypeCode.Uint32,
-			encode: data => data,
-			value,
-		})
+		return this.setFromScheme('timelapseNumber', value)
 	}
 
 	getTimelapseNumberDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.TimelapseNumber,
-			datatypeCode: DatatypeCode.Uint32,
-			decode: data => data,
-		})
+		return this.descFromScheme('timelapseNumber')
 	}
 
 	setTimelapseInterval(value: number) {
-		return this.setDevicePropValue({
-			devicePropCode: DevicePropCode.TimelapseInterval,
-			datatypeCode: DatatypeCode.Uint32,
-			encode: data => data,
-			value,
-		})
+		return this.setFromScheme('timelapseInterval', value)
 	}
 
 	getTimelapseIntervalDesc() {
-		return this.getDevicePropDesc({
-			devicePropCode: DevicePropCode.TimelapseInterval,
-			datatypeCode: DatatypeCode.Uint32,
-			decode: data => data,
-		})
+		return this.descFromScheme('timelapseInterval')
 	}
 
 	// Actions
@@ -896,8 +734,186 @@ export class TethrPTPUSB extends Tethr {
 		this.emit(`${name}Change`, desc)
 	}
 
-	protected getConfigNameByCode(code: number) {
-		return ConfigForDevicePropTable.get(code) ?? null
+	//----------------------------------------------------------------------------
+	// Declarative config scheme
+
+	/**
+	 * Standard-PTP configs described as data. The getter/setter/desc methods
+	 * above delegate to {@link descFromScheme} / {@link setFromScheme} against
+	 * this table, and {@link getConfigNameByCode} derives the change-event
+	 * reverse map from it. A vendor that reuses standard property codes (e.g.
+	 * Sony) can override just the entries here and inherit the methods; a vendor
+	 * with its own protocol overrides the methods directly as before.
+	 *
+	 * Only numeric device properties live here; string/derived configs
+	 * (imageSize, model, capability flags) stay as explicit methods.
+	 */
+	protected configScheme: ConfigTable = defineConfigs({
+		aperture: {
+			devicePropCode: DevicePropCode.FNumber,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: raw => (raw / 100) as Aperture,
+			encode: value => (value === 'auto' ? null : Math.round(value * 100)),
+		},
+		batteryLevel: {
+			devicePropCode: DevicePropCode.BatteryLevel,
+			datatypeCode: DatatypeCode.Uint8,
+			decode: raw => raw as BatteryLevel,
+		},
+		captureDelay: {
+			devicePropCode: DevicePropCode.CaptureDelay,
+			datatypeCode: DatatypeCode.Uint32,
+			decode: raw => raw,
+			encode: value => value,
+		},
+		driveMode: {
+			devicePropCode: DevicePropCode.StillCaptureMode,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: raw => DriveModeTable.get(raw) ?? 'normal',
+			encode: value => DriveModeTable.getKey(value) ?? 0x0,
+		},
+		exposureComp: {
+			devicePropCode: DevicePropCode.ExposureBiasCompensation,
+			datatypeCode: DatatypeCode.Int16,
+			decode: mills => {
+				if (mills === 0) return '0'
+
+				const millsAbs = Math.abs(mills)
+
+				const sign = mills > 0 ? '+' : '-'
+				const integer = Math.floor(millsAbs / 1000)
+				const fracMills = millsAbs % 1000
+
+				let fraction = ''
+
+				switch (fracMills) {
+					case 300:
+						fraction = '1/3'
+						break
+					case 500:
+						fraction = '1/2'
+						break
+					case 700:
+						fraction = '2/3'
+						break
+				}
+
+				if (integer === 0) return `${sign}${fraction}`
+				if (fraction === '') return `${sign}${integer}`
+				return `${sign}${integer} ${fraction}`
+			},
+			encode: str => {
+				if (str === '0') return 0
+
+				const match = str.match(/^([+-]?)([0-9]+)?\s?(1\/2|1\/3|2\/3)?$/)
+
+				if (!match) return null
+
+				const [, signStr, integerStr, fractionStr] = match
+
+				const sign = signStr === '-' ? -1 : +1
+				const integer = parseInt(integerStr)
+				let fracMills = 0
+				switch (fractionStr) {
+					case '1/3':
+						fracMills = 300
+						break
+					case '1/2':
+						fracMills = 500
+						break
+					case '2/3':
+						fracMills = 700
+						break
+				}
+
+				return sign * (integer * 1000 + fracMills)
+			},
+		},
+		exposureMode: {
+			devicePropCode: DevicePropCode.ExposureProgramMode,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: raw =>
+				ExposureModeTable.get(raw) ??
+				(`vendor ${toHexString(raw, 4)}` as ExposureMode),
+			encode: value =>
+				ExposureModeTable.getKey(value) ??
+				parseInt(value.replace('vendor ', ''), 16),
+		},
+		iso: {
+			devicePropCode: DevicePropCode.ExposureIndex,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: raw => (raw === 0xffff ? 'auto' : raw),
+			encode: value => (value === 'auto' ? 0xffff : value),
+		},
+		whiteBalance: {
+			devicePropCode: DevicePropCode.WhiteBalance,
+			datatypeCode: DatatypeCode.Uint16,
+			decode: raw =>
+				WhiteBalanceTable.get(raw) ??
+				(`vendor ${toHexString(raw, 4)}` as WhiteBalance),
+			encode: value =>
+				WhiteBalanceTable.getKey(value) ??
+				parseInt(value.replace(/^vendor /, ''), 16),
+		},
+		timelapseNumber: {
+			devicePropCode: DevicePropCode.TimelapseNumber,
+			datatypeCode: DatatypeCode.Uint32,
+			decode: raw => raw,
+			encode: value => value,
+		},
+		timelapseInterval: {
+			devicePropCode: DevicePropCode.TimelapseInterval,
+			datatypeCode: DatatypeCode.Uint32,
+			decode: raw => raw,
+			encode: value => value,
+		},
+	})
+
+	#configCodeMap?: Map<number, ConfigName>
+
+	/** Resolves a config's descriptor from {@link configScheme}. */
+	protected descFromScheme<N extends ConfigName>(
+		name: N
+	): Promise<ConfigDesc<ConfigType[N]>> {
+		const scheme = this.configScheme[name] as ConfigScheme<N> | undefined
+		if (!scheme) return Promise.resolve(UnsupportedConfigDesc)
+
+		return this.getDevicePropDesc({
+			devicePropCode: scheme.devicePropCode,
+			datatypeCode: scheme.datatypeCode,
+			// Bridge cast: the public table types are precise; the generic engine
+			// erases the datatype↔raw-type relationship here.
+			decode: scheme.decode as any,
+		}) as Promise<ConfigDesc<ConfigType[N]>>
+	}
+
+	/** Applies a config value via {@link configScheme}. */
+	protected setFromScheme<N extends ConfigName>(
+		name: N,
+		value: ConfigType[N]
+	): Promise<OperationResult> {
+		const scheme = this.configScheme[name] as ConfigScheme<N> | undefined
+		if (!scheme || !scheme.encode) {
+			return Promise.resolve(UnsupportedOperationResult)
+		}
+
+		return this.setDevicePropValue({
+			devicePropCode: scheme.devicePropCode,
+			datatypeCode: scheme.datatypeCode,
+			encode: scheme.encode as any,
+			value,
+		})
+	}
+
+	protected getConfigNameByCode(code: number): ConfigName | null {
+		// Derive the reverse map lazily so a subclass's overridden configScheme
+		// (set after the base constructor) is picked up.
+		if (!this.#configCodeMap) {
+			this.#configCodeMap = buildConfigCodeMap(this.configScheme)
+		}
+		return (
+			this.#configCodeMap.get(code) ?? ConfigForDevicePropTable.get(code) ?? null
+		)
 	}
 
 	protected getObjectFormatNameByCode(code: number): string {
