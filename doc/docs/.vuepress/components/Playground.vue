@@ -1,8 +1,6 @@
 <template>
-	<div class="app">
+	<div class="Playground">
 		<main>
-			<h1>Tethr Demo</h1>
-			<a href="https://github.com/baku89/tethr">Fork Me on GitHub</a>
 			<video
 				class="view"
 				:srcObject.prop="configs.liveview.value"
@@ -127,9 +125,9 @@
 import {useTethr} from '@tethr/vue3'
 import {saveAs} from 'file-saver'
 import {Tethr, TethrObject} from 'tethr'
-import {ref, shallowRef, watchEffect} from 'vue'
+import {ref, shallowRef} from 'vue'
 
-import TethrConfig from './TethrConfig.vue'
+import TethrConfig from './playground/TethrConfig.vue'
 
 const folderHandler = shallowRef<FileSystemDirectoryHandle | null>(null)
 
@@ -201,17 +199,16 @@ async function onClickPairedCamera(cam: Tethr) {
 		open(cam)
 	}
 }
-
-watchEffect(() => {
-	;(window as any).cam = camera.value
-})
 </script>
 
 <style lang="stylus" scoped>
-.app
+.Playground
 	display grid
-	height 100vh
-	grid-template-columns 1fr 30rem
+	height 80vh
+	border 1px solid var(--tq-color-border, #2b2b2b)
+	border-radius 0.5rem
+	overflow hidden
+	grid-template-columns 1fr 24rem
 
 	@media (max-width 700px)
 		display block
@@ -219,12 +216,16 @@ watchEffect(() => {
 	& > *
 		padding 1em
 
+main
+	overflow-y auto
+
 aside
 	display grid
 	overflow-y scroll
 	border-left 2px solid #2b2b2b
 	grid-template-columns min-content 1fr
 	grid-template-rows repeat(10000, min-content)
+	align-content start
 
 .connect-button, h2, dl
 	grid-column 1 / 3
@@ -277,4 +278,3 @@ dl
 	button
 		width 100%
 </style>
-../../integrations/vue3/useTethr

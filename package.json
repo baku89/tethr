@@ -12,6 +12,10 @@
     "doc",
     "integrations/*"
   ],
+  "resolutions": {
+    "vite": "7.1.9",
+    "vue": "3.5.39"
+  },
   "devDependencies": {
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",

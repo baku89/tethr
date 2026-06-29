@@ -5,6 +5,10 @@ node_modules
 lib
 *.tsbuildinfo
 doc/dist
+doc/docs/api
+doc/docs/.vuepress/.cache
+doc/docs/.vuepress/.temp
+doc/docs/.vuepress/dist
 
 *.log
 .vscode/launch.json

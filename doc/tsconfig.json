@@ -1,13 +1,23 @@
 {
 	"extends": ["@vue/tsconfig/tsconfig.dom", "../tsconfig"],
-	"include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+	"include": [
+		"env.d.ts",
+		"docs/.vuepress/**/*.ts",
+		"docs/.vuepress/**/*.vue"
+	],
+	"exclude": ["docs/.vuepress/dist", "docs/api"],
 	"compilerOptions": {
 		"baseUrl": ".",
+		"module": "esnext",
+		"moduleResolution": "bundler",
 		"lib": ["esnext", "dom", "dom.iterable"],
+		"types": ["node", "vuepress/client"],
 		"paths": {
 			"tethr": ["../core/src"],
 			"@tethr/vue3": ["../integrations/vue3/src"],
-		},
+			"tweeq": ["./node_modules/tweeq/src"],
+			"tweeq/*": ["./node_modules/tweeq/src/*"]
+		}
 	},
-	"files": ["../node_modules/@types/wicg-file-system-access/index.d.ts"],
+	"files": ["../node_modules/@types/wicg-file-system-access/index.d.ts"]
 }

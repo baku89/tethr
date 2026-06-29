@@ -1,0 +1,13 @@
+{
+	"$schema": "https://typedoc.org/schema.json",
+	"entryPoints": ["../core/src/index.ts"],
+	"tsconfig": "../core/tsconfig.json",
+	"plugin": ["typedoc-plugin-markdown"],
+	"out": "docs/api",
+	"readme": "none",
+	"githubPages": false,
+	"hideBreadcrumbs": true,
+	"hidePageHeader": true,
+	"entryFileName": "index",
+	"gitRevision": "main"
+}
