@@ -1,0 +1,19 @@
+// Brand accent — the rose / magenta-leaning red shared with koma (and tq-rec).
+// Overrides @vuepress/theme-default's green accent. Appended after the theme's
+// styles via @vuepress/plugin-palette, so these win.
+
+:root {
+	--vp-c-accent: #c85168;
+	--vp-c-accent-bg: #c85168;
+	--vp-c-accent-hover: #d76d81;
+	--vp-c-accent-text: #ffffff;
+	--vp-c-accent-soft: rgb(200 81 104 / 14%);
+}
+
+[data-theme='dark'] {
+	--vp-c-accent: #e07a8f;
+	--vp-c-accent-bg: #c85168;
+	--vp-c-accent-hover: #cd5d72;
+	--vp-c-accent-text: #ffffff;
+	--vp-c-accent-soft: rgb(200 81 104 / 16%);
+}
