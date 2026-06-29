@@ -1,3 +1,8 @@
+---
+sidebar: false
+pageClass: tethr-app-page
+---
+
 # プレイグラウンド
 
 手で触れるデモです。カメラを接続し、config をライブで変更したり、ライブビューや

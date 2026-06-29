@@ -1,3 +1,8 @@
+---
+sidebar: false
+pageClass: tethr-app-page
+---
+
 # Playground
 
 A hands-on demo: connect a camera, tweak its configs live, run liveview, and

@@ -15,9 +15,21 @@ export default defineClientConfig({
 		app.use(createPinia())
 
 		const {initTweeq} = await import('tweeq/useTweeq')
-		initTweeq('com.baku89.tethr-doc', {
-			colorMode: 'dark',
-			accentColor: '#C85168',
+		initTweeq('com.baku89.tethr-doc', {accentColor: '#C85168'})
+
+		// Follow VuePress's light/dark instead of forcing a mode. The default
+		// theme writes `data-theme="light|dark"` on <html>; mirror it onto Tweeq's
+		// theme store so the embedded panels match the surrounding page.
+		const {useThemeStore} = await import('tweeq/stores/theme')
+		const themeStore = useThemeStore()
+		const syncColorMode = () => {
+			themeStore.colorMode =
+				document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
+		}
+		syncColorMode()
+		new MutationObserver(syncColorMode).observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['data-theme'],
 		})
 
 		const [{default: CameraReport}, {default: Playground}] = await Promise.all([

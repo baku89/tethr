@@ -197,15 +197,24 @@ async function onClickPairedCamera(cam: Tethr) {
 						label="Shutter"
 						icon="mdi:camera-iris"
 					>
-						<Tq.InputGroup>
-							<Tq.InputButton label="Take Photo" @click="takePhoto" />
-							<Tq.InputButton
-								:label="folderHandler ? folderHandler.name : 'Save to…'"
-								icon="mdi:folder"
-								subtle
-								@click="setupSaveFolder"
-							/>
-						</Tq.InputGroup>
+						<Tq.InputButton
+							label="Take Photo"
+							icon="mdi:camera"
+							@click="takePhoto"
+						/>
+					</Tq.Parameter>
+
+					<Tq.Parameter
+						v-if="configs.canTakePhoto.value"
+						label="Save"
+						icon="mdi:folder"
+					>
+						<Tq.InputButton
+							:label="folderHandler ? folderHandler.name : 'Save to…'"
+							icon="mdi:folder-open"
+							subtle
+							@click="setupSaveFolder"
+						/>
 					</Tq.Parameter>
 
 					<Tq.Parameter
@@ -266,20 +275,20 @@ async function onClickPairedCamera(cam: Tethr) {
 <style lang="stylus" scoped>
 .Playground
 	display grid
-	height 80vh
-	border 1px solid var(--tq-color-border)
-	border-radius 0.5rem
-	overflow hidden
-	grid-template-columns 1fr 24rem
+	gap 1.5rem
+	grid-template-columns minmax(0, 1fr) minmax(28rem, 38rem)
+	align-items start
 
-	@media (max-width 800px)
-		display block
-		height auto
+	@media (max-width 900px)
+		grid-template-columns 1fr
 
 .view-pane
-	padding 1rem
-	overflow-y auto
-	background var(--tq-color-background)
+	background transparent
+
+	// Keep the preview visible while scrolling the (often long) config list.
+	@media (min-width 901px)
+		position sticky
+		top 1rem
 
 .view
 	display block
@@ -291,7 +300,10 @@ async function onClickPairedCamera(cam: Tethr) {
 	object-fit contain
 
 .control-pane
-	padding 1rem
-	overflow-y auto
-	border-left 1px solid var(--tq-color-border)
+	min-width 0
+
+	// Let the Tweeq inputs fill their cell instead of overflowing it.
+	:deep(.TethrConfig)
+		width 100%
+		min-width 0
 </style>

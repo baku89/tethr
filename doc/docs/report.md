@@ -1,3 +1,8 @@
+---
+sidebar: false
+pageClass: tethr-app-page
+---
+
 # Capability Report
 
 Connect a camera below to generate a full capability report. The sweep runs

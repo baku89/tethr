@@ -1,3 +1,8 @@
+---
+sidebar: false
+pageClass: tethr-app-page
+---
+
 # 機能テスト
 
 下のボタンからカメラを接続すると、全機能のテストレポートを生成します。接続時に

@@ -58,7 +58,7 @@ export default defineUserConfig({
 			'link',
 			{
 				rel: 'stylesheet',
-				href: 'https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Material+Symbols+Outlined&display=swap',
+				href: 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Material+Symbols+Outlined&display=swap',
 			},
 		],
 	],
@@ -82,7 +82,7 @@ export default defineUserConfig({
 				'process.env.PROMISE_QUEUE_COVERAGE': 'false',
 			},
 			optimizeDeps: {
-				include: tweeqDeps,
+				include: [...tweeqDeps, 'js-yaml'],
 			},
 			ssr: {
 				// tweeq is browser-only; never let SSR try to externalize/evaluate it.

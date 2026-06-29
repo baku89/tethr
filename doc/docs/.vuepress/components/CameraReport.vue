@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {useTethr} from '@tethr/vue3'
 import {saveAs} from 'file-saver'
+import {dump as dumpYaml} from 'js-yaml'
 import {ConfigNameList} from 'tethr'
 import * as Tq from 'tweeq'
 import {computed, reactive, ref, shallowRef, watch} from 'vue'
@@ -99,7 +100,7 @@ async function runReport() {
 		sections.push(caps)
 		for (const flag of CAPABILITY_FLAGS) {
 			try {
-				const desc = await cam.getDesc(flag)
+				const desc = await withTimeout(cam.getDesc(flag), 5000, flag)
 				caps.rows.push({
 					label: flag,
 					status: desc.value ? 'ok' : 'skip',
@@ -117,8 +118,16 @@ async function runReport() {
 		for (const name of ConfigNameList) {
 			if (flagSet.has(name)) continue
 			try {
-				const desc = await cam.getDesc(name)
+				const desc = await withTimeout(cam.getDesc(name), 5000, name)
 				const gettable = desc.value !== null && desc.value !== undefined
+				// "Supported" = the camera can read it, write it, or at least
+				// describe its options. A webcam reports neither for most props —
+				// those are genuinely unsupported, not merely read-only.
+				const supported = desc.writable || gettable || desc.option != null
+				if (!supported) {
+					props.rows.push({label: name, status: 'skip', detail: 'unsupported'})
+					continue
+				}
 				const bits: string[] = []
 				bits.push(desc.writable ? 'writable' : 'read-only')
 				if (desc.option?.type === 'enum') {
@@ -131,7 +140,7 @@ async function runReport() {
 				if (gettable) bits.push(`= ${formatValue(desc.value)}`)
 				props.rows.push({
 					label: name,
-					status: gettable ? 'ok' : 'skip',
+					status: 'ok',
 					detail: bits.join(' · '),
 				})
 			} catch (e) {
@@ -145,7 +154,7 @@ async function runReport() {
 
 		// Liveview
 		try {
-			const r = await cam.startLiveview()
+			const r = await withTimeout(cam.startLiveview(), 8000, 'startLiveview')
 			if (r.status === 'ok' && r.value) {
 				liveviewStream.value = r.value
 				actions.rows.push({
@@ -154,7 +163,7 @@ async function runReport() {
 					detail: 'MediaStream received',
 				})
 				await sleep(1200)
-				await cam.stopLiveview()
+				await withTimeout(cam.stopLiveview(), 5000, 'stopLiveview')
 			} else {
 				actions.rows.push({
 					label: 'startLiveview',
@@ -172,9 +181,9 @@ async function runReport() {
 
 		// AutoFocus
 		try {
-			const canAF = (await cam.getDesc('canRunAutoFocus')).value
+			const canAF = (await withTimeout(cam.getDesc('canRunAutoFocus'), 5000, 'canRunAutoFocus')).value
 			if (canAF) {
-				const r = await cam.runAutoFocus()
+				const r = await withTimeout(cam.runAutoFocus(), 8000, 'runAutoFocus')
 				actions.rows.push({
 					label: 'runAutoFocus',
 					status: r.status === 'ok' ? 'ok' : 'fail',
@@ -197,9 +206,9 @@ async function runReport() {
 
 		// takePhoto — fires the physical shutter
 		try {
-			const canShoot = (await cam.getDesc('canTakePhoto')).value
+			const canShoot = (await withTimeout(cam.getDesc('canTakePhoto'), 5000, 'canTakePhoto')).value
 			if (canShoot) {
-				const r = await cam.takePhoto()
+				const r = await withTimeout(cam.takePhoto(), 20000, 'takePhoto')
 				if (r.status === 'ok' && r.value) {
 					const preview = r.value.find(o => o.format !== 'raw') ?? r.value[0]
 					if (preview?.blob) photoURL.value = URL.createObjectURL(preview.blob)
@@ -234,7 +243,7 @@ async function runReport() {
 		const store: Section = {title: 'Object Store', rows: []}
 		sections.push(store)
 		try {
-			const storages = await cam.getStorages()
+			const storages = await withTimeout(cam.getStorages(), 8000, 'getStorages')
 			store.rows.push({
 				label: 'getStorages',
 				status: 'ok',
@@ -248,7 +257,7 @@ async function runReport() {
 			})
 		}
 		try {
-			const objects = await cam.getObjects({})
+			const objects = await withTimeout(cam.getObjects({}), 10000, 'getObjects')
 			store.rows.push({
 				label: 'getObjects',
 				status: 'ok',
@@ -276,7 +285,19 @@ function sleep(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function exportJSON() {
+// Some camera ops never resolve on certain bodies — e.g. Sigma fp runs the
+// autofocus motor but never signals completion. Race every probe against a
+// timeout so one hung call can't freeze the whole sweep at "Running…".
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string) {
+	return Promise.race([
+		promise,
+		new Promise<T>((_, reject) =>
+			setTimeout(() => reject(new Error(`${label} timed out (${ms}ms)`)), ms)
+		),
+	])
+}
+
+function exportYAML() {
 	const report = {
 		generatedAt: new Date().toISOString(),
 		camera: camera.value
@@ -287,13 +308,15 @@ function exportJSON() {
 				}
 			: null,
 		summary: summary.value,
-		sections,
+		sections: sections.map(s => ({
+			title: s.title,
+			rows: s.rows.map(r => ({...r})),
+		})),
 	}
-	const blob = new Blob([JSON.stringify(report, null, 2)], {
-		type: 'application/json',
-	})
+	const yaml = dumpYaml(report, {lineWidth: 100, noRefs: true})
+	const blob = new Blob([yaml], {type: 'text/yaml'})
 	const stamp = new Date().toISOString().replace(/[:.]/g, '-')
-	saveAs(blob, `tethr-report-${stamp}.json`)
+	saveAs(blob, `tethr-report-${stamp}.yaml`)
 }
 </script>
 
@@ -321,10 +344,10 @@ function exportJSON() {
 			/>
 			<Tq.InputButton
 				v-if="sections.length"
-				label="Export JSON"
+				label="Export YAML"
 				icon="mdi:download"
 				:disabled="running"
-				@click="exportJSON"
+				@click="exportYAML"
 			/>
 		</div>
 

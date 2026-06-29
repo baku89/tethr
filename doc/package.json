@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@baku89/pave": "^0.4.1",
+		"js-yaml": "^4.1.0",
 		"tweeq": "github:baku89/tweeq"
 	},
 	"devDependencies": {
