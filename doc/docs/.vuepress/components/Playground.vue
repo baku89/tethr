@@ -1,171 +1,11 @@
-<template>
-	<div class="Playground">
-		<main>
-			<video
-				class="view"
-				:srcObject.prop="configs.liveview.value"
-				autoplay
-				muted
-				playsinline
-			/>
-			<img class="view" :src="photoURL" />
-		</main>
-
-		<aside>
-			<dl>
-				<dt>Connect to</dt>
-				<dd class="connect-to">
-					<button class="connect-button" @click="requestCamera('ptpusb')">
-						USB
-					</button>
-					<button class="connect-button" @click="requestCamera('webcam')">
-						Webcam
-					</button>
-				</dd>
-			</dl>
-			<ul class="webcam-list">
-				<li v-for="(cam, i) in pairedCameras" :key="i">
-					<button @click="onClickPairedCamera(cam)">
-						{{ cam.name }}
-					</button>
-				</li>
-			</ul>
-
-			<template v-if="camera">
-				<h2>Actions</h2>
-				<dl>
-					<template v-if="configs.canTakePhoto.value">
-						<dt>saveFolder</dt>
-						<dd>
-							<button @click="setupSaveFolder">
-								{{ folderHandler ? folderHandler.name : '(None)' }}
-							</button>
-						</dd>
-						<dt>takePhoto</dt>
-						<dd><button class="red" @click="takePhoto">Shutter</button></dd>
-					</template>
-					<template v-if="configs.canRunAutoFocus.value">
-						<dt>autoFocus</dt>
-						<dd><button @click="camera.runAutoFocus">Run</button></dd>
-					</template>
-					<template v-if="configs.canRunManualFocus.value">
-						<dt>manualFocus</dt>
-						<dd
-							style="
-								display: grid;
-								grid-template-rows: 1fr 1fr;
-								grid-auto-flow: column;
-							"
-						>
-							<button
-								v-if="configs.manualFocusOptions.value?.includes('far:1')"
-								@click="camera.runManualFocus('far:1')"
-							>
-								↑
-							</button>
-							<button
-								v-if="configs.manualFocusOptions.value?.includes('near:1')"
-								@click="camera.runManualFocus('near:1')"
-							>
-								↓
-							</button>
-							<button
-								v-if="configs.manualFocusOptions.value?.includes('far:2')"
-								@click="camera.runManualFocus('far:2')"
-							>
-								↑↑
-							</button>
-							<button
-								v-if="configs.manualFocusOptions.value?.includes('near:2')"
-								@click="camera.runManualFocus('near:2')"
-							>
-								↓↓
-							</button>
-							<button
-								v-if="configs.manualFocusOptions.value?.includes('far:3')"
-								@click="camera.runManualFocus('far:3')"
-							>
-								↑↑↑
-							</button>
-							<button
-								v-if="configs.manualFocusOptions.value?.includes('near:3')"
-								@click="camera.runManualFocus('near:3')"
-							>
-								↓↓↓
-							</button>
-						</dd>
-					</template>
-					<template v-if="configs.canStartLiveview.value">
-						<dt>liveview</dt>
-						<dd>
-							<button @click="toggleLiveview">
-								{{ configs.liveview.value ? 'Stop' : 'Start' }}
-							</button>
-						</dd>
-					</template>
-				</dl>
-
-				<h2>Configs</h2>
-				<dl>
-					<template v-for="(config, name) in configs">
-						<TethrConfig
-							v-if="config.value !== null"
-							:key="name"
-							:label="name"
-							:config="config"
-						/>
-					</template>
-				</dl>
-			</template>
-		</aside>
-	</div>
-</template>
-
 <script lang="ts" setup>
 import {useTethr} from '@tethr/vue3'
 import {saveAs} from 'file-saver'
-import {Tethr, TethrObject} from 'tethr'
-import {ref, shallowRef} from 'vue'
+import {ConfigName, Tethr, TethrObject} from 'tethr'
+import * as Tq from 'tweeq'
+import {computed, ref, shallowRef} from 'vue'
 
 import TethrConfig from './playground/TethrConfig.vue'
-
-const folderHandler = shallowRef<FileSystemDirectoryHandle | null>(null)
-
-const TransparentPng =
-	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
-
-async function setupSaveFolder() {
-	const handler = await window.showDirectoryPicker({
-		id: 'saveFile',
-	})
-
-	const option: FileSystemHandlePermissionDescriptor = {
-		mode: 'readwrite',
-	}
-
-	const permission = await handler.queryPermission(option)
-
-	if (permission !== 'granted') {
-		await handler.requestPermission(option)
-	}
-
-	folderHandler.value = handler
-}
-
-async function onSave(object: TethrObject) {
-	if (folderHandler.value) {
-		// Use File System Access API
-		const h = await folderHandler.value.getFileHandle(object.filename, {
-			create: true,
-		})
-		const w = await h.createWritable()
-		await w.write(object.blob)
-		await w.close()
-	} else {
-		// Just download to the default directory
-		saveAs(object.blob, object.filename)
-	}
-}
 
 const {
 	camera,
@@ -175,7 +15,112 @@ const {
 	requestCamera,
 	configs,
 	toggleLiveview,
+	isConnecting,
 } = useTethr()
+
+const folderHandler = shallowRef<FileSystemDirectoryHandle | null>(null)
+const photoURL = ref<string | null>(null)
+
+// A curated, ordered subset (mirrors koma's CameraControl) with labels + icons.
+const configLabels: Partial<
+	Record<ConfigName, {label: string; icon: string; hint?: string}>
+> = {
+	exposureMode: {
+		label: 'Mode',
+		icon: 'material-symbols:settings-photo-camera',
+		hint: 'Exposure mode (P / A / S / M)',
+	},
+	exposureComp: {
+		label: 'Exp.',
+		icon: 'material-symbols:exposure',
+		hint: 'Exposure compensation',
+	},
+	focalLength: {label: 'F.L.', icon: 'lucide:focus', hint: 'Focal length'},
+	focusDistance: {
+		label: 'F.D.',
+		icon: 'tabler:frustum',
+		hint: 'Focus distance',
+	},
+	aperture: {label: 'Apr.', icon: 'ph:aperture', hint: 'Aperture'},
+	shutterSpeed: {
+		label: 'SS',
+		icon: 'material-symbols:shutter-speed',
+		hint: 'Shutter speed',
+	},
+	whiteBalance: {label: 'WB', icon: 'subway:black-white', hint: 'White balance'},
+	colorTemperature: {
+		label: 'C.Temp.',
+		icon: 'mdi:temperature',
+		hint: 'Color temperature',
+	},
+	iso: {label: 'ISO', icon: 'carbon:iso', hint: 'ISO sensitivity'},
+	imageQuality: {label: 'Quality', icon: 'mdi:image', hint: 'Image quality'},
+	colorMode: {label: 'Color', icon: 'mdi:palette', hint: 'Color mode'},
+	imageAspect: {
+		label: 'Aspect',
+		icon: 'mdi:aspect-ratio',
+		hint: 'Image aspect ratio',
+	},
+	destinationToSave: {
+		label: 'Save',
+		icon: 'mdi:content-save',
+		hint: 'Destination to save captures',
+	},
+	focusPeaking: {
+		label: 'Peaking',
+		icon: 'material-symbols:center-focus-strong',
+		hint: 'Focus peaking',
+	},
+	liveviewMagnifyRatio: {
+		label: 'LV Zoom',
+		icon: 'material-symbols:zoom-in',
+		hint: 'Live view magnification',
+	},
+}
+
+const configNames = Object.keys(configLabels) as ConfigName[]
+
+// Only show a row the camera can actually read or write.
+const visibleConfigNames = computed(() =>
+	configNames.filter(name => {
+		const c = (configs as any)[name]
+		return c && (c.writable || c.value !== null)
+	})
+)
+
+const manualFocusSteps: {option: any; icon: string; label: string}[] = [
+	{option: 'far:3', icon: 'mdi:chevron-triple-up', label: 'far ×3'},
+	{option: 'far:2', icon: 'mdi:chevron-double-up', label: 'far ×2'},
+	{option: 'far:1', icon: 'mdi:chevron-up', label: 'far ×1'},
+	{option: 'near:1', icon: 'mdi:chevron-down', label: 'near ×1'},
+	{option: 'near:2', icon: 'mdi:chevron-double-down', label: 'near ×2'},
+	{option: 'near:3', icon: 'mdi:chevron-triple-down', label: 'near ×3'},
+]
+const manualFocusOptions = computed(
+	() => (configs.manualFocusOptions.value as string[] | null) ?? []
+)
+
+async function setupSaveFolder() {
+	const handler = await window.showDirectoryPicker({id: 'saveFile'})
+	const option: FileSystemHandlePermissionDescriptor = {mode: 'readwrite'}
+	if ((await handler.queryPermission(option)) !== 'granted') {
+		await handler.requestPermission(option)
+	}
+	folderHandler.value = handler
+}
+
+async function onSave(object: TethrObject) {
+	if (folderHandler.value) {
+		const h = await folderHandler.value.getFileHandle(object.filename, {
+			create: true,
+		})
+		const w = await h.createWritable()
+		await w.write(object.blob)
+		await w.close()
+	} else {
+		saveAs(object.blob, object.filename)
+	}
+}
 
 async function takePhoto() {
 	if (!camera.value) return
@@ -190,91 +135,163 @@ async function takePhoto() {
 	}
 }
 
-const photoURL = ref(TransparentPng)
-
 async function onClickPairedCamera(cam: Tethr) {
-	if (cam.opened) {
-		close()
-	} else {
-		open(cam)
-	}
+	if (cam.opened) close()
+	else open(cam)
 }
 </script>
+
+<template>
+	<Tq.Viewport class="Playground">
+		<main class="view-pane">
+			<video
+				class="view"
+				:srcObject.prop="configs.liveview.value"
+				autoplay
+				muted
+				playsinline
+			/>
+			<img v-if="photoURL" class="view" :src="photoURL" />
+		</main>
+
+		<aside class="control-pane">
+			<Tq.ParameterGrid>
+				<Tq.Parameter label="Connect" icon="mdi:camera-plus">
+					<Tq.InputGroup>
+						<Tq.InputButton
+							label="USB"
+							icon="mdi:usb"
+							:disabled="isConnecting"
+							@click="requestCamera('ptpusb')"
+						/>
+						<Tq.InputButton
+							label="Webcam"
+							icon="mdi:webcam"
+							:disabled="isConnecting"
+							@click="requestCamera('webcam')"
+						/>
+					</Tq.InputGroup>
+				</Tq.Parameter>
+
+				<Tq.Parameter
+					v-if="pairedCameras.length"
+					label="Paired"
+					icon="mdi:devices"
+				>
+					<Tq.InputGroup>
+						<Tq.InputButton
+							v-for="(cam, i) in pairedCameras"
+							:key="i"
+							:label="cam.name"
+							:icon="cam.opened ? 'mdi:link-off' : 'mdi:link'"
+							@click="onClickPairedCamera(cam)"
+						/>
+					</Tq.InputGroup>
+				</Tq.Parameter>
+			</Tq.ParameterGrid>
+
+			<template v-if="camera">
+				<Tq.ParameterGroup name="actions" label="Actions">
+					<Tq.Parameter
+						v-if="configs.canTakePhoto.value"
+						label="Shutter"
+						icon="mdi:camera-iris"
+					>
+						<Tq.InputGroup>
+							<Tq.InputButton label="Take Photo" @click="takePhoto" />
+							<Tq.InputButton
+								:label="folderHandler ? folderHandler.name : 'Save to…'"
+								icon="mdi:folder"
+								subtle
+								@click="setupSaveFolder"
+							/>
+						</Tq.InputGroup>
+					</Tq.Parameter>
+
+					<Tq.Parameter
+						v-if="configs.canStartLiveview.value"
+						label="Liveview"
+						icon="mdi:video"
+					>
+						<Tq.InputButton
+							:label="configs.liveview.value ? 'Stop' : 'Start'"
+							:icon="configs.liveview.value ? 'mdi:stop' : 'mdi:play'"
+							@click="toggleLiveview"
+						/>
+					</Tq.Parameter>
+
+					<Tq.Parameter
+						v-if="configs.canRunAutoFocus.value"
+						label="AF"
+						icon="mdi:focus-auto"
+					>
+						<Tq.InputButton label="Run AF" @click="camera.runAutoFocus()" />
+					</Tq.Parameter>
+
+					<Tq.Parameter
+						v-if="configs.canRunManualFocus.value"
+						label="MF"
+						icon="mdi:focus-field"
+					>
+						<Tq.InputGroup>
+							<Tq.InputButton
+								v-for="step in manualFocusSteps"
+								v-show="manualFocusOptions.includes(step.option)"
+								:key="step.option"
+								:icon="step.icon"
+								subtle
+								narrow
+								@click="camera.runManualFocus(step.option)"
+							/>
+						</Tq.InputGroup>
+					</Tq.Parameter>
+				</Tq.ParameterGroup>
+
+				<Tq.ParameterGroup name="configs" label="Configs">
+					<Tq.Parameter
+						v-for="name in visibleConfigNames"
+						:key="name"
+						:label="configLabels[name]!.label"
+						:icon="configLabels[name]!.icon"
+						:hint="configLabels[name]!.hint"
+					>
+						<TethrConfig :config="(configs as any)[name]" :name="name" />
+					</Tq.Parameter>
+				</Tq.ParameterGroup>
+			</template>
+		</aside>
+	</Tq.Viewport>
+</template>
 
 <style lang="stylus" scoped>
 .Playground
 	display grid
 	height 80vh
-	border 1px solid var(--tq-color-border, #2b2b2b)
+	border 1px solid var(--tq-color-border)
 	border-radius 0.5rem
 	overflow hidden
 	grid-template-columns 1fr 24rem
 
-	@media (max-width 700px)
+	@media (max-width 800px)
 		display block
+		height auto
 
-	& > *
-		padding 1em
-
-main
+.view-pane
+	padding 1rem
 	overflow-y auto
-
-aside
-	display grid
-	overflow-y scroll
-	border-left 2px solid #2b2b2b
-	grid-template-columns min-content 1fr
-	grid-template-rows repeat(10000, min-content)
-	align-content start
-
-.connect-button, h2, dl
-	grid-column 1 / 3
-
-h2
-	margin 2em 0 0.5em
+	background var(--tq-color-background)
 
 .view
 	display block
-	margin-top 0.5em
 	width 100%
-	border-radius 0.5em
-	background-color #2b2b2b
-	aspect-ratio 16 / 9
+	margin-bottom 0.5rem
+	border-radius 0.5rem
+	background #000
+	aspect-ratio 3 / 2
 	object-fit contain
 
-dl
-	display grid
-	column-gap 0.5em
-	row-gap 1rem
-	grid-template-columns subgrid
-
-	&:deep(dt)
-		height 2em
-		line-height 2em
-		white-space nowrap
-
-	&:deep(dd)
-		display flex
-		gap 0.2em
-
-	&:deep(input),
-	&:deep(select),
-	&:deep(button)
-		display block
-		width 100%
-		text-align center
-
-.connect-to
-	display: flex
-	gap: 1em
-	margin-bottom 1em
-
-.webcam-list
-	grid-column: 1 / span 2
-
-	li
-		margin-bottom 0.2em
-
-	button
-		width 100%
+.control-pane
+	padding 1rem
+	overflow-y auto
+	border-left 1px solid var(--tq-color-border)
 </style>
