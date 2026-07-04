@@ -26,7 +26,10 @@ type TethrManagerEvents = {
 }
 export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	#ptpusbCameras: Map<USBDevice, TethrPTPUSB> = new Map()
-	#webcam: TethrWebcam | null = null
+	// One webcam per physical camera, keyed by its MediaDeviceInfo deviceId. Empty
+	// until the user has granted camera permission at least once — before that the
+	// browser hides deviceIds/labels, so individual webcams can't be enumerated.
+	#webcams: Map<string, TethrWebcam> = new Map()
 
 	constructor() {
 		super()
@@ -37,7 +40,7 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	async #init() {
 		Promise.allSettled([
 			this.#initPairedUSBPTPCameras(),
-			this.#refreshPairedWebcam(),
+			this.#refreshPairedWebcams(),
 		]).then(() => this.#emitPairedCameras())
 
 		// Detect USB PTP camera changes
@@ -59,7 +62,7 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 
 		// Detect webcam changes
 		navigator.mediaDevices.addEventListener('devicechange', async () => {
-			await this.#refreshPairedWebcam()
+			await this.#refreshPairedWebcams()
 			this.#emitPairedCameras()
 		})
 	}
@@ -81,18 +84,30 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 		})
 	}
 
-	async #refreshPairedWebcam(): Promise<TethrWebcam | null> {
+	// Sync the webcam map with the currently enumerable videoinput devices: add a
+	// TethrWebcam for each newly-seen deviceId, and drop ones that have gone away
+	// (unless still open). Devices with an empty deviceId (no permission granted
+	// yet) are skipped — they can't be told apart until a grant reveals them.
+	async #refreshPairedWebcams(): Promise<void> {
 		const devices = await this.#enumerateWebcamDeviceInfo()
+		const videoDevices = devices.filter(device => device.deviceId !== '')
 
-		const videoDevices = devices.filter(
-			device => device.kind === 'videoinput' && device.deviceId !== ''
-		)
-
-		if (!this.#webcam && videoDevices.length > 0) {
-			this.#webcam = new TethrWebcam()
+		const seen = new Set<string>()
+		for (const device of videoDevices) {
+			seen.add(device.deviceId)
+			if (!this.#webcams.has(device.deviceId)) {
+				this.#webcams.set(
+					device.deviceId,
+					new TethrWebcam(device.deviceId, device.label)
+				)
+			}
 		}
 
-		return this.#webcam
+		for (const [deviceId, webcam] of this.#webcams) {
+			if (!seen.has(deviceId) && !webcam.opened) {
+				this.#webcams.delete(deviceId)
+			}
+		}
 	}
 
 	#emitPairedCameras() {
@@ -100,10 +115,7 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	}
 
 	get pairedCameras(): Tethr[] {
-		return [
-			...this.#ptpusbCameras.values(),
-			...(this.#webcam ? [this.#webcam] : []),
-		]
+		return [...this.#ptpusbCameras.values(), ...this.#webcams.values()]
 	}
 
 	/**
@@ -143,11 +155,14 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 				}
 			}
 		} else {
-			// webcam — Tethr can't distinguish individual webcams.
-			camera = this.#webcam
+			// webcam — each physical camera is its own device, keyed by deviceId.
+			// 1. Reuse an already-paired webcam matching the identifier (silent).
+			if (id) camera = this.#findPairedWebcam(id)
+
+			// 2. Otherwise grant permission (which also reveals deviceIds/labels).
 			if (!camera && prompt) {
 				try {
-					camera = await this.#requestWebcam()
+					camera = await this.#requestWebcam(id)
 				} catch (err) {
 					// Denying/closing the camera-permission prompt is a cancel, not
 					// an error.
@@ -230,11 +245,52 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 		return {status: 'ok', value: {camera: result.value, usb: usbDevice}}
 	}
 
-	async #requestWebcam() {
-		const media = await navigator.mediaDevices.getUserMedia({video: true})
+	#findPairedWebcam(id: TethrIdentifier): TethrWebcam | null {
+		if (id.type !== 'webcam') return null
+
+		const webcams = [...this.#webcams.values()]
+
+		// Exact camera by deviceId.
+		if (id.deviceId) {
+			const m = webcams.find(c => c.deviceId === id.deviceId)
+			if (m) return m
+		}
+		// Fallback: same human-readable label (deviceIds can rotate between
+		// sessions; the label is more stable for identical models with one each).
+		if (id.label) {
+			const m = webcams.find(c => {
+				const cid = c.identifier
+				return cid.type === 'webcam' && cid.label === id.label
+			})
+			if (m) return m
+		}
+		return null
+	}
+
+	async #requestWebcam(id?: TethrIdentifier | null): Promise<TethrWebcam | null> {
+		// Grant permission — prefer the remembered device — which also un-hides the
+		// deviceIds/labels of every webcam so #refreshPairedWebcams can list them.
+		const media = await navigator.mediaDevices.getUserMedia({
+			video:
+				id && id.type === 'webcam' && id.deviceId
+					? {deviceId: {exact: id.deviceId}}
+					: true,
+		})
+		const grantedId = media.getVideoTracks()[0]?.getSettings().deviceId ?? ''
 		media.getTracks().forEach(track => track.stop())
 
-		return this.#refreshPairedWebcam()
+		await this.#refreshPairedWebcams()
+
+		// Return the specific webcam that was just granted (falling back to the
+		// remembered identifier, then the first available).
+		if (grantedId && this.#webcams.has(grantedId)) {
+			return this.#webcams.get(grantedId)!
+		}
+		if (id) {
+			const m = this.#findPairedWebcam(id)
+			if (m) return m
+		}
+		return [...this.#webcams.values()][0] ?? null
 	}
 
 	async #enumerateWebcamDeviceInfo() {

@@ -192,7 +192,6 @@ export type ConfigType = {
 	exposureComp: ExposureComp
 	exposureMeteringMode: ExposureMeteringMode
 	exposureMode: ExposureMode
-	facingMode: string
 	flashMode: FlashMode
 	focalLength: FocalLength
 	focusDistance: number
@@ -247,7 +246,6 @@ export const ConfigNameList: ConfigName[] = (() => {
 		'exposureComp',
 		'exposureMeteringMode',
 		'exposureMode',
-		'facingMode',
 		'flashMode',
 		'focalLength',
 		'focusDistance',

@@ -121,7 +121,8 @@ export type TethrDeviceType = 'ptpusb' | 'webcam'
  * {@link Tethr.identifier} and accepted by {@link TethrManager.requestCamera} so
  * an app can persist a connection and later reconnect to the same — or a
  * same-kind — device. For USB cameras `usb.serialNumber` pins the exact body;
- * webcams can't be told apart, so only `type` is meaningful for them.
+ * for webcams `deviceId` pins the exact camera (the MediaDeviceInfo id), with
+ * `label` as the human-readable name and a legacy-friendly fallback.
  */
 export type TethrIdentifier =
 	| {
@@ -129,7 +130,7 @@ export type TethrIdentifier =
 			usb?: {vendorId: number; productId: number; serialNumber?: string}
 			model?: string
 	  }
-	| {type: 'webcam'; model?: string}
+	| {type: 'webcam'; deviceId?: string; label?: string; model?: string}
 
 export abstract class Tethr
 	extends EventEmitter<EventTypes>
@@ -469,17 +470,6 @@ export abstract class Tethr
 		return (await this.getExposureModeDesc()).value
 	}
 	async getExposureModeDesc(): Promise<ConfigDesc<ExposureMode>> {
-		return UnsupportedConfigDesc
-	}
-
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setFacingMode(value: string): Promise<OperationResult> {
-		return UnsupportedOperationResult
-	}
-	async getFacingMode() {
-		return (await this.getFacingModeDesc()).value
-	}
-	async getFacingModeDesc(): Promise<ConfigDesc<string>> {
 		return UnsupportedConfigDesc
 	}
 

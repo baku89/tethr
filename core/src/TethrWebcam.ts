@@ -1,7 +1,4 @@
-import {BiMap} from 'bim'
-
 import {
-	ConfigDesc,
 	OperationResult,
 	TakePhotoOption,
 	Tethr,
@@ -19,22 +16,60 @@ type CaptureHandler =
 			video: HTMLVideoElement
 	  }
 
+/**
+ * Chromium appends the USB `(vendorId:productId)` (4 hex : 4 hex) to a camera's
+ * MediaDeviceInfo.label to disambiguate identical models. We key identity by
+ * deviceId, so strip that noise for a clean display name.
+ */
+function cleanWebcamLabel(label: string): string {
+	return label.replace(/\s*\([0-9a-f]{4}:[0-9a-f]{4}\)\s*$/i, '').trim()
+}
+
+/**
+ * A single webcam, identified by its MediaDeviceInfo `deviceId`. Each connected
+ * camera is its own TethrWebcam (the manager creates one per videoinput device)
+ * rather than one webcam with a facing-mode switch. `deviceId`/`label` may be
+ * empty until the user has granted camera permission at least once — until then
+ * the browser hides them — so an instance can start "unresolved" (default cam)
+ * and pin its real id/label on open().
+ */
 export class TethrWebcam extends Tethr {
 	#media: MediaStream | null = null
 	#captureHandler: CaptureHandler | null = null
-	#facingModeDict = new BiMap<string, string>()
+	#deviceId: string
+	#label: string
 
-	constructor() {
+	constructor(deviceId = '', label = '') {
 		super()
+		this.#deviceId = deviceId
+		this.#label = cleanWebcamLabel(label)
+	}
+
+	/** The webcam's stable id (empty only for an as-yet-unresolved default cam). */
+	get deviceId() {
+		return this.#deviceId
 	}
 
 	async open() {
 		try {
 			this.#media = await navigator.mediaDevices.getUserMedia({
-				video: true,
+				video: this.#deviceId
+					? {deviceId: {exact: this.#deviceId}}
+					: true,
 			})
 		} catch {
 			throw new Error('No available webcam is connected')
+		}
+
+		// With permission now granted, pin the concrete id/label the browser hid
+		// before (a default-cam instance opened with an empty deviceId learns which
+		// device it actually is here, so its identifier round-trips).
+		const settings = this.#media.getVideoTracks()[0]?.getSettings()
+		if (settings?.deviceId) this.#deviceId = settings.deviceId
+		if (!this.#label && settings?.deviceId) {
+			const devices = await navigator.mediaDevices.enumerateDevices()
+			const info = devices.find(d => d.deviceId === settings.deviceId)
+			if (info?.label) this.#label = cleanWebcamLabel(info.label)
 		}
 
 		// Setup CaptureHandler
@@ -66,15 +101,6 @@ export class TethrWebcam extends Tethr {
 				}
 			}
 		}
-
-		// Retrieve the camera's available facingModes
-		const devices = await navigator.mediaDevices.enumerateDevices()
-
-		const facingModeEntries = devices
-			.filter(d => d.kind === 'videoinput')
-			.map(d => [d.deviceId, d.label] as [string, string])
-
-		this.#facingModeDict = new BiMap(facingModeEntries)
 	}
 
 	async close() {
@@ -92,11 +118,15 @@ export class TethrWebcam extends Tethr {
 	}
 
 	get name() {
-		return 'Webcam'
+		return this.#label || 'Webcam'
 	}
 
 	get identifier(): TethrIdentifier {
-		return {type: 'webcam'}
+		return {
+			type: 'webcam',
+			deviceId: this.#deviceId || undefined,
+			label: this.#label || undefined,
+		}
 	}
 
 	// Configs
@@ -106,63 +136,6 @@ export class TethrWebcam extends Tethr {
 
 	async getCanTakePhotoDesc() {
 		return readonlyConfigDesc(this.#captureHandler !== null)
-	}
-
-	async setFacingMode(value: string): Promise<OperationResult> {
-		if (!this.#media || !this.#captureHandler) {
-			return {status: 'unsupported'}
-		}
-
-		const desc = await this.getFacingModeDesc()
-		if (desc.value === null) {
-			return {status: 'unsupported'}
-		}
-
-		const deviceId = this.#facingModeDict.getKey(value)
-
-		if (!deviceId) {
-			return {status: 'invalid parameter'}
-		}
-
-		// Stop all tracks at first
-		this.#media.getTracks().forEach(t => t.stop())
-
-		// Then get a new media stream and notify the change
-		this.#media = await navigator.mediaDevices.getUserMedia({
-			video: {deviceId: {exact: deviceId}},
-		})
-		this.emit('liveviewChange', readonlyConfigDesc(this.#media))
-
-		// Setup other variables
-		const videoTrack = this.#media.getVideoTracks()[0]
-
-		if (this.#captureHandler.type === 'imageCapture') {
-			this.#captureHandler.imageCapture = new ImageCapture(videoTrack)
-		} else {
-			const {video} = this.#captureHandler
-			video.srcObject = this.#media
-		}
-
-		return {status: 'ok'}
-	}
-
-	async getFacingModeDesc() {
-		if (!this.#media) {
-			return UnsupportedConfigDesc
-		}
-
-		const videoTrack = this.#media.getVideoTracks()[0]
-		const currentId = videoTrack.getSettings().deviceId ?? ''
-		const value = this.#facingModeDict.get(currentId) ?? null
-
-		return {
-			writable: this.#facingModeDict.size > 0,
-			value,
-			option: {
-				type: 'enum',
-				values: [...this.#facingModeDict.values()],
-			},
-		} as ConfigDesc<string>
 	}
 
 	async getModelDesc() {
