@@ -1,4 +1,5 @@
 import {DeviceInfo} from '../DeviceInfo'
+import {TethrCanon} from './TethrCanon'
 import {TethrPanasonic} from './TethrPanasonic'
 import {TethrPTPUSB} from './TethrPTPUSB'
 import {TethrRicohTheta} from './TethrRicohTheta'
@@ -65,8 +66,7 @@ export function getVendorSpecificPTPUSBClass(
 ): typeof TethrPTPUSB | undefined {
 	// 1. Capability-based detection (most reliable).
 	if (isCanonEOS(info)) {
-		// TODO: return TethrCanon once Canon EOS support lands. Until then fall
-		// through to the generic class so standard device props still work.
+		return TethrCanon
 	}
 	if (isSonyAlpha(info)) {
 		// TODO: return TethrSony once Sony support lands.

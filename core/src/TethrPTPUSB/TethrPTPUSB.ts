@@ -22,6 +22,7 @@ import {
 	defineConfigs,
 } from '../configScheme'
 import {DeviceInfo} from '../DeviceInfo'
+import {getMimeForObjectFormat, getObjectFormatName} from '../objectFormat'
 import {
 	DatatypeCode,
 	DevicePropCode,
@@ -32,7 +33,6 @@ import {
 	PTPStorageTypeCode,
 	ResCode,
 } from '../PTPDatacode'
-import {getMimeForObjectFormat, getObjectFormatName} from '../objectFormat'
 import {PTPDataView} from '../PTPDataView'
 import {PTPEvent, PTPPriority, PTPTransport} from '../PTPDevice'
 import {
@@ -562,8 +562,14 @@ export class TethrPTPUSB extends Tethr {
 		}
 	}
 
-	/** Chunk size for partial-object transfers (2 MB, as SampleApps commonly use). */
-	protected static readonly ObjectChunkSize = 0x00200000
+	/**
+	 * Chunk size for partial-object transfers (2 MB, as SampleApps commonly
+	 * use). A getter so vendors with stricter limits can shrink it (EOS R
+	 * bodies crash on chunks over ~1 MB).
+	 */
+	protected get objectChunkSize(): number {
+		return 0x00200000
+	}
 
 	/**
 	 * Yields an object's bytes in chunks. A large transfer becomes many small
@@ -594,7 +600,7 @@ export class TethrPTPUSB extends Tethr {
 			return
 		}
 
-		const chunkSize = TethrPTPUSB.ObjectChunkSize
+		const chunkSize = this.objectChunkSize
 		let loaded = 0
 		for (let offset = 0; offset < byteLength; offset += chunkSize) {
 			const length = Math.min(chunkSize, byteLength - offset)
