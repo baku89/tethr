@@ -1,5 +1,4 @@
 import {BiMap} from 'bim'
-import sleep from 'sleep-promise'
 
 import {
 	Aperture,
@@ -133,6 +132,19 @@ const EVFOutputPC = 0x2
 /** FocusMode (0xd108) value for manual focus. */
 const FocusModeManual = 3
 
+/**
+ * RemoteReleaseOn (0x9128) press codes — the Canon EDSDK PressShutterButton
+ * values reused by the EOS PTP op. The 0x10000 bit means "no autofocus": the
+ * shutter fires without driving the lens, which stop-motion needs (the focus
+ * must stay put between frames). AF, when wanted, is a separate explicit action
+ * (runAutoFocus). Verified on an EOS R5: a bare full press is rejected, the
+ * AF-less half must be followed by the AF-less full (a plain 0x2 full press
+ * after the AF-less half does not release the shutter), and this pair fires with
+ * no lens movement.
+ */
+const ShutterHalfNonAF = 0x10001
+const ShutterFullNonAF = 0x10003
+
 /** Canon JPEG (EXIF) / CR2 / CR3 object format codes. */
 const OFCJpeg = 0x3801
 const OFCCr2 = 0xb101
@@ -147,15 +159,22 @@ interface CanonObjectAddedInfo {
 	filename: string
 }
 
-const CanonEventPollIntervalMs = 500
+/**
+ * GetEvent poll cadence — the ONLY channel for body-dial changes: the R5 never
+ * raises the 0xc101 interrupt nudge for them (verified on-wire), so polling
+ * cadence = UI reflection latency. 300 ms is affordable because an (empty)
+ * GetEvent costs ~1 ms — PROVIDED the liveview loop breathes between frames
+ * (frameGapMs below). Without that breathing room the camera's command
+ * processor is pinned by flat-out GetViewFinderData polling and the very same
+ * GetEvent takes ~250 ms, freezing the stream at every poll.
+ */
+const CanonEventPollIntervalMs = 300
 /** gphoto2 sends KeepDeviceOn ~every 10 s to hold off the camera's auto-off. */
 const CanonKeepAliveIntervalMs = 10_000
 /** Max wait for the first captured object (covers long exposures). */
 const CanonCaptureTimeoutMs = 15_000
 /** After the first object, wait this long for siblings (RAW+JPEG pairs). */
 const CanonCaptureSiblingWaitMs = 1_000
-/** Grace period for one-shot AF to lock between half and full press. */
-const CanonHalfPressSettleMs = 500
 
 export class TethrCanon extends TethrPTPUSB {
 	/** Latest raw value per EOS prop, fed by PropValueChanged records. */
@@ -168,8 +187,23 @@ export class TethrCanon extends TethrPTPUSB {
 	#pollTimer: ReturnType<typeof setTimeout> | undefined
 	#lastKeepAlive = 0
 
+	/**
+	 * Last live-view magnification we set. The camera doesn't report the current
+	 * zoom back through GetEvent, so we cache it to answer getLiveviewMagnifyRatio.
+	 */
+	#liveviewMagnifyRatio = 1
+
 	/** Resolvers waiting for captured objects (takePhoto). */
 	#objectAddedWaiters: ((info: CanonObjectAddedInfo) => void)[] = []
+	/**
+	 * Captured-object infos that arrived before a waiter was registered. With
+	 * RAW+JPEG the body emits both ObjectAdded records in a single GetEvent blob,
+	 * which #handleEventData walks synchronously: the first record resolves the
+	 * pending waiter, but the sibling waiter isn't registered until that resolved
+	 * promise's microtask runs — so without this buffer the second object (e.g.
+	 * the JPEG) is dropped and only one file comes back.
+	 */
+	#pendingObjects: CanonObjectAddedInfo[] = []
 
 	/** EOS R bodies crash on partial transfers over ~1 MB (gphoto2 finding). */
 	protected get objectChunkSize(): number {
@@ -212,7 +246,9 @@ export class TethrCanon extends TethrPTPUSB {
 		await this.#pollEvents()
 
 		this.device.onEventCode(EventCodeCanonRequestGetEvent, () => {
-			void this.#pollEvents()
+			// The nudge means "something changed" (usually a body dial) — fetch at
+			// Interactive priority so the update isn't starved by liveview grabs.
+			void this.#pollEvents(PTPPriority.Interactive)
 		})
 
 		this.#schedulePoll()
@@ -267,8 +303,14 @@ export class TethrCanon extends TethrPTPUSB {
 	 * Fetch and apply pending event records, repeating until the camera reports
 	 * no more (gphoto2 drains the same way). This is the only source of EOS
 	 * property values/allowed lists, capture results, and change notifications.
+	 *
+	 * `priority` defaults to Bulk so the periodic fallback poll never cuts in
+	 * front of pending liveview frames. Pass Interactive from paths that reflect
+	 * a user action — the 0xc101 nudge (a dial was turned), the post-set
+	 * confirmation, the capture-object wait — so those don't also sit out the
+	 * starvation wait behind a continuously-polling liveview loop.
 	 */
-	async #pollEvents(): Promise<void> {
+	async #pollEvents(priority: PTPPriority = PTPPriority.Bulk): Promise<void> {
 		// The transaction queue serializes transfers anyway; this flag just avoids
 		// stacking redundant GetEvent transactions when a poll tick, an interrupt
 		// nudge and a post-set refresh coincide.
@@ -282,6 +324,7 @@ export class TethrCanon extends TethrPTPUSB {
 					opcode: OpCodeCanon.GetEvent,
 					expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 					maxByteLength: 2_000_000,
+					priority,
 				})
 				if (resCode !== ResCode.OK) break
 
@@ -357,7 +400,14 @@ export class TethrCanon extends TethrPTPUSB {
 					const info = this.#parseObjectRecord(dataView, offset, size, type)
 					if (info) {
 						const waiter = this.#objectAddedWaiters.shift()
-						waiter?.(info)
+						if (waiter) {
+							waiter(info)
+						} else if (this.#isCapturing) {
+							// No waiter registered yet — this is the sibling of a
+							// RAW+JPEG pair sharing one blob. Hold it so the next
+							// #waitObjectAdded drains it instead of losing it.
+							this.#pendingObjects.push(info)
+						}
 					}
 					break
 				}
@@ -459,7 +509,7 @@ export class TethrCanon extends TethrPTPUSB {
 
 		// The camera confirms (and possibly clamps) the write by echoing a
 		// PropValueChanged event; pull it now so caches and listeners stay fresh.
-		await this.#pollEvents()
+		await this.#pollEvents(PTPPriority.Interactive)
 
 		return {status: 'ok'}
 	}
@@ -478,7 +528,11 @@ export class TethrCanon extends TethrPTPUSB {
 			),
 		]
 
-		if (values.length > 0) {
+		// Only settable when there's a real choice. A single (or empty) allowed
+		// list means nothing else can be picked — expose it read-only instead of a
+		// one-entry dropdown that looks editable (e.g. FocusMode reporting only
+		// "AF" while the lens switch, not the PC, owns AF/MF).
+		if (values.length > 1) {
 			return {writable: true, value, option: {type: 'enum', values}}
 		}
 		return {writable: false, value}
@@ -646,13 +700,89 @@ export class TethrCanon extends TethrPTPUSB {
 		return this.#setPropValue(DevicePropCodeCanon.ColorTemperature, value)
 	}
 
+	/**
+	 * Live-view magnification via the EOS Zoom op (0x9158). Over this op the R5
+	 * gives two steps — value 5 → 5×; 1 → 1× — and clamps everything else to 5×
+	 * (6/10 also land on 5×, 15 is ignored). Its native 15× isn't reachable this
+	 * way. Zoom centres on the current ZoomPosition (see setLiveviewMagnifyPos).
+	 */
+	async getLiveviewMagnifyRatioDesc(): Promise<ConfigDesc<number>> {
+		return {
+			writable: true,
+			value: this.#liveviewMagnifyRatio,
+			option: {type: 'enum', values: [1, 5]},
+		}
+	}
+
+	async setLiveviewMagnifyRatio(value: number): Promise<OperationResult> {
+		if (value !== 1 && value !== 5) return {status: 'invalid parameter'}
+		try {
+			await this.device.sendCommand({
+				label: 'Canon Zoom',
+				opcode: OpCodeCanon.Zoom,
+				parameters: [value],
+			})
+			this.#liveviewMagnifyRatio = value
+			this.emit(
+				'liveviewMagnifyRatioChange',
+				await this.getLiveviewMagnifyRatioDesc()
+			)
+			return {status: 'ok'}
+		} catch {
+			return {status: 'general error'}
+		}
+	}
+
+	/**
+	 * Move the magnified region via ZoomPosition (0x9159). `x`/`y` are normalized
+	 * [0,1] positions in the frame, mapped linearly onto the zoom-rect coordinate
+	 * space — the R5 sensor (8192×5464). The rect stops a little short of the far
+	 * edge (~8000×5000) as it pins itself inside the frame, so corner clicks just
+	 * clamp. TODO: the sensor size is hard-coded for the R5; read it from the
+	 * camera so other bodies map correctly.
+	 */
+	static ZoomPosMax: readonly [number, number] = [8192, 5464]
+
+	async setLiveviewMagnifyPos(x: number, y: number): Promise<OperationResult> {
+		const [maxX, maxY] = TethrCanon.ZoomPosMax
+		const px = Math.round(Math.max(0, Math.min(1, x)) * maxX)
+		const py = Math.round(Math.max(0, Math.min(1, y)) * maxY)
+
+		try {
+			await this.device.sendCommand({
+				label: 'Canon ZoomPosition',
+				opcode: OpCodeCanon.ZoomPosition,
+				parameters: [px, py],
+			})
+			return {status: 'ok'}
+		} catch {
+			return {status: 'general error'}
+		}
+	}
+
 	async getFocusModeDesc(): Promise<ConfigDesc<FocusMode>> {
-		const desc = this.#descFromProp(
+		// Writable when the body lists FocusMode options (RF bodies expose AF/MF
+		// over PTP — there's no physical switch on many RF lenses). If the camera
+		// sends no allowed list it's a lens-switch affair and #descFromProp reports
+		// it read-only on its own.
+		return this.#descFromProp(
 			DevicePropCodeCanon.FocusMode,
 			raw => (raw === FocusModeManual ? 'mf' : 'af') as FocusMode
 		)
-		// AF/MF is a lens-switch / camera-menu affair; report it read-only.
-		return {writable: false, value: desc.value}
+	}
+
+	async setFocusMode(value: FocusMode): Promise<OperationResult> {
+		let raw: number | undefined
+		if (value === 'mf') {
+			raw = FocusModeManual
+		} else {
+			// The AF code isn't fixed across bodies; use whatever non-manual value
+			// the camera currently lists (One-Shot / Servo / AI Focus differ).
+			const options = this.#propOptions.get(DevicePropCodeCanon.FocusMode) ?? []
+			raw = options.find(v => v !== FocusModeManual)
+		}
+		if (raw === undefined) return {status: 'invalid parameter'}
+		return this.#setPropValue(DevicePropCodeCanon.FocusMode, raw)
 	}
 
 	async getBatteryLevelDesc(): Promise<ConfigDesc<BatteryLevel>> {
@@ -740,6 +870,9 @@ export class TethrCanon extends TethrPTPUSB {
 	> {
 		if (this.#isCapturing) return {status: 'busy'}
 		this.#isCapturing = true
+		// Drop any stragglers from a previous capture so they can't be miscounted
+		// as siblings of this one.
+		this.#pendingObjects = []
 
 		try {
 			const infos = await this.#captureAndCollectObjects()
@@ -783,38 +916,33 @@ export class TethrCanon extends TethrPTPUSB {
 		const {operationsSupported} = await this.getDeviceInfo()
 
 		if (operationsSupported.includes(OpCodeCanon.RemoteReleaseOn)) {
-			// Modern bodies: explicit half press → full press → release, like the
-			// physical button (gphoto2 library.c camera_canon_eos_capture).
-			// param2=0 keeps the camera's own AF setting in effect.
-			await this.device.sendCommand({
-				label: 'Canon RemoteReleaseOn (half)',
-				opcode: OpCodeCanon.RemoteReleaseOn,
-				parameters: [0x1, 0x0],
-			})
+			// EOS needs an explicit half press (SW1) before the full press (SW2) — a
+			// bare full press is rejected (DeviceBusy). Use the AF-less variants
+			// (ShutterHalfNonAF/ShutterFullNonAF) so the shutter fires without driving
+			// the lens; stop-motion needs the focus held fixed between frames. AF,
+			// when wanted, is a separate explicit action (runAutoFocus). param2=0.
 			try {
-				const focusMode = this.#propValues.get(DevicePropCodeCanon.FocusMode)
-				if (focusMode !== FocusModeManual) {
-					// Let one-shot AF settle. (gphoto2 polls OLC focus records here;
-					// a fixed grace period keeps it simple and MF rigs skip it.)
-					await sleep(CanonHalfPressSettleMs)
-				}
-
 				await this.device.sendCommand({
-					label: 'Canon RemoteReleaseOn (full)',
+					label: 'Canon RemoteReleaseOn (half, no AF)',
 					opcode: OpCodeCanon.RemoteReleaseOn,
-					parameters: [0x2, 0x0],
+					parameters: [ShutterHalfNonAF, 0x0],
+				})
+				await this.device.sendCommand({
+					label: 'Canon RemoteReleaseOn (full, no AF)',
+					opcode: OpCodeCanon.RemoteReleaseOn,
+					parameters: [ShutterFullNonAF, 0x0],
 				})
 				await this.device.sendCommand({
 					label: 'Canon RemoteReleaseOff (full)',
 					opcode: OpCodeCanon.RemoteReleaseOff,
-					parameters: [0x2],
+					parameters: [ShutterFullNonAF],
 				})
 			} finally {
 				try {
 					await this.device.sendCommand({
 						label: 'Canon RemoteReleaseOff (half)',
 						opcode: OpCodeCanon.RemoteReleaseOff,
-						parameters: [0x1],
+						parameters: [ShutterHalfNonAF],
 					})
 				} catch {
 					// Releasing a press that never registered can fail; ignore.
@@ -846,10 +974,18 @@ export class TethrCanon extends TethrPTPUSB {
 	}
 
 	#waitObjectAdded(timeoutMs: number): Promise<CanonObjectAddedInfo | null> {
+		// A sibling object may already be buffered (arrived in the same blob as the
+		// one that resolved the previous waiter); hand it over without waiting.
+		const buffered = this.#pendingObjects.shift()
+		if (buffered) return Promise.resolve(buffered)
+
 		return new Promise(resolve => {
 			// Poll aggressively while waiting: object records only surface through
 			// GetEvent, and the interrupt nudge is not always sent.
-			const interval = setInterval(() => void this.#pollEvents(), 100)
+			const interval = setInterval(
+				() => void this.#pollEvents(PTPPriority.Interactive),
+				100
+			)
 
 			const timeout = setTimeout(() => {
 				const index = this.#objectAddedWaiters.indexOf(waiter)
@@ -969,6 +1105,16 @@ export class TethrCanon extends TethrPTPUSB {
 		grab: () => this.#getLiveviewImage(),
 		isOpen: () => this.device.opened,
 		onChange: stream => this.emit('liveviewChange', readonlyConfigDesc(stream)),
+		// GetViewFinderData answers NotReady whenever we poll faster than the
+		// sensor produces frames — the *steady state* once we've caught up, not an
+		// error. The driver's generic 200 ms backoff would stall the stream to
+		// ~5 fps every time we catch up; retry quickly instead.
+		backoffMs: 20,
+		// Breathe between delivered frames. The R5 supplies ~22 fps (a frame per
+		// ~45 ms); polling flat-out just burns NotReady round-trips (more than
+		// half of all requests) and keeps the camera's command processor pinned —
+		// suspected of inflating concurrent GetEvent answers to ~250 ms.
+		frameGapMs: 25,
 	})
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
@@ -1018,16 +1164,21 @@ export class TethrCanon extends TethrPTPUSB {
 			const {resCode, data} = await this.device.receiveData({
 				label: 'Canon GetViewFinderData',
 				opcode: OpCodeCanon.GetViewFinderData,
-				// 0x00200000 is what current gphoto2 sends for every EOS
-				// ("from trace"); NotReady/DeviceBusy = no frame yet (normal for
-				// ~1s after enabling liveview), which the driver backs off on.
+				// 0x00200000 is what current gphoto2 sends for every EOS ("from
+				// trace") — it advertises a 2 MB host buffer, so the camera won't
+				// send more than that. NotReady/DeviceBusy = no *new* frame yet
+				// (normal for ~1s after enabling liveview, and steady-state when
+				// polling outpaces the sensor), which the driver backs off on.
 				parameters: [0x00200000, 0x00000000, 0x00000000],
 				expectedResCodes: [
 					ResCode.OK,
 					ResCode.DeviceBusy,
 					ResCodeCanon.ObjectNotReady,
 				],
-				maxByteLength: 4_000_000,
+				// Sized to the advertised buffer (+ header room): WebUSB allocates
+				// this much per transferIn, so a 4 MB ask meant 4 MB of allocation
+				// churn per frame for a ~300 KB JPEG.
+				maxByteLength: 0x00200000 + 0x10000,
 				priority: PTPPriority.Liveview,
 			})
 

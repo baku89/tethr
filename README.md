@@ -35,6 +35,7 @@ Here's a list of camera models currently supported by the library:
 
 | Vendor    | Camera      | Features                    |
 | --------- | ----------- | --------------------------- |
+| Canon     | EOS R5      | Shutter, LV, AF, MF, Config |
 | Panasonic | S5, DC-G9M2 | Shutter, LV, AF, MF, Config |
 | Sigma     | fp, fp L    | Shutter, LV, AF, MF, Config |
 | Ricoh     | Theta S     | Shutter, Config             |

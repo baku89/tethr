@@ -630,6 +630,16 @@ export abstract class Tethr
 		return UnsupportedConfigDesc
 	}
 
+	/** Centre the magnified live-view region on a normalized [0,1] frame position. */
+	async setLiveviewMagnifyPos(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		x: number,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		y: number
+	): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setLiveviewSize(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult

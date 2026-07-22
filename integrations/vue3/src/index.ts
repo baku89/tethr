@@ -5,6 +5,7 @@ import {
 	ConfigNameList,
 	ConfigType,
 	isUserCancelledError,
+	ManualFocusOption,
 	Tethr,
 	TethrDeviceType,
 	TethrIdentifier,
@@ -157,6 +158,23 @@ export function useTethr() {
 		}
 	}
 
+	// Manual focus is a lens-drive *action* (near/far nudges), so it needs an
+	// explicit method. Its capability flag and option list already ride the config
+	// machinery as the `canRunManualFocus` / `manualFocusOptions` configs, so we
+	// don't duplicate them here (doing so also collided with the spread `configs`).
+	async function runManualFocus(option: ManualFocusOption) {
+		// DriveLens (and the Sigma equivalent) only work while liveview is running;
+		// callers keep it on, so just forward the nudge.
+		if (!camera.value) return
+		await camera.value.runManualFocus(option)
+	}
+
+	/** Centre the magnified live-view region on a normalized [0,1] frame position. */
+	async function setLiveviewMagnifyPos(x: number, y: number) {
+		if (!camera.value) return
+		await camera.value.setLiveviewMagnifyPos(x, y)
+	}
+
 	onUnmounted(() => {
 		if (camera.value) {
 			camera.value.close()
@@ -172,6 +190,8 @@ export function useTethr() {
 		close,
 		camera,
 		toggleLiveview,
+		runManualFocus,
+		setLiveviewMagnifyPos,
 		// DPC
 		configs: Object.fromEntries(
 			ConfigNameList.map(name => [name, useTethrConfig(camera, name)])
