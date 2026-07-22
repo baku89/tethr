@@ -9,7 +9,7 @@ Tethr is a JavaScript/TypeScript library designed to control USB-connected digit
 
 It is built on top of the [WebUSB API](https://developer.mozilla.org/en-US/docs/Web/API/USB) and aims to provide support for cameras by various vendors. The library utilizes the Picture Transfer Protocol (PTP), which offers a means to access camera functionalities such as shutter control, aperture adjustment, ISO settings, and more via USB or TCP/IP connections. However, due to the varying vendor-specific extensions employed by different camera models, acheving compatibility among them has been challenging.
 
-Tethr addreses this issue by acting as a bridge and offering a standarized and contemporary interface for developers. With Tethr, developers can interact with cameras seamlessly, abstracting away the underlying differences and complexities. The project takes inspiration from [libgphoto2](https://github.com/gphoto/libgphoto2) in its pursuit of providing a comprehensive camera control solution.
+Tethr addreses this issue by acting as a bridge and offering a standarized and contemporary interface for developers. With Tethr, developers can interact with cameras seamlessly, abstracting away the underlying differences and complexities. Its vendor-specific drivers combine first-hand reverse-engineering of each camera's protocol with references to the [libgphoto2](https://github.com/gphoto/libgphoto2) source; see [Acknowledgments](#acknowledgments) for details.
 
 ### Features
 
@@ -246,3 +246,21 @@ lerna publish from-git
 ## License
 
 This repository is published under an MIT License. See the included [LICENSE file](./LICENSE).
+
+## Acknowledgments
+
+Tethr's vendor-specific drivers are the result of both first-hand
+reverse-engineering of each camera's protocol and study of the
+[libgphoto2](https://github.com/gphoto/libgphoto2) source. The Canon EOS driver
+(`core/src/TethrPTPUSB/TethrCanon.ts`) in particular references libgphoto2's
+`camlibs/ptp2/` sources (`ptp.h`, `ptp-pack.c`, `config.c`, `library.c`) for the
+Canon EOS PTP dialect: its operation / response / event / device-property codes,
+binary struct field offsets, parameter value encodings (aperture, shutter, ISO,
+exposure compensation), and documented behavioral quirks. Individual references
+to the originating files are noted inline throughout the source.
+
+No source code from libgphoto2 was copied, compiled, or linked into Tethr. The
+drivers are an original TypeScript reimplementation of these publicly documented,
+interoperability-oriented facts about each camera's protocol. libgphoto2 is
+licensed under the GNU LGPL v2.1, and huge thanks are due to its contributors for
+documenting these protocols so thoroughly.
