@@ -158,6 +158,14 @@ const SigmaImportMaxTries = 5
 // interval. Polling the whole config list floods the single-slot PTP queue and
 // stalls every live-view frame (it dropped the stream from ~30fps to ~1fps),
 // but these read-only physical values still need to refresh reasonably often.
+//
+// NB (measured on-wire, 2026-07-22): while streaming, the fp intermittently
+// takes 200-270 ms to answer a status query — independent of which data groups
+// are requested — and PTP is single-slot, so polling at this cadence is what
+// makes the fp's live view hitch a couple of times a second. Slowing the poll
+// to 3 s cures the hitch but was rejected: the zoom-ring readout (focalLength)
+// must track the physical ring promptly. Revisit if a cheaper zoom-only query
+// turns up.
 const SigmaLiveviewPollIntervalMs = 400
 const SigmaLiveviewPollConfigs: ConfigName[] = ['focalLength', 'focusDistance']
 
@@ -1396,6 +1404,9 @@ export class TethrSigma extends TethrPTPUSB {
 		},
 		isOpen: () => this.device.opened,
 		onChange: stream => this.emit('liveviewChange', readonlyConfigDesc(stream)),
+		// GetViewFrame answers DeviceBusy for transient beats (not just AF/写込み);
+		// the driver's generic 200 ms backoff turns each one into a visible stall.
+		backoffMs: 20,
 	})
 
 	async startLiveview(): Promise<OperationResult<MediaStream>> {
@@ -1511,11 +1522,29 @@ export class TethrSigma extends TethrPTPUSB {
 
 	@MemoizeExpiring(SigmaExpirationMs)
 	private async getCamStatus() {
-		const {data} = await this.device.receiveData({
-			label: 'SigmaFP GetCamStatus2',
-			opcode: OpCodeSigma.GetCamStatus2,
-			parameters: [0b10000, 0b1111111, 0b0],
-		})
+		// Retry DeviceBusy here rather than inside receiveData: the transport-level
+		// retry sleeps 100 ms per try while *holding* the transaction queue, which
+		// blocked liveview frames for 200-300 ms on every busy status poll (the
+		// periodic LV stutter). Expecting busy makes receiveData return right away,
+		// so the wait below happens with the queue released and LV frames flow
+		// between attempts. Bulk priority keeps the poll from preempting pending
+		// frames in the first place.
+		let data: ArrayBuffer
+		for (let tries = 0; ; tries++) {
+			const res = await this.device.receiveData({
+				label: 'SigmaFP GetCamStatus2',
+				opcode: OpCodeSigma.GetCamStatus2,
+				parameters: [0b10000, 0b1111111, 0b0],
+				expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
+				priority: PTPPriority.Bulk,
+			})
+			if (res.resCode === ResCode.OK) {
+				data = res.data
+				break
+			}
+			if (tries >= 29) throw new Error('GetCamStatus2 kept answering busy')
+			await sleep(50)
+		}
 
 		const decoded = decodeIFD(data, {
 			camDataGroup1: {
