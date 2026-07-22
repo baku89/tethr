@@ -191,7 +191,15 @@ export abstract class Tethr
 			const value = configs[name]
 			if (value === undefined) continue
 
-			await this.set(name, value)
+			try {
+				await this.set(name, value)
+			} catch (err) {
+				// Configs may have been saved from a different camera model; one
+				// foreign/bad entry must not abort the rest of the import (callers
+				// run this as part of connect, before starting liveview).
+				// eslint-disable-next-line no-console
+				console.warn(`Failed to import config "${name}":`, err)
+			}
 		}
 	}
 

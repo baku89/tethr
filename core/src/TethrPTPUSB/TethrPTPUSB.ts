@@ -78,6 +78,8 @@ type DataViewTypeForDatatypeCode<D extends DatatypeCode> =
 export class TethrPTPUSB extends Tethr {
 	protected _opened = false
 	private _listenersBound = false
+	/** Cached DeviceInfo (static per session); also the source of the model name. */
+	#deviceInfo?: DeviceInfo
 
 	constructor(protected readonly device: PTPTransport) {
 		super()
@@ -119,6 +121,10 @@ export class TethrPTPUSB extends Tethr {
 			window.addEventListener('beforeunload', () => void this.close())
 		}
 
+		// Warm the DeviceInfo cache now so `name` reports the model the moment the
+		// camera is exposed as connected (rather than the generic USB product name).
+		await this.getDeviceInfo()
+
 		this._opened = true
 	}
 
@@ -141,7 +147,14 @@ export class TethrPTPUSB extends Tethr {
 	}
 
 	get name(): string {
-		return this.device.descriptor.productName ?? 'Generic PTP Camera'
+		// Prefer the PTP model ("Canon EOS R5"), available once DeviceInfo has been
+		// read; the USB descriptor only carries a generic product name ("Canon
+		// Digital Camera").
+		return (
+			this.#deviceInfo?.model ||
+			this.device.descriptor.productName ||
+			'Generic PTP Camera'
+		)
 	}
 
 	get identifier(): TethrIdentifier {
@@ -308,6 +321,13 @@ export class TethrPTPUSB extends Tethr {
 	}: Omit<DevicePropScheme<T, D>, 'decode'> & {
 		value: T
 	}): Promise<OperationResult> {
+		// Setting an unsupported prop must be a clean no-op, not a wire write the
+		// camera rejects (importConfigs replays configs saved from *another*
+		// camera model, so foreign props are routine).
+		if (!(await this.isDevicePropSupported(devicePropCode))) {
+			return UnsupportedOperationResult
+		}
+
 		const devicePropData = encode(value)
 
 		if (devicePropData === null) {
@@ -340,7 +360,7 @@ export class TethrPTPUSB extends Tethr {
 				dataView.writeBigUint64(devicePropData as bigint)
 				break
 			case DatatypeCode.String:
-				dataView.writeBigUint64(devicePropData as bigint)
+				dataView.writeUTF16StringNT(devicePropData as string)
 				break
 			default: {
 				const label = DatatypeCode[datatypeCode] ?? toHexString(16)
@@ -471,7 +491,9 @@ export class TethrPTPUSB extends Tethr {
 	}
 
 	protected async getDeviceInfo(): Promise<DeviceInfo> {
-		return await TethrPTPUSB.getDeviceInfo(this.device)
+		// Memoized: DeviceInfo is static for the session, called on many hot paths
+		// (capability checks, chunked transfers), and backs the `name` getter.
+		return (this.#deviceInfo ??= await TethrPTPUSB.getDeviceInfo(this.device))
 	}
 
 	protected async getObjectHandles(

@@ -205,6 +205,23 @@ export class PTPDataView {
 		this.updateByteLength()
 	}
 
+	/**
+	 * Writes a standard PTP string: [u8 charCount incl. terminator][UTF-16LE
+	 * chars][u16 0x0000]. An empty string is the single count byte 0.
+	 */
+	writeUTF16StringNT(value: string) {
+		if (value.length === 0) {
+			this.writeUint8(0)
+			return
+		}
+
+		this.writeUint8(value.length + 1)
+		for (let i = 0; i < value.length; i++) {
+			this.writeUint16(value.charCodeAt(i))
+		}
+		this.writeUint16(0x0000)
+	}
+
 	writeBigInt64(value: bigint) {
 		this.resizeBuffer(this.currentByteOffset + 8)
 		this.dataView.setBigInt64(this.currentByteOffset, value, true)
