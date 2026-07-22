@@ -4,6 +4,7 @@ import {TethrPanasonic} from './TethrPanasonic'
 import {TethrPTPUSB} from './TethrPTPUSB'
 import {TethrRicohTheta} from './TethrRicohTheta'
 import {TethrSigma} from './TethrSigma'
+import {TethrSony} from './TethrSony'
 
 /**
  * Standard PTP vendor extension IDs reported in {@link DeviceInfo.vendorExtensionID}.
@@ -75,7 +76,7 @@ export function getVendorSpecificPTPUSBClass(
 		return TethrCanon
 	}
 	if (isSonyAlpha(info)) {
-		// TODO: return TethrSony once Sony support lands.
+		return TethrSony
 	}
 
 	// 2. Vendor-extension-id / model fallbacks.
