@@ -6,7 +6,7 @@ import {
 	TethrDeviceType,
 	TethrIdentifier,
 } from './Tethr'
-import {initTethrUSBPTP, TethrPTPUSB} from './TethrPTPUSB'
+import {initTethrUSBPTP, PatientOpenOptions, TethrPTPUSB} from './TethrPTPUSB'
 import {TethrWebcam} from './TethrWebcam'
 
 /**
@@ -72,7 +72,9 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 	 */
 	async #initPairedUSBPTPCameras() {
 		const usbDevices = await navigator.usb.getDevices()
-		const results = await Promise.allSettled(usbDevices.map(initTethrUSBPTP))
+		const results = await Promise.allSettled(
+			usbDevices.map(usb => initTethrUSBPTP(usb))
+		)
 
 		// Key the map by the USBDevice we already hold here, rather than reaching
 		// into the camera's (now transport-private) device — keep the index
@@ -239,7 +241,9 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 			return {status: 'general error', message: 'Unable to connect to camera'}
 		}
 
-		const result = await initTethrUSBPTP(usbDevice)
+		// Interactive connect: retry patiently so the click succeeds once the user
+		// frees the interface from ptpcamerad, rather than failing after ~1 s.
+		const result = await initTethrUSBPTP(usbDevice, PatientOpenOptions)
 		if (result.status !== 'ok') return result
 
 		return {status: 'ok', value: {camera: result.value, usb: usbDevice}}
