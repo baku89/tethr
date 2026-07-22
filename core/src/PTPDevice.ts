@@ -18,6 +18,30 @@ const PTPDefaultTimeoutMs = 10000
 const PTPTryCount = 30
 const PTPTryAgainIntervalMs = 100
 
+/** Every PTP bulk container starts with [u32 length][u16 type][u16 code][u32 id]. */
+const PTPContainerHeaderByteLength = 12
+
+/**
+ * Bulk-in reads are two-phase: a small first read covers the container header
+ * (and, for most transactions, the whole container), then the remainder is
+ * requested at its exact announced size. WebUSB allocates the full requested
+ * length per transferIn, so the old single-read-of-maxByteLength approach
+ * allocated megabytes per transaction on hot paths (a 4 MB ask per ~300 KB
+ * liveview frame); this keeps allocations at actual container size.
+ */
+const PTPBulkInFirstRequestByteLength = 16384
+
+/**
+ * Bulk transfers must be requested in whole-max-packet multiples or an
+ * unaligned final packet errors the transfer. 1024 is a common multiple of
+ * every bulk max-packet size in use (64 / 512 / 1024 for FS / HS / SS).
+ */
+const PTPBulkInAlignment = 1024
+
+function alignBulkInRequest(byteLength: number) {
+	return Math.ceil(byteLength / PTPBulkInAlignment) * PTPBulkInAlignment
+}
+
 // When packet loss or out-of-order packets occur, we may receive containers
 // with unexpected transaction IDs. To make the communication robust, we try
 // to resync by discarding a limited number of mismatched packets and clearing
@@ -584,9 +608,15 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 		let mismatches = 0
 
 		for (;;) {
+			// Phase 1: a small aligned read that covers the container header — and,
+			// for most transactions (responses, events, small data), the whole
+			// container.
 			const {data, status} = await this.usb.transferIn(
 				this.#endpointNumberBulkIn,
-				maxByteLength
+				Math.min(
+					PTPBulkInFirstRequestByteLength,
+					alignBulkInRequest(maxByteLength + PTPContainerHeaderByteLength)
+				)
 			)
 
 			// Error checking
@@ -601,7 +631,9 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 				}
 				throw new Error(`BulkIn returned status: ${status}`)
 			}
-			if (!data || data.byteLength < 12) {
+			if (!data || data.byteLength < PTPContainerHeaderByteLength) {
+				// Includes the zero-length packet a device sends to terminate a
+				// transfer that ended exactly on a packet boundary — skip and resync.
 				mismatches += 1
 				if (mismatches % PTPResyncClearHaltEvery === 0) {
 					await this.usb.clearHalt('in', this.#endpointNumberBulkIn)
@@ -612,15 +644,91 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 				continue
 			}
 
-			// Unpack packet
+			// Unpack container header
+			const containerLength = data.getUint32(0, true)
 			const type = data.getUint16(4, true)
 			const code = data.getUint16(6, true)
 			const transactionId = data.getUint32(8, true)
-			// Ensure ArrayBuffer payload (avoid SharedArrayBuffer type widening)
-			const viewBytes = new Uint8Array(data.buffer, 12)
-			const payloadCopy = new Uint8Array(viewBytes.byteLength)
-			payloadCopy.set(viewBytes)
-			const payload = payloadCopy.buffer
+
+			if (
+				containerLength < PTPContainerHeaderByteLength ||
+				containerLength > maxByteLength + PTPContainerHeaderByteLength
+			) {
+				// A garbage announced length means we're not looking at a container
+				// header — typically mid-container remnants of a transfer a page
+				// reload cut short. Boundaries are unknowable, so gulp a large drain
+				// read to flush the stale bytes (the single-read design did this
+				// implicitly by always requesting maxByteLength) and resync.
+				try {
+					await this.usb.transferIn(
+						this.#endpointNumberBulkIn,
+						alignBulkInRequest(
+							Math.min(maxByteLength + PTPContainerHeaderByteLength, 8_000_000)
+						)
+					)
+				} catch {
+					// The drain is best-effort; the clearHalt below re-arms the pipe.
+				}
+				mismatches += 1
+				if (mismatches % PTPResyncClearHaltEvery === 0) {
+					await this.usb.clearHalt('in', this.#endpointNumberBulkIn)
+				}
+				if (mismatches >= PTPResyncMaxSkips) {
+					throw new Error(`Invalid container length: ${containerLength}`)
+				}
+				continue
+			}
+
+			// Phase 2: read the container's remainder in exact aligned requests.
+			// Done before the transaction-id check so the pipe stays
+			// container-aligned even when this container is about to be discarded.
+			const chunks = [
+				new Uint8Array(data.buffer, data.byteOffset, data.byteLength),
+			]
+			let received = data.byteLength
+
+			while (received < containerLength) {
+				const rest = await this.usb.transferIn(
+					this.#endpointNumberBulkIn,
+					alignBulkInRequest(containerLength - received)
+				)
+				if (rest.status === 'stall') {
+					await this.usb.clearHalt('in', this.#endpointNumberBulkIn)
+					throw new Error('BulkIn stalled mid-container')
+				}
+				if (!rest.data || rest.data.byteLength === 0) {
+					throw new Error('BulkIn ended mid-container')
+				}
+				chunks.push(
+					new Uint8Array(
+						rest.data.buffer,
+						rest.data.byteOffset,
+						rest.data.byteLength
+					)
+				)
+				received += rest.data.byteLength
+			}
+
+			// Assemble the payload: one exact-size copy with the header stripped.
+			// (Also guarantees a plain ArrayBuffer — no SharedArrayBuffer widening.)
+			const payload = new ArrayBuffer(
+				Math.min(received, containerLength) - PTPContainerHeaderByteLength
+			)
+			{
+				const out = new Uint8Array(payload)
+				let src = 0
+				for (const chunk of chunks) {
+					const start = Math.max(PTPContainerHeaderByteLength - src, 0)
+					const end = Math.min(chunk.byteLength, containerLength - src)
+					if (end > start) {
+						out.set(
+							chunk.subarray(start, end),
+							src + start - PTPContainerHeaderByteLength
+						)
+					}
+					src += chunk.byteLength
+				}
+			}
 
 			this.#console.info(
 				'transferInBulk',
