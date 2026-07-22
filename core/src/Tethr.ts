@@ -412,6 +412,17 @@ export abstract class Tethr
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setDepthOfFieldPreview(value: boolean): Promise<OperationResult> {
+		return UnsupportedOperationResult
+	}
+	async getDepthOfFieldPreview() {
+		return (await this.getDepthOfFieldPreviewDesc()).value
+	}
+	async getDepthOfFieldPreviewDesc(): Promise<ConfigDesc<boolean>> {
+		return UnsupportedConfigDesc
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setDestinationToSave(value: string): Promise<OperationResult> {
 		return UnsupportedOperationResult
 	}

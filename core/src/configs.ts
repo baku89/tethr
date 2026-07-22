@@ -186,6 +186,7 @@ export type ConfigType = {
 	colorTemperature: number
 	contrast: number
 	dateTime: Date
+	depthOfFieldPreview: boolean
 	destinationToSave: string
 	digitalZoom: number
 	driveMode: DriveMode
@@ -240,6 +241,7 @@ export const ConfigNameList: ConfigName[] = (() => {
 		'colorTemperature',
 		'contrast',
 		'dateTime',
+		'depthOfFieldPreview',
 		'destinationToSave',
 		'digitalZoom',
 		'driveMode',

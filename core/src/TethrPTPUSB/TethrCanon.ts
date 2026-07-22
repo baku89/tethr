@@ -3,9 +3,11 @@ import {BiMap} from 'bim'
 import {
 	Aperture,
 	BatteryLevel,
+	ColorMode,
 	ExposureComp,
 	ExposureMode,
 	FocusMode,
+	ImageQuality,
 	ISO,
 	ManualFocusOption,
 	ShutterSpeed,
@@ -114,12 +116,48 @@ enum DevicePropCodeCanon {
 	FocusMode = 0xd108,
 	WhiteBalance = 0xd109,
 	ColorTemperature = 0xd10a,
+	PictureStyle = 0xd110,
 	BatteryPower = 0xd111,
 	AvailableShots = 0xd11b,
 	CaptureDestination = 0xd11c,
+	ImageFormat = 0xd120,
+	ImageFormatCF = 0xd121,
+	ImageFormatSD = 0xd122,
 	EVFOutputDevice = 0xd1b0,
 	EVFMode = 0xd1b1,
+	DepthOfFieldPreview = 0xd1b2,
 }
+
+/**
+ * The ImageFormat props (0xd120-0xd122) carry a *composite* value, not a
+ * scalar: `[u32 fileCount][per file: u32 0x10, u32 type, u32 size, u32
+ * compression]` (libgphoto2 ptp-pack.c `ptp_unpack_EOS_ImageFormat`). type
+ * 1 = JPEG, 6 = RAW; compression 4 = lossless RAW, 3 = fine JPEG / C-RAW,
+ * 2 = normal JPEG.
+ */
+interface CanonImageFormatFile {
+	type: number
+	size: number
+	compression: number
+}
+
+const CanonImageFormatProps = [
+	DevicePropCodeCanon.ImageFormat,
+	DevicePropCodeCanon.ImageFormatCF,
+	DevicePropCodeCanon.ImageFormatSD,
+] as number[]
+
+const CanonJpegSizeNames = new BiMap<number, string>([
+	[0x0, 'large'],
+	[0x1, 'medium'],
+	[0x2, 'small'],
+	[0x5, 'medium1'],
+	[0x6, 'medium2'],
+	[0x7, 'medium3'],
+	[0xe, 'small1'],
+	[0xf, 'small2'],
+	[0x10, 'small3'],
+])
 
 /** CaptureDestination (0xd11c) value for host (SDRAM) capture. */
 const CaptureDestHost = 0x4
@@ -181,6 +219,10 @@ export class TethrCanon extends TethrPTPUSB {
 	#propValues = new Map<number, number>()
 	/** Allowed values per EOS prop, fed by AvailListChanged records. */
 	#propOptions = new Map<number, number[]>()
+	/** Current composite value per ImageFormat prop (0xd120-0xd122). */
+	#imageFormatValues = new Map<number, CanonImageFormatFile[]>()
+	/** Allowed composite values per ImageFormat prop. */
+	#imageFormatOptions = new Map<number, CanonImageFormatFile[][]>()
 
 	#isCapturing = false
 	#polling = false
@@ -358,38 +400,72 @@ export class TethrCanon extends TethrPTPUSB {
 				case CanonEventRecord.PropValueChanged: {
 					if (size < 13) break
 					const propCode = dataView.getUint32(offset + 8, true)
-					// The value width isn't on the wire; read what the record holds
-					// (u8 props ship shorter records). String props get misread as
-					// numbers, but we never map those so the garbage is inert.
-					const payloadSize = size - 12
-					const value =
-						payloadSize >= 4
-							? dataView.getUint32(offset + 12, true)
-							: payloadSize >= 2
-								? dataView.getUint16(offset + 12, true)
-								: dataView.getUint8(offset + 12)
-					this.#propValues.set(propCode, value)
+					if (CanonImageFormatProps.includes(propCode)) {
+						// Composite value (see CanonImageFormatFile).
+						const parsed = this.#parseImageFormatAt(
+							dataView,
+							offset + 12,
+							offset + size
+						)
+						if (parsed) this.#imageFormatValues.set(propCode, parsed.files)
+					} else {
+						// The value width isn't on the wire; read what the record holds
+						// (u8 props ship shorter records). String props get misread as
+						// numbers, but we never map those so the garbage is inert.
+						const payloadSize = size - 12
+						const value =
+							payloadSize >= 4
+								? dataView.getUint32(offset + 12, true)
+								: payloadSize >= 2
+									? dataView.getUint16(offset + 12, true)
+									: dataView.getUint8(offset + 12)
+						this.#propValues.set(propCode, value)
+						if (
+							propCode === DevicePropCodeCanon.FocusMode &&
+							value !== FocusModeManual
+						) {
+							this.#lastAFFocusRaw = value
+						}
+					}
 					changedProps.add(propCode)
 					break
 				}
 				case CanonEventRecord.AvailListChanged: {
 					if (size < 20) break
 					const propCode = dataView.getUint32(offset + 8, true)
-					// +12: dpd type. Only type 3 (enum of values) is meaningful, and
-					// its entries are 4-byte-packed regardless of the prop's datatype.
+					// +12: dpd type. Only type 3 (enum of values) is meaningful.
 					const dpdType = dataView.getUint32(offset + 12, true)
 					if (dpdType !== 3) break
 					const count = dataView.getUint32(offset + 16, true)
-					const values: number[] = []
-					for (
-						let i = 0, o = offset + 20;
-						i < count && o + 4 <= offset + size;
-						i++, o += 4
-					) {
-						values.push(dataView.getUint32(o, true))
+					if (CanonImageFormatProps.includes(propCode)) {
+						// Each allowed value is a variable-length composite.
+						const options: CanonImageFormatFile[][] = []
+						let o = offset + 20
+						for (let i = 0; i < count; i++) {
+							const parsed = this.#parseImageFormatAt(
+								dataView,
+								o,
+								offset + size
+							)
+							if (!parsed) break
+							options.push(parsed.files)
+							o += parsed.byteLength
+						}
+						this.#imageFormatOptions.set(propCode, options)
+					} else {
+						// Scalar props list 4-byte-packed entries regardless of the
+						// prop's datatype.
+						const values: number[] = []
+						for (
+							let i = 0, o = offset + 20;
+							i < count && o + 4 <= offset + size;
+							i++, o += 4
+						) {
+							values.push(dataView.getUint32(o, true))
+						}
+						// An empty list means "not currently settable".
+						this.#propOptions.set(propCode, values)
 					}
-					// An empty list means "not currently settable".
-					this.#propOptions.set(propCode, values)
 					changedProps.add(propCode)
 					break
 				}
@@ -485,6 +561,36 @@ export class TethrCanon extends TethrPTPUSB {
 		return str
 	}
 
+	/**
+	 * Parse one composite ImageFormat value at `offset` (bounded by `end`):
+	 * `[u32 fileCount][per file: u32 entrySize (0x10), u32 type, u32 size,
+	 * u32 compression]`. Returns null on malformed data.
+	 */
+	#parseImageFormatAt(
+		dataView: DataView,
+		offset: number,
+		end: number
+	): {files: CanonImageFormatFile[]; byteLength: number} | null {
+		if (offset + 4 > end) return null
+		const fileCount = dataView.getUint32(offset, true)
+		if (fileCount < 1 || fileCount > 3) return null
+
+		const files: CanonImageFormatFile[] = []
+		let o = offset + 4
+		for (let i = 0; i < fileCount; i++) {
+			if (o + 16 > end) return null
+			const entrySize = dataView.getUint32(o, true)
+			if (entrySize < 16 || o + entrySize > end) return null
+			files.push({
+				type: dataView.getUint32(o + 4, true),
+				size: dataView.getUint32(o + 8, true),
+				compression: dataView.getUint32(o + 12, true),
+			})
+			o += entrySize
+		}
+		return {files, byteLength: o - offset}
+	}
+
 	// Property plumbing --------------------------------------------------------
 
 	async #setPropValue(
@@ -573,6 +679,14 @@ export class TethrCanon extends TethrPTPUSB {
 				return 'whiteBalance' as const
 			case DevicePropCodeCanon.ColorTemperature:
 				return 'colorTemperature' as const
+			case DevicePropCodeCanon.PictureStyle:
+				return 'colorMode' as const
+			case DevicePropCodeCanon.ImageFormat:
+			case DevicePropCodeCanon.ImageFormatCF:
+			case DevicePropCodeCanon.ImageFormatSD:
+				return 'imageQuality' as const
+			case DevicePropCodeCanon.DepthOfFieldPreview:
+				return 'depthOfFieldPreview' as const
 			case DevicePropCodeCanon.FocusMode:
 				return 'focusMode' as const
 			case DevicePropCodeCanon.BatteryPower:
@@ -700,6 +814,111 @@ export class TethrCanon extends TethrPTPUSB {
 		return this.#setPropValue(DevicePropCodeCanon.ColorTemperature, value)
 	}
 
+	/** Picture Style (0xd110), exposed as the generic colorMode config. */
+	async getColorModeDesc(): Promise<ConfigDesc<ColorMode>> {
+		return this.#descFromProp(
+			DevicePropCodeCanon.PictureStyle,
+			raw => this.pictureStyleTable.get(raw) ?? `vendor:${toHexString(raw, 1)}`
+		)
+	}
+
+	async setColorMode(value: ColorMode): Promise<OperationResult> {
+		let raw: number | undefined = this.#encodeWithOptions(
+			this.pictureStyleTable,
+			value,
+			DevicePropCodeCanon.PictureStyle
+		)
+		if (raw === undefined && value.startsWith('vendor:0x')) {
+			raw = parseInt(value.replace('vendor:', ''), 16)
+		}
+		if (raw === undefined) return {status: 'invalid parameter'}
+		return this.#setPropValue(DevicePropCodeCanon.PictureStyle, raw)
+	}
+
+	/**
+	 * Which ImageFormat prop this body actually reports through — 0xd120 on
+	 * single-slot bodies, 0xd121 (CF) / 0xd122 (SD) per card on dual-slot ones.
+	 */
+	#imageFormatPropCode(): number | undefined {
+		return CanonImageFormatProps.find(
+			code =>
+				this.#imageFormatValues.has(code) ||
+				(this.#imageFormatOptions.get(code)?.length ?? 0) > 0
+		)
+	}
+
+	async getImageQualityDesc(): Promise<ConfigDesc<ImageQuality>> {
+		const propCode = this.#imageFormatPropCode()
+		if (propCode === undefined) return {writable: false, value: null}
+
+		const files = this.#imageFormatValues.get(propCode)
+		const value = files ? decodeCanonImageFormat(files) : null
+		const values = (this.#imageFormatOptions.get(propCode) ?? []).map(
+			decodeCanonImageFormat
+		)
+
+		if (values.length > 1) {
+			return {writable: true, value, option: {type: 'enum', values}}
+		}
+		return {writable: false, value}
+	}
+
+	async setImageQuality(value: ImageQuality): Promise<OperationResult> {
+		const propCode = this.#imageFormatPropCode()
+		if (propCode === undefined) return {status: 'invalid parameter'}
+
+		// Only combinations the camera itself listed are sendable; re-encode the
+		// matching option rather than parsing the label.
+		const files = (this.#imageFormatOptions.get(propCode) ?? []).find(
+			option => decodeCanonImageFormat(option) === value
+		)
+		if (!files) return {status: 'invalid parameter'}
+
+		const dataView = new PTPDataView()
+		dataView.writeUint32(12 + files.length * 16)
+		dataView.writeUint32(propCode)
+		dataView.writeUint32(files.length)
+		for (const file of files) {
+			dataView.writeUint32(0x10)
+			dataView.writeUint32(file.type)
+			dataView.writeUint32(file.size)
+			dataView.writeUint32(file.compression)
+		}
+
+		const {resCode} = await this.device.sendData({
+			label: 'Canon SetDevicePropValueEx',
+			opcode: OpCodeCanon.SetDevicePropValueEx,
+			data: dataView.toBuffer(),
+			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
+		})
+		if (resCode !== ResCode.OK) return {status: 'busy'}
+
+		await this.#pollEvents(PTPPriority.Interactive)
+		return {status: 'ok'}
+	}
+
+	/**
+	 * Depth-of-field preview (0xd1b2): stops the lens down to the taking
+	 * aperture in live view. Host-driven toggle — the camera publishes no
+	 * allowed list for it, so offer on/off whenever the prop exists.
+	 */
+	async getDepthOfFieldPreviewDesc(): Promise<ConfigDesc<boolean>> {
+		const raw = this.#propValues.get(DevicePropCodeCanon.DepthOfFieldPreview)
+		if (raw === undefined) return {writable: false, value: null}
+		return {
+			writable: true,
+			value: raw !== 0,
+			option: {type: 'enum', values: [false, true]},
+		}
+	}
+
+	async setDepthOfFieldPreview(value: boolean): Promise<OperationResult> {
+		return this.#setPropValue(
+			DevicePropCodeCanon.DepthOfFieldPreview,
+			value ? 1 : 0
+		)
+	}
+
 	/**
 	 * Live-view magnification via the EOS Zoom op (0x9158). Over this op the R5
 	 * gives two steps — value 5 → 5×; 1 → 1× — and clamps everything else to 5×
@@ -761,14 +980,16 @@ export class TethrCanon extends TethrPTPUSB {
 	}
 
 	async getFocusModeDesc(): Promise<ConfigDesc<FocusMode>> {
-		// Writable when the body lists FocusMode options (RF bodies expose AF/MF
-		// over PTP — there's no physical switch on many RF lenses). If the camera
-		// sends no allowed list it's a lens-switch affair and #descFromProp reports
-		// it read-only on its own.
-		return this.#descFromProp(
-			DevicePropCodeCanon.FocusMode,
-			raw => (raw === FocusModeManual ? 'mf' : 'af') as FocusMode
-		)
+		// Deliberately read-only in the UI: AF/MF is the camera-side dial (per
+		// UX decision), and switching TO AF from PTP is shaky anyway — while in
+		// MF the allowed list only names MF, and the R5 silently ignores a
+		// guessed AF code. Capture and click-AF hop modes internally via
+		// #setPropValue regardless.
+		const raw = this.#propValues.get(DevicePropCodeCanon.FocusMode)
+		return {
+			writable: false,
+			value: raw === undefined ? null : raw === FocusModeManual ? 'mf' : 'af',
+		}
 	}
 
 	async setFocusMode(value: FocusMode): Promise<OperationResult> {
@@ -776,10 +997,13 @@ export class TethrCanon extends TethrPTPUSB {
 		if (value === 'mf') {
 			raw = FocusModeManual
 		} else {
-			// The AF code isn't fixed across bodies; use whatever non-manual value
-			// the camera currently lists (One-Shot / Servo / AI Focus differ).
+			// The AF code isn't fixed across bodies (One-Shot / Servo / AI Focus
+			// differ); prefer a listed non-manual value, then the last one seen.
 			const options = this.#propOptions.get(DevicePropCodeCanon.FocusMode) ?? []
-			raw = options.find(v => v !== FocusModeManual)
+			raw =
+				options.find(v => v !== FocusModeManual) ??
+				this.#lastAFFocusRaw ??
+				undefined
 		}
 		if (raw === undefined) return {status: 'invalid parameter'}
 		return this.#setPropValue(DevicePropCodeCanon.FocusMode, raw)
@@ -1060,6 +1284,14 @@ export class TethrCanon extends TethrPTPUSB {
 			return null
 		}
 	}
+
+	/**
+	 * Last non-manual FocusMode raw value the camera reported. Needed to switch
+	 * back to AF: while in MF the allowed list only names MF, and the R5
+	 * silently ignores a guessed 0 (answers OK, stays MF) — restoring the exact
+	 * code we saw also preserves One-Shot vs Servo.
+	 */
+	#lastAFFocusRaw: number | null = null
 
 	async runAutoFocus(): Promise<OperationResult> {
 		try {
@@ -1401,6 +1633,21 @@ export class TethrCanon extends TethrPTPUSB {
 		[0x37, 'vendor:Fv'],
 	])
 
+	/** PictureStyle (0xd110) codes, from libgphoto2 canon_eos_picturestyle. */
+	protected pictureStyleTable = new BiMap<number, string>([
+		[0x81, 'standard'],
+		[0x82, 'portrait'],
+		[0x83, 'landscape'],
+		[0x84, 'neutral'],
+		[0x85, 'faithful'],
+		[0x86, 'monochrome'],
+		[0x87, 'auto'],
+		[0x88, 'fine detail'],
+		[0x21, 'user1'],
+		[0x22, 'user2'],
+		[0x23, 'user3'],
+	])
+
 	protected whiteBalanceTable = new BiMap<number, WhiteBalance>([
 		[0, 'auto'],
 		[1, 'daylight'],
@@ -1413,6 +1660,28 @@ export class TethrCanon extends TethrPTPUSB {
 		[9, 'manual'], // Kelvin (use colorTemperature to pick the value)
 		[23, 'auto cool'], // AWB White priority
 	])
+}
+
+/**
+ * Human label for a composite ImageFormat value, e.g. 'craw + large fine',
+ * 'raw', 'small1 normal'. Derived purely from the camera's own data, so the
+ * option list always mirrors what the body offers.
+ */
+function decodeCanonImageFormat(files: CanonImageFormatFile[]): string {
+	return files
+		.map(file => {
+			if (file.type === 6) return file.compression === 3 ? 'craw' : 'raw'
+			const size =
+				CanonJpegSizeNames.get(file.size) ?? `size${file.size.toString(16)}`
+			const compression =
+				file.compression === 3
+					? 'fine'
+					: file.compression === 2
+						? 'normal'
+						: `c${file.compression}`
+			return `${size} ${compression}`
+		})
+		.join(' + ')
 }
 
 /**
