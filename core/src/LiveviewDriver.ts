@@ -35,6 +35,11 @@ export interface LiveviewDriverOptions {
  * Loop rules:
  * - **one frame in flight** — never enqueue a new frame before the previous
  *   resolves, so a slow pipe can't pile up frame requests.
+ * - **decode off the critical path** — the loop hands each delivered blob to a
+ *   concurrent decode+draw lane and immediately requests the next frame, so
+ *   JPEG decoding (~5-10 ms) overlaps the USB transfer instead of serializing
+ *   with it. If decoding falls behind, older undecoded frames are dropped —
+ *   only the newest waits.
  * - **fast when delivering, back off when empty** — yields the pipe to other
  *   work while the camera is busy.
  * - **swallow errors** — a failed fetch (typically a disconnect) must not
@@ -49,6 +54,11 @@ export class LiveviewDriver {
 	// so a quick stop()→start() can't leave the previous loop running alongside
 	// the new one (the old loop may be parked in sleep() when #active flips).
 	#runId = 0
+
+	// Decode lane state: the newest blob waiting to be decoded (older waiters
+	// are overwritten = dropped), and whether the drain task is running.
+	#pendingBlob: Blob | null = null
+	#decoding = false
 
 	#grab: LiveviewDriverOptions['grab']
 	#isOpen: LiveviewDriverOptions['isOpen']
@@ -77,7 +87,9 @@ export class LiveviewDriver {
 		if (this.#stream) return this.#stream
 
 		const stream = await this.#canvas.begin(async () => {
-			await this.#tick()
+			// Draw the first frame synchronously so the canvas has its real size
+			// before captureStream() is taken.
+			await this.#tick(true)
 		})
 
 		this.#stream = stream
@@ -92,6 +104,7 @@ export class LiveviewDriver {
 	stop() {
 		this.#active = false
 		this.#runId++
+		this.#pendingBlob = null
 		this.#canvas.end()
 		this.#stream = null
 		this.#onChange(null)
@@ -104,7 +117,12 @@ export class LiveviewDriver {
 		}
 	}
 
-	async #tick(): Promise<boolean> {
+	/**
+	 * Fetch one frame. With `sync` the frame is also decoded and drawn before
+	 * resolving (used for the initial draw); otherwise it's handed to the decode
+	 * lane and the loop is free to request the next frame right away.
+	 */
+	async #tick(sync = false): Promise<boolean> {
 		if (!this.#isOpen() || this.#inFlight) return false
 
 		this.#inFlight = true
@@ -112,13 +130,56 @@ export class LiveviewDriver {
 			const blob = await this.#grab()
 			if (!blob) return false
 
-			const bitmap = await createImageBitmap(blob)
-			this.#canvas.updateWithImage(bitmap)
+			if (sync) {
+				await this.#decodeAndDraw(blob)
+			} else {
+				this.#enqueueDecode(blob)
+			}
 			return true
 		} catch {
 			return false
 		} finally {
 			this.#inFlight = false
+		}
+	}
+
+	#enqueueDecode(blob: Blob) {
+		// Newest frame wins; an undecoded older frame still waiting is stale
+		// anyway, so it's simply replaced (dropped) rather than queued.
+		this.#pendingBlob = blob
+		if (this.#decoding) return
+
+		this.#decoding = true
+		void this.#drainDecode()
+	}
+
+	async #drainDecode() {
+		try {
+			// `#stream` goes null on stop(), ending the drain.
+			while (this.#pendingBlob && this.#stream) {
+				const blob = this.#pendingBlob
+				this.#pendingBlob = null
+				try {
+					await this.#decodeAndDraw(blob)
+				} catch {
+					// A malformed frame (or a stop() racing the draw) skips a paint,
+					// nothing more.
+				}
+			}
+		} finally {
+			this.#decoding = false
+		}
+	}
+
+	async #decodeAndDraw(blob: Blob) {
+		const bitmap = await createImageBitmap(blob)
+		try {
+			this.#canvas.updateWithImage(bitmap)
+		} finally {
+			// Release the bitmap's graphics memory now. Left to the GC, ~2.4 MB
+			// per frame piles up (~50 MB/s at 20 fps) until a major collection
+			// pauses the stream noticeably.
+			bitmap.close()
 		}
 	}
 }
