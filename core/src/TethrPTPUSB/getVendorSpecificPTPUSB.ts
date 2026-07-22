@@ -29,12 +29,18 @@ const OpSonySDIOGetExtDeviceInfo = 0x9202
 /**
  * Whether this is a Canon EOS body (the event-driven "EOS" PTP extension),
  * as opposed to a PowerShot/legacy Canon which speaks a different dialect.
+ *
+ * Modern EOS bodies (e.g. EOS R5) enumerate under the generic MTP vendor
+ * extension id, not Canon's — so keying off the vendor id alone misses them.
+ * We key off the EOS-only GetEvent op, confirmed by either the Canon extension
+ * id or the manufacturer string so a non-Canon body reusing the 0x9116 code in
+ * its own vendor space isn't misdetected.
  */
 function isCanonEOS(info: DeviceInfo): boolean {
-	return (
-		info.vendorExtensionID === VendorExtensionID.Canon &&
-		info.operationsSupported.includes(OpCanonEOSGetEvent)
-	)
+	const isCanon =
+		info.vendorExtensionID === VendorExtensionID.Canon ||
+		/canon/i.test(info.manufacturer)
+	return isCanon && info.operationsSupported.includes(OpCanonEOSGetEvent)
 }
 
 /**
