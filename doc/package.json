@@ -27,6 +27,7 @@
 		"file-saver": "^2.0.5",
 		"markdown-it-cjk-friendly": "^1.0.0",
 		"pinia": "^3.0.1",
+		"sass-embedded": "^1.83.0",
 		"stylus": "^0.63.0",
 		"typedoc": "^0.28.1",
 		"typedoc-plugin-markdown": "^4.6.0",
