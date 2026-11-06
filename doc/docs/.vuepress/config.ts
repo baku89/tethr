@@ -102,8 +102,9 @@ export default defineUserConfig({
 				selectLanguageName: 'English',
 				navbar: [
 					{text: 'Guide', link: '/guide'},
-					{text: 'Capability Report', link: '/report'},
+					{text: 'Camera Check', link: '/report'},
 					{text: 'Playground', link: '/playground'},
+					{text: 'Studio', link: '/studio'},
 					{text: 'API', link: '/api/'},
 				],
 			},
@@ -111,8 +112,9 @@ export default defineUserConfig({
 				selectLanguageName: '日本語',
 				navbar: [
 					{text: 'ガイド', link: '/ja/guide'},
-					{text: '機能テスト', link: '/ja/report'},
+					{text: '動作チェック', link: '/ja/report'},
 					{text: 'プレイグラウンド', link: '/ja/playground'},
+					{text: 'スタジオ', link: '/ja/studio'},
 					{text: 'API', link: '/api/'},
 				],
 			},

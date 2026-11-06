@@ -9,7 +9,8 @@
 		"dev:doc": "vuepress dev docs",
 		"build": "npm run build:api && vuepress build docs",
 		"build:api": "typedoc",
-		"typecheck": "vue-tsc --noEmit"
+		"typecheck": "vue-tsc --noEmit",
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@baku89/pave": "^0.4.1",

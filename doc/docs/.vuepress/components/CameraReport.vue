@@ -1,405 +1,274 @@
 <script lang="ts" setup>
 import {useTethr} from '@tethr/vue3'
 import {saveAs} from 'file-saver'
-import {dump as dumpYaml} from 'js-yaml'
-import {ConfigNameList} from 'tethr'
 import * as Tq from 'tweeq'
 import {computed, reactive, ref, shallowRef, watch} from 'vue'
 
-type Status = 'ok' | 'fail' | 'skip' | 'pending'
+import corePackage from '../../../../core/package.json'
+import {
+	buildReport,
+	createPullRequestLink,
+	describeBrowser,
+	describeCamera,
+	PullRequestLink,
+	Report,
+	ReportCamera,
+	toYaml,
+} from './report/reportFile'
+import ReportList from './report/ReportList.vue'
+import {
+	CheckOptions,
+	CheckSection,
+	CheckStatus,
+	DefaultCheckOptions,
+	runChecks,
+} from './report/runChecks'
 
-interface Row {
-	label: string
-	status: Status
-	detail?: string
-}
+const {camera, requestCamera, isConnecting} = useTethr()
 
-interface Section {
-	title: string
-	rows: Row[]
-}
-
-const CAPABILITY_FLAGS = [
-	'canTakePhoto',
-	'canStartLiveview',
-	'canRunAutoFocus',
-	'canRunManualFocus',
-] as const
-
-const {camera, pairedCameras, requestCamera, isConnecting} = useTethr()
+const options = reactive<CheckOptions>({...DefaultCheckOptions})
+const notes = ref('')
 
 const running = ref(false)
-const sections = reactive<Section[]>([])
-const liveviewStream = shallowRef<MediaStream | null>(null)
-const photoURL = ref<string | null>(null)
+const crashed = ref<string | null>(null)
+const sections = reactive<CheckSection[]>([])
+const identity = ref<ReportCamera | null>(null)
+const liveview = shallowRef<MediaStream | null>(null)
+const photoUrl = ref<string | null>(null)
+const copied = ref(false)
 
-const summary = computed(() => {
-	let ok = 0,
-		fail = 0,
-		skip = 0
-	for (const s of sections) {
-		for (const r of s.rows) {
-			if (r.status === 'ok') ok++
-			else if (r.status === 'fail') fail++
-			else if (r.status === 'skip') skip++
-		}
-	}
-	return {ok, fail, skip, total: ok + fail + skip}
-})
-
-function statusIcon(status: Status) {
-	switch (status) {
-		case 'ok':
-			return 'mdi:check-circle'
-		case 'fail':
-			return 'mdi:close-circle'
-		case 'skip':
-			return 'mdi:minus-circle'
-		default:
-			return 'mdi:dots-horizontal-circle'
-	}
+const StatusIcons: Record<CheckStatus, string> = {
+	ok: 'mdi:check-circle',
+	fail: 'mdi:close-circle',
+	skip: 'mdi:minus-circle',
 }
 
-function errMessage(e: unknown) {
-	return e instanceof Error ? e.message : String(e)
+const OptionRows: {
+	key: keyof CheckOptions
+	label: string
+	hint: string
+}[] = [
+	{
+		key: 'writeConfigs',
+		label: 'Settings',
+		hint: 'Writes values and reads them back, then puts each one back.',
+	},
+	{key: 'liveview', label: 'Liveview', hint: 'Runs liveview for a moment.'},
+	{key: 'autoFocus', label: 'Autofocus', hint: 'Moves the lens.'},
+	{key: 'manualFocus', label: 'Manual focus', hint: 'Moves the lens a step.'},
+	{
+		key: 'shutter',
+		label: 'Shutter',
+		hint: 'Takes a picture, which stays on the card.',
+	},
+	{
+		key: 'listObjects',
+		label: 'Card contents',
+		hint: 'Reads the info of every file. Slow on a full card.',
+	},
+]
+
+function clear() {
+	sections.splice(0)
+	crashed.value = null
+	liveview.value = null
+	photoUrl.value = null
+	copied.value = false
 }
 
-// Auto-run a full sweep whenever a camera is (re)connected.
 watch(camera, cam => {
-	if (cam) runReport()
-	else {
-		sections.splice(0)
-		liveviewStream.value = null
-		photoURL.value = null
-	}
+	clear()
+	identity.value = null
+	if (cam) describeCamera(cam).then(found => (identity.value = found))
 })
 
-async function runReport() {
+async function run() {
 	const cam = camera.value
 	if (!cam || running.value) return
 
 	running.value = true
-	sections.splice(0)
-	liveviewStream.value = null
-	photoURL.value = null
-
+	clear()
 	try {
-		// 1. Identity
-		const identity: Section = {title: 'Identity', rows: []}
-		sections.push(identity)
-		identity.rows.push({label: 'type', status: 'ok', detail: cam.type})
-		identity.rows.push({label: 'name', status: 'ok', detail: cam.name})
-		identity.rows.push({
-			label: 'identifier',
-			status: 'ok',
-			detail: JSON.stringify(cam.identifier),
+		identity.value = await describeCamera(cam)
+		await runChecks(cam, options, sections, {
+			onLiveview: stream => (liveview.value = stream),
+			onPhoto: image => (photoUrl.value = URL.createObjectURL(image)),
 		})
-
-		// 2. Capability flags
-		const caps: Section = {title: 'Capabilities', rows: []}
-		sections.push(caps)
-		for (const flag of CAPABILITY_FLAGS) {
-			try {
-				const desc = await withTimeout(cam.getDesc(flag), 5000, flag)
-				caps.rows.push({
-					label: flag,
-					status: desc.value ? 'ok' : 'skip',
-					detail: String(desc.value),
-				})
-			} catch (e) {
-				caps.rows.push({label: flag, status: 'fail', detail: errMessage(e)})
-			}
-		}
-
-		// 3. All configurable props (gettable / writable / options)
-		const props: Section = {title: 'Properties', rows: []}
-		sections.push(props)
-		const flagSet = new Set<string>(CAPABILITY_FLAGS)
-		for (const name of ConfigNameList) {
-			if (flagSet.has(name)) continue
-			try {
-				const desc = await withTimeout(cam.getDesc(name), 5000, name)
-				const gettable = desc.value !== null && desc.value !== undefined
-				// "Supported" = the camera can read it, write it, or at least
-				// describe its options. A webcam reports neither for most props —
-				// those are genuinely unsupported, not merely read-only.
-				const supported = desc.writable || gettable || desc.option != null
-				if (!supported) {
-					props.rows.push({label: name, status: 'skip', detail: 'unsupported'})
-					continue
-				}
-				const bits: string[] = []
-				bits.push(desc.writable ? 'writable' : 'read-only')
-				if (desc.option?.type === 'enum') {
-					bits.push(`enum(${desc.option.values.length})`)
-				} else if (desc.option?.type === 'range') {
-					bits.push(
-						`range ${desc.option.min}–${desc.option.max} / ${desc.option.step}`
-					)
-				}
-				if (gettable) bits.push(`= ${formatValue(desc.value)}`)
-				props.rows.push({
-					label: name,
-					status: 'ok',
-					detail: bits.join(' · '),
-				})
-			} catch (e) {
-				props.rows.push({label: name, status: 'fail', detail: errMessage(e)})
-			}
-		}
-
-		// 4. Actions (Liveview / AutoFocus / takePhoto)
-		const actions: Section = {title: 'Actions', rows: []}
-		sections.push(actions)
-
-		// Liveview
-		try {
-			const r = await withTimeout(cam.startLiveview(), 8000, 'startLiveview')
-			if (r.status === 'ok' && r.value) {
-				liveviewStream.value = r.value
-				actions.rows.push({
-					label: 'startLiveview',
-					status: 'ok',
-					detail: 'MediaStream received',
-				})
-				await sleep(1200)
-				await withTimeout(cam.stopLiveview(), 5000, 'stopLiveview')
-			} else {
-				actions.rows.push({
-					label: 'startLiveview',
-					status: 'skip',
-					detail: r.status,
-				})
-			}
-		} catch (e) {
-			actions.rows.push({
-				label: 'startLiveview',
-				status: 'fail',
-				detail: errMessage(e),
-			})
-		}
-
-		// AutoFocus
-		try {
-			const canAF = (await withTimeout(cam.getDesc('canRunAutoFocus'), 5000, 'canRunAutoFocus')).value
-			if (canAF) {
-				const r = await withTimeout(cam.runAutoFocus(), 8000, 'runAutoFocus')
-				actions.rows.push({
-					label: 'runAutoFocus',
-					status: r.status === 'ok' ? 'ok' : 'fail',
-					detail: r.status,
-				})
-			} else {
-				actions.rows.push({
-					label: 'runAutoFocus',
-					status: 'skip',
-					detail: 'unsupported',
-				})
-			}
-		} catch (e) {
-			actions.rows.push({
-				label: 'runAutoFocus',
-				status: 'fail',
-				detail: errMessage(e),
-			})
-		}
-
-		// takePhoto — fires the physical shutter
-		try {
-			const canShoot = (await withTimeout(cam.getDesc('canTakePhoto'), 5000, 'canTakePhoto')).value
-			if (canShoot) {
-				const r = await withTimeout(cam.takePhoto(), 20000, 'takePhoto')
-				if (r.status === 'ok' && r.value) {
-					const preview = r.value.find(o => o.format !== 'raw') ?? r.value[0]
-					if (preview?.blob) photoURL.value = URL.createObjectURL(preview.blob)
-					actions.rows.push({
-						label: 'takePhoto',
-						status: 'ok',
-						detail: r.value.map(o => o.format).join(', '),
-					})
-				} else {
-					actions.rows.push({
-						label: 'takePhoto',
-						status: 'fail',
-						detail: r.status,
-					})
-				}
-			} else {
-				actions.rows.push({
-					label: 'takePhoto',
-					status: 'skip',
-					detail: 'unsupported',
-				})
-			}
-		} catch (e) {
-			actions.rows.push({
-				label: 'takePhoto',
-				status: 'fail',
-				detail: errMessage(e),
-			})
-		}
-
-		// 5. Object Store
-		const store: Section = {title: 'Object Store', rows: []}
-		sections.push(store)
-		try {
-			const storages = await withTimeout(cam.getStorages(), 8000, 'getStorages')
-			store.rows.push({
-				label: 'getStorages',
-				status: 'ok',
-				detail: `${storages.length} storage(s)`,
-			})
-		} catch (e) {
-			store.rows.push({
-				label: 'getStorages',
-				status: 'fail',
-				detail: errMessage(e),
-			})
-		}
-		try {
-			const objects = await withTimeout(cam.getObjects({}), 10000, 'getObjects')
-			store.rows.push({
-				label: 'getObjects',
-				status: 'ok',
-				detail: `${objects.length} object(s)`,
-			})
-		} catch (e) {
-			store.rows.push({
-				label: 'getObjects',
-				status: 'fail',
-				detail: errMessage(e),
-			})
-		}
+	} catch (e) {
+		crashed.value = e instanceof Error ? e.message : String(e)
 	} finally {
 		running.value = false
 	}
 }
 
-function formatValue(v: unknown) {
-	if (typeof v === 'object') return JSON.stringify(v)
-	const s = String(v)
-	return s.length > 40 ? s.slice(0, 40) + '…' : s
+const report = computed<Report | null>(() => {
+	if (!identity.value || running.value || sections.length === 0) return null
+	return buildReport(
+		identity.value,
+		{tethr: corePackage.version, ...describeBrowser(navigator.userAgent)},
+		sections,
+		{notes: notes.value}
+	)
+})
+
+const link = computed<PullRequestLink | null>(
+	() => report.value && createPullRequestLink(report.value)
+)
+
+function exportYaml() {
+	if (!report.value || !link.value) return
+	const blob = new Blob([toYaml(report.value)], {type: 'text/yaml'})
+	saveAs(blob, link.value.filename)
 }
 
-function sleep(ms: number) {
-	return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-// Some camera ops never resolve on certain bodies — e.g. Sigma fp runs the
-// autofocus motor but never signals completion. Race every probe against a
-// timeout so one hung call can't freeze the whole sweep at "Running…".
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string) {
-	return Promise.race([
-		promise,
-		new Promise<T>((_, reject) =>
-			setTimeout(() => reject(new Error(`${label} timed out (${ms}ms)`)), ms)
-		),
-	])
-}
-
-function exportYAML() {
-	const report = {
-		generatedAt: new Date().toISOString(),
-		camera: camera.value
-			? {
-					type: camera.value.type,
-					name: camera.value.name,
-					identifier: camera.value.identifier,
-				}
-			: null,
-		summary: summary.value,
-		sections: sections.map(s => ({
-			title: s.title,
-			rows: s.rows.map(r => ({...r})),
-		})),
+async function openPullRequest() {
+	if (!link.value) return
+	// Must happen in the click, or the browser blocks the new tab
+	const tab = window.open(link.value.url, '_blank', 'noopener')
+	if (!link.value.inlined) {
+		await navigator.clipboard.writeText(link.value.yaml)
+		copied.value = true
 	}
-	const yaml = dumpYaml(report, {lineWidth: 100, noRefs: true})
-	const blob = new Blob([yaml], {type: 'text/yaml'})
-	const stamp = new Date().toISOString().replace(/[:.]/g, '-')
-	saveAs(blob, `tethr-report-${stamp}.yaml`)
+	void tab
 }
 </script>
 
 <template>
 	<Tq.Viewport class="CameraReport">
-		<div class="toolbar">
-			<Tq.InputButton
-				label="Connect USB"
-				icon="mdi:usb"
-				:disabled="isConnecting || running"
-				@click="requestCamera('ptpusb')"
-			/>
-			<Tq.InputButton
-				label="Connect Webcam"
-				icon="mdi:webcam"
-				:disabled="isConnecting || running"
-				@click="requestCamera('webcam')"
-			/>
-			<Tq.InputButton
-				v-if="camera"
-				label="Re-run"
-				icon="mdi:refresh"
-				:disabled="running"
-				@click="runReport"
-			/>
-			<Tq.InputButton
-				v-if="sections.length"
-				label="Export YAML"
-				icon="mdi:download"
-				:disabled="running"
-				@click="exportYAML"
-			/>
-		</div>
+		<section class="connect">
+			<Tq.InputGroup>
+				<Tq.InputButton
+					label="Connect USB"
+					icon="mdi:usb"
+					:disabled="isConnecting || running"
+					@click="requestCamera('ptpusb')"
+				/>
+				<Tq.InputButton
+					label="Connect Webcam"
+					icon="mdi:webcam"
+					:disabled="isConnecting || running"
+					@click="requestCamera('webcam')"
+				/>
+			</Tq.InputGroup>
+			<span v-if="isConnecting" class="muted">Connecting…</span>
+			<strong v-else-if="identity">
+				{{ [identity.manufacturer, identity.model].filter(Boolean).join(' ') }}
+				<span v-if="identity.firmware" class="muted">
+					firmware {{ identity.firmware }}
+				</span>
+			</strong>
+		</section>
 
-		<ul v-if="pairedCameras.length" class="paired">
-			<li v-for="(cam, i) in pairedCameras" :key="i">{{ cam.name }}</li>
-		</ul>
+		<section v-if="camera">
+			<h3>What to check</h3>
+			<Tq.ParameterGrid>
+				<Tq.Parameter
+					v-for="row in OptionRows"
+					:key="row.key"
+					:label="row.label"
+				>
+					<div class="option">
+						<Tq.InputSwitch v-model="options[row.key]" :disabled="running" />
+						<span class="muted">{{ row.hint }}</span>
+					</div>
+				</Tq.Parameter>
+			</Tq.ParameterGrid>
+			<div class="run">
+				<Tq.InputButton
+					:label="running ? 'Checking…' : 'Run Check'"
+					icon="mdi:play"
+					:disabled="running"
+					@click="run"
+				/>
+			</div>
+		</section>
 
-		<p v-if="!camera && !isConnecting" class="hint">
-			Connect a camera to generate a capability report. The sweep runs
-			automatically and <strong>fires the physical shutter</strong> when the
-			camera supports <code>takePhoto</code>.
-		</p>
+		<p v-if="crashed" class="error">{{ crashed }}</p>
 
-		<p v-if="isConnecting" class="hint">Connecting…</p>
-		<p v-if="running" class="hint">Running capability sweep…</p>
-
-		<div v-if="summary.total" class="summary">
-			<Tq.IconIndicator inline icon="mdi:check-circle" />
-			<span>{{ summary.ok }} pass</span>
-			<Tq.IconIndicator inline icon="mdi:close-circle" />
-			<span>{{ summary.fail }} fail</span>
-			<Tq.IconIndicator inline icon="mdi:minus-circle" />
-			<span>{{ summary.skip }} skip</span>
-		</div>
-
-		<div v-if="liveviewStream || photoURL" class="previews">
+		<div v-if="liveview || photoUrl" class="previews">
 			<video
-				v-if="liveviewStream"
+				v-if="liveview"
 				class="preview"
-				:srcObject.prop="liveviewStream"
+				:srcObject.prop="liveview"
 				autoplay
 				muted
 				playsinline
 			/>
-			<img v-if="photoURL" class="preview" :src="photoURL" />
+			<img v-if="photoUrl" class="preview" :src="photoUrl" />
 		</div>
 
-		<section v-for="section in sections" :key="section.title" class="section">
+		<section v-if="report" class="share">
+			<div class="summary">
+				<Tq.IconIndicator inline :icon="StatusIcons.ok" />
+				<span>{{ report.summary.ok }} ok</span>
+				<Tq.IconIndicator inline :icon="StatusIcons.fail" />
+				<span>{{ report.summary.fail }} failed</span>
+				<Tq.IconIndicator inline :icon="StatusIcons.skip" />
+				<span>{{ report.summary.skip }} skipped</span>
+			</div>
+
+			<Tq.ParameterGrid>
+				<Tq.Parameter label="Notes">
+					<Tq.InputString
+						v-model="notes"
+						placeholder="Anything the check can't see: did the picture look right?"
+					/>
+				</Tq.Parameter>
+			</Tq.ParameterGrid>
+
+			<div class="run">
+				<Tq.InputButton
+					label="Create Pull Request"
+					icon="mdi:source-pull"
+					@click="openPullRequest"
+				/>
+				<Tq.InputButton
+					label="Save YAML"
+					icon="mdi:download"
+					subtle
+					@click="exportYaml"
+				/>
+			</div>
+
+			<p class="muted">
+				Opens GitHub with this report as
+				<code>doc/reports/{{ link?.filename }}</code
+				>. Nothing is sent until you commit it there. The report has the model
+				and firmware, but no serial number, pictures or file names.
+			</p>
+			<p v-if="link && !link.inlined" class="muted">
+				This report is too long to fit in a link, so it's copied instead: paste
+				it into the page that opens.
+				<strong v-if="copied">Copied.</strong>
+			</p>
+		</section>
+
+		<section v-for="section in sections" :key="section.id">
 			<h3>{{ section.title }}</h3>
 			<Tq.ParameterGrid>
 				<Tq.Parameter
 					v-for="row in section.rows"
-					:key="row.label"
-					:label="row.label"
+					:key="row.name"
+					:label="row.name"
 				>
 					<div class="row" :class="row.status">
-						<Tq.IconIndicator inline :icon="statusIcon(row.status)" />
-						<span class="detail">{{ row.detail }}</span>
+						<Tq.IconIndicator inline :icon="StatusIcons[row.status]" />
+						<span v-if="row.access" class="fact">{{ row.access }}</span>
+						<span v-if="row.options !== undefined" class="fact">
+							{{ row.options }} values
+						</span>
+						<span v-if="row.roundTrip" class="fact">
+							wrote {{ row.roundTrip }}
+						</span>
+						<span v-if="row.detail" class="detail" :title="row.detail">
+							{{ row.detail }}
+						</span>
 					</div>
 				</Tq.Parameter>
 			</Tq.ParameterGrid>
 		</section>
+
+		<ReportList />
 	</Tq.Viewport>
 </template>
 
@@ -410,33 +279,52 @@ function exportYAML() {
 	border-radius 0.5rem
 	border 1px solid var(--tq-color-border)
 
-.toolbar
+section
+	margin-top 1.5rem
+
+	&:first-child
+		margin-top 0
+
+h3
+	margin-bottom 0.5rem
+
+.connect
 	display flex
 	flex-wrap wrap
-	gap 0.5rem
+	align-items center
+	gap 1rem
 
-.paired
-	margin 0.5rem 0
-	padding-left 1rem
+.muted
 	opacity 0.7
 	font-size 0.85em
+	font-weight normal
 
-.hint
-	margin 1rem 0
-	opacity 0.8
+.option
+	display flex
+	align-items center
+	gap 0.5rem
+	min-width 0
+
+.run
+	display flex
+	gap 0.5rem
+	margin-top 0.75rem
+
+.error
+	color var(--tq-color-error, #e5484d)
 
 .summary
 	display flex
 	align-items center
 	gap 0.4rem
-	margin 1rem 0
+	margin-bottom 0.75rem
 	font-variant-numeric tabular-nums
 
 .previews
 	display flex
 	flex-wrap wrap
 	gap 0.5rem
-	margin 1rem 0
+	margin-top 1rem
 
 .preview
 	width 100%
@@ -446,24 +334,23 @@ function exportYAML() {
 	aspect-ratio 3 / 2
 	object-fit contain
 
-.section
-	margin-top 1.5rem
-
-	h3
-		margin-bottom 0.5rem
-
 .row
 	display flex
 	align-items center
-	gap 0.4rem
+	gap 0.5rem
 	min-width 0
+	font-size 0.85em
+
+	.fact
+		opacity 0.7
+		white-space nowrap
+		font-variant-numeric tabular-nums
 
 	.detail
 		overflow hidden
 		text-overflow ellipsis
 		white-space nowrap
 		opacity 0.85
-		font-size 0.85em
 
 	&.fail .detail
 		color var(--tq-color-error, #e5484d)

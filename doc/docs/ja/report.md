@@ -3,21 +3,13 @@ sidebar: false
 pageClass: tethr-app-page
 ---
 
-# 機能テスト
+# 動作チェック
 
-下のボタンからカメラを接続すると、全機能のテストレポートを生成します。接続時に
-**自動で**スイープが走り、以下をプローブします。
+カメラを接続して、確かめる項目を選び、実行します。結果はそのまま Pull Request にして共有でき、その機種の動作状況を他の人も確認できるようになります。
 
-- **Identity** — デバイス種別・名前・再接続用 identifier
-- **Capabilities** — `canTakePhoto` / `canStartLiveview` / `canRunAutoFocus` / `canRunManualFocus`
-- **Properties** — `ConfigNameList` の全 config: 取得可否・writable・options
-- **Actions** — `startLiveview` / `runAutoFocus` / `takePhoto`
-- **Object Store** — `getStorages` / `getObjects`
+設定は書き込んで読み戻したあと、元の値に戻します。レンズとシャッターは、オンにしない限り動きません。シャッターをオンにすると、撮った写真がカードに残ります。
 
-::: warning
-レポートは `takePhoto` を含む全テストを自動実行します。対応カメラでは
-**実際にシャッターが切れます**。撮影してよい状態のときに USB 接続してください。
-:::
+カメラがうまく動かないときは、どこが失敗するかを示すレポートが一番確かな報告になります。コードの知識は要りません。
 
 <ClientOnly>
   <CameraReport />

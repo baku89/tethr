@@ -3,22 +3,17 @@ sidebar: false
 pageClass: tethr-app-page
 ---
 
-# Capability Report
+# Camera Check
 
-Connect a camera below to generate a full capability report. The sweep runs
-**automatically** on connect and probes:
+Connect a camera, choose what to check, and run it. Then share the result as a
+pull request, so others can see how the model behaves.
 
-- **Identity** — device type, name, and the reconnect identifier
-- **Capabilities** — `canTakePhoto`, `canStartLiveview`, `canRunAutoFocus`, `canRunManualFocus`
-- **Properties** — every config in `ConfigNameList`: gettable? writable? what options?
-- **Actions** — `startLiveview` / `runAutoFocus` / `takePhoto`
-- **Object Store** — `getStorages` / `getObjects`
+Settings are written and read back, then put back as they were. The lens and the
+shutter stay untouched unless you turn those on: the shutter leaves a picture on
+the card.
 
-::: warning
-The report runs every test automatically, including `takePhoto` — this
-**fires the physical shutter** on cameras that support it. Connect over USB only
-when you're ready to take a frame.
-:::
+If a camera isn't working, a report showing what fails is the best way to ask for
+a fix, and all of it works without knowing any code.
 
 <ClientOnly>
   <CameraReport />

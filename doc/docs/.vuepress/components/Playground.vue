@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import {useTethr} from '@tethr/vue3'
 import {saveAs} from 'file-saver'
-import {ConfigName, Tethr, TethrObject} from 'tethr'
+import {Tethr, TethrObject} from 'tethr'
 import * as Tq from 'tweeq'
 import {computed, ref, shallowRef} from 'vue'
 
+import {CameraConfigNames, CameraConfigs, ManualFocusSteps} from './cameraConfigs'
 import TethrConfig from './playground/TethrConfig.vue'
 
 const {
@@ -21,64 +22,8 @@ const {
 const folderHandler = shallowRef<FileSystemDirectoryHandle | null>(null)
 const photoURL = ref<string | null>(null)
 
-// A curated, ordered subset (mirrors koma's CameraControl) with labels + icons.
-const configLabels: Partial<
-	Record<ConfigName, {label: string; icon: string; hint?: string}>
-> = {
-	exposureMode: {
-		label: 'Mode',
-		icon: 'material-symbols:settings-photo-camera',
-		hint: 'Exposure mode (P / A / S / M)',
-	},
-	exposureComp: {
-		label: 'Exp.',
-		icon: 'material-symbols:exposure',
-		hint: 'Exposure compensation',
-	},
-	focalLength: {label: 'F.L.', icon: 'lucide:focus', hint: 'Focal length'},
-	focusDistance: {
-		label: 'F.D.',
-		icon: 'tabler:frustum',
-		hint: 'Focus distance',
-	},
-	aperture: {label: 'Apr.', icon: 'ph:aperture', hint: 'Aperture'},
-	shutterSpeed: {
-		label: 'SS',
-		icon: 'material-symbols:shutter-speed',
-		hint: 'Shutter speed',
-	},
-	whiteBalance: {label: 'WB', icon: 'subway:black-white', hint: 'White balance'},
-	colorTemperature: {
-		label: 'C.Temp.',
-		icon: 'mdi:temperature',
-		hint: 'Color temperature',
-	},
-	iso: {label: 'ISO', icon: 'carbon:iso', hint: 'ISO sensitivity'},
-	imageQuality: {label: 'Quality', icon: 'mdi:image', hint: 'Image quality'},
-	colorMode: {label: 'Color', icon: 'mdi:palette', hint: 'Color mode'},
-	imageAspect: {
-		label: 'Aspect',
-		icon: 'mdi:aspect-ratio',
-		hint: 'Image aspect ratio',
-	},
-	destinationToSave: {
-		label: 'Save',
-		icon: 'mdi:content-save',
-		hint: 'Destination to save captures',
-	},
-	focusPeaking: {
-		label: 'Peaking',
-		icon: 'material-symbols:center-focus-strong',
-		hint: 'Focus peaking',
-	},
-	liveviewMagnifyRatio: {
-		label: 'LV Zoom',
-		icon: 'material-symbols:zoom-in',
-		hint: 'Live view magnification',
-	},
-}
-
-const configNames = Object.keys(configLabels) as ConfigName[]
+const configLabels = CameraConfigs
+const configNames = CameraConfigNames
 
 // Only show a row the camera can actually read or write.
 const visibleConfigNames = computed(() =>
@@ -88,14 +33,7 @@ const visibleConfigNames = computed(() =>
 	})
 )
 
-const manualFocusSteps: {option: any; icon: string; label: string}[] = [
-	{option: 'far:3', icon: 'mdi:chevron-triple-up', label: 'far ×3'},
-	{option: 'far:2', icon: 'mdi:chevron-double-up', label: 'far ×2'},
-	{option: 'far:1', icon: 'mdi:chevron-up', label: 'far ×1'},
-	{option: 'near:1', icon: 'mdi:chevron-down', label: 'near ×1'},
-	{option: 'near:2', icon: 'mdi:chevron-double-down', label: 'near ×2'},
-	{option: 'near:3', icon: 'mdi:chevron-triple-down', label: 'near ×3'},
-]
+const manualFocusSteps = ManualFocusSteps
 const manualFocusOptions = computed(
 	() => (configs.manualFocusOptions.value as string[] | null) ?? []
 )

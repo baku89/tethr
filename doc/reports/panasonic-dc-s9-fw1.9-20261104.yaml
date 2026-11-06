@@ -1,0 +1,47 @@
+schema: 1
+date: "2026-11-04"
+camera:
+  type: ptpusb
+  manufacturer: Panasonic
+  model: DC-S9
+  firmware: "1.9"
+  usb: 04da:2382
+environment:
+  tethr: 0.6.4
+  browser: Electron 44
+  os: macOS
+summary:
+  ok: 24
+  fail: 1
+  skip: 1
+sections:
+  capabilities:
+    canTakePhoto: {status: ok, detail: "true"}
+    canStartLiveview: {status: ok, detail: "true"}
+    canRunAutoFocus: {status: ok, detail: "true"}
+    canRunManualFocus: {status: ok, detail: "true"}
+  configs:
+    exposureMode: {access: r, options: 0}
+    aperture: {detail: 3 moved to the nearest stop, access: rw, options: 67, roundTrip: 12/12}
+    batteryLevel: {access: r}
+    colorMode: {access: rw, options: 21, roundTrip: 12/12}
+    whiteBalance: {access: rw, options: 15, roundTrip: 12/12}
+    colorTemperature: {access: r, options: 0}
+    exposureComp: {access: rw, options: 31, roundTrip: 12/12}
+    focusMode: {access: rw, options: 2, roundTrip: 1/1}
+    imageAspect: {access: rw, options: 4, roundTrip: 3/3}
+    imageQuality: {access: rw, options: 5, roundTrip: 4/4}
+    iso: {access: rw, options: 26, roundTrip: 12/12}
+    liveviewSize: {access: rw, options: 3, roundTrip: 2/2}
+    manualFocusOptions: {access: r}
+    manufacturer: {access: r}
+    model: {access: r}
+    shutterSpeed: {access: rw, options: 59, roundTrip: 12/12}
+  actions:
+    liveview: {status: ok}
+    autoFocus: {status: ok}
+    manualFocus: {status: ok}
+    takePhoto: {status: ok, detail: "jpeg, raw"}
+  storage:
+    getStorages: {status: fail, detail: Cannot receive data code=0x2008}
+    getObjects: {status: skip, detail: not selected}

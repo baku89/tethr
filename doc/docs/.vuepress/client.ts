@@ -32,12 +32,15 @@ export default defineClientConfig({
 			attributeFilter: ['data-theme'],
 		})
 
-		const [{default: CameraReport}, {default: Playground}] = await Promise.all([
-			import('./components/CameraReport.vue'),
-			import('./components/Playground.vue'),
-		])
+		const [{default: CameraReport}, {default: Playground}, {default: Studio}] =
+			await Promise.all([
+				import('./components/CameraReport.vue'),
+				import('./components/Playground.vue'),
+				import('./components/Studio.vue'),
+			])
 
 		app.component('CameraReport', CameraReport)
 		app.component('Playground', Playground)
+		app.component('Studio', Studio)
 	},
 })

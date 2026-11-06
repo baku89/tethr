@@ -82,6 +82,12 @@ const inputAttrs = computed<InputAttrs>(() => {
 			return {suffix: 'K'}
 		case 'shutterSpeed':
 			return {labelizer: (v: any) => (/^[a-z]+$/i.test(v) ? capital(v) : v)}
+		case 'exposureComp':
+		case 'imageAspect':
+			// Their signs and colons mean something: keep them
+			return {labelizer: (v: any) => String(v)}
+		case 'focusMode':
+			return {labelizer: (v: any) => String(v).toUpperCase()}
 		case 'liveviewMagnifyRatio':
 			return {labelizer: (v: any) => '×' + v}
 		case 'focusPeaking':
