@@ -1,19 +1,20 @@
 import {BiMap} from 'bim'
 import {times} from 'lodash'
 
-import {LiveviewDriver} from '../LiveviewDriver'
 import {
 	Aperture,
 	ColorMode,
 	ConfigName,
 	ExposureComp,
 	ExposureMode,
+	FocusMode,
 	ImageAspect,
 	ISO,
 	ManualFocusOption,
 	ShutterSpeed,
 	WhiteBalance,
 } from '../configs'
+import {LiveviewDriver} from '../LiveviewDriver'
 import {getObjectFormatName} from '../objectFormat'
 import {ResCode} from '../PTPDatacode'
 import {PTPDataView} from '../PTPDataView'
@@ -27,6 +28,7 @@ enum OpCodePanasonic {
 	OpenSession = 0x9102,
 	CloseSession = 0x9103,
 	GetDevicePropDesc = 0x9108,
+	AcknowledgeEvent = 0x9401,
 	GetDevicePropValue = 0x9402,
 	SetDevicePropValue = 0x9403,
 	InitiateCapture = 0x9404,
@@ -39,8 +41,10 @@ enum OpCodePanasonic {
 }
 
 enum EventCodePanasonic {
+	AcknowledgeRequired = 0xc101,
 	DevicePropChanged = 0xc102,
 	ObjectAdded = 0xc108,
+	ObjectAddedSDRAM = 0xc109,
 }
 
 // Panasonic does not have regular device properties, they use some 32bit values
@@ -98,6 +102,15 @@ enum ObjectFormatCodePanasonic {
 	Raw = 0x3800,
 }
 
+const NudgeAfterMs = 1500
+const CaptureTimeoutMs = 10_000
+
+function shutterSpeedToMs(value: ShutterSpeed | null) {
+	if (!value || value.startsWith('1/')) return 0
+	const seconds = parseFloat(value)
+	return isNaN(seconds) ? 0 : seconds * 1000
+}
+
 interface DevicePropSchemePanasonic<T> {
 	devicePropCode: number
 	decode: (value: number) => T | null
@@ -124,22 +137,47 @@ export class TethrPanasonic extends TethrPTPUSB {
 			label: 'Panasonic OpenSession',
 			opcode: OpCodePanasonic.OpenSession,
 			parameters: [0x00010001],
+			nudgeAfterMs: NudgeAfterMs,
 		})
+
+		if ((await this.getDeviceInfo()).model === 'DC-S9') {
+			this.imageQualityTable = new BiMap<number, string>([
+				[0, 'fine'],
+				[1, 'standard'],
+				[3, 'raw'],
+				[4, 'raw,fine'],
+				[5, 'raw,standard'],
+			])
+		}
 
 		this.device.onEventCode(
 			EventCodePanasonic.DevicePropChanged,
 			this.onDevicePropChanged
 		)
+		this.device.onEventCode(
+			EventCodePanasonic.AcknowledgeRequired,
+			this.onAcknowledgeRequired
+		)
 	}
 
 	async close(): Promise<void> {
+		this.device.offEventCode(
+			EventCodePanasonic.DevicePropChanged,
+			this.onDevicePropChanged
+		)
+		this.device.offEventCode(
+			EventCodePanasonic.AcknowledgeRequired,
+			this.onAcknowledgeRequired
+		)
+
 		await this.device.sendCommand({
 			label: 'Panasonic CloseSession',
 			opcode: OpCodePanasonic.CloseSession,
 			parameters: [0x00010001],
+			nudgeAfterMs: NudgeAfterMs,
 		})
 
-		await super.open()
+		await super.close()
 	}
 
 	// Config
@@ -254,6 +292,29 @@ export class TethrPanasonic extends TethrPTPUSB {
 			},
 			valueSize: 2,
 		})
+	}
+
+	setFocusMode(value: FocusMode) {
+		return this.setDevicePropValuePanasonic({
+			devicePropCode: DevicePropCodePanasonic.AFArea_AFModeParam,
+			encode: (value: FocusMode) => (value === 'mf' ? 3 : 4),
+			valueSize: 2,
+			value,
+		})
+	}
+
+	async getFocusModeDesc(): Promise<ConfigDesc<FocusMode>> {
+		const desc = await this.getDevicePropDescPanasonic({
+			devicePropCode: DevicePropCodePanasonic.AFArea_AFModeParam,
+			// 3 = MF, others are AF variants (4 = AF-S, 5 = AF-C, 6 = AF-F)
+			decode: (value: number): FocusMode => (value === 3 ? 'mf' : 'af'),
+			valueSize: 2,
+		})
+
+		return {
+			...desc,
+			option: {type: 'enum', values: [...new Set(desc.option?.type === 'enum' ? desc.option.values : [])]},
+		}
 	}
 
 	async getManualFocusOptionsDesc() {
@@ -407,15 +468,37 @@ export class TethrPanasonic extends TethrPTPUSB {
 		if (valueSize === 2) dataView.writeUint16(encodedValue)
 		if (valueSize === 4) dataView.writeUint32(encodedValue)
 
-		const succeed = await this.device.sendData({
-			label: 'Panasonic SetDevicePropValue',
-			opcode: OpCodePanasonic.SetDevicePropValue,
-			parameters: [devicePropCode],
-			data: dataView.toBuffer(),
-		})
+		const send = () =>
+			this.device.sendData({
+				label: 'Panasonic SetDevicePropValue',
+				opcode: OpCodePanasonic.SetDevicePropValue,
+				parameters: [devicePropCode],
+				data: dataView.toBuffer(),
+				nudgeAfterMs: NudgeAfterMs,
+				expectedResCodes: [
+					ResCode.OK,
+					ResCode.DeviceBusy,
+					ResCode.InvalidDevicePropValue,
+					ResCode.InvalidParameter,
+				],
+			})
 
-		return {
-			status: succeed ? 'ok' : 'invalid parameter',
+		let {resCode} = await send()
+
+		// The S9 can reject a valid value while still applying the previous change
+		// (the lens stopping down, for one), so give it a second chance.
+		if (resCode === ResCode.InvalidParameter) {
+			await new Promise(resolve => setTimeout(resolve, 300))
+			;({resCode} = await send())
+		}
+
+		switch (resCode) {
+			case ResCode.OK:
+				return {status: 'ok'}
+			case ResCode.DeviceBusy:
+				return {status: 'busy'}
+			default:
+				return {status: 'invalid parameter'}
 		}
 	}
 
@@ -424,11 +507,25 @@ export class TethrPanasonic extends TethrPTPUSB {
 		decode,
 		valueSize,
 	}: Omit<DevicePropSchemePanasonic<T>, 'encode'>): Promise<ConfigDesc<T>> {
-		const {data} = await this.device.receiveData({
-			label: 'Panasonic GetDevicePropDesc',
-			opcode: OpCodePanasonic.GetDevicePropDesc,
-			parameters: [devicePropCode],
-		})
+		const read = () =>
+			this.device.receiveData({
+				label: 'Panasonic GetDevicePropDesc',
+				opcode: OpCodePanasonic.GetDevicePropDesc,
+				parameters: [devicePropCode],
+				nudgeAfterMs: NudgeAfterMs,
+			})
+
+		let {data} = await read()
+
+		// During liveview the S9 occasionally answers OK with no data phase
+		for (let i = 0; i < 3 && data.byteLength === 0; i++) {
+			await new Promise(resolve => setTimeout(resolve, 100))
+			;({data} = await read())
+		}
+
+		if (data.byteLength === 0) {
+			return {writable: false, value: null}
+		}
 
 		const dataView = new PTPDataView(data)
 
@@ -468,16 +565,19 @@ export class TethrPanasonic extends TethrPTPUSB {
 		}
 	}
 
+	#bulbCode = 0xffffffff
+
 	setShutterSpeed(value: ShutterSpeed) {
 		return this.setDevicePropValuePanasonic({
 			devicePropCode: DevicePropCodePanasonic.ShutterSpeed_Param,
 			encode: (value: string) => {
-				if (value === 'bulb') return 0xffffffff
+				if (value === 'bulb') return this.#bulbCode
 				if (value === 'auto') return 0x0ffffffe
 
 				if (value.startsWith('1/')) {
-					const denominator = parseInt(value.replace(/^1\//, ''))
-					return denominator * 1000
+					// The denominator can be fractional (1/1.3, 1/2.5, 1/3.2...)
+					const denominator = parseFloat(value.slice(2))
+					return Math.round(denominator * 1000)
 				}
 
 				// Seconds
@@ -498,6 +598,8 @@ export class TethrPanasonic extends TethrPTPUSB {
 			decode: (value: number) => {
 				switch (value) {
 					case 0xffffffff:
+					case 0xfffffffe: // S9
+						this.#bulbCode = value
 						return 'bulb'
 					case 0x0fffffff:
 						return 'auto'
@@ -519,45 +621,82 @@ export class TethrPanasonic extends TethrPTPUSB {
 	async takePhoto({doDownload = true}: TakePhotoOption = {}): Promise<
 		OperationResult<TethrObject[]>
 	> {
+		const shutterSpeed = await this.get('shutterSpeed')
 		const quality = await this.get('imageQuality')
-		let restNumPhotos = quality?.includes('+') ? 2 : 1
+		let restNumPhotos = quality?.includes(',') ? 2 : 1
 
-		await this.device.sendCommand({
-			label: 'Panasonic InitiateCapture',
-			opcode: OpCodePanasonic.InitiateCapture,
-			parameters: [0x3000011],
-		})
+		const objectEvents = [
+			EventCodePanasonic.ObjectAdded,
+			EventCodePanasonic.ObjectAddedSDRAM,
+		]
 
-		const infos = await new Promise<TethrObjectInfo[]>(resolve => {
-			const infos: TethrObjectInfo[] = []
+		const infos: TethrObjectInfo[] = []
+		let onObjectAdded!: (ev: PTPEvent) => void
 
-			const onObjectAdded = async (ev: PTPEvent) => {
-				const objectID = ev.parameters[0]
-				const info = await this.getObjectInfo(objectID)
+		const arrived = new Promise<boolean>((resolve, reject) => {
+			onObjectAdded = async (ev: PTPEvent) => {
+				if (restNumPhotos === 0) return
 
-				switch (info.format) {
-					case 'jpeg':
-					case 'raw':
-						infos.push(info)
-						break
-					case 'association':
-						// Ignore folder
-						return
-					default:
-						throw new Error('Received unexpected objectFormat' + info.format)
-				}
+				try {
+					// Reading the info right after the event can fail
+					await new Promise(r => setTimeout(r, 50))
+					const info = await this.getObjectInfo(ev.parameters[0])
 
-				if (--restNumPhotos === 0) {
-					this.device.offEventCode(
-						EventCodePanasonic.ObjectAdded,
-						onObjectAdded
-					)
-					resolve(infos)
+					// A new folder is announced the same way
+					if (info.format !== 'jpeg' && info.format !== 'raw') return
+
+					infos.push(info)
+					if (--restNumPhotos === 0) resolve(true)
+				} catch (err) {
+					reject(err)
 				}
 			}
 
-			this.device.onEventCode(EventCodePanasonic.ObjectAdded, onObjectAdded)
+			setTimeout(
+				() => resolve(false),
+				CaptureTimeoutMs + shutterSpeedToMs(shutterSpeed)
+			)
 		})
+
+		for (const code of objectEvents) {
+			this.device.onEventCode(code, onObjectAdded)
+		}
+
+		let succeeded: boolean
+		try {
+			const capture = () =>
+				this.device.sendCommand({
+					label: 'Panasonic InitiateCapture',
+					opcode: OpCodePanasonic.InitiateCapture,
+					parameters: [0x3000011],
+					nudgeAfterMs: NudgeAfterMs,
+					expectedResCodes: [ResCode.OK, ResCode.GeneralError],
+				})
+
+			// Refused for a moment after other operations, such as autofocus
+			let response = await capture()
+			if (response?.resCode === ResCode.GeneralError) {
+				await new Promise(resolve => setTimeout(resolve, 1000))
+				response = await capture()
+			}
+			if (response?.resCode === ResCode.GeneralError) {
+				return {status: 'general error', message: 'The camera refused to shoot.'}
+			}
+
+			succeeded = await arrived
+		} finally {
+			for (const code of objectEvents) {
+				this.device.offEventCode(code, onObjectAdded)
+			}
+		}
+
+		if (!succeeded) {
+			return {
+				status: 'general error',
+				message:
+					'No image arrived. In AF-S the camera silently refuses to shoot when it cannot focus.',
+			}
+		}
 
 		if (!doDownload) {
 			return {status: 'ok', value: []}
@@ -588,6 +727,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			label: 'Panasonic Liveview',
 			opcode: OpCodePanasonic.Liveview,
 			parameters: [0x0d000010],
+			nudgeAfterMs: NudgeAfterMs,
 		})
 
 		const stream = await this.#liveview.start()
@@ -604,6 +744,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			label: 'Panasonic Liveview',
 			opcode: OpCodePanasonic.Liveview,
 			parameters: [0x0d000011],
+			nudgeAfterMs: NudgeAfterMs,
 		})
 
 		this.#liveview.stop()
@@ -633,7 +774,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 	}
 
 	async setLiveviewSize(value: string): Promise<OperationResult> {
-		const [width, height] = value.split('x').map(parseInt)
+		const [width, height] = value.split('x').map(Number)
 
 		const settings = await this.getLiveviewRecommendedSettings()
 
@@ -717,6 +858,7 @@ export class TethrPanasonic extends TethrPTPUSB {
 			expectedResCodes: [ResCode.OK, ResCode.DeviceBusy],
 			maxByteLength: 1_000_000, // = 1MB
 			priority: PTPPriority.Liveview,
+			nudgeAfterMs: NudgeAfterMs,
 		})
 
 		if (resCode !== ResCode.OK) return null
@@ -805,12 +947,18 @@ export class TethrPanasonic extends TethrPTPUSB {
 		dataView.writeUint32(2)
 		dataView.writeUint16(mode)
 
-		await this.device.sendData({
+		const {resCode} = await this.device.sendData({
 			label: 'Panasonic ManualFocusDrive',
 			opcode: OpCodePanasonic.ManualFocusDrive,
 			parameters: [devicePropCode],
 			data: dataView.toBuffer(),
+			expectedResCodes: [ResCode.OK, ResCode.InvalidParameter],
 		})
+
+		if (resCode !== ResCode.OK) {
+			// Rejected unless the focus mode is MF
+			return {status: 'invalid parameter', message: 'Focus mode is not MF'}
+		}
 
 		return {status: 'ok'}
 	}
@@ -820,9 +968,23 @@ export class TethrPanasonic extends TethrPTPUSB {
 			label: 'Panasonic Ctrl Liveview',
 			opcode: OpCodePanasonic.CtrlLiveview,
 			parameters: [0x03000024],
+			nudgeAfterMs: NudgeAfterMs,
 		})
 
 		return {status: 'ok'}
+	}
+
+	// libgphoto2 does this for 0xC101, following LUMIX Tether
+	protected onAcknowledgeRequired = async (ev: PTPEvent) => {
+		try {
+			await this.device.receiveData({
+				label: 'Panasonic Acknowledge Event',
+				opcode: OpCodePanasonic.AcknowledgeEvent,
+				parameters: [ev.parameters[0]],
+			})
+		} catch {
+			// As above
+		}
 	}
 
 	protected onDevicePropChanged = async (ev: PTPEvent) => {
@@ -859,9 +1021,13 @@ export class TethrPanasonic extends TethrPTPUSB {
 				return
 		}
 
-		for (const config of configs) {
-			const desc = await this.getDesc(config)
-			this.emit(`${config}Change`, desc)
+		try {
+			for (const config of configs) {
+				const desc = await this.getDesc(config)
+				this.emit(`${config}Change`, desc)
+			}
+		} catch {
+			// Nothing to report to from an event; the next explicit read will throw.
 		}
 	}
 
@@ -893,11 +1059,12 @@ export class TethrPanasonic extends TethrPTPUSB {
 		[0x0007, 'flash'],
 		[0x0005, 'fluorescent'],
 		// [0x800a, 'Black and White'],
-		// [0x800b, 'WB Setting 1'],
-		// [0x800c, 'WB Setting 2'],
-		// [0x800d, 'WB Setting 3'],
-		// [0x800e, 'WB Setting 4'],
+		[0x800b, 'vendor:preset1'],
+		[0x800c, 'vendor:preset2'],
+		[0x800d, 'vendor:preset3'],
+		[0x800e, 'vendor:preset4'],
 		[0x800f, 'shade'],
+		// Color temperature slots K1-K4
 		[0x8010, 'vendor:manual'],
 		[0x8011, 'vendor:manual2'],
 		[0x8012, 'vendor:manual3'],

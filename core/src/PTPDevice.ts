@@ -49,6 +49,8 @@ function alignBulkInRequest(byteLength: number) {
 const PTPResyncMaxSkips = 8
 const PTPResyncClearHaltEvery = 4
 
+const PTPOpCodeOpenSession = 0x1002
+
 const PTPQueueOptions = {
 	timeout: PTPDefaultTimeoutMs,
 	throwOnTimeout: true,
@@ -73,6 +75,15 @@ export interface PTPSendCommandOption {
 	 * gaps a higher-priority frame can slip into.
 	 */
 	priority?: number
+	/**
+	 * Some bodies (seen on the Panasonic S9, about once in 30 transactions) hold a
+	 * response back until the next command arrives. Since the queue won't send one
+	 * until this transaction finishes, that's a deadlock. If nothing has arrived
+	 * after this many ms, send a command with no data phase to release it. Only
+	 * for transactions that always answer quickly: a command sent during a long
+	 * transfer would disturb it.
+	 */
+	nudgeAfterMs?: number
 }
 
 /** Scheduling lanes for {@link PTPSendCommandOption.priority}. */
@@ -118,6 +129,8 @@ export interface PTPDeviceDescriptor {
 	serialNumber?: string
 	productName?: string
 }
+
+const USB_VENDOR_PANASONIC = 0x04da
 
 /**
  * The transport surface the PTP protocol layer ({@link TethrPTPUSB} and its
@@ -223,10 +236,18 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 		// reset nor the defensive releaseInterface is essential — claimInterface
 		// is the only call we actually need — so tolerate their failure and let
 		// the claim itself be the hard requirement.
-		try {
-			await this.usb.reset()
-		} catch {
-			// ignore — device may not need / support reset on this platform
+		//
+		// Panasonic bodies (seen on the S9) drop off the bus on reset and come back
+		// ~2 s later as a new USBDevice, so this object goes stale, claimInterface
+		// fails, and the `connect` event that follows re-enters this path — an
+		// endless re-enumeration loop. The class reset below still clears any dirty
+		// session.
+		if (this.usb.vendorId !== USB_VENDOR_PANASONIC) {
+			try {
+				await this.usb.reset()
+			} catch {
+				// ignore — device may not need / support reset on this platform
+			}
 		}
 		try {
 			await this.usb.releaseInterface(interfaceNum)
@@ -287,10 +308,18 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 			// no halt to clear
 		}
 
-		this.#listenInterruptIn()
-		this.#listenDisconnect()
-
 		this.#opened = true
+
+		// #listenInterruptIn stops as soon as it sees the device closed, so calling
+		// it before #opened was set (as it was since 881329b) meant no camera has
+		// received events. Only Panasonic turns them back on for now: other vendors
+		// would start re-reading their configs on every DevicePropChanged, which
+		// needs testing on the bodies themselves first (the Sigma drops writes when
+		// the bus is busy).
+		if (this.usb.vendorId === USB_VENDOR_PANASONIC) {
+			this.#listenInterruptIn()
+		}
+		this.#listenDisconnect()
 	}
 
 	close = async (): Promise<void> => {
@@ -362,7 +391,7 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 	}
 
 	async #sendCommandNow(option: PTPSendCommandOption): Promise<PTPResponse> {
-		const {opcode, parameters, expectedResCodes} = {
+		const {opcode, parameters, expectedResCodes, nudgeAfterMs} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
 			...option,
@@ -373,7 +402,11 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 
 			await this.#transferOutCommand(opcode, id, parameters)
 
-			const res = await this.#waitBulkIn(id, PTPCommandMaxByteLength)
+			const res = await this.#waitBulkIn(
+				id,
+				PTPCommandMaxByteLength,
+				nudgeAfterMs
+			)
 
 			// Error checking
 			if (res.type !== PTPBlockType.Response) {
@@ -409,7 +442,7 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 	}
 
 	async #sendDataNow(option: PTPSendDataOption): Promise<PTPResponse> {
-		const {opcode, data, parameters, expectedResCodes} = {
+		const {opcode, data, parameters, expectedResCodes, nudgeAfterMs} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
 			...option,
@@ -421,7 +454,11 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 			await this.#transferOutCommand(opcode, id, parameters)
 			await this.#transferOutData(opcode, id, data)
 
-			const res = await this.#waitBulkIn(id, PTPCommandMaxByteLength)
+			const res = await this.#waitBulkIn(
+				id,
+				PTPCommandMaxByteLength,
+				nudgeAfterMs
+			)
 
 			// Error checking
 			if (res.type !== PTPBlockType.Response) {
@@ -459,7 +496,7 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 	async #receiveDataNow(
 		option: PTPReceiveDataOption
 	): Promise<PTPDataResponse> {
-		const {opcode, parameters, expectedResCodes, maxByteLength} = {
+		const {opcode, parameters, expectedResCodes, maxByteLength, nudgeAfterMs} = {
 			parameters: [],
 			expectedResCodes: [ResCode.OK],
 			maxByteLength: 10_000_000, // = 10MB. Increased for media data transfer
@@ -470,7 +507,7 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 			const id = this.#generateTransactionId()
 
 			await this.#transferOutCommand(opcode, id, parameters)
-			const res1 = await this.#waitBulkIn(id, maxByteLength)
+			const res1 = await this.#waitBulkIn(id, maxByteLength, nudgeAfterMs)
 
 			if (res1.type === PTPBlockType.Response) {
 				if (expectedResCodes.includes(res1.code)) {
@@ -486,7 +523,11 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 				throw new Error(`Cannot receive data code=${toHexString(res1.code)}`)
 			}
 
-			const res2 = await this.#waitBulkIn(id, PTPCommandMaxByteLength)
+			const res2 = await this.#waitBulkIn(
+				id,
+				PTPCommandMaxByteLength,
+				nudgeAfterMs
+			)
 
 			if (res2.type !== PTPBlockType.Response) {
 				throw new Error(
@@ -599,7 +640,8 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 
 	async #waitBulkIn(
 		expectedTransactionId: number,
-		maxByteLength: number
+		maxByteLength: number,
+		nudgeAfterMs?: number
 	): Promise<BulkInInfo> {
 		if (!this.usb || !this.usb.opened) {
 			throw new Error('Device is not opened')
@@ -608,16 +650,23 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 		let mismatches = 0
 
 		for (;;) {
+			const nudge =
+				nudgeAfterMs === undefined
+					? undefined
+					: setTimeout(() => void this.#nudge(), nudgeAfterMs)
+
 			// Phase 1: a small aligned read that covers the container header — and,
 			// for most transactions (responses, events, small data), the whole
 			// container.
-			const {data, status} = await this.usb.transferIn(
-				this.#endpointNumberBulkIn,
-				Math.min(
-					PTPBulkInFirstRequestByteLength,
-					alignBulkInRequest(maxByteLength + PTPContainerHeaderByteLength)
+			const {data, status} = await this.usb
+				.transferIn(
+					this.#endpointNumberBulkIn,
+					Math.min(
+						PTPBulkInFirstRequestByteLength,
+						alignBulkInRequest(maxByteLength + PTPContainerHeaderByteLength)
+					)
 				)
-			)
+				.finally(() => clearTimeout(nudge))
 
 			// Error checking
 			if (status !== 'ok') {
@@ -759,6 +808,23 @@ export class PTPDevice extends EventEmitter<EventTypes> implements PTPTransport 
 				transactionId,
 				payload,
 			}
+		}
+	}
+
+	/**
+	 * See {@link PTPSendCommandOption.nudgeAfterMs}. OpenSession has no data phase
+	 * and only answers SessionAlreadyOpen; that response carries another
+	 * transaction ID, so the next #waitBulkIn skips it as a mismatch.
+	 */
+	async #nudge() {
+		try {
+			await this.#transferOutCommand(
+				PTPOpCodeOpenSession,
+				this.#generateTransactionId(),
+				[0x1]
+			)
+		} catch {
+			// The pending transfer will report what's wrong with the connection.
 		}
 	}
 

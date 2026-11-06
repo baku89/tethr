@@ -241,6 +241,11 @@ export class TethrManager extends EventEmitter<TethrManagerEvents> {
 			return {status: 'general error', message: 'Unable to connect to camera'}
 		}
 
+		// The picker also offers devices that are already paired. Opening one again
+		// would put two readers on its endpoints, and they'd take each other's data.
+		const paired = this.#ptpusbCameras.get(usbDevice)
+		if (paired) return {status: 'ok', value: {camera: paired, usb: usbDevice}}
+
 		// Interactive connect: retry patiently so the click succeeds once the user
 		// frees the interface from ptpcamerad, rather than failing after ~1 s.
 		const result = await initTethrUSBPTP(usbDevice, PatientOpenOptions)

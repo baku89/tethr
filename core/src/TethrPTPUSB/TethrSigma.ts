@@ -38,7 +38,7 @@ import {
 	readonlyConfigDesc,
 	UnsupportedConfigDesc,
 } from '../util'
-import {TethrPTPUSB} from '.'
+import {TethrPTPUSB} from './TethrPTPUSB'
 
 enum OpCodeSigma {
 	GetCamConfig = 0x9010,

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "npm run dev --w doc",
     "build": "npm run build --w core",
+    "test": "npm run test --w core && npm run test --w doc",
     "build:doc": "npm run build --w doc"
   },
   "workspaces": [
@@ -24,7 +25,8 @@
     "eslint-plugin-unused-imports": "^3.0.0",
     "lerna": "^8.1.8",
     "prettier": "^3.2.4",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "3.2.7"
   },
   "dependencies": {}
 }
